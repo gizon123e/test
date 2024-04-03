@@ -5,8 +5,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const db = require("./database/database");
 const cors = require("cors");
-
-const User = require("./database/models/user-model");
+const User = require("./user_model");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
