@@ -48,6 +48,10 @@ const productModels = mongoose.Schema({
         type: String,
         required: false,
     },
+    stok:{
+        type: Number,
+        required: true
+    },
     rasaLevel:{
         type: Number,
         required: false,
