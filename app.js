@@ -1,91 +1,22 @@
+require('./database/database')
 const express = require("express");
-const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const app = express();
-const db = require("./database/database");
 const cors = require("cors");
+const logger = require('morgan')
+const cookieParser = require('cookie-parser')
 
-const User = require("./database/models/user-model");
+const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
+app.use(logger('dev'))
+app.use(cookieParser())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
 
-app.post("/signin", async (req, res) => {
-  const { username, password, email } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) {
-    return res.status(404).json({
-      message: `Username ${username} tidak ditemukan`,
-      succes: false,
-    });
-  }
-  const token = jwt.sign(
-    { username, password, email },
-    process.env.SECRET_TOKEN,
-    {
-      expiresIn: "7d",
-    }
-  );
-  const match = await bcrypt.compare(password, user.password);
-  if (match) {
-    user.password = undefined;
-    return res.status(200).json({
-      message: "Login berhasil",
-      data: user,
-      token,
-      success: true,
-    });
-  } else {
-    return res.status(403).json({
-      message: "Password yang Anda masukkan salah",
-      success: false,
-    });
-  }
-});
+// router
+app.use('/', require('./routes/router-index'))
+app.use('/product', require('./routes/router-product'))
 
-app.post("/signup", async (req, res) => {
-  try {
-    const { username, password, email } = req.body;
-    console.log(req.body);
-    const foundUsername = await User.findOne({ username });
-    const foundEmail = await User.findOne({ email });
+// midelware error
+app.use(require('./midelware/error-midelware'))
 
-    if (foundEmail) {
-      return res.status(302).json({
-        message: `Email ${email} sudah digunakan`,
-        success: false,
-      });
-    }
-
-    if (foundUsername) {
-      return res.status(302).json({
-        message: `Username ${username} sudah digunakan`,
-        success: false,
-      });
-    }
-
-    if (!foundUsername && !foundEmail) {
-      const salt = 10;
-      const user = new User({
-        ...req.body,
-        password: await bcrypt.hash(password, salt),
-      });
-
-      await user.save();
-      res.status(201).json({
-        message: "Akun berhasil dibuat, silahkan login",
-        success: true,
-      });
-    }
-  } catch (error) {
-    res.json({ error, success: false });
-  }
-});
-
-db().then(() => {
-  app.listen(3000, function () {
-    console.log("Listening on http://localhost:3000");
-  });
-});
+app.listen(4000, () => console.log('connection express success'))
