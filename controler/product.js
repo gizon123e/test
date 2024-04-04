@@ -4,8 +4,8 @@ module.exports = {
     list_product: async(req, res, next) => {
         try {
             const list_product = await Product.find({userId: req.user.id})
-            if(!list_product){
-                return res.status(404).json({message:`${req.user.username} tidak memiliki produk`})
+            if(!list_product || list_product.length == 0){
+                return res.status(404).json({message:`${req.user.name} tidak memiliki produk`})
             }
             return res.status(201).json({datas: list_product})
         } catch (error) {
