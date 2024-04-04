@@ -15,20 +15,9 @@ module.exports = {
     },
     upload: async (req, res, next) => {
         try {
-            const { name_product, price, diskon, description, image_product, stok, categoryId, size, warna, varianRasa, rasaLevel} = req.body
-            const total_price = price - (price * diskon /100)
+            const dataProduct = req.body
             const user = User.findById(req.user.id).then(async(found)=>{
-                const newProduct = await Product.create({ 
-                    name_product, 
-                    price, 
-                    diskon, 
-                    description, 
-                    categoryId, 
-                    image_product, 
-                    total_price, 
-                    userId: found.id, 
-                    stok
-                })
+                const newProduct = await Product.create(dataProduct)
                 return res.status(201).json({
                     error: false,
                     message: 'Upload Product Success',

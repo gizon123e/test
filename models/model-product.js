@@ -55,6 +55,9 @@ const productModels = mongoose.Schema({
     rasaLevel:{
         type: Number,
         required: false,
+    },
+    pemasok:{
+        type: mongoose.Types.ObjectId,
     }
 }, { timestamp: true })
 
