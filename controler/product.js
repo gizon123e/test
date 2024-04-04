@@ -1,6 +1,5 @@
 const Product = require('../models/model-product')
 const User = require("../models/model-auth-user")
-
 module.exports = {
     upload: async (req, res, next) => {
         try {
