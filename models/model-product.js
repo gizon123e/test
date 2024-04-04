@@ -30,6 +30,27 @@ const productModels = mongoose.Schema({
     userId:{
         type: mongoose.Types.ObjectId,
         ref: User
+    },
+    warna:{
+        type: String,
+        required: false,
+    },
+    size:{
+        type: String,
+        enum:['small', 'medium', 'big']
+    },
+    categoryId:{
+        type: String,
+        enum:['makanan berat', 'makanan ringan', 'bahan mentah', 'bahan matang'],
+        required: true,
+    },
+    varianRasa:{
+        type: String,
+        required: false,
+    },
+    rasaLevel:{
+        type: Number,
+        required: false,
     }
 }, { timestamp: true })
 

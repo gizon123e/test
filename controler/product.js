@@ -1,6 +1,18 @@
 const Product = require('../models/model-product')
 const User = require("../models/model-auth-user")
 module.exports = {
+    list_product: async(req, res, next) => {
+        try {
+            const list_product = await Product.find({userId: req.user.id})
+            if(!list_product){
+                return res.status(404).json({message:`${req.user.username} tidak memiliki produk`})
+            }
+            return res.status(201).json({datas: list_product})
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({message: 'internal server error'})
+        }
+    },
     upload: async (req, res, next) => {
         try {
             const { name_product, price, diskon, description, image_product} = req.body
@@ -16,7 +28,7 @@ module.exports = {
             
         } catch (err) {
             console.log(err)
-            next(err)
+            return res.status(500).json({message: 'internal server error'})
         }
     },
     edit:async(req, res,next)=>{
