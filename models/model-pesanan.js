@@ -7,12 +7,18 @@ const pesananModels = new mongoose.Schema({
         ref: "User",
         required: true
     },
+    sellerID:{
+        type: mongoose.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
     produk: [
         {
             _id: false,
             produkID: {
                 type: mongoose.Types.ObjectId,
-                require: true
+                require: true,
+                ref: "Product"
             },
             jumlah:{
                 type: Number,
