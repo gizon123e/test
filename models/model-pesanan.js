@@ -9,13 +9,22 @@ const pesananModels = new mongoose.Schema({
     },
     produk: [
         {
-            type:mongoose.Types.ObjectId,
-            ref: "Product"
+            _id: false,
+            produkID: {
+                type: mongoose.Types.ObjectId,
+                require: true
+            },
+            jumlah:{
+                type: Number,
+                required: true
+            }
         }
     ],
     status:{
         type: String,
+        required:true,
         enum: ["Belum Bayar", "Sedang diproses", "Dikirim", "Selesai", "Dibatalkan"]
     }
-
 })
+const Pesanan = mongoose.model('Pesanan', pesananModels)
+module.exports = Pesanan

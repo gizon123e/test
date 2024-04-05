@@ -11,7 +11,7 @@ const controlerPesanan = require("../controler/pesanan");
 const router = require("express").Router();
 
 // router product management
-router.post("/buat", authorization, roleClasification, controlerPesanan.make);
+router.post("/buat", authorization, controlerPesanan.make);
 
 
 module.exports = router;
