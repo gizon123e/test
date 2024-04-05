@@ -17,6 +17,7 @@ module.exports = {
         try {
             const dataProduct = req.body
             const user = User.findById(req.user.id).then(async(found)=>{
+                dataProduct.userId = found.id
                 const newProduct = await Product.create(dataProduct)
                 return res.status(201).json({
                     error: false,
@@ -24,10 +25,9 @@ module.exports = {
                     datas: newProduct
                 })
             })
-            
         } catch (err) {
             console.log(err)
-            return res.status(500).json({message: 'internal server error'})
+            return res.status(500).json({message: 'user tidak ditemukan'})
         }
     },
     edit:async(req, res,next)=>{

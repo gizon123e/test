@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const User = require('./model-auth-user')
+require('./model-auth-user')
 const productModels = mongoose.Schema({
     name_product: {
         type: String,
@@ -29,7 +29,8 @@ const productModels = mongoose.Schema({
     },
     userId:{
         type: mongoose.Types.ObjectId,
-        ref: User
+        ref: "User",
+        required: true
     },
     warna:{
         type: String,
@@ -58,6 +59,7 @@ const productModels = mongoose.Schema({
     },
     pemasok:{
         type: mongoose.Types.ObjectId,
+        ref: "User"
     }
 }, { timestamp: true })
 
