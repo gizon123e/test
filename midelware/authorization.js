@@ -12,6 +12,7 @@ module.exports = (req, res, next) => {
         req.user = verifyToken
         next()
     } catch (error) {
+        console.log(error)
         next(error)
     }
 }

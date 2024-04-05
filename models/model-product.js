@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const User = require('./model-auth-user')
+require('./model-auth-user')
 const productModels = mongoose.Schema({
     name_product: {
         type: String,
@@ -29,7 +29,37 @@ const productModels = mongoose.Schema({
     },
     userId:{
         type: mongoose.Types.ObjectId,
-        ref: User
+        ref: "User",
+        required: true
+    },
+    warna:{
+        type: String,
+        required: false,
+    },
+    size:{
+        type: String,
+        enum:['small', 'medium', 'big']
+    },
+    categoryId:{
+        type: String,
+        enum:['makanan berat', 'makanan ringan', 'bahan mentah', 'bahan matang'],
+        required: true,
+    },
+    varianRasa:{
+        type: String,
+        required: false,
+    },
+    stok:{
+        type: Number,
+        required: true
+    },
+    rasaLevel:{
+        type: Number,
+        required: false,
+    },
+    pemasok:{
+        type: mongoose.Types.ObjectId,
+        ref: "User"
     }
 }, { timestamp: true })
 

@@ -29,7 +29,7 @@ const userModels = mongoose.Schema({
         type: String,
         enum: ['vendor', 'konsumen', 'produsen', 'supplier'],
         message: '{VALUE} is not supported',
-        default: 'user'
+        required: true
     }
 }, { temestamp: true })
 
