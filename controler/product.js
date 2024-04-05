@@ -1,6 +1,15 @@
 const Product = require('../models/model-product')
 const User = require("../models/model-auth-user")
 module.exports = {
+    search: async(req, res,next) =>{
+        try {
+            const product = await Product.find({})
+            return res.status(200).json({datas: product})
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({message: 'internal server error'})
+        }
+    },
     list_product: async(req, res, next) => {
         try {
             const list_product = await Product.find({userId: req.user.id})
