@@ -10,7 +10,7 @@ module.exports= {
             // if(!pelanggan) return res.status(404).json({message:`user dengan id: ${req.body.pelanggan_id} tidak ditemukan`})
 
             //Dua baris kode diatas kira kira harus dipake gak ya mas?
-
+            if(!req.body.produk) return res.status(404).json({message: `Array produk tidak ditemukan payload yang dikirim\n${req.body}`})
             for (const item of req.body.produk){
                 const produk = await Product.findById(item.produk_id)
 

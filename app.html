@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div id="loginField">
+      <input type="text" name="email" id="email" />
+      <input type="text" name="password" id="password" />
+      <button onclick="login()">LOGIN</button>
+    </div>
+
+    <div id="sendMsg">
+      <input type="text" name="nama" id="nama" />
+      <input type="text" name="pesan" id="pesan" />
+      <button onclick="sendMsg()">SEND MSG</button>
+      <button onclick="logout()">LOG OUT</button>
+    </div>
+    <script>
+      let socket;
+      const token = localStorage.getItem("token");
+
+      async function login() {
+        const formData = {
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value,
+        };
+
+        try {
+          const response = await fetch("http://localhost:4000/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+          const result = await response.json();
+          console.log("Success:", result);
+          if (result) {
+            localStorage.setItem("token", result.datas.token);
+            alert("login berhasil");
+            return window.location.reload();
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          throw error;
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        return window.location.reload();
+      }
+
+      if (token) {
+        initializeSocket(token);
+        document.getElementById("loginField").style.display = "none";
+      } else {
+        alert("login dulu sono");
+        document.getElementById("sendMsg").style.display = "none";
+      }
+
+      function initializeSocket(token) {
+        socket = io("http://localhost:3000", {
+          auth: {
+            token,
+          },
+        });
+
+        socket.on("hello", (arg) => {
+          const text = document.createElement("p");
+          text.innerHTML = arg;
+          document.body.appendChild(text);
+        });
+      }
+
+      function sendMsg() {
+        const nama = document.getElementById("nama").value;
+        const msg = document.getElementById("pesan").value;
+
+        if (socket) {
+          socket.emit(
+            "send msg",
+            {
+              nama,
+              msg,
+            },
+            (res) => {
+              console.log(res);
+            }
+          );
+        } else {
+          console.error("Socket belum diinisialisasi");
+        }
+      }
+
+      socket.on(
+        "msg",
+        (msg, sender) => {
+          const text = document.createElement("p");
+          text.innerHTML = `${sender}: ${msg}`;
+          document.body.appendChild(text);
+        },
+        (res) => {
+          console.log(res);
+        }
+      );
+    </script>
+  </body>
+</html>

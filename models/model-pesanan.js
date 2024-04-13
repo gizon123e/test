@@ -30,6 +30,10 @@ const pesananModels = new mongoose.Schema({
         type: String,
         required:true,
         enum: ["Belum Bayar", "Sedang diproses", "Dikirim", "Selesai", "Dibatalkan"]
+    },
+    createdAt:{
+        type: Date,
+        default: Date.now()
     }
 })
 const Pesanan = mongoose.model('Pesanan', pesananModels)

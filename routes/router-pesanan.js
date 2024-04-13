@@ -12,8 +12,8 @@ const router = require("express").Router();
 
 // router product management
 router.post("/buat", authorization, controlerPesanan.make);
-router.get("/list", authorization, roleClasification, controlerPesanan.list_pesanan)
-router.put("/update_status", authorization, roleClasification, controlerPesanan.update_status)
+router.get("/list", authorization, roleClasification.seller, controlerPesanan.list_pesanan)
+router.put("/update_status", authorization, roleClasification.seller, controlerPesanan.update_status)
 
 
 module.exports = router;
