@@ -13,9 +13,12 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 
 // router
-app.use('/', require('./routes/router-index'))
+app.use('/user', require('./routes/router-user'))
 app.use('/product', require('./routes/router-product'))
-app.use('/pesanan', require('./routes/router-pesanan'))
+app.use('/category', require('./routes/router-category'))
+app.use('/cart', require('./routes/router-carts'))
+app.use('/address', require('./routes/router-address'))
+app.use('/order', require('./routes/router-order'))
 
 // midelware error
 app.use(require('./midelware/error-midelware'))

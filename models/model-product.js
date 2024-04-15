@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 require('./model-auth-user')
+require('./model-category')
 const productModels = mongoose.Schema({
     name_product: {
         type: String,
@@ -12,7 +13,7 @@ const productModels = mongoose.Schema({
         required: [true, 'price harus di isi'],
         min: [3, 'price yang harus diisi setidaknya 100'],
     },
-    total_price:{
+    total_price: {
         type: Number,
     },
     diskon: {
@@ -27,55 +28,55 @@ const productModels = mongoose.Schema({
         type: String,
         required: [true, 'product harus memiliki setidaknya 1 gambar']
     },
-    userId:{
+    userId: {
         type: mongoose.Types.ObjectId,
         ref: "User",
         required: true
     },
-    warna:{
-        type: String,
+    warna: {
+        type: [String],
         required: false,
     },
-    size:{
+    size: {
         type: String,
-        enum:['small', 'medium', 'big']
+        enum: ['small', 'medium', 'big']
     },
-    categoryId:{
-        type: String,
-        enum:['makanan berat', 'makanan ringan', 'bahan mentah', 'bahan matang'],
+    categoryId: {
+        type: mongoose.Types.ObjectId,
         required: true,
+        ref: 'Category'
     },
-    varianRasa:{
-        type: String,
+    varianRasa: {
+        type: [String],
         required: false,
     },
-    stok:{
+    stok: {
         type: Number,
         required: true
     },
-    rasaLevel:{
-        type: Number,
+    rasaLevel: {
+        type: [String],
         required: false,
     },
-    pemasok:{
+    pemasok: {
         type: mongoose.Types.ObjectId,
         ref: "User"
     }
 }, { timestamp: true })
 
 //Check if there is discon for the product before save
-productModels.pre('save', function(next){
-    if(this.diskon){
-        this.total_price = this.price - (this.price*this.diskon/100)
+productModels.pre('save', function (next) {
+    if (this.diskon) {
+        this.total_price = this.price - (this.price * this.diskon / 100)
     }
     next()
 })
 
 //Check if there is discon for the product before update(edit)
-productModels.pre('findOneAndUpdate', async function(next){
- const docToUpdate = this.getUpdate()
- await this.model.updateOne(this.getQuery(), { total_price: docToUpdate.price - (docToUpdate.price*docToUpdate.diskon/100) });
- next()
+productModels.pre('findOneAndUpdate', async function (next) {
+    const docToUpdate = this.getUpdate()
+    await this.model.updateOne(this.getQuery(), { total_price: docToUpdate.price - (docToUpdate.price * docToUpdate.diskon / 100) });
+    next()
 })
 
 const Product = mongoose.model('Product', productModels)

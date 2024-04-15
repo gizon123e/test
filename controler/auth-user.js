@@ -6,16 +6,19 @@ const jwt = require('../utils/jwt')
 module.exports = {
     register: async (req, res, next) => {
         try {
-            const { username, email, password, role } = req.body
+            const { username, email, password, role, phone } = req.body
 
             const isEmailRegister = await User.exists({ email })
             if (isEmailRegister) {
                 return res.status(400).json({ error: 'email sudah terdaftar' })
             }
 
+            const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
+            if (!regexNoTelepon.test(phone)) return res.status(400).json({ error: 'no telepon tidak valid' })
+
             const handleHashPassword = await bcrypt.hash(password, 10)
 
-            const newUser = await User.create({ username, email, password: handleHashPassword, role })
+            const newUser = await User.create({ username, email, password: handleHashPassword, role, phone })
 
             return res.status(201).json({
                 error: false,
@@ -58,7 +61,8 @@ module.exports = {
                 id: newUser._id,
                 name: newUser.username,
                 email: newUser.email,
-                role: newUser.role
+                role: newUser.role,
+                phone: newUser.phone
             }
 
             const jwtToken = jwt.createToken(tokenPayload)
@@ -70,6 +74,7 @@ module.exports = {
                     name: newUser.username,
                     email: newUser.email,
                     role: newUser.role,
+                    phone: newUser.phone,
                     token: jwtToken
                 }
             })

@@ -25,9 +25,14 @@ const userModels = mongoose.Schema({
         maxlength: [250, 'panjang password harus di antara 3 - 250 karakter'],
         minlength: [3, 'panjang password harus di antara 3 - 250 karakter']
     },
+    phone: {
+        type: String,
+        required: [true, 'phone harus di isi'],
+        minlength: [9, 'panjang password harus di antara 3 - 250 karakter']
+    },
     role: {
         type: String,
-        enum: ['vendor', 'konsumen', 'produsen', 'supplier'],
+        enum: ['vendor', 'konsumen', 'produsen', 'supplier', 'distributtor'],
         message: '{VALUE} is not supported',
         required: true
     }

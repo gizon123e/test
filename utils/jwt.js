@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 
 const config = require('../config/config-env')
+console.log(config.secretKey)
 
 module.exports = {
     createToken: (token) => {
