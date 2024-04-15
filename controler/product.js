@@ -8,9 +8,9 @@ module.exports = {
                 return res.status(404).json({message:`${req.user.name} tidak memiliki produk`})
             }
             return res.status(201).json({datas: list_product})
-        } catch (error) {
-            console.log(error)
-            return res.status(500).json({message: 'internal server error'})
+        } catch (err) {
+            console.log(err)
+            next(err)
         }
     },
     upload: async (req, res, next) => {
@@ -27,14 +27,14 @@ module.exports = {
                 })
             }
         } catch (err) {
-            return res.status(500).json({message: err.message})
+            console.log(err)
+            next(err)
         }
     },
     edit:async(req, res,next)=>{
         try{
             const updateData = req.body
             const productId = req.body.product_id
-            console.log(productId)
             if(!productId)return res.status(400).json({message: "Diperlukan payload product_id"})
             delete req.body.product_id
             const product = await Product.findByIdAndUpdate(productId, {$set: updateData}, {new: true})
@@ -54,7 +54,7 @@ module.exports = {
             })
         }catch(err){
             console.log(err)
-            return res.status(500).json({message: err.message})
+            next(err)
         }
     },
     addComment: async(req,res,next)=>{
@@ -74,9 +74,9 @@ module.exports = {
             await produk.save()
             return res.status(200).json({message:"Berhasil menambahkan komentar untuk produk ini"})
             
-        } catch (error) {
-            console.log(error)
-            return res.status(500).json({message: 'internal server error'})
+        } catch (err) {
+            console.log(err)
+            next(err)
         }
     },
     pemasok:async(req, res, next)=>{
@@ -87,11 +87,11 @@ module.exports = {
                 return res.status(404).json({message:`Produk dengan id: ${product_id} tidak ditemukan`})
             }
             if(produk.userId.toString() !== req.user.id ) return res.status(403).json({message: "Tidak bisa mengubah produk orang lain!"})
-            return res.status(200).json({message:"Berhasil mengubah pemasok untuk produk ini produk ini"})
+            return res.status(200).json({message:"Berhasil mengubah pemasok untuk produk ini produk ini", data: produk})
 
-        } catch (error) {
-            console.log(error)
-            return res.status(500).json({message: error.message})
+        } catch (err) {
+            console.log(err)
+            next(err)
         }
     },
     delete:async(req,res,next)=>{
@@ -107,7 +107,7 @@ module.exports = {
             }
         }catch(err){
             console.log(err)
-            return res.status(500).json({message: 'internal server error'})
+            next(err)
         }
     }
 }

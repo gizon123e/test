@@ -16,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/", require("./routes/router-index"));
 app.use("/product", require("./routes/router-product"));
 app.use("/pesanan", require("./routes/router-pesanan"));
+app.use("/report", require("./routes/router-laporan"));
 
 // midelware error
 app.use(require("./midelware/error-midelware"));

@@ -11,11 +11,11 @@ const controlerProduct = require("../controler/product");
 const router = require("express").Router();
 
 // router product management
-router.get("/list", emptyData, authorization, roleClasification.seller, controlerProduct.list_product);
-router.post("/upload", emptyData, authorization, roleClasification.seller, controlerProduct.upload);
-router.post("/addComment", emptyData, authorization, controlerProduct.addComment);
-router.put('/editPemasok', emptyData, authorization, roleClasification.vendor, controlerProduct.pemasok)
-router.put('/edit', emptyData, authorization, controlerProduct.edit)
-router.delete('/delete', emptyData, authorization, controlerProduct.delete)
+router.get("/list", authorization, emptyData, roleClasification.seller, controlerProduct.list_product);
+router.post("/upload", authorization, emptyData, roleClasification.seller, controlerProduct.upload);
+router.post("/addComment", authorization, emptyData, controlerProduct.addComment);
+router.put('/editPemasok', authorization, emptyData, roleClasification.vendor, controlerProduct.pemasok)
+router.put('/edit', authorization, emptyData, controlerProduct.edit)
+router.delete('/delete', authorization, emptyData, controlerProduct.delete)
 
 module.exports = router;

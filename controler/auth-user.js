@@ -7,7 +7,6 @@ module.exports = {
     register: async (req, res, next) => {
         try {
             const { username, email, password, role } = req.body
-
             const isEmailRegister = await User.exists({ email })
             if (isEmailRegister) {
                 return res.status(400).json({ error: 'email sudah terdaftar' })
@@ -37,7 +36,6 @@ module.exports = {
     login: async (req, res, next) => {
         try {
             const { email, password } = req.body
-
             const newUser = await User.findOne({ email })
             if (!newUser) {
                 return res.status(400).json({
