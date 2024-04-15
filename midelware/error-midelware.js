@@ -11,5 +11,7 @@ module.exports = (err, req, res, next) => {
 
     if(err=="Error: Invalid Token") return res.status(403).json({ ...validateError, message: "Token Invalid" })
 
-    res.status(500).json({ ...validateError, message: 'internal server error', error: err.errors })
+    if(err=="Error: Token has expired") return res.status(403).json({ ...validateError, message: "Token Sudah Kadaluarsa" })
+
+    res.status(500).json({ ...validateError, message: 'internal server error', error: err })
 }

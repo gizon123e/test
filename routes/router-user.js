@@ -10,5 +10,4 @@ const router = require("express").Router();
 router.post("/login", controlerAuthUser.login);
 router.post("/register", controlerAuthUser.register);
 
-
 module.exports = router;
