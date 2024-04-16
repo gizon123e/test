@@ -9,7 +9,7 @@ function getNamaBulan(angka){
   ];
 
   if(angka => 1 && angka <= 12){
-    return namaBulan[angka]
+    return namaBulan[angka - 1]
   }else{
     return `Tidak ada bulan ke-${angka}`
   }
@@ -46,12 +46,5 @@ module.exports = {
       if(err.name==="CastError") return res.status(400).json({message: "Mohon diperiksa kembali data yang dikirim", error: err.message})
       next(err)
     }
-  },
-  salesReportAllProduct: async (req, res, next) => {
-    const product = await Product.find({userId: req.user.id})
-    if(!product && product.length < 1) return res.status(404).json({message: `User ${req.user.name} dengan id ${req.user.id} tidak memliki produk`})
-    
-    
-    console.log(product)
   }
 };

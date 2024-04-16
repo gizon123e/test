@@ -2,6 +2,7 @@ const Carts = require('../models/model-cart')
 const Product = require('../models/model-product')
 
 module.exports = {
+
     getCarts: async (req, res, next) => {
         try {
             const dataCart = await Carts.find({ userId: req.user.id })
@@ -43,12 +44,12 @@ module.exports = {
                 const validateCart = await Carts.findOne({ productId })
 
                 if (validateCart) {
-                    const plusQuantity = validateCart.quantity + quantity
+                    const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
 
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
                         {
                             quantity: plusQuantity,
-                            total_price: vaildateProduct.total_price * plusQuantity
+                            total_price: parseInt(vaildateProduct.total_price) * plusQuantity
                         }, { new: true })
 
                     return res.status(201).json({
@@ -56,7 +57,12 @@ module.exports = {
                         datas: updateCart
                     })
                 } else {
-                    const dataCarts = await Carts.create({ productId, quantity, total_price: vaildateProduct.total_price * quantity, userId: req.user.id })
+                    const dataCarts = await Carts.create({ 
+                        productId, 
+                        quantity, 
+                        total_price: parseInt(vaildateProduct.total_price) * quantity, 
+                        userId: req.user.id 
+                    })
 
                     return res.status(201).json({
                         message: 'create data cart success',
@@ -84,9 +90,14 @@ module.exports = {
 
     updateCart: async (req, res, next) => {
         try {
-            const dataCarts = await Carts.findByIdAndUpdate({ _id: req.params.id }, { quantity: req.body.quantity }, { new: true })
-
-            return res.status(201).json({ message: 'update data cart success', data: dataCarts })
+            const dataCharts = await Carts.findById( req.params.id ).populate('productId')
+            const productId = dataCharts.productId._id
+            dataCharts.total_price = parseInt(dataCharts.productId.total_price) * req.body.quantity
+            dataCharts.quantity = req.body.quantity
+            const object = dataCharts.toObject()
+            object.productId = productId
+            await dataCharts.save()
+            return res.status(201).json({ message: 'update data cart success', data: object })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
@@ -102,6 +113,7 @@ module.exports = {
     deleteCarts: async (req, res, next) => {
         try {
             const dataCart = await Carts.findOne({ _id: req.params.id })
+            if (dataCart.userId.toString() !== req.user.id) return res.status(403).json({message: "Tidak bisa menghapus data orang lain!"})
             if (!dataCart) return res.status(404).json({ message: 'delete data cart not foud' })
 
             await Carts.deleteOne({ _id: req.params.id })

@@ -16,6 +16,7 @@ const productModels = mongoose.Schema(
     },
     total_price: {
       type: Number,
+      required: false
     },
     diskon: {
       type: Number,
@@ -35,7 +36,7 @@ const productModels = mongoose.Schema(
       required: true,
     },
     warna: {
-      type: String,
+      type: [String],
       required: false,
     },
     size: {
@@ -89,11 +90,13 @@ const productModels = mongoose.Schema(
 productModels.pre("save", function (next) {
   if (this.diskon) {
     this.total_price = this.price - (this.price * this.diskon) / 100;
-    return next();
+  }else{
+    this.total_price = this.price
   }
+  return next();
 });
 
-productModels.post("save", function (next) {
+productModels.post("save", async function (next) {
   const product = this;
 
   if (product.komentar && product.komentar.length > 0) {
@@ -117,8 +120,7 @@ productModels.post("findOneAndUpdate", async function (doc, next) {
     }
 
     const updatedDoc = this._update;
-    updatedDoc.total_price =
-      updatedDoc.price - (updatedDoc.price * updatedDoc.diskon) / 100;
+    updatedDoc.total_price = updatedDoc.price - (updatedDoc.price * updatedDoc.diskon) / 100;
     await doc.save();
     return next();
   } catch (error) {

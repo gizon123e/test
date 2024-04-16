@@ -26,13 +26,17 @@ module.exports = {
         password: handleHashPassword,
         role,
         phone,
-      });
+      })
+
+      const newUserWithoutPassword = { ...newUser._doc };
+      delete newUserWithoutPassword.password;
 
       return res.status(201).json({
         error: false,
         message: "register success",
-        datas: newUser,
-      });
+        datas: newUserWithoutPassword,
+      })
+
     } catch (err) {
       if (err && err.name == "ValidationError") {
         return res.status(400).json({
