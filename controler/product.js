@@ -69,6 +69,14 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
+      if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"})
+      console.log(req.body)
+      console.log(req.user.role === 'produsen' && !req.body.bahanBaku)
+      if(req.user.role === "produsen" && !req.body.bahanBaku){
+        return res.status(400).json({
+          message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object"
+        }) 
+      }
       const dataProduct = req.body;
       const user = await User.findById(req.user.id);
       dataProduct.userId = user._id;

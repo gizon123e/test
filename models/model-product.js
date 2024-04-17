@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
+
 require("./model-auth-user");
 require("./model-category");
+require("./models-bahan_baku")
+
 const productModels = mongoose.Schema(
   {
     name_product: {
@@ -67,6 +70,19 @@ const productModels = mongoose.Schema(
     rating: {
       type: Number,
     },
+    bahan_baku:[
+      {
+        bahanBakuId: {
+            type: mongoose.Types.ObjectId,
+            ref: "BahanBaku",
+            required: true
+        },
+        quantityNeed:{
+          type: Number,
+          required: true
+        }
+      }
+    ],
     komentar: [
       {
         userId: {
