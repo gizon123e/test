@@ -7,6 +7,7 @@ module.exports = {
   list_product: async (req, res, next) => {
     try {
       const { search, category } = req.query;
+      console.log(search, category)
 
       let handlerFilter = {};
 
@@ -25,16 +26,22 @@ module.exports = {
         if(!categoryResoul) return res.status(404).json({message: `Tidak Ditemukan product dengan kategori ${category}`})
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
       }
-      
+
       const list_product = await Product.find(handlerFilter)
         .populate("userId", "-password")
         .populate("categoryId");
       
-      if(!list_product || list_product.length === 0 ) res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
+
+      if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
+      
+      for (const product of list_product ){
+        await product.updateOne({$inc:{imppresions: 1}})
+      }
+
       return res.status(200).json({ datas: list_product });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ message: "Internal server error" });
+      next(error)
     }
   },
 
@@ -57,28 +64,34 @@ module.exports = {
     try {
       const dataProduct = await Product.findOne({ _id: req.params.id });
 
-      if (!dataProduct)
-        return res.status(404).json({ message: "product Not Found" });
+      if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
+
+      await dataProduct.updateOne({$inc:{views: 1}})
 
       return res.status(200).json({ datas: dataProduct });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ message: "internal server error" });
+      next(error)
     }
   },
 
   upload: async (req, res, next) => {
     try {
       if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"})
-      console.log(req.body)
-      console.log(req.user.role === 'produsen' && !req.body.bahanBaku)
+
       if(req.user.role === "produsen" && !req.body.bahanBaku || (!Array.isArray(req.body.bahanBaku))){
         return res.status(400).json({
           message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object"
         }) 
       }
+
+      const category = await Category.findById(req.body.categoryId)
+      if(!category) return res.status(400).json({message: `Category dengan id: ${req.body.categoryId} tidak ada`})
+
       const dataProduct = req.body;
+
       const user = await User.findById(req.user.id);
+      
       dataProduct.userId = user._id;
       const newProduct = await Product.create(dataProduct);
       return res.status(201).json({

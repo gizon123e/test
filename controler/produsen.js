@@ -70,6 +70,26 @@ module.exports = {
     },
 
     updateBahanBaku: async (req, res, next) =>{
-        
+        try {
+            const { bahanId, jumlahTambahan } = req.body
+            const bahan = await BahanBaku.findByIdAndUpdate(bahanId, {$inc:{ quantity: jumlahTambahan}}, {new: true})
+            if(!bahan) return res.status(400).json({message: `Bahan dengan id: ${bahanId} tidak ditemukan`})
+            return res.status(200).json({message: "Berhasil menambahkan stok untuk " + bahan.name, data: bahan})
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
+
+    getAllBahan: async (req, res, next)=>{
+        try {
+            if(req.user.role !== "produsen") return res.status(403).json({message:"Role selain produsen tidak bisa melihat bahan"})
+            const bahan = await BahanBaku.find({userId: req.user.id})
+            if(bahan && bahan.length > 0) return res.status(200).json({message: "Berhasil mendapatkan bahan yang dimiliki user", data: bahan})
+            return res.status(404).json({message: `User ${req.user.name} tidak memiliki bahan`})
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
     }
 }
