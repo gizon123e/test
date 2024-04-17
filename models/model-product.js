@@ -70,8 +70,9 @@ const productModels = mongoose.Schema(
     rating: {
       type: Number,
     },
-    bahan_baku:[
+    bahanBaku:[
       {
+        _id: false,
         bahanBakuId: {
             type: mongoose.Types.ObjectId,
             ref: "BahanBaku",

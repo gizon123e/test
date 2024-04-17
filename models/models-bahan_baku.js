@@ -13,7 +13,7 @@ const bahanBakuModels = mongoose.Schema({
     quantity: {
         type: Number,
         required: [true, "Bahan baku harus ada jumlahnya"],
-        min: 1
+        min: 0
     }
 })
 

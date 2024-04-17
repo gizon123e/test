@@ -20,6 +20,7 @@ app.use('/cart', require('./routes/router-carts'))
 app.use('/address', require('./routes/router-address'))
 app.use('/order', require('./routes/router-order'))
 app.use("/report", require("./routes/router-laporan"));
+app.use("/produsen", require("./routes/router-produsen"));
 
 // midelware error
 app.use(require("./midelware/error-midelware"));

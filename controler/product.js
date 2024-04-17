@@ -1,6 +1,7 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
 const Category = require("../models/model-category");
+const BahanBaku = require("../models/models-bahan_baku")
 
 module.exports = {
   list_product: async (req, res, next) => {
@@ -17,7 +18,6 @@ module.exports = {
       }
 
       if (category) {
-        console.log('g')
         const categoryResoul = await Category.findOne({
           name: { $regex: category, $options: "i" },
         });
@@ -72,7 +72,7 @@ module.exports = {
       if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"})
       console.log(req.body)
       console.log(req.user.role === 'produsen' && !req.body.bahanBaku)
-      if(req.user.role === "produsen" && !req.body.bahanBaku){
+      if(req.user.role === "produsen" && !req.body.bahanBaku || (!Array.isArray(req.body.bahanBaku))){
         return res.status(400).json({
           message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object"
         }) 
