@@ -84,21 +84,6 @@ const productModels = mongoose.Schema(
         }
       }
     ],
-    komentar: [
-      {
-        userId: {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
-        },
-        content: {
-          type: String,
-        },
-        rating: {
-          type: Number,
-          enum: [1, 2, 3, 4, 5],
-        },
-      },
-    ],
   },
   { timestamp: true }
 );
@@ -111,21 +96,6 @@ productModels.pre("save", function (next) {
     this.total_price = this.price
   }
   return next();
-});
-
-productModels.post("save", async function (next) {
-  const product = this;
-
-  if (product.komentar && product.komentar.length > 0) {
-    const totalRating = product.komentar.reduce(
-      (acc, comment) => acc + comment.rating,
-      0
-    );
-    product.rating = totalRating / product.komentar.length;
-    product.save();
-  } else {
-    product.rating = 0;
-  }
 });
 
 productModels.post("findOneAndUpdate", async function (doc, next) {

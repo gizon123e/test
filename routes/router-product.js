@@ -15,7 +15,6 @@ router.get("/list", controlerProduct.list_product);
 router.get("/detail/:id", controlerProduct.productDetail);
 router.get('/list_all', authorization , controlerProduct.list_all)
 router.post("/upload", authorization, controlerProduct.upload);
-router.post("/addComment", authorization, emptyData, controlerProduct.addComment);
 router.put('/performance', authorization, controlerProduct.updateProductPerformance)
 router.put("/editPemasok", authorization, emptyData, roleClasification.vendor, controlerProduct.pemasok);
 router.put("/edit", authorization, controlerProduct.edit);
