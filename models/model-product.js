@@ -84,14 +84,6 @@ const productModels = mongoose.Schema(
         }
       }
     ],
-    imppresions:{
-      type: Number,
-      required: false
-    },
-    views:{
-      type: Number,
-      required: false
-    },
     komentar: [
       {
         userId: {

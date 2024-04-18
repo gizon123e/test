@@ -1,9 +1,10 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
 const Category = require("../models/model-category");
-const BahanBaku = require("../models/models-bahan_baku")
-
+const Performance = require('../models/model-laporan-kinerja-product')
+  
 module.exports = {
+
   list_product: async (req, res, next) => {
     try {
       const { search, category } = req.query;
@@ -31,12 +32,7 @@ module.exports = {
         .populate("userId", "-password")
         .populate("categoryId");
       
-
       if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
-      
-      for (const product of list_product ){
-        await product.updateOne({$inc:{imppresions: 1}})
-      }
 
       return res.status(200).json({ datas: list_product });
     } catch (error) {
@@ -66,9 +62,8 @@ module.exports = {
 
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
 
-      await dataProduct.updateOne({$inc:{views: 1}})
-
       return res.status(200).json({ datas: dataProduct });
+
     } catch (error) {
       console.log(error);
       next(error)
@@ -87,13 +82,17 @@ module.exports = {
 
       const category = await Category.findById(req.body.categoryId)
       if(!category) return res.status(400).json({message: `Category dengan id: ${req.body.categoryId} tidak ada`})
-
-      const dataProduct = req.body;
-
-      const user = await User.findById(req.user.id);
       
+      const dataProduct = req.body;
+      
+      const user = await User.findById(req.user.id);
       dataProduct.userId = user._id;
       const newProduct = await Product.create(dataProduct);
+      await Performance.create({
+        productId: newProduct._id,
+        impressions: [{ time: new Date(), amount: 0 }],
+        views: [{ time: new Date(), amount: 0 }]
+      })
       return res.status(201).json({
         error: false,
         message: "Upload Product Success",
@@ -244,6 +243,39 @@ module.exports = {
     } catch (err) {
       console.log(err);
       next(err);
+    }
+  },
+
+  updateProductPerformance: async(req, res, next) => {
+    try {
+      const { views, impressions } = req.query
+
+      if(!views && !impressions ) return res.status(400).json({message:"Harus ada query views atau impressionss"})
+
+      if(!req.body.productId) return res.status(400).json({message:"Dibutuh kan payload productId"})
+
+      const kinerja = await Performance.findOne({productId: req.body.productId}).populate("productId")
+
+      if(!kinerja) return res.status(404).json({message: `Tidak ditemukan product dengan id: ${req.body.productId}`})
+
+      if(views && parseInt(views) !== NaN){
+        for ( perform of kinerja.views ){
+          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(views) : kinerja.views.push({ time: newDate(), amount: views})
+        }
+      }
+      
+      if(impressions && parseInt(impressions) !== NaN){
+        for (perform of kinerja.impressions){
+          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(impressions) : kinerja.impressions.push({ time: newDate(), amount: impressions})
+        }
+      }
+
+      await kinerja.save({new: true})
+
+      return res.status(200).json({message: "Berhasil update performance product!", data:kinerja})
+    } catch (error) {
+      console.log(error)
+      next(error)
     }
   },
 
