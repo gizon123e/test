@@ -35,19 +35,21 @@ module.exports = {
       if(parseInt(periode_hari)){
         const now = new Date()
         const fewDaysAgo = new Date(now.getTime() - periode_hari * 24 * 60 * 60 * 1000);
-        const filteredTrack = laporan.track.filter((obj)=>{
-          return obj.time.getDate() <= fewDaysAgo.getDate()
-        })
-        const data = []
         let totalSold = 0
-        for (const item of filteredTrack){
-          data.push({
-            tanggal: `${item.time.getDate()} ${getNamaBulan(item.time.getMonth() + 1)}`,
-            terjual: item.soldAtMoment
-          })
-          totalSold += item.soldAtMoment
-        }
-        return res.status(200).json({message:"Berikut Data Penjualan untuk Produk Ini", data:{ data, totalTerjual: totalSold }})
+        const filteredTrack = laporan.track.filter((obj)=>{
+          return obj.time.getDate() >= fewDaysAgo.getDate()
+        }).map(track => {
+          totalSold += track.soldAtMoment
+          return { 
+            tanggal: `${track.time.getDate()} ${getNamaBulan(track.time.getMonth() + 1)}`, 
+            terjual: track.soldAtMoment,
+            waktu: track.time
+          };
+        }).sort((a, b) => {
+          return a.waktu - b.waktu;
+        });
+
+        return res.status(200).json({message:"Berikut Data Penjualan untuk Produk Ini", data: { dataPenjualan: filteredTrack, totalTerjual: totalSold}})
       }else{
         return res.status(400).json({message: "Tolong Berikan Data Angka", error: true})
       }
@@ -76,36 +78,39 @@ module.exports = {
 
         const fewDaysAgo = new Date(now.getTime() - periode_hari * 24 * 60 * 60 * 1000);
 
-        const impressionsTrack = laporan.impressions.filter((obj)=>{
-          return obj.time.getDate() <= fewDaysAgo.getDate()
-        })
-
-        const viewsTrack = laporan.views.filter((obj)=>{
-          return obj.time.getDate() <= fewDaysAgo.getDate()
-        })
-
-        const data = []
         let counterImpressions = 0
         let counterViews = 0
 
-        for (const item of impressionsTrack){
-          data.push({
-            tanggal: `${item.time.getDate()} ${getNamaBulan(item.time.getMonth() + 1)}`,
-            totalImpressions: item.amount
-          })
-          counterImpressions += item.amount
-        }
+        const impressionsTrack = laporan.impressions.filter((obj)=>{
+          return obj.time.getDate() >= fewDaysAgo.getDate()
+        }).map(impression => {
+          counterImpressions += impression.amount
+          return { 
+            tanggal: `${impression.time.getDate()} ${getNamaBulan(impression.time.getMonth() + 1)}`, 
+            jumlah: impression.amount,
+            waktu: impression.time
+          };
+        }).sort((a, b) => {
+          return a.waktu - b.waktu;
+        });
 
-        for (const item of viewsTrack){
-          data.push({
-            tanggal: `${item.time.getDate()} ${getNamaBulan(item.time.getMonth() + 1)}`,
-            totalViews: item.amount
-          })
-          counterViews += item.amount
-        }
+        const viewsTrack = laporan.views.filter((obj)=>{
+          return obj.time.getDate() >= fewDaysAgo.getDate()
+        }).map(views => {
+          counterViews += views.amount
+          return { 
+            tanggal: `${views.time.getDate()} ${getNamaBulan(views.time.getMonth() + 1)}`, 
+            jumlah: views.amount,
+            waktu: views.time
+          };
+        }).sort((a, b) => {
+          return a.waktu - b.waktu;
+        });
 
-        return res.status(200).json({message:"Berikut Data Penjualan untuk Produk Ini", data: {
-          data, 
+        
+        return res.status(200).json({message:"Berikut Data Performa untuk Produk Ini", data: {
+          dataImpresi: impressionsTrack,
+          dataViews: viewsTrack, 
           totalImpression: counterImpressions,
           totalViews: counterViews
         }})
@@ -129,7 +134,7 @@ module.exports = {
       
       const fewDaysAgo = new Date(new Date().getTime() - periode_hari * 24 * 60 * 60 * 1000)
       console.log(fewDaysAgo.getDate())
-      const hasilTrends = []
+      const data = []
 
       //iterasi laporan tiap product
       for (const product of listProducts){
@@ -137,7 +142,7 @@ module.exports = {
         const sales = await SalesReport.findOne({productId: product._id})
 
         const filteredImpression = performance.impressions.filter(impression =>{
-          return impression.time.getDate() <= fewDaysAgo.getDate() || impression.time.getDate() <= new Date().getDate()
+          return impression.time.getDate() >= fewDaysAgo.getDate()
         }).map(impression => {
           return { 
             tanggal: `${impression.time.getDate()} ${getNamaBulan(impression.time.getMonth() + 1)}`, 
@@ -149,7 +154,7 @@ module.exports = {
         });
 
         const filteredViews = performance.views.filter(views =>{
-          return views.time.getDate() <= fewDaysAgo.getDate() || views.time.getDate() <= new Date().getDate()
+          return views.time.getDate() >= fewDaysAgo.getDate() 
         }).map(views => {
           return { 
             tanggal: `${views.time.getDate()} ${getNamaBulan(views.time.getMonth() + 1)}`, 
@@ -161,7 +166,7 @@ module.exports = {
         });
         
         const filteredSales = sales.track.filter(track =>{
-          return track.time.getDate() <= fewDaysAgo.getDate() || track.time.getDate() <= new Date().getDate()
+          return track.time.getDate() >= fewDaysAgo.getDate() 
         }).map(track => {
           return { 
             tanggal: `${track.time.getDate()} ${getNamaBulan(track.time.getMonth() + 1)}`, 
@@ -172,18 +177,20 @@ module.exports = {
           return a.waktu - b.waktu;
         });
 
-        hasilTrends.push({
+        data.push({
           namaProduct: product.name_product,
-          impressions: filteredImpression,
-          views: filteredViews,
-          penjualan: filteredSales
-        })
-
+          dataImpression: filteredImpression,
+          dataViews: filteredViews,
+          dataPenjualan: filteredSales
+        });
       }
-      res.status(200).json({message:"Berhasil melihat laporan trend untuk produk yang dimilik user ini",data: hasilTrends})
+
+      res.status(200).json({message:"Berhasil melihat laporan trend untuk produk yang dimilik user ini", data})
+
     } catch (error) {
       if(error.name==="CastError") return res.status(400).json({message: "Mohon diperiksa kembali data yang dikirim", error: err.message})
       console.log(error)
+      next(error)
     }
   }
 };
