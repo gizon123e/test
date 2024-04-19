@@ -17,7 +17,7 @@ const salesReport = mongoose.Schema({
       soldAtMoment: {
         type: Number,
         required: true,
-        min: 1,
+        min: 0,
       },
     },
   ],

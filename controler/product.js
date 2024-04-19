@@ -1,7 +1,9 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
 const Category = require("../models/model-category");
-const Performance = require('../models/model-laporan-kinerja-product')
+const Performance = require('../models/model-laporan-kinerja-product');
+const BahanBaku = require("../models/models-bahan_baku");
+const SalesReport = require("../models/model-laporan-penjualan");
   
 module.exports = {
 
@@ -74,10 +76,19 @@ module.exports = {
     try {
       if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"})
 
-      if(req.user.role === "produsen" && !req.body.bahanBaku || (!Array.isArray(req.body.bahanBaku))){
+      if((req.user.role === "vendor" || req.user.role === "supplier") && (req.body.bahanBaku !== undefined)) return  res.status(400).json({message:"Payload bahan baku hanya untuk user produsen"})
+
+      if(req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))){
         return res.status(400).json({
           message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object"
         }) 
+      }
+
+      if(req.body.bahanBaku){
+        for(const bahan of req.body.bahanBaku){
+          const bahanFound = await BahanBaku.findById(bahan.bahanBakuId)
+          if(!bahanFound) return res.status(404).json({message:"Bahan baku tidak ditemukan"})
+        }
       }
 
       const category = await Category.findById(req.body.categoryId)
@@ -92,6 +103,10 @@ module.exports = {
         productId: newProduct._id,
         impressions: [{ time: new Date(), amount: 0 }],
         views: [{ time: new Date(), amount: 0 }]
+      })
+      await SalesReport.create({
+        productId: newProduct._id,
+        track: [{ time: new Date(), soldAtMoment: 0 }]
       })
       return res.status(201).json({
         error: false,
@@ -197,13 +212,13 @@ module.exports = {
 
       if(views && parseInt(views) !== NaN){
         for ( perform of kinerja.views ){
-          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(views) : kinerja.views.push({ time: newDate(), amount: views})
+          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(views) : kinerja.views.push({ time: new Date(), amount: views})
         }
       }
       
       if(impressions && parseInt(impressions) !== NaN){
         for (perform of kinerja.impressions){
-          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(impressions) : kinerja.impressions.push({ time: newDate(), amount: impressions})
+          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(impressions) : kinerja.impressions.push({ time: new Date(), amount: impressions})
         }
       }
 
