@@ -2,6 +2,8 @@ const Report = require("../models/model-laporan-penjualan");
 const Performance = require('../models/model-laporan-kinerja-product');
 const SalesReport = require("../models/model-laporan-penjualan");
 const Product = require("../models/model-product");
+const exportReport = require('../excel2');
+const { get } = require("mongoose");
 
 function getNamaBulan(angka){
   const namaBulan = [
@@ -35,9 +37,12 @@ module.exports = {
       if(parseInt(periode_hari)){
         const now = new Date()
         const fewDaysAgo = new Date(now.getTime() - periode_hari * 24 * 60 * 60 * 1000);
+        console.log(fewDaysAgo)
         let totalSold = 0
         const filteredTrack = laporan.track.filter((obj)=>{
-          return obj.time.getDate() >= fewDaysAgo.getDate()
+          return  obj.time.getFullYear() > fewDaysAgo.getFullYear() || 
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() > fewDaysAgo.getMonth()) ||
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() === fewDaysAgo.getMonth() && obj.time.getDate() >= fewDaysAgo.getDate() && obj.time.getDate() < now.getDate());
         }).map(track => {
           totalSold += track.soldAtMoment
           return { 
@@ -49,7 +54,8 @@ module.exports = {
           return a.waktu - b.waktu;
         });
 
-        return res.status(200).json({message:"Berikut Data Penjualan untuk Produk Ini", data: { dataPenjualan: filteredTrack, totalTerjual: totalSold}})
+        const data = { namaProduct: laporan.productId.name_product, dataPenjualan: filteredTrack, totalTerjual: totalSold}
+        return res.status(200).json({message:"Berikut Data Penjualan untuk Produk Ini", data })
       }else{
         return res.status(400).json({message: "Tolong Berikan Data Angka", error: true})
       }
@@ -82,7 +88,9 @@ module.exports = {
         let counterViews = 0
 
         const impressionsTrack = laporan.impressions.filter((obj)=>{
-          return obj.time.getDate() >= fewDaysAgo.getDate()
+          return  obj.time.getFullYear() > fewDaysAgo.getFullYear() || 
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() > fewDaysAgo.getMonth()) ||
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() === fewDaysAgo.getMonth() && obj.time.getDate() >= fewDaysAgo.getDate() && obj.time.getDate() < now.getDate());
         }).map(impression => {
           counterImpressions += impression.amount
           return { 
@@ -95,7 +103,9 @@ module.exports = {
         });
 
         const viewsTrack = laporan.views.filter((obj)=>{
-          return obj.time.getDate() >= fewDaysAgo.getDate()
+          return  obj.time.getFullYear() > fewDaysAgo.getFullYear() || 
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() > fewDaysAgo.getMonth()) ||
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() === fewDaysAgo.getMonth() && obj.time.getDate() >= fewDaysAgo.getDate() && obj.time.getDate() < now.getDate());
         }).map(views => {
           counterViews += views.amount
           return { 
@@ -132,8 +142,8 @@ module.exports = {
 
       if(!listProducts || listProducts.length == 0) return res.status(404).json({message: "User tidak memiliki produk", user: req.user})
       
+      const now = new Date()
       const fewDaysAgo = new Date(new Date().getTime() - periode_hari * 24 * 60 * 60 * 1000)
-      console.log(fewDaysAgo.getDate())
       const data = []
 
       //iterasi laporan tiap product
@@ -141,8 +151,10 @@ module.exports = {
         const performance = await Performance.findOne({productId: product._id})
         const sales = await SalesReport.findOne({productId: product._id})
 
-        const filteredImpression = performance.impressions.filter(impression =>{
-          return impression.time.getDate() >= fewDaysAgo.getDate()
+        const filteredImpression = performance.impressions.filter(obj =>{
+          return  obj.time.getFullYear() > fewDaysAgo.getFullYear() || 
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() > fewDaysAgo.getMonth()) ||
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() === fewDaysAgo.getMonth() && obj.time.getDate() >= fewDaysAgo.getDate() && obj.time.getDate() < now.getDate());
         }).map(impression => {
           return { 
             tanggal: `${impression.time.getDate()} ${getNamaBulan(impression.time.getMonth() + 1)}`, 
@@ -153,8 +165,10 @@ module.exports = {
           return a.waktu - b.waktu;
         });
 
-        const filteredViews = performance.views.filter(views =>{
-          return views.time.getDate() >= fewDaysAgo.getDate() 
+        const filteredViews = performance.views.filter(obj =>{
+          return  obj.time.getFullYear() > fewDaysAgo.getFullYear() || 
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() > fewDaysAgo.getMonth()) ||
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() === fewDaysAgo.getMonth() && obj.time.getDate() >= fewDaysAgo.getDate() && obj.time.getDate() < now.getDate());
         }).map(views => {
           return { 
             tanggal: `${views.time.getDate()} ${getNamaBulan(views.time.getMonth() + 1)}`, 
@@ -165,8 +179,10 @@ module.exports = {
           return a.waktu - b.waktu;
         });
         
-        const filteredSales = sales.track.filter(track =>{
-          return track.time.getDate() >= fewDaysAgo.getDate() 
+        const filteredSales = sales.track.filter(obj =>{
+          return  obj.time.getFullYear() > fewDaysAgo.getFullYear() || 
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() > fewDaysAgo.getMonth()) ||
+          (obj.time.getFullYear() === fewDaysAgo.getFullYear() && obj.time.getMonth() === fewDaysAgo.getMonth() && obj.time.getDate() >= fewDaysAgo.getDate() && obj.time.getDate() < now.getDate());
         }).map(track => {
           return { 
             tanggal: `${track.time.getDate()} ${getNamaBulan(track.time.getMonth() + 1)}`, 
@@ -185,7 +201,7 @@ module.exports = {
         });
       }
 
-      res.status(200).json({message:"Berhasil melihat laporan trend untuk produk yang dimilik user ini", data})
+      res.status(200).json({message:"Berhasil melihat laporan trend untuk produk yang dimiliki user ini", data})
 
     } catch (error) {
       if(error.name==="CastError") return res.status(400).json({message: "Mohon diperiksa kembali data yang dikirim", error: err.message})
