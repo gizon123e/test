@@ -1,0 +1,108 @@
+{
+    "data": {
+        "namaProduct": "Intel i5 9400f",
+        "dataPenjualan": [
+            {
+                "tanggal": "1 April",
+                "terjual": 44,
+                "waktu": "2024-04-01T11:46:39.404Z"
+            },
+            {
+                "tanggal": "2 April",
+                "terjual": 80,
+                "waktu": "2024-04-02T11:46:39.372Z"
+            },
+            {
+                "tanggal": "3 April",
+                "terjual": 93,
+                "waktu": "2024-04-03T11:46:39.334Z"
+            },
+            {
+                "tanggal": "4 April",
+                "terjual": 77,
+                "waktu": "2024-04-04T11:46:39.293Z"
+            },
+            {
+                "tanggal": "5 April",
+                "terjual": 63,
+                "waktu": "2024-04-05T11:46:39.262Z"
+            },
+            {
+                "tanggal": "6 April",
+                "terjual": 27,
+                "waktu": "2024-04-06T11:46:39.232Z"
+            },
+            {
+                "tanggal": "7 April",
+                "terjual": 8,
+                "waktu": "2024-04-07T11:46:39.194Z"
+            },
+            {
+                "tanggal": "8 April",
+                "terjual": 16,
+                "waktu": "2024-04-08T11:46:39.157Z"
+            },
+            {
+                "tanggal": "9 April",
+                "terjual": 72,
+                "waktu": "2024-04-09T11:46:39.119Z"
+            },
+            {
+                "tanggal": "10 April",
+                "terjual": 51,
+                "waktu": "2024-04-10T11:46:39.085Z"
+            },
+            {
+                "tanggal": "11 April",
+                "terjual": 80,
+                "waktu": "2024-04-11T11:46:39.055Z"
+            },
+            {
+                "tanggal": "12 April",
+                "terjual": 1,
+                "waktu": "2024-04-12T11:46:39.021Z"
+            },
+            {
+                "tanggal": "13 April",
+                "terjual": 68,
+                "waktu": "2024-04-13T11:46:38.984Z"
+            },
+            {
+                "tanggal": "14 April",
+                "terjual": 9,
+                "waktu": "2024-04-14T11:46:38.947Z"
+            },
+            {
+                "tanggal": "15 April",
+                "terjual": 81,
+                "waktu": "2024-04-15T11:46:38.909Z"
+            },
+            {
+                "tanggal": "16 April",
+                "terjual": 2,
+                "waktu": "2024-04-16T11:46:38.872Z"
+            },
+            {
+                "tanggal": "17 April",
+                "terjual": 62,
+                "waktu": "2024-04-17T11:46:38.841Z"
+            },
+            {
+                "tanggal": "18 April",
+                "terjual": 33,
+                "waktu": "2024-04-18T11:46:38.810Z"
+            },
+            {
+                "tanggal": "19 April",
+                "terjual": 80,
+                "waktu": "2024-04-19T11:46:38.682Z"
+            },
+            {
+                "tanggal": "20 April",
+                "terjual": 1,
+                "waktu": "2024-04-20T11:46:39.736Z"
+            }
+        ],
+        "totalTerjual": 948
+    }
+}

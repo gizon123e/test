@@ -22,6 +22,8 @@ app.use('/order', require('./routes/router-order'))
 app.use("/report", require("./routes/router-laporan"));
 app.use("/produsen", require("./routes/router-produsen"));
 app.use("/comment", require("./routes/router-komentar"));
+app.use("/export", require("./routes/router-export"));
+
 
 
 // midelware error

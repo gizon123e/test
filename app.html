@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
     <script
       src="https://cdn.socket.io/4.7.5/socket.io.min.js"
       integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
@@ -24,9 +25,41 @@
       <button onclick="sendMsg()">SEND MSG</button>
       <button onclick="logout()">LOG OUT</button>
     </div>
+
+    <button onclick="download()">DOWNLOAD EXCEL</button>
     <script>
       let socket;
       const token = localStorage.getItem("token");
+      $(document).ready(function(){
+        
+      })
+
+      async function download(){
+        try {
+          $.getJSON("testData.json", async function(data) {
+            const response = await fetch("http://localhost:4000/report/export", {
+              method: "POST",
+              headers: {
+                "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWY1NWZjMWI2YzQ5ZjlkMGFjOTdkZCIsIm5hbWUiOiJwcm9kdXNlbiIsImVtYWlsIjoicHJvZHVzZW5AZ21haWwuY29tIiwicm9sZSI6InByb2R1c2VuIiwicGhvbmUiOiIwODU4NDUxMjEwNTQ4IiwiaWF0IjoxNzEzNDEwMDg1fQ._qXT4CSN_-BBHLpvzrgsczd2jOcGmOWVG0KrlEx1-VE",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+            const file = await response.arrayBuffer()
+            const blob = new Blob([file], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const blobUrl = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = blobUrl;
+            anchor.download = "Laporan Penjualan"; // Isi dengan nama yang diinginkan
+            anchor.click();
+            URL.revokeObjectURL(blobUrl);
+          }).fail((error)=>{
+            console.log(error)
+          })
+        } catch (error) {
+          console.log(error)
+        }
+      }
 
       async function login() {
         const formData = {
