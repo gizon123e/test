@@ -13,6 +13,29 @@
     ></script>
   </head>
   <body>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <label for="name_product">Product Name:</label><br>
+      <input type="text" id="name_product" name="name_product"><br><br>
+      
+      <label for="price">Price:</label><br>
+      <input type="text" id="price" name="price"><br><br>
+      
+      <label for="description">Description:</label><br>
+      <textarea id="description" name="description"></textarea><br><br>
+      
+      <label for="categoryId">Category ID:</label><br>
+      <input type="text" id="categoryId" name="categoryId"><br><br>
+      
+      <label for="stok">Stock:</label><br>
+      <input type="text" id="stok" name="stok"><br><br>
+      
+      <label for="photo">Photos:</label><br>
+      <input type="file" id="photo" name="ImageProduct" multiple><br><br>
+      
+      <input type="submit" value="Submit">
+    </form>
+    
+    <img src="" id="img" alt="" style="width: 200px; height: 200px; object-fit: contain;">
     <div id="loginField">
       <input type="text" name="email" id="email" />
       <input type="text" name="password" id="password" />
@@ -30,8 +53,67 @@
     <script>
       let socket;
       const token = localStorage.getItem("token");
-      $(document).ready(function(){
-        
+
+
+      document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Mengumpulkan data dari formulir
+        const formData = new FormData();
+        formData.append('name_product', document.getElementById('name_product').value);
+        formData.append('price', document.getElementById('price').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('categoryId', document.getElementById('categoryId').value);
+        formData.append('stok', document.getElementById('stok').value);
+
+        // Mengumpulkan file-file foto
+        const fileInput = document.getElementById('photo');
+        for (let i = 0; i < fileInput.files.length; i++) {
+          formData.append('ImageProduct', fileInput.files[i]);
+        }
+        const bahanBakuArray = [
+          {
+            bahanBakuId: "661f56a015aa8425f5fed2cc",
+            quantityNeed: 5
+          },
+          {
+            bahanBakuId: "661f85b4ba78463065f5088e",
+            quantityNeed: 4
+          }
+        ];
+
+        for (let i = 0; i < bahanBakuArray.length; i++) {
+          formData.append('bahanBaku', JSON.stringify(bahanBakuArray[i]))
+        }
+
+        // Mengirimkan formulir dengan menggunakan fetch
+        fetch('http://localhost:4000/product/upload', {
+          headers:{
+            "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWY1NWZjMWI2YzQ5ZjlkMGFjOTdkZCIsIm5hbWUiOiJwcm9kdXNlbiIsImVtYWlsIjoicHJvZHVzZW5AZ21haWwuY29tIiwicm9sZSI6InByb2R1c2VuIiwicGhvbmUiOiIwODU4NDUxMjEwNTQ4IiwiaWF0IjoxNzEzNTEwNjgyfQ.bFN-gOsm65-lxcGj8WuOgYWN6NGcWbRS555HaLrOeOs",
+          },
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Response:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      });
+
+      $(document).ready(async function(){
+        const response = await fetch("http://localhost:4000/product/list_all", {
+              method: "GET",
+              headers: {
+                "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWRlNzJkN2NkY2ViYjFlZDFiZmJlMCIsIm5hbWUiOiJ2ZW5kb3IiLCJlbWFpbCI6InZlbmRvckBnbWFpbC5jb20iLCJyb2xlIjoidmVuZG9yIiwicGhvbmUiOiIwODU4NDUxMjEwNTEzIiwiaWF0IjoxNzEzODUxODUzfQ.95SNxRuKO-FEVVWl6W8-iC-pWcHbeb_-JaFiStAqCWI",
+                "Content-Type": "application/json",
+              },
+            });
+        const data = await response.json()
+        console.log(data)
+        document.getElementById('img').src = data.data[0].image_product[0]
       })
 
       async function download(){

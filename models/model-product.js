@@ -30,7 +30,7 @@ const productModels = mongoose.Schema(
       required: [true, "deskripsi harus diisi"],
     },
     image_product: {
-      type: String,
+      type: [String],
       required: [true, "product harus memiliki setidaknya 1 gambar"],
     },
     userId: {

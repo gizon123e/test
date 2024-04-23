@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
+const fileupload = require("express-fileupload")
 const websocket = require("./websocket/index-ws");
 const app = express();
 
@@ -11,6 +12,9 @@ app.use(logger("dev"));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/public",express.static("public"));
+app.use(fileupload())
+global.__basedir = __dirname;
 
 // router
 app.use('/user', require('./routes/router-user'))

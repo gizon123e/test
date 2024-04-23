@@ -4,14 +4,13 @@ const Category = require("../models/model-category");
 const Performance = require('../models/model-laporan-kinerja-product');
 const BahanBaku = require("../models/models-bahan_baku");
 const SalesReport = require("../models/model-laporan-penjualan");
+const path = require('path')
   
 module.exports = {
 
   list_product: async (req, res, next) => {
     try {
       const { search, category } = req.query;
-      console.log(search, category)
-
       let handlerFilter = {};
 
       if (search) {
@@ -33,10 +32,64 @@ module.exports = {
       const list_product = await Product.find(handlerFilter)
         .populate("userId", "-password")
         .populate("categoryId");
+
+      
+      
+      const datas = list_product.filter((data)=>{
+        const user = req.user.role
+        switch(user){
+          case "konsumen":
+            return data.userId.role === "vendor";
+          case "vendor":
+            return data.userId.role === "supplier";
+          case "supplier":
+            return data.userId.role === "produsen";
+        }
+      })
       
       if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
 
-      return res.status(200).json({ datas: list_product });
+      return res.status(200).json({ datas });
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
+  list_product_public: async (req, res, next) => {
+    try {
+      const { search, category } = req.query;
+      let handlerFilter = {};
+
+      if (search) {
+        handlerFilter = {
+          ...handlerFilter,
+          name_product: { $regex: new RegExp(search, "i") },
+        };
+      }
+
+      if (category) {
+        const categoryResoul = await Category.findOne({
+          name: { $regex: category, $options: "i" },
+        });
+
+        if(!categoryResoul) return res.status(404).json({message: `Tidak Ditemukan product dengan kategori ${category}`})
+        handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
+      }
+
+      const list_product = await Product.find(handlerFilter)
+        .populate("userId", "-password")
+        .populate("categoryId");
+
+      
+      
+      const datas = list_product.filter((data)=>{
+        return data.userId.role === "vendor";
+      })
+      
+      if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
+
+      return res.status(200).json({ datas });
     } catch (error) {
       console.log(error);
       next(error)
@@ -74,40 +127,69 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
-      if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"})
+      if(!req.files || !req.files.ImageProduct) return res.status(400).json({message:"Produk Minimal Punya 1 Foto, kirimkan file foto dengan nama ImageProduct"});
 
-      if((req.user.role === "vendor" || req.user.role === "supplier") && (req.body.bahanBaku !== undefined)) return  res.status(400).json({message:"Payload bahan baku hanya untuk user produsen"})
+      if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"});
+
+      if((req.user.role === "vendor" || req.user.role === "supplier") && (req.body.bahanBaku !== undefined)) return  res.status(400).json({message:"Payload bahan baku hanya untuk user produsen"});
 
       if(req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))){
         return res.status(400).json({
-          message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object"
-        }) 
-      }
+          message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object dengan property bahanBakuId dan quantityNeed"
+        }) ;
+      };
 
-      if(req.body.bahanBaku){
+      if(req.body.bahanBaku && req.user.role === "produsen"){
+        const obj = []
+        for(const bahan of req.body.bahanBaku){
+          obj.push(JSON.parse(bahan))
+        };
+        req.body.bahanBaku = obj;
+        
         for(const bahan of req.body.bahanBaku){
           const bahanFound = await BahanBaku.findById(bahan.bahanBakuId)
           if(!bahanFound) return res.status(404).json({message:"Bahan baku tidak ditemukan"})
         }
-      }
+      };
 
-      const category = await Category.findById(req.body.categoryId)
-      if(!category) return res.status(400).json({message: `Category dengan id: ${req.body.categoryId} tidak ada`})
+
+      const category = await Category.findById(req.body.categoryId);
+      if(!category) return res.status(400).json({message: `Category dengan id: ${req.body.categoryId} tidak ada`});
       
       const dataProduct = req.body;
-      
+      const imgPaths = [];
+      if(Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0){
+        req.files.ImageProduct.forEach((img, i)=>{
+          const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}${i}${path.extname(img.name)}`;
+          img.mv(pathImg, function(err){
+            if(err) return res.status(507).json({message:"Ada masalah saat mencoba nyimpan file gambar", error: err});
+            imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}${i}${path.extname(img.name)}`);
+          });
+        });
+      }else{
+        const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}${1}${path.extname(req.files.ImageProduct.name)}`;
+        req.files.ImageProduct.mv(pathImg, function(err){
+          if(err) return res.status(507).json({message:"Ada masalah saat mencoba nyimpan file gambar", error: err});
+          imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.username}${1}${path.extname(req.files.ImageProduct.name)}`);
+        })
+      };
+
+      dataProduct.image_product = imgPaths
       const user = await User.findById(req.user.id);
       dataProduct.userId = user._id;
       const newProduct = await Product.create(dataProduct);
+
       await Performance.create({
         productId: newProduct._id,
         impressions: [{ time: new Date(), amount: 0 }],
         views: [{ time: new Date(), amount: 0 }]
-      })
+      });
+
       await SalesReport.create({
         productId: newProduct._id,
         track: [{ time: new Date(), soldAtMoment: 0 }]
-      })
+      });
+
       return res.status(201).json({
         error: false,
         message: "Upload Product Success",
