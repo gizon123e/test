@@ -22,30 +22,32 @@ module.exports = {
           name: { $regex: category, $options: "i" },
         });
 
-        if(!categoryResoul) return res.status(404).json({message: `Tidak Ditemukan product dengan kategori ${category}`})
+        if (!categoryResoul) return res.status(404).json({ message: `Tidak Ditemukan product dengan kategori ${category}` })
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
       }
-      
+
       const list_product = await Product.find(handlerFilter)
         .populate("userId", "-password")
         .populate("categoryId");
-      
-      if(!list_product || list_product.length === 0 ) res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
-      return res.status(200).json({ datas: list_product });
+
+      if (!list_product || list_product.length === 0) {
+        return res.status(404).json({ message: `Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan` })
+      }
+      res.status(200).json({ datas: list_product });
     } catch (error) {
       console.log(error);
       return res.status(500).json({ message: "Internal server error" });
     }
   },
 
-  list_all: async(req, res, next) =>{
+  list_all: async (req, res, next) => {
     try {
-      if(req.user.role === "konsumen") return res.status(403).json({message: "Konsumen tidak bisa memiliki product"})
-      const data = await Product.find({userId: req.user.id}).populate('userId', '-password')
-      if(data){
-        return res.status(200).json({message: "Menampilkan semua produk yang dimiliki user", data})
-      }else{
-        return res.status(404).json({message: "User tidak memiliki produk", data})
+      if (req.user.role === "konsumen") return res.status(403).json({ message: "Konsumen tidak bisa memiliki product" })
+      const data = await Product.find({ userId: req.user.id }).populate('userId', '-password')
+      if (data) {
+        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data })
+      } else {
+        return res.status(404).json({ message: "User tidak memiliki produk", data })
       }
     } catch (error) {
       console.log(error)
@@ -199,7 +201,7 @@ module.exports = {
         return komen.userId.toString() == req.user.id;
       });
 
-      if (sameUser) return res.status(403).json({message:"User yang sama tidak bisa memberikan komentar dan rating lebih dari satu kali",});
+      if (sameUser) return res.status(403).json({ message: "User yang sama tidak bisa memberikan komentar dan rating lebih dari satu kali", });
 
       produk.komentar.push(komentar);
       await produk.save();
@@ -209,17 +211,17 @@ module.exports = {
       next(err);
     }
   },
-  
+
   pemasok: async (req, res, next) => {
     try {
       const { product_id, pemasok } = req.body;
-      const produk = await Product.findByIdAndUpdate(product_id, {$set:{ pemasok }});
+      const produk = await Product.findByIdAndUpdate(product_id, { $set: { pemasok } });
 
       if (!produk) return res.status(404).json({ message: `Produk dengan id: ${product_id} tidak ditemukan` });
-      
+
       if (produk.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah produk orang lain!" });
       console.log(produk)
-      return res.status(200).json({message: "Berhasil mengubah pemasok untuk produk ini produk ini", data: produk,});
+      return res.status(200).json({ message: "Berhasil mengubah pemasok untuk produk ini produk ini", data: produk, });
     } catch (err) {
       console.log(err);
       next(err);

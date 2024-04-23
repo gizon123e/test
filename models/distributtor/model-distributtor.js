@@ -44,6 +44,10 @@ const modelDistributtor = mongoose.Schema({
     jam_oprasi: {
         type: String,
         required: [true, 'jam_oprasi harus di isi']
+    },
+    harga_ongkir: {
+        type: Number,
+        required: [true, 'harga ongkir harus di isi']
     }
 }, { timestamp: true })
 

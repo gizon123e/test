@@ -1,38 +1,40 @@
 const mongoose = require('mongoose')
 
 const modelOrderDistributtor = mongoose.Schema({
-    date_order_distributtor: {
+    date_order: {
         type: String,
-        required: [true, 'date_order_distributtor harus di isi']
+        required: [true, 'date_order harus di isi']
     },
     distributtorId: {
         type: mongoose.Types.ObjectId,
         required: [true, 'distributtorId harus di isi'],
         ref: 'Distributtor'
     },
-    price: {
-        type: Number,
-        required: [true, 'price harus di isi']
-    },
     tujuan_alamat: {
         type: mongoose.Types.ObjectId,
         required: [true, 'tujuan_alamat harus di isi'],
         ref: 'Address'
     },
-    userOrderId: {
+    user_orderId: {
         type: mongoose.Types.ObjectId,
         required: [true, 'userOrderId harus di isi'],
         ref: 'User'
     },
-    productId: {
+    order_product: {
         type: mongoose.Types.ObjectId,
         required: [true, 'productId harus di isi'],
-        ref: 'Product'
+        ref: 'Orders'
     },
-    statusOrder: {
+    status_order: {
         type: String,
         required: [true, 'statusOrder harus di isi'],
-        enum:['DiKemas', 'Dikirim', 'Verifikasi Penerimah'],
+        enum: ['Proses', 'Verifikasi Pengiriman', 'Verifikasi Penerimah', 'Cancel'],
+        default: 'Proses'
+    },
+    optimasi_hari: {
+        type: Number,
+        required: false,
+        default: null
     }
 }, { timestamp: true })
 

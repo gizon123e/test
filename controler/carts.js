@@ -40,7 +40,7 @@ module.exports = {
                 })
             }
 
-            if (req.user.role === 'konsumen') {
+            if (req.user.role === 'konsumen' || req.user.role === 'konsumen') {
                 const validateCart = await Carts.findOne({ productId })
 
                 if (validateCart) {

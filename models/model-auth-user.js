@@ -38,6 +38,11 @@ const userModels = mongoose.Schema(
       message: "{VALUE} is not supported",
       required: true,
     },
+    verifikasi: {
+      type: Boolean,
+      required: [true, 'verifikasi harus di isi'],
+      default: false
+    }
   },
   { temestamp: true }
 );

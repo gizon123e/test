@@ -20,13 +20,15 @@ app.use('/cart', require('./routes/router-carts'))
 app.use('/address', require('./routes/router-address'))
 app.use('/order', require('./routes/router-order'))
 app.use("/report", require("./routes/router-laporan"));
+app.use("/distributtor", require('./routes/router-distributtor'))
+app.use('/order-distributtor', require('./routes/router-order-distributtor'))
 
 // midelware error
 app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
   console.log("connection express success");
-  websocket.listen(3000, () => {
-    console.log("Connection websocket success");
-  });
+  // websocket.listen(3000, () => {
+  //   console.log("Connection websocket success");
+  // });
 });

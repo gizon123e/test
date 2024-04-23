@@ -1,10 +1,57 @@
 const OrderDistributtor = require('../../models/distributtor/model-order-distributtor')
-const { getAllDistributtor } = require('./distributtor')
+const Distributtor = require('../../models/distributtor/model-distributtor')
+const Order = require('../../models/models-orders')
+
 
 module.exports = {
     getAllOrderDistributtor: async (req, res, next) => {
         try {
-            const dataDistributtor = await OrderDistributtor.find()
+            if (req.user.role === "distributtor") {
+                const distributtor = await Distributtor.findOne({ userId: req.user.id })
+                if (!distributtor) {
+                    return res.status(404).json({ message: "distributtor not found" })
+                }
+
+                const dataDistributtor = await OrderDistributtor.find({ distributtorId: distributtor._id })
+                    .populate('tujuan_alamat', '-userId')
+                    .populate('user_orderId', "-password")
+                    .populate({
+                        path: 'order_product',
+                        select: '-userId -addressId -date_order -status',
+                        populate: {
+                            path: 'product.productId',
+                            select: '-komentar -total_price"'
+                        }
+                    })
+                    .populate({
+                        path: "distributtorId",
+                        populate: {
+                            path: "userId",
+                            select: "-password"
+                        }
+                    })
+
+                return res.status(200).json({ message: 'get all order distributtor success', datas: dataDistributtor })
+            }
+
+            const dataDistributtor = await OrderDistributtor.find({ user_orderId: req.user.id })
+                .populate('tujuan_alamat', '-userId')
+                .populate('user_orderId', "-password")
+                .populate({
+                    path: 'order_product',
+                    select: '-userId -addressId -date_order -status',
+                    populate: {
+                        path: 'product.productId',
+                        select: '-komentar -total_price"'
+                    }
+                })
+                .populate({
+                    path: "distributtorId",
+                    populate: {
+                        path: "userId",
+                        select: "-password"
+                    }
+                })
 
             return res.status(200).json({ message: 'get all orders distributtor success', datas: dataDistributtor })
         } catch (error) {
@@ -17,5 +64,101 @@ module.exports = {
             }
             next(error)
         }
+    },
+
+    createOrderDistributtor: async (req, res, next) => {
+        try {
+            const { distributtorId, order_product } = req.body
+
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            const date_order = `${dd}/${mm}/${yyyy}`;
+
+            const orderId = await Order.findOne({ _id: order_product })
+            if (!orderId) return res.status(404).json({ error: 'data order_product not found' })
+
+            if (req.user.role === "distributtor") return res.status(400).json({ error: "anda tidak dapat create order distributtor" })
+
+            const dataOrder = await OrderDistributtor.create({ distributtorId, order_product, user_orderId: req.user.id, date_order, tujuan_alamat: orderId.addressId._id })
+            console.log(dataOrder)
+            res.status(201).json({ message: 'create data order distributtor success', datas: dataOrder })
+
+        } catch (error) {
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
+    },
+    updateOrderDistributtor: async (req, res, next) => {
+        try {
+            const { status_order, optimasi_hari } = req.body
+
+            const dataDetailOrderDistributtor = await OrderDistributtor.findOne({ _id: req.params.id })
+            if (!dataDetailOrderDistributtor) return res.status(404).json({ error: `data ${req.params.id} not found` })
+
+            if (!status_order) return res.status(400).json({ erro: 'data status_order harus di isi' })
+
+            let dataOrder
+            if (req.user.role === "distributtor") {
+                if (dataDetailOrderDistributtor.status_order === 'Cancel' || dataDetailOrderDistributtor.status_order === 'Verifikasi Penerimah') {
+
+                    return res.status(400).json({ error: "anda sudah tidak dapat update status order" })
+
+                } else {
+                    if (!optimasi_hari) return res.status(400).json({ error: 'data optimasi_hari harus di isi' })
+                    if (status_order === 'Verifikasi Pengiriman') {
+                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, optimasi_hari }, { new: true })
+                    } else {
+                        return res.status({ error: "status order tidak valid" })
+                    }
+                }
+            } else {
+                if (dataDetailOrderDistributtor.status_order === 'Verifikasi Pengiriman') {
+                    if (status_order === 'Verifikasi Penerimah') {
+
+                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, optimasi_hari }, { new: true })
+
+                    } else {
+                        return res.status(400).json({ error: "anda sudah tidak dapat update status order" })
+                    }
+                } else if (dataDetailOrderDistributtor.status_order === 'Proses') {
+                    if (status_order === 'Cancel') {
+
+                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, optimasi_hari }, { new: true })
+
+                    } else {
+                        return res.status(400).json({ error: "status order tidak valid" })
+                    }
+                } else if (dataDetailOrderDistributtor.status_order === 'Verifikasi Penerimah') {
+                    return res.status(400).json({ error: "anda sudah tidak dapat update status order" })
+                }
+            }
+
+            res.status(201).json({ message: 'update data order distributtor', datas: dataOrder })
+        } catch (error) {
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
+    },
+
+    deleteOrderDistributtor: async (req, res, next) => {
+        const orderDistributtor = await OrderDistributtor.findOne({ _id: req.params.id })
+        if (!orderDistributtor) return res.status(404).json({ error: `data id ${req.params.id} not found` })
+
+        await OrderDistributtor.deleteOne({ _id: req.params.id })
+        res.status(200).json({ message: `data id ${req.params.id} success` })
     }
 }
