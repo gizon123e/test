@@ -87,7 +87,7 @@ module.exports = {
     createOrder: async (req, res, next) => {
         try {
             const { product = [], addressId, cartId = [] } = req.body
-
+            console.log(req.user)
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -99,7 +99,12 @@ module.exports = {
 
             if (cartId.length !== 0) {
                 for (const element of cartId) {
-                    const dataCart = await Carts.findOne({ _id: element })
+                    const dataCart = await Carts.findOne({ _id: element }).populate('productId').populate('userId')
+
+                    if( req.user.role === "konsumen" && ( !dataCart.productId.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor`})
+                    if( req.user.role === "vendor" && ( !dataCart.productId.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier`})
+                    if( req.user.role === "supplier" && ( !dataCart.productId.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen`})
+
 
                     if(dataCart){
                         total_price += dataCart.total_price
@@ -118,7 +123,11 @@ module.exports = {
                 }
             } else if (product.length > 0) {
                 for (const element of product) {
-                    const dataTotalProduct = await Product.findOne({ _id: element.productId });
+                    const dataTotalProduct = await Product.findOne({ _id: element.productId }).populate('userId');
+
+                    if( req.user.role === "konsumen" && ( dataTotalProduct.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+                    if( req.user.role === "vendor" && ( dataTotalProduct.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+                    if( req.user.role === "supplier" && ( dataTotalProduct.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen. Produk ini dari user role ${dataTotalProduct.userId.role}`})
                     if (!dataTotalProduct) {
                         return res.status(404).json({ error: true, message: `Product with ID ${element.productId} not found` });
                     }
@@ -145,10 +154,10 @@ module.exports = {
 
                 for (const produk of dataArrayProduct){
 
-                    const laporan = await Report.findOne({product_id: produk.productId})
+                    const laporan = await Report.findOne({productId: produk.productId})
                     if(!laporan){
                         const report = await Report.create({
-                            product_id: produk.productId,
+                            productId: produk.productId,
                             track: [ { time: new Date(), soldAtMoment: produk.quantity } ]
                         })
                     }else{
@@ -166,7 +175,6 @@ module.exports = {
                         }
 
                         if (!isDateFound) {
-                            console.log('a');
                             laporan.track.push({ time: noww, soldAtMoment: produk.quantity });
                         }
 

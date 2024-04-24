@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(bodyParser.json())
 app.use('/public', express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: true }));
-app.use(fileUpload())
+global.__basedir = __dirname;
 
 // router
 app.use('/user', require('./routes/router-user'))
@@ -27,6 +27,9 @@ app.use('/cart', require('./routes/router-carts'))
 app.use('/address', require('./routes/router-address'))
 app.use('/order', require('./routes/router-order'))
 app.use("/report", require("./routes/router-laporan"));
+app.use("/produsen", require("./routes/router-produsen"));
+app.use("/comment", require("./routes/router-komentar"));
+app.use("/export", require("./routes/router-export"));
 app.use("/distributtor", require('./routes/router-distributtor'))
 app.use('/order-distributtor', require('./routes/router-order-distributtor'))
 

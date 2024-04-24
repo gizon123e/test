@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
+
 require("./model-auth-user");
 require("./model-category");
+require("./models-bahan_baku")
+
 const productModels = mongoose.Schema(
   {
     name_product: {
@@ -27,7 +30,7 @@ const productModels = mongoose.Schema(
       required: [true, "deskripsi harus diisi"],
     },
     image_product: {
-      type: String,
+      type: [String],
       required: [true, "product harus memiliki setidaknya 1 gambar"],
     },
     userId: {
@@ -67,20 +70,19 @@ const productModels = mongoose.Schema(
     rating: {
       type: Number,
     },
-    komentar: [
+    bahanBaku:[
       {
-        userId: {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
+        _id: false,
+        bahanBakuId: {
+            type: mongoose.Types.ObjectId,
+            ref: "BahanBaku",
+            required: true
         },
-        content: {
-          type: String,
-        },
-        rating: {
+        quantityNeed:{
           type: Number,
-          enum: [1, 2, 3, 4, 5],
-        },
-      },
+          required: true
+        }
+      }
     ],
   },
   { timestamp: true }
@@ -94,21 +96,6 @@ productModels.pre("save", function (next) {
     this.total_price = this.price
   }
   return next();
-});
-
-productModels.post("save", async function (next) {
-  const product = this;
-
-  if (product.komentar && product.komentar.length > 0) {
-    const totalRating = product.komentar.reduce(
-      (acc, comment) => acc + comment.rating,
-      0
-    );
-    product.rating = totalRating / product.komentar.length;
-    product.save();
-  } else {
-    product.rating = 0;
-  }
 });
 
 productModels.post("findOneAndUpdate", async function (doc, next) {

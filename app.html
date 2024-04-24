@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
     <script
       src="https://cdn.socket.io/4.7.5/socket.io.min.js"
       integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
@@ -12,6 +13,29 @@
     ></script>
   </head>
   <body>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <label for="name_product">Product Name:</label><br>
+      <input type="text" id="name_product" name="name_product"><br><br>
+      
+      <label for="price">Price:</label><br>
+      <input type="text" id="price" name="price"><br><br>
+      
+      <label for="description">Description:</label><br>
+      <textarea id="description" name="description"></textarea><br><br>
+      
+      <label for="categoryId">Category ID:</label><br>
+      <input type="text" id="categoryId" name="categoryId"><br><br>
+      
+      <label for="stok">Stock:</label><br>
+      <input type="text" id="stok" name="stok"><br><br>
+      
+      <label for="photo">Photos:</label><br>
+      <input type="file" id="photo" name="ImageProduct" multiple><br><br>
+      
+      <input type="submit" value="Submit">
+    </form>
+    
+    <img src="" id="img" alt="" style="width: 200px; height: 200px; object-fit: contain;">
     <div id="loginField">
       <input type="text" name="email" id="email" />
       <input type="text" name="password" id="password" />
@@ -24,9 +48,100 @@
       <button onclick="sendMsg()">SEND MSG</button>
       <button onclick="logout()">LOG OUT</button>
     </div>
+
+    <button onclick="download()">DOWNLOAD EXCEL</button>
     <script>
       let socket;
       const token = localStorage.getItem("token");
+
+
+      document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Mengumpulkan data dari formulir
+        const formData = new FormData();
+        formData.append('name_product', document.getElementById('name_product').value);
+        formData.append('price', document.getElementById('price').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('categoryId', document.getElementById('categoryId').value);
+        formData.append('stok', document.getElementById('stok').value);
+
+        // Mengumpulkan file-file foto
+        const fileInput = document.getElementById('photo');
+        for (let i = 0; i < fileInput.files.length; i++) {
+          formData.append('ImageProduct', fileInput.files[i]);
+        }
+        const bahanBakuArray = [
+          {
+            bahanBakuId: "661f56a015aa8425f5fed2cc",
+            quantityNeed: 5
+          },
+          {
+            bahanBakuId: "661f85b4ba78463065f5088e",
+            quantityNeed: 4
+          }
+        ];
+
+        for (let i = 0; i < bahanBakuArray.length; i++) {
+          formData.append('bahanBaku', JSON.stringify(bahanBakuArray[i]))
+        }
+
+        // Mengirimkan formulir dengan menggunakan fetch
+        fetch('http://localhost:4000/product/upload', {
+          headers:{
+            "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWY1NWZjMWI2YzQ5ZjlkMGFjOTdkZCIsIm5hbWUiOiJwcm9kdXNlbiIsImVtYWlsIjoicHJvZHVzZW5AZ21haWwuY29tIiwicm9sZSI6InByb2R1c2VuIiwicGhvbmUiOiIwODU4NDUxMjEwNTQ4IiwiaWF0IjoxNzEzNTEwNjgyfQ.bFN-gOsm65-lxcGj8WuOgYWN6NGcWbRS555HaLrOeOs",
+          },
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Response:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      });
+
+      $(document).ready(async function(){
+        const response = await fetch("http://localhost:4000/product/list_all", {
+              method: "GET",
+              headers: {
+                "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWRlNzJkN2NkY2ViYjFlZDFiZmJlMCIsIm5hbWUiOiJ2ZW5kb3IiLCJlbWFpbCI6InZlbmRvckBnbWFpbC5jb20iLCJyb2xlIjoidmVuZG9yIiwicGhvbmUiOiIwODU4NDUxMjEwNTEzIiwiaWF0IjoxNzEzODUxODUzfQ.95SNxRuKO-FEVVWl6W8-iC-pWcHbeb_-JaFiStAqCWI",
+                "Content-Type": "application/json",
+              },
+            });
+        const data = await response.json()
+        console.log(data)
+        document.getElementById('img').src = data.data[0].image_product[0]
+      })
+
+      async function download(){
+        try {
+          $.getJSON("testData.json", async function(data) {
+            const response = await fetch("http://localhost:4000/export/sell", {
+              method: "POST",
+              headers: {
+                "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWY1NWZjMWI2YzQ5ZjlkMGFjOTdkZCIsIm5hbWUiOiJwcm9kdXNlbiIsImVtYWlsIjoicHJvZHVzZW5AZ21haWwuY29tIiwicm9sZSI6InByb2R1c2VuIiwicGhvbmUiOiIwODU4NDUxMjEwNTQ4IiwiaWF0IjoxNzEzNDEwMDg1fQ._qXT4CSN_-BBHLpvzrgsczd2jOcGmOWVG0KrlEx1-VE",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+            const file = await response.arrayBuffer()
+            const blob = new Blob([file], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const blobUrl = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = blobUrl;
+            anchor.download = "Laporan Penjualan.xlsx"; // Isi dengan nama yang diinginkan
+            anchor.click();
+            URL.revokeObjectURL(blobUrl);
+          }).fail((error)=>{
+            console.log(error)
+          })
+        } catch (error) {
+          console.log(error)
+        }
+      }
 
       async function login() {
         const formData = {
@@ -35,7 +150,7 @@
         };
 
         try {
-          const response = await fetch("http://localhost:4000/login", {
+          const response = await fetch("http://localhost:4000/user/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

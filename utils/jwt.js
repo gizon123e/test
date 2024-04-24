@@ -5,7 +5,8 @@ console.log(config.secretKey);
 
 module.exports = {
   createToken: (token) => {
-    return jwt.sign(token, config.secretKey, { expiresIn: "24h" });
+    //masih development jadngan dlu dikasih expires
+    return jwt.sign(token, config.secretKey);
   },
   verifyToken: (token) => {
     try {
