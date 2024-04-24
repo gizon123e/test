@@ -44,9 +44,19 @@ module.exports = {
         }
     },
 
+    listProduction: async(req, res, next) =>{
+        try {
+            const produksi = await Produksi.find({userId: req.user.id})
+            if(!produksi && produksi.length === 0) return res.status(404).json({message:"Tidak ada produksi yang dijalankan"}) 
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
+
     createBahanBaku: async(req, res, next)=>{
         try {
-            const { productId, quantity, name_bahan } = req.body
+            const { quantity, name_bahan } = req.body
             console.log(new RegExp(name_bahan, "i"))
             const bahan = await BahanBaku.findOne({ 
                 userId: req.user.id,
@@ -56,7 +66,6 @@ module.exports = {
                 res.status(400).json({message: "Anda sudah memiliki bahan " + name_bahan, data: bahan})
             }else{
                 const bahan = await BahanBaku.create({
-                    productId, 
                     quantity, 
                     userId: req.user.id,
                     name: name_bahan

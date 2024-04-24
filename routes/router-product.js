@@ -11,8 +11,8 @@ const controlerProduct = require("../controler/product");
 const router = require("express").Router();
 
 // router product management
-router.get("/list_public", controlerProduct.list_product_public);
-router.get("/list", authorization, controlerProduct.list_product);
+router.get("/search_public", controlerProduct.search_product_public);
+router.get("/search", authorization, controlerProduct.search);
 router.get("/detail/:id", controlerProduct.productDetail);
 router.get('/list_all', authorization , controlerProduct.list_all)
 router.post("/upload", authorization, controlerProduct.upload);

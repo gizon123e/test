@@ -8,7 +8,7 @@ const path = require('path')
   
 module.exports = {
 
-  list_product: async (req, res, next) => {
+  search: async (req, res, next) => {
     try {
       const { search, category } = req.query;
       let handlerFilter = {};
@@ -56,7 +56,7 @@ module.exports = {
     }
   },
 
-  list_product_public: async (req, res, next) => {
+  search_product_public: async (req, res, next) => {
     try {
       const { search, category } = req.query;
       let handlerFilter = {};
@@ -170,7 +170,7 @@ module.exports = {
         const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}${1}${path.extname(req.files.ImageProduct.name)}`;
         req.files.ImageProduct.mv(pathImg, function(err){
           if(err) return res.status(507).json({message:"Ada masalah saat mencoba nyimpan file gambar", error: err});
-          imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.username}${1}${path.extname(req.files.ImageProduct.name)}`);
+          imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}${1}${path.extname(req.files.ImageProduct.name)}`);
         })
       };
 

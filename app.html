@@ -119,7 +119,7 @@
       async function download(){
         try {
           $.getJSON("testData.json", async function(data) {
-            const response = await fetch("http://localhost:4000/report/export", {
+            const response = await fetch("http://localhost:4000/export/sell", {
               method: "POST",
               headers: {
                 "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWY1NWZjMWI2YzQ5ZjlkMGFjOTdkZCIsIm5hbWUiOiJwcm9kdXNlbiIsImVtYWlsIjoicHJvZHVzZW5AZ21haWwuY29tIiwicm9sZSI6InByb2R1c2VuIiwicGhvbmUiOiIwODU4NDUxMjEwNTQ4IiwiaWF0IjoxNzEzNDEwMDg1fQ._qXT4CSN_-BBHLpvzrgsczd2jOcGmOWVG0KrlEx1-VE",
@@ -132,7 +132,7 @@
             const blobUrl = URL.createObjectURL(blob);
             const anchor = document.createElement('a');
             anchor.href = blobUrl;
-            anchor.download = "Laporan Penjualan"; // Isi dengan nama yang diinginkan
+            anchor.download = "Laporan Penjualan.xlsx"; // Isi dengan nama yang diinginkan
             anchor.click();
             URL.revokeObjectURL(blobUrl);
           }).fail((error)=>{

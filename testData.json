@@ -1,7 +1,43 @@
 {
+    "message": "Berikut Data Penjualan untuk Produk Ini",
     "data": {
         "namaProduct": "Intel i5 9400f",
         "dataPenjualan": [
+            {
+                "tanggal": "25 Maret",
+                "terjual": 39,
+                "waktu": "2024-03-25T11:46:39.619Z"
+            },
+            {
+                "tanggal": "26 Maret",
+                "terjual": 38,
+                "waktu": "2024-03-26T11:46:39.589Z"
+            },
+            {
+                "tanggal": "27 Maret",
+                "terjual": 36,
+                "waktu": "2024-03-27T11:46:39.560Z"
+            },
+            {
+                "tanggal": "28 Maret",
+                "terjual": 91,
+                "waktu": "2024-03-28T11:46:39.526Z"
+            },
+            {
+                "tanggal": "29 Maret",
+                "terjual": 26,
+                "waktu": "2024-03-29T11:46:39.493Z"
+            },
+            {
+                "tanggal": "30 Maret",
+                "terjual": 31,
+                "waktu": "2024-03-30T11:46:39.465Z"
+            },
+            {
+                "tanggal": "31 Maret",
+                "terjual": 52,
+                "waktu": "2024-03-31T11:46:39.435Z"
+            },
             {
                 "tanggal": "1 April",
                 "terjual": 44,
@@ -103,6 +139,6 @@
                 "waktu": "2024-04-20T11:46:39.736Z"
             }
         ],
-        "totalTerjual": 948
+        "totalTerjual": 1261
     }
 }
