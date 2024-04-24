@@ -6,17 +6,17 @@ const Order = require('../../models/models-orders')
 module.exports = {
     getAllOrderDistributtor: async (req, res, next) => {
         try {
-            if (req.user.role === "distributtor") {
+            if (req.user.role === "distributor") {
                 const distributtor = await Distributtor.findOne({ userId: req.user.id })
                 if (!distributtor) {
                     return res.status(404).json({ message: "distributtor not found" })
                 }
 
-                const dataDistributtor = await OrderDistributtor.find({ distributtorId: distributtor._id })
+                const dataDistributtor = await OrderDistributtor.find({ distributorId: distributtor._id })
                     .populate('tujuan_alamat', '-userId')
                     .populate('user_orderId', "-password")
                     .populate({
-                        path: 'order_product',
+                        path: 'orderId',
                         select: '-userId -addressId -date_order -status',
                         populate: {
                             path: 'product.productId',
@@ -24,13 +24,13 @@ module.exports = {
                         }
                     })
                     .populate({
-                        path: "distributtorId",
+                        path: "distributorId",
                         populate: {
                             path: "userId",
                             select: "-password"
                         }
                     })
-
+                
                 return res.status(200).json({ message: 'get all order distributtor success', datas: dataDistributtor })
             }
 
@@ -68,7 +68,7 @@ module.exports = {
 
     createOrderDistributtor: async (req, res, next) => {
         try {
-            const { distributtorId, order_product } = req.body
+            const { distributorId, orderId } = req.body
 
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
@@ -76,12 +76,12 @@ module.exports = {
             const yyyy = today.getFullYear();
             const date_order = `${dd}/${mm}/${yyyy}`;
 
-            const orderId = await Order.findOne({ _id: order_product })
-            if (!orderId) return res.status(404).json({ error: 'data order_product not found' })
+            const order = await Order.findById(orderId)
+            if (!order) return res.status(404).json({ error: 'data orderId not found' })
 
             if (req.user.role === "distributtor") return res.status(400).json({ error: "anda tidak dapat create order distributtor" })
 
-            const dataOrder = await OrderDistributtor.create({ distributtorId, order_product, user_orderId: req.user.id, date_order, tujuan_alamat: orderId.addressId._id })
+            const dataOrder = await OrderDistributtor.create({ distributorId, orderId, user_orderId: req.user.id, date_order, tujuan_alamat: order.addressId._id })
             console.log(dataOrder)
             res.status(201).json({ message: 'create data order distributtor success', datas: dataOrder })
 
@@ -98,7 +98,7 @@ module.exports = {
     },
     updateOrderDistributtor: async (req, res, next) => {
         try {
-            const { status_order, optimasi_hari } = req.body
+            const { status_order, estimasi_hari } = req.body
 
             const dataDetailOrderDistributtor = await OrderDistributtor.findOne({ _id: req.params.id })
             if (!dataDetailOrderDistributtor) return res.status(404).json({ error: `data ${req.params.id} not found` })
@@ -107,23 +107,23 @@ module.exports = {
 
             let dataOrder
             if (req.user.role === "distributtor") {
-                if (dataDetailOrderDistributtor.status_order === 'Cancel' || dataDetailOrderDistributtor.status_order === 'Verifikasi Penerimah') {
+                if (dataDetailOrderDistributtor.status_order === 'Cancel' || dataDetailOrderDistributtor.status_order === 'Verifikasi Penerima') {
 
                     return res.status(400).json({ error: "anda sudah tidak dapat update status order" })
 
                 } else {
-                    if (!optimasi_hari) return res.status(400).json({ error: 'data optimasi_hari harus di isi' })
+                    if (!estimasi_hari) return res.status(400).json({ error: 'data estimasi_hari harus di isi' })
                     if (status_order === 'Verifikasi Pengiriman') {
-                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, optimasi_hari }, { new: true })
+                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, estimasi_hari }, { new: true })
                     } else {
                         return res.status({ error: "status order tidak valid" })
                     }
                 }
             } else {
                 if (dataDetailOrderDistributtor.status_order === 'Verifikasi Pengiriman') {
-                    if (status_order === 'Verifikasi Penerimah') {
+                    if (status_order === 'Verifikasi Penerima') {
 
-                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, optimasi_hari }, { new: true })
+                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, estimasi_hari }, { new: true })
 
                     } else {
                         return res.status(400).json({ error: "anda sudah tidak dapat update status order" })
@@ -131,12 +131,12 @@ module.exports = {
                 } else if (dataDetailOrderDistributtor.status_order === 'Proses') {
                     if (status_order === 'Cancel') {
 
-                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, optimasi_hari }, { new: true })
+                        dataOrder = await OrderDistributtor.findByIdAndUpdate({ _id: req.params.id }, { status_order, estimasi_hari }, { new: true })
 
                     } else {
                         return res.status(400).json({ error: "status order tidak valid" })
                     }
-                } else if (dataDetailOrderDistributtor.status_order === 'Verifikasi Penerimah') {
+                } else if (dataDetailOrderDistributtor.status_order === 'Verifikasi Penerima') {
                     return res.status(400).json({ error: "anda sudah tidak dapat update status order" })
                 }
             }
@@ -160,7 +160,7 @@ module.exports = {
             if (!orderDistributtor) return res.status(404).json({ error: `data id ${req.params.id} not found` })
 
             await OrderDistributtor.deleteOne({ _id: req.params.id })
-            res.status(200).json({ message: `data id ${req.params.id} success` })
+            res.status(200).json({ message: `data id ${req.params.id} deleted successfully` })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({

@@ -14,9 +14,10 @@ app.use(cors());
 app.use(logger("dev"));
 app.use(cookieParser());
 app.use(express.json());
-app.use(bodyParser.json())
-app.use('/public', express.static(path.join(__dirname, 'public')))
+app.use(bodyParser.json());
+app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload())
 global.__basedir = __dirname;
 
 // router
@@ -30,8 +31,8 @@ app.use("/report", require("./routes/router-laporan"));
 app.use("/produsen", require("./routes/router-produsen"));
 app.use("/comment", require("./routes/router-komentar"));
 app.use("/export", require("./routes/router-export"));
-app.use("/distributtor", require('./routes/router-distributtor'))
-app.use('/order-distributtor', require('./routes/router-order-distributtor'))
+app.use("/distributor", require('./routes/router-distributtor'))
+app.use('/order-distributor', require('./routes/router-order-distributtor'))
 
 // midelware error
 app.use(require("./midelware/error-midelware"));

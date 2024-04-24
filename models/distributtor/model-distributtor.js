@@ -16,7 +16,7 @@ const modelDistributtor = mongoose.Schema({
     },
     armada_pengiriman: {
         type: String,
-        enum: ['Speda Motor', 'Mobil', 'Truck', 'Mobil Box'],
+        enum: ['Sepeda Motor', 'Mobil', 'Truck', 'Mobil Box'],
         message: '{VALUE} is not supported',
         required: [true, 'armada_pengiriman harus di isi']
     },
@@ -49,8 +49,8 @@ const modelDistributtor = mongoose.Schema({
         type: Number,
         required: [true, 'harga ongkir harus di isi']
     }
-}, { timestamp: true })
+}, { timestamp: true });
 
-const Distributtor = mongoose.model('Distributtor', modelDistributtor)
+const Distributtor = mongoose.model('Distributtor', modelDistributtor);
 
-module.exports = Distributtor
+module.exports = Distributtor;

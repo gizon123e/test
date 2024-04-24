@@ -5,7 +5,7 @@ const modelOrderDistributtor = mongoose.Schema({
         type: String,
         required: [true, 'date_order harus di isi']
     },
-    distributtorId: {
+    distributorId: {
         type: mongoose.Types.ObjectId,
         required: [true, 'distributtorId harus di isi'],
         ref: 'Distributtor'
@@ -20,7 +20,7 @@ const modelOrderDistributtor = mongoose.Schema({
         required: [true, 'userOrderId harus di isi'],
         ref: 'User'
     },
-    order_product: {
+    orderId: {
         type: mongoose.Types.ObjectId,
         required: [true, 'productId harus di isi'],
         ref: 'Orders'
@@ -28,10 +28,10 @@ const modelOrderDistributtor = mongoose.Schema({
     status_order: {
         type: String,
         required: [true, 'statusOrder harus di isi'],
-        enum: ['Proses', 'Verifikasi Pengiriman', 'Verifikasi Penerimah', 'Cancel'],
+        enum: ['Proses', 'Verifikasi Pengiriman', 'Verifikasi Penerima', 'Cancel'],
         default: 'Proses'
     },
-    optimasi_hari: {
+    estimasi_hari: {
         type: Number,
         required: false,
         default: null

@@ -52,6 +52,8 @@ module.exports = {
 
     createDistributtor: async (req, res, next) => {
         try {
+            if(req.user.role != "distributor") return res.status(403).json({message:"User bukan distributor!"});
+
             const { name_kantor, no_telepon, armada_pengiriman, name_penanggung_jawab, nik_ktp, addressId, jam_oprasi, harga_ongkir } = req.body;
             const { image_ktp, image_sim } = req.files;
 

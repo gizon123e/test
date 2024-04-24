@@ -34,7 +34,7 @@ const userModels = mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["vendor", "konsumen", "produsen", "supplier", "distributtor"],
+      enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
       message: "{VALUE} is not supported",
       required: true,
     },
