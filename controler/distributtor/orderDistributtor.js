@@ -155,10 +155,21 @@ module.exports = {
     },
 
     deleteOrderDistributtor: async (req, res, next) => {
-        const orderDistributtor = await OrderDistributtor.findOne({ _id: req.params.id })
-        if (!orderDistributtor) return res.status(404).json({ error: `data id ${req.params.id} not found` })
+        try {
+            const orderDistributtor = await OrderDistributtor.findOne({ _id: req.params.id })
+            if (!orderDistributtor) return res.status(404).json({ error: `data id ${req.params.id} not found` })
 
-        await OrderDistributtor.deleteOne({ _id: req.params.id })
-        res.status(200).json({ message: `data id ${req.params.id} success` })
+            await OrderDistributtor.deleteOne({ _id: req.params.id })
+            res.status(200).json({ message: `data id ${req.params.id} success` })
+        } catch (error) {
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
     }
 }

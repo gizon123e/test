@@ -3,6 +3,10 @@ const express = require("express");
 const cors = require("cors");
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
+const bodyParser = require('body-parser')
+const fileUpload = require('express-fileupload');
+const path = require('path')
+
 const websocket = require("./websocket/index-ws");
 const app = express();
 
@@ -10,7 +14,10 @@ app.use(cors());
 app.use(logger("dev"));
 app.use(cookieParser());
 app.use(express.json());
+app.use(bodyParser.json())
+app.use('/public', express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload())
 
 // router
 app.use('/user', require('./routes/router-user'))
