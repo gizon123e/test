@@ -1,6 +1,6 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
-const Category = require("../models/model-category");
+const Category = require("../models/model-specific-category");
 const Performance = require('../models/model-laporan-kinerja-product');
 const BahanBaku = require("../models/models-bahan_baku");
 const SalesReport = require("../models/model-laporan-penjualan");
@@ -33,10 +33,12 @@ module.exports = {
         .populate("userId", "-password")
         .populate("categoryId");
 
+      let datas = []
       
-      
-      const datas = list_product.filter((data)=>{
+      if(!req.user){
+        datas = list_product.filter((data)=>{
         const user = req.user.role
+        if(!user) return data.userId.role === "vendor";
         switch(user){
           case "konsumen":
             return data.userId.role === "vendor";
@@ -45,47 +47,8 @@ module.exports = {
           case "supplier":
             return data.userId.role === "produsen";
         }
-      })
-      
-      if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
-
-      return res.status(200).json({ datas });
-    } catch (error) {
-      console.log(error);
-      next(error)
-    }
-  },
-
-  search_product_public: async (req, res, next) => {
-    try {
-      const { search, category } = req.query;
-      let handlerFilter = {};
-
-      if (search) {
-        handlerFilter = {
-          ...handlerFilter,
-          name_product: { $regex: new RegExp(search, "i") },
-        };
+      });
       }
-
-      if (category) {
-        const categoryResoul = await Category.findOne({
-          name: { $regex: category, $options: "i" },
-        });
-
-        if (!categoryResoul) return res.status(404).json({ message: `Tidak Ditemukan product dengan kategori ${category}` })
-        handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
-      }
-
-      const list_product = await Product.find(handlerFilter)
-        .populate("userId", "-password")
-        .populate("categoryId");
-
-      
-      
-      const datas = list_product.filter((data)=>{
-        return data.userId.role === "vendor";
-      })
       
       if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
 

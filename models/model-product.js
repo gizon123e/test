@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 require("./model-auth-user");
-require("./model-category");
+require("./model-specific-category");
 require("./models-bahan_baku")
 
 const productModels = mongoose.Schema(
