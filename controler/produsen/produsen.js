@@ -6,7 +6,8 @@ module.exports = {
 
     getAllProdusen: async (req, res, next) => {
         try {
-            const dataProdusen = await Produsen.find().populate('userId', '-password').populate('addressId')
+            const dataProdusen = await Produsen.find().populate('userId', '-password').populate('addressId');
+            if(!dataProdusen || dataProdusen.length === 0) return res.status(404).json({message: "Tidak ada Produsen terdaftar"})
             return res.status(200).json({
                 message: 'get data all Produsen success',
                 datas: dataProdusen
@@ -117,6 +118,7 @@ module.exports = {
     updateProdusen: async (req, res, next) => {
         try {
             const produsen = await Produsen.findById(req.params.id);
+            if(!produsen) return res.status(404).json({message: `Produsen dengan id ${req.params.id} tidak ditemukan`});
             let filePath = produsen.legalitasBadanUsaha
             if(req.body.noTeleponKantor){
                 const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
@@ -144,14 +146,15 @@ module.exports = {
             }
 
 
-            await Produsen.updateMany(
-                req.params.id,
+            const updatedData = await Produsen.findByIdAndUpdate(
+                req.params.id ,
                 { ...req.body, legalitasBadanUsaha: filePath },
+                { new: true }
             );
 
             return res.status(200).json({
                 message: 'Produsen updated successfully',
-                data: produsen
+                data: updatedData
             });
         } catch (error) {
             if (error && error.name === 'ValidationError') {

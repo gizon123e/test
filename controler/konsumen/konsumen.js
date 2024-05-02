@@ -6,20 +6,21 @@ module.exports = {
 
     getAllKonsumen: async (req, res, next) => {
         try {
-            const dataKonsumen = await Konsumen.find().populate('userId', '-password').populate('addressId')
+            const dataKonsumen = await Konsumen.find().populate('userId', '-password').populate('addressId');
+            if(!dataKonsumen || dataKonsumen.length === 0) return res.status(404).json({message: "Tidak ada Konsumen terdaftar"});
             return res.status(200).json({
                 message: 'get data all Konsumen success',
                 datas: dataKonsumen
-            })
+            });
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
                     error: true,
                     message: error.message,
                     fields: error.fields
-                })
-            }
-            next(error)
+                });
+            };
+            next(error);
         }
     },
 
@@ -117,6 +118,7 @@ module.exports = {
     updateKonsumen: async (req, res, next) => {
         try {
             const konsumen = await Konsumen.findById(req.params.id);
+            if(!konsumen) return res.status(404).json({message: `Konsumen dengan id ${req.params.id} tidak ditemukan`});
             let filePath = konsumen.legalitasBadanUsaha
             if(req.body.noTeleponKantor){
                 const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
@@ -144,14 +146,11 @@ module.exports = {
             }
 
 
-            await Konsumen.updateMany(
-                req.params.id,
-                { ...req.body, legalitasBadanUsaha: filePath },
-            );
+            const updatedData = await Konsumen.findByIdAndUpdate( req.params.id, { ...req.body, legalitasBadanUsaha: filePath }, {new: true});
 
             res.status(200).json({
                 message: 'Konsumen updated successfully',
-                data: konsumen
+                data: updatedData
             });
         } catch (error) {
             if (error && error.name === 'ValidationError') {

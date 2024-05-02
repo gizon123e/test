@@ -21,6 +21,9 @@ app.use(fileUpload())
 global.__basedir = __dirname;
 
 // router
+app.get('', (req, res)=>{
+  res.send("Hello, Server is Online");
+})
 app.use('/user', require('./routes/router-user'));
 app.use('/product', require('./routes/router-product'));
 app.use('/category', require('./routes/router-category'));
@@ -34,7 +37,7 @@ app.use("/export", require("./routes/router-export"));
 app.use("/distributor", require('./routes/router-distributtor'));
 app.use("/vendor", require('./routes/router-vendor'));
 app.use("/supplier", require('./routes/router-supplier'));
-app.use("/data/produsen", require('./routes/router-produsen'));
+app.use("/data/produsen", require('./routes/router-data-produsen'));
 app.use("/konsumen", require('./routes/router-konsumen'));
 app.use('/order-distributor', require('./routes/router-order-distributtor'));
 
@@ -43,7 +46,7 @@ app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
   console.log("connection express success");
-  // websocket.listen(3000, () => {
-  //   console.log("Connection websocket success");
-  // });
+  websocket.listen(3000, () => {
+    console.log("Connection websocket success");
+  });
 });

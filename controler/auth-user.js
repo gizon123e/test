@@ -84,7 +84,7 @@ module.exports = {
 
       const jwtToken = jwt.createToken(tokenPayload);
 
-      res.status(201).json({
+      res.status(200).json({
         error: false,
         message: "login success",
         datas: {

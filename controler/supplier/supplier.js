@@ -7,6 +7,7 @@ module.exports = {
     getAllSupplier: async (req, res, next) => {
         try {
             const dataSupplier = await Supplier.find().populate('userId', '-password').populate('addressId')
+            if(!dataSupplier || dataSupplier.length === 0) return res.status(404).json({message: "Tidak ada Supplier terdaftar"})
             return res.status(200).json({
                 message: 'get data all supplier success',
                 datas: dataSupplier
@@ -116,7 +117,10 @@ module.exports = {
 
     updateSupplier: async (req, res, next) => {
         try {
-            const supplier = await Supplier.findById(req.params.id);
+            const id = req.params.id
+            const supplier = await Supplier.findById(id);
+            if(!supplier) return res.status(404).json({message: `Supplier dengan id ${id} tidak ditemukan`});
+            console.log(id)
             let filePath = supplier.legalitasBadanUsaha
             if(req.body.noTeleponKantor){
                 const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
@@ -144,14 +148,15 @@ module.exports = {
             }
 
 
-            await Supplier.updateMany(
-                req.params.id,
+            const updatedData = await Supplier.findByIdAndUpdate(
+                id ,
                 { ...req.body, legalitasBadanUsaha: filePath },
+                { new: true }
             );
 
             return res.status(200).json({
                 message: 'Supplier updated successfully',
-                data: supplier
+                data: updatedData
             });
         } catch (error) {
             if (error && error.name === 'ValidationError') {
