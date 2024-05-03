@@ -22,6 +22,7 @@ global.__basedir = __dirname;
 
 // router
 app.get('', (req, res)=>{
+  console.log(req.query)
   res.send("Hello, Server is Online");
 })
 app.use('/user', require('./routes/router-user'));
@@ -40,6 +41,7 @@ app.use("/supplier", require('./routes/router-supplier'));
 app.use("/data/produsen", require('./routes/router-data-produsen'));
 app.use("/konsumen", require('./routes/router-konsumen'));
 app.use('/order-distributor', require('./routes/router-order-distributtor'));
+app.use('/payment', require('./routes/router-payment'));
 
 // midelware error
 app.use(require("./midelware/error-midelware"));

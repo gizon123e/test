@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 
 const config = require("../config/config-env");
-console.log(config.secretKey);
 
 module.exports = {
   createToken: (token) => {
@@ -19,4 +18,11 @@ module.exports = {
       }
     }
   },
+  verify: (token) => {
+    try{
+      return jwt.verify(token, config.secretKey);
+    }catch{
+      return null
+    }
+  }
 };

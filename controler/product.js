@@ -1,27 +1,39 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
-const Category = require("../models/model-specific-category");
+const SpecificCategory = require("../models/model-specific-category");
 const Performance = require('../models/model-laporan-kinerja-product');
 const BahanBaku = require("../models/models-bahan_baku");
 const SalesReport = require("../models/model-laporan-penjualan");
-const path = require('path')
-  
+const path = require('path');
+const jwt = require('../utils/jwt');
+const { getToken } = require('../utils/getToken');
+
 module.exports = {
 
   search: async (req, res, next) => {
     try {
-      const { search, category } = req.query;
+
+      function auth(){
+        const token = getToken(req)
+      
+        const verifyToken = jwt.verify(token);
+        if(!verifyToken) return null
+        return verifyToken
+      };
+
+      const { name, category } = req.query;
       let handlerFilter = {};
 
-      if (search) {
+      if (name) {
+        console.log(name)
         handlerFilter = {
           ...handlerFilter,
-          name_product: { $regex: new RegExp(search, "i") },
+          name_product: { $regex: new RegExp(name, "i") },
         };
       }
 
       if (category) {
-        const categoryResoul = await Category.findOne({
+        const categoryResoul = await SpecificCategory.findOne({
           name: { $regex: category, $options: "i" },
         });
 
@@ -33,24 +45,27 @@ module.exports = {
         .populate("userId", "-password")
         .populate("categoryId");
 
+      req.user = auth();
       let datas = []
-      
       if(!req.user){
         datas = list_product.filter((data)=>{
-        const user = req.user.role
-        if(!user) return data.userId.role === "vendor";
-        switch(user){
-          case "konsumen":
-            return data.userId.role === "vendor";
-          case "vendor":
-            return data.userId.role === "supplier";
-          case "supplier":
-            return data.userId.role === "produsen";
-        }
-      });
+          return data.userId.role === "vendor";
+        });
+      }else{
+        datas = list_product.filter((data)=>{
+          switch(req.user.role){
+            case "konsumen":
+              return data.userId.role === "vendor";
+            case "vendor":
+              return data.userId.role === "supplier";
+            case "supplier":
+              return data.userId.role === "produsen";
+          };
+        });
       }
       
       if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
+      if( (!datas || datas.length === 0) && (list_product || list_product.length > 0) ) return res.status(403).json({message: "Produk yang dicari tidak boleh untuk user " + req.user.role})
 
       return res.status(200).json({ datas });
     } catch (error) {

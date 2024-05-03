@@ -15,6 +15,8 @@ module.exports = {
                 })
                 .populate('userId', '-password')
 
+            if(!dataCart || dataCart.length == 0) return res.status(404).json({message:"User belum memiliki cart"});
+
             return res.status(200).json({ datas: dataCart })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
@@ -32,7 +34,10 @@ module.exports = {
         try {
             const { productId, quantity } = req.body
 
-            const vaildateProduct = await Product.findOne({ _id: productId })
+            const vaildateProduct = await Product.findById(productId).populate('userId');
+            
+            if(vaildateProduct.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
+
             if (!vaildateProduct) {
                 return res.status(400).json({
                     error: true,
@@ -40,10 +45,11 @@ module.exports = {
                 })
             }
 
-            if (req.user.role === 'konsumen' || req.user.role === 'konsumen') {
-                const validateCart = await Carts.findOne({ productId })
+            if (req.user.role === 'konsumen') {
+                const validateCart = await Carts.findOne({ productId }).populate('userId')
 
                 if (validateCart) {
+                    
                     const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
 
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
