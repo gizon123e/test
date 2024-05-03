@@ -87,7 +87,6 @@ module.exports = {
     createOrder: async (req, res, next) => {
         try {
             const { product = [], addressId, cartId = [] } = req.body
-            console.log(req.user)
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -98,32 +97,32 @@ module.exports = {
             let total_price = 0
 
             if (cartId.length !== 0) {
-                for (const element of cartId) {
-                    const dataCart = await Carts.findOne({ _id: element }).populate('productId').populate('userId')
-
-                    if( req.user.role === "konsumen" && ( !dataCart.productId.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor`})
-                    if( req.user.role === "vendor" && ( !dataCart.productId.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier`})
-                    if( req.user.role === "supplier" && ( !dataCart.productId.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen`})
-
-
-                    if(dataCart){
-                        total_price += dataCart.total_price
-
-                        const data = {
-                            productId: dataCart.productId,
-                            quantity: dataCart.quantity
-                        }
-
-                        dataArrayProduct.push(data);
-
-                        await Carts.deleteOne({ _id: element })
-                    }else{
-                        return res.status(404).json({message: `Cart dengan Id ${element} tidak ditemukan`})
+                const carts = await Carts.find({_id: { $in: cartId }}).populate({
+                    path: "productId",
+                    populate:{
+                        path: "userId"
                     }
+                });
+            
+                //cek cartId yang diberikan
+                cartId.forEach((id)=>{
+                    const foundCartId = carts.find((element => element._id.toString() === id ));
+                    if(!foundCartId) return res.status(404).json({message: `cart dengan id: ${id} tidak ditemukan`});
+                });
+
+                for (const cart of carts){
+                    if(cart.userId.toString() !== req.user.id) return res.status(403).json({message:"Gak bisa pake cart orang lain"});
+                    if( req.user.role === "konsumen" && ( cart.productId.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor`});
+                    if( req.user.role === "vendor" && ( cart.productId.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier`});
+                    if( req.user.role === "supplier" && ( cart.productId.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen`});
+                    
+                    total_price += cart.total_price;
+                    dataArrayProduct.push({productId: cart.productId, quantity: cart.quantity});
+                    await Carts.deleteOne({_id: cart._id});
                 }
             } else if (product.length > 0) {
                 for (const element of product) {
-                    const dataTotalProduct = await Product.findOne({ _id: element.productId }).populate('userId');
+                    const dataTotalProduct = await Product.findById(element.productId).populate('userId');
 
                     if( req.user.role === "konsumen" && ( dataTotalProduct.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor. Produk ini dari user role ${dataTotalProduct.userId.role}`})
                     if( req.user.role === "vendor" && ( dataTotalProduct.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier. Produk ini dari user role ${dataTotalProduct.userId.role}`})
