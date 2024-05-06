@@ -5,8 +5,7 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload');
-const path = require('path')
-
+const path = require('path');
 const websocket = require("./websocket/index-ws");
 const app = express();
 
@@ -17,14 +16,14 @@ app.use(express.json());
 app.use(bodyParser.json({limit: '250mb'}));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-app.use(fileUpload())
+app.use(fileUpload());
 global.__basedir = __dirname;
 
 // router
 app.get('', (req, res)=>{
-  console.log(req.query)
-  res.send("Hello, Server is Online");
-})
+  res.send("Server is working!");
+});
+app.use('/verify-otp', require('./routes/router-verifyOtp'));
 app.use('/user', require('./routes/router-user'));
 app.use('/product', require('./routes/router-product'));
 app.use('/category', require('./routes/router-category'));

@@ -1,5 +1,6 @@
 const User = require("../models/model-auth-user");
 
+const sendOTP = require("../utils/sendOtp").sendOtp;
 const bcrypt = require("bcrypt");
 const jwt = require("../utils/jwt");
 
@@ -23,16 +24,22 @@ module.exports = {
 
       const handleHashPassword = await bcrypt.hash(password, 10);
 
+      const code_OTP = Math.floor(1000 + Math.random() * 9000);
+
       const newUser = await User.create({
         username,
         email,
         password: handleHashPassword,
         role,
         phone,
+        code_OTP
       })
 
       const newUserWithoutPassword = { ...newUser._doc };
       delete newUserWithoutPassword.password;
+      delete newUserWithoutPassword.code_OTP
+
+      sendOTP(email, code_OTP);
 
       return res.status(201).json({
         error: false,
@@ -54,25 +61,29 @@ module.exports = {
 
   login: async (req, res, next) => {
     try {
-      const { email, password } = req.body;
-      const newUser = await User.findOne({ email });
-      if (!newUser) {
-        return res.status(400).json({
-          error: true,
-          message: "invalid email / password",
-        });
+      const { email, password, phone } = req.body;
+      let newUser;
+      if(email && !phone){
+        newUser = await User.findOne({ email });
+      }else if(phone && !email){
+        newUser = await User.findOne({ phone });
+      }else if(phone && email){
+        return res.status(400).json({message: "Masukan hanya email atau no hp aja cukup ya kalo untuk login"});
       }
+
+      if(!newUser) return res.status(400).json({message: "Email atau No Hp yang dimasukkan tidak ditemukan"});
 
       const validationPassword = await bcrypt.compare(
         password,
         newUser.password
       );
+
       if (!validationPassword) {
         return res.status(400).json({
           error: true,
           message: "invalid email / password",
         });
-      }
+      };
 
       const tokenPayload = {
         id: newUser._id,
@@ -84,15 +95,13 @@ module.exports = {
 
       const jwtToken = jwt.createToken(tokenPayload);
 
-      res.status(200).json({
+      return res.status(200).json({
         error: false,
         message: "login success",
         datas: {
-          name: newUser.username,
-          email: newUser.email,
-          role: newUser.role,
-          phone: newUser.phone,
+          ...tokenPayload,
           token: jwtToken,
+          kode_otp: 1111
         },
       });
     } catch (err) {
