@@ -3,7 +3,8 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 module.exports = {
-    sendOtp: (email, kode) => {
+    sendOtp: (email, kode, status) => {
+        const subject = status === "login" ? "Login Otp Code" : "Register Otp Code"
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 465,
@@ -18,7 +19,7 @@ module.exports = {
         transporter.sendMail({
             from: process.env.EMAIL_SENDER,
             to: email,
-            subject: "Registration OTP Code",
+            subject: subject,
             text: "Ini kode otp: " + kode,
             auth: {
               user: process.env.EMAIL_SENDER,

@@ -29,8 +29,8 @@ module.exports = (secretKey) => {
 }
 
 function generate(secretKey){
-    const totp = jsotp.TOTP("SECRET")
-    const kode =  totp.verify(329414)
-    console.log(kode)
+    const totp = jsotp.TOTP("SECRET", 300)
+    // const kode =  totp.verify(329414)
+    console.log(totp)
 }
 generate()

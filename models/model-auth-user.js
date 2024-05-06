@@ -43,9 +43,13 @@ const userModels = mongoose.Schema(
       required: [true, 'verifikasi harus di isi'],
       default: false
     },
-    code_OTP:{
-      type: String,
-      required: false
+    codeOtp:{
+      code: {
+        type: String
+      },
+      expire: {
+        type: Date
+      }
     }
   },
   { temestamp: true }

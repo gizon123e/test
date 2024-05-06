@@ -1,5 +1,4 @@
 const User = require("../models/model-auth-user");
-
 const sendOTP = require("../utils/sendOtp").sendOtp;
 const bcrypt = require("bcrypt");
 const jwt = require("../utils/jwt");
@@ -24,7 +23,12 @@ module.exports = {
 
       const handleHashPassword = await bcrypt.hash(password, 10);
 
-      const code_OTP = Math.floor(1000 + Math.random() * 9000);
+      const kode_random = Math.floor(1000 + Math.random() * 9000);
+      const kode = await bcrypt.hash(kode_random.toString(), 3)
+      const codeOtp = {
+        code: kode,
+        expire: new Date(new Date().getTime() + 5 * 60 * 1000)
+      }
 
       const newUser = await User.create({
         username,
@@ -32,14 +36,14 @@ module.exports = {
         password: handleHashPassword,
         role,
         phone,
-        code_OTP
+        codeOtp
       })
 
       const newUserWithoutPassword = { ...newUser._doc };
       delete newUserWithoutPassword.password;
-      delete newUserWithoutPassword.code_OTP
+      delete newUserWithoutPassword.codeOtp
 
-      sendOTP(email, code_OTP);
+      sendOTP(email, kode_random, "register");
 
       return res.status(201).json({
         error: false,
@@ -93,6 +97,19 @@ module.exports = {
         phone: newUser.phone,
       };
 
+      const kode_random = Math.floor(1000 + Math.random() * 9000);
+      const kode = await bcrypt.hash(kode_random.toString(), 3);
+      
+      const codeOtp = {
+        code: kode,
+        expire: new Date(new Date().getTime() + 5 * 60 * 1000)
+      };
+
+      newUser.codeOtp = codeOtp
+      await newUser.save();
+
+      sendOTP(email, kode_random, "login");
+
       const jwtToken = jwt.createToken(tokenPayload);
 
       return res.status(200).json({
@@ -101,7 +118,6 @@ module.exports = {
         datas: {
           ...tokenPayload,
           token: jwtToken,
-          kode_otp: 1111
         },
       });
     } catch (err) {

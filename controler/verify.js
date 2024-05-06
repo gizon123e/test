@@ -1,15 +1,18 @@
 const User = require("../models/model-auth-user");
+const bcrypt = require("bcrypt");
+
 module.exports = {
     verifyOtpRegister: async (req, res, next) =>{
         try {
-            const { kode_otp, id } = req.body
+            const { kode_otp, id } = req.body;
             const user = await User.findById(id);
-            if(kode_otp.toString() == user.code_OTP){
-                await user.updateOne({verifikasi: true});
-                res.status(200).json({message: "Berhasil terverikasi"});
-            }else{
-                res.status(403).json({message: "Kode OTP Salah"});
-            }
+            if(!user) return res.status(400).json({message:"User tidak ditemukan"});
+            if(user.verifkasi) return res.status(400).json({message: "User sudah terverifikasi"});
+            if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
+            const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
+            if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
+            await User.findByIdAndUpdate(id, {verifikasi: true});
+            return res.status(200).json({message: "Verifikasi Berhasil"});
         } catch (error) {
             console.log(error);
             next(error)
@@ -17,15 +20,18 @@ module.exports = {
     },
     verifyOtpLogin: async (req, res, next ) =>{
         try {
-            const { kode_otp } = req.body;
-            console.log(kode_otp)
-            if(kode_otp === "1111"){
-                return res.status(200).json({message: "Berhasil terverifikasi"});
-            }else{
-                return res.status(403).json({message: "Gagal terverifikasi"});
-            }
+            const { kode_otp, id } = req.body;
+            const user = await User.findById(id);
+            if(!user) return res.status(400).json({message:"User tidak ditemukan"});
+            if(user.verifkasi) return res.status(400).json({message: "User sudah terverifikasi"});
+            if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
+            const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
+            if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
+            await User.findByIdAndUpdate(id, {verifikasi: true});
+            return res.status(200).json({message: "Verifikasi Berhasil"});
         } catch (error) {
-            
+            console.log(error);
+            next(error)
         }
     }
 }
