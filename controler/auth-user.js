@@ -4,52 +4,69 @@ const bcrypt = require("bcrypt");
 const jwt = require("../utils/jwt");
 
 module.exports = {
-  register: async (req, res, next) => {
+
+  sendOtpWithEmail: async (req, res, next) =>{
     try {
-      const { username, email, password, role, phone } = req.body;
+      const { email } = req.body;
 
       const isEmailRegister = await User.exists({ email });
+
       if (isEmailRegister) {
         return res.status(400).json({ error: "email sudah terdaftar" });
-      }
-
-      const isPhoneValidate = await User.exists({ phone })
-      if (isPhoneValidate) return res.status(400).json({ error: "phone sudah terdaftar" })
-
-      const regexNoTelepon =
-        /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
-      if (!regexNoTelepon.test(phone))
-        return res.status(400).json({ error: "no telepon tidak valid" });
-
-      const handleHashPassword = await bcrypt.hash(password, 10);
+      };
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
-      const kode = await bcrypt.hash(kode_random.toString(), 3)
+      const kode = await bcrypt.hash(kode_random.toString(), 3);
+
       const codeOtp = {
         code: kode,
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
-      }
+      };
 
       const newUser = await User.create({
-        username,
         email,
-        password: handleHashPassword,
-        role,
-        phone,
         codeOtp
-      })
-
-      const newUserWithoutPassword = { ...newUser._doc };
-      delete newUserWithoutPassword.password;
-      delete newUserWithoutPassword.codeOtp
+      });
 
       sendOTP(email, kode_random, "register");
+
+      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newUser._id});
+
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
+  register: async (req, res, next) => {
+    try {
+      const { id, username, password, role } = req.body;
+      if(!id) return res.status(400).json({message: "Tidak ada id yang dikirim"});
+      // const regexNoTelepon =
+      //   /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
+      // if (!regexNoTelepon.test(phone))
+      //   return res.status(400).json({ error: "no telepon tidak valid" });
+
+      const handleHashPassword = await bcrypt.hash(password, 10);
+
+      
+      const newUser = await User.findByIdAndUpdate(id, {
+        username,
+        role,
+        password: handleHashPassword
+      }, {new: true});
+      
+      if(!newUser) return res.status(404).json({message: `id ${id} tidak ditemukan`});
+      if(!newUser.verifikasi) return res.status(403).json({message: "User belum terverifikasi"});
+      const newUserWithoutPassword = { ...newUser._doc };
+      delete newUserWithoutPassword.password;
+      delete newUserWithoutPassword.codeOtp;
 
       return res.status(201).json({
         error: false,
         message: "register success",
         datas: newUserWithoutPassword,
-      })
+      });
 
     } catch (err) {
       if (err && err.name == "ValidationError") {
