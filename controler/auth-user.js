@@ -122,6 +122,8 @@ module.exports = {
       if(email && !phone){
         newUser = await User.findOne({ 'email.content': email });
       }else if(phone && !email){
+        const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
+        if (!regexNoTelepon.test(phone)) return res.status(400).json({ error: "no telepon tidak valid" });
         newUser = await User.findOne({ 'phone.content': phone });
       }else if(phone && email){
         return res.status(400).json({message: "Masukan hanya email atau no hp aja cukup ya kalo untuk login"});
