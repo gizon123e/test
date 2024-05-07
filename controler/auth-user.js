@@ -1,13 +1,14 @@
 const User = require("../models/model-auth-user");
 const sendOTP = require("../utils/sendOtp").sendOtp;
 const bcrypt = require("bcrypt");
-const jwt = require("../utils/jwt");
 
 module.exports = {
 
   sendOtpWithEmail: async (req, res, next) =>{
     try {
       const { email } = req.body;
+
+      if(!email) return res.status(400).json({message:"Tidak ada email yang dikirimkan"});
 
       const isEmailRegister = await User.exists({ email });
 
@@ -31,6 +32,39 @@ module.exports = {
       sendOTP(email, kode_random, "register");
 
       return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newUser._id});
+
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
+  sendOtpWithPhone: async (req, res, next) =>{
+    try {
+      const { phone } = req.body;
+      if(!phone) return res.status(400).json({message:"Tidak ada phone number yang dikirimkan"});
+      const isPhoneRegistered = await User.exists({ phone });
+
+      if (isPhoneRegistered) {
+        return res.status(400).json({ error: "phone sudah terdaftar" });
+      };
+
+      const kode_random = Math.floor(1000 + Math.random() * 9000);
+      const kode = await bcrypt.hash(kode_random.toString(), 3);
+
+      const codeOtp = {
+        code: kode,
+        expire: new Date(new Date().getTime() + 5 * 60 * 1000)
+      };
+
+      const newUser = await User.create({
+        phone,
+        codeOtp
+      });
+
+      // sendOTP(email, kode_random, "register");
+
+      return res.status(200).json({message: "SMS Verifikasi Sudah dikirim", id: newUser._id, kode_otp: kode_random});
 
     } catch (error) {
       console.log(error);
@@ -83,35 +117,29 @@ module.exports = {
   login: async (req, res, next) => {
     try {
       const { email, password, phone } = req.body;
-      let newUser;
+      let user;
+      if(!password) return res.status(400).json({message:"Password tidak boleh kosong"});
+
       if(email && !phone){
-        newUser = await User.findOne({ email });
+        user = await User.findOne({ email });
       }else if(phone && !email){
-        newUser = await User.findOne({ phone });
+        user = await User.findOne({ phone });
       }else if(phone && email){
         return res.status(400).json({message: "Masukan hanya email atau no hp aja cukup ya kalo untuk login"});
       }
 
-      if(!newUser) return res.status(400).json({message: "Email atau No Hp yang dimasukkan tidak ditemukan"});
+      if(!user) return res.status(400).json({message: "Email atau No Hp yang dimasukkan tidak ditemukan"});
 
       const validationPassword = await bcrypt.compare(
         password,
-        newUser.password
+        user.password
       );
 
       if (!validationPassword) {
         return res.status(400).json({
           error: true,
-          message: "invalid email / password",
+          message: "invalid password",
         });
-      };
-
-      const tokenPayload = {
-        id: newUser._id,
-        name: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
-        phone: newUser.phone,
       };
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
@@ -122,21 +150,19 @@ module.exports = {
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
 
-      newUser.codeOtp = codeOtp
-      await newUser.save();
+      const kode_otp = phone? kode_random : null
+      user.codeOtp = codeOtp
+      await user.save();
 
-      sendOTP(email, kode_random, "login");
-
-      const jwtToken = jwt.createToken(tokenPayload);
+      if(email && !phone) sendOTP(email, kode_random, "login");
 
       return res.status(200).json({
         error: false,
-        message: "login success",
-        datas: {
-          ...tokenPayload,
-          token: jwtToken,
-        },
+        message: `${phone? "SMS":"Email"} Verifikasi Sudah dikirim`,
+        id: user._id,
+        kode_otp
       });
+
     } catch (err) {
       if (err && err.name == "ValidationError") {
         return res.status(400).json({

@@ -10,5 +10,6 @@ const router = require("express").Router();
 router.post("/login", controlerAuthUser.login);
 router.post("/register", controlerAuthUser.register);
 router.post("/register/send_otp_email", controlerAuthUser.sendOtpWithEmail);
+router.post("/register/send_otp_phone", controlerAuthUser.sendOtpWithPhone);
 
 module.exports = router;

@@ -9,7 +9,6 @@ const userModels = mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, "email harus di isi"],
       maxlength: [250, "panjang email harus di antara 3 - 250 karakter"],
       validate: {
         validator: (email) => {
