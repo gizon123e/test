@@ -1,6 +1,7 @@
 const User = require("../models/model-auth-user");
 const sendOTP = require("../utils/sendOtp").sendOtp;
 const bcrypt = require("bcrypt");
+const jwt = require("../utils/jwt");
 
 module.exports = {
 
@@ -118,8 +119,7 @@ module.exports = {
     try {
       const { email, password, phone } = req.body;
       let user;
-      if(!password) return res.status(400).json({message:"Password tidak boleh kosong"});
-
+      if(!password) return res.status(400).json({message:"password tidak boleh kosong"});
       if(email && !phone){
         user = await User.findOne({ email });
       }else if(phone && !email){
@@ -156,13 +156,13 @@ module.exports = {
 
       if(email && !phone) sendOTP(email, kode_random, "login");
 
+
       return res.status(200).json({
         error: false,
         message: `${phone? "SMS":"Email"} Verifikasi Sudah dikirim`,
-        id: user._id,
+        id: 
         kode_otp
       });
-
     } catch (err) {
       if (err && err.name == "ValidationError") {
         return res.status(400).json({
