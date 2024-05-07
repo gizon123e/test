@@ -8,16 +8,22 @@ const userModels = mongoose.Schema(
       minlength: [3, "panjang nama harus antara 3 - 250 karakter"],
     },
     email: {
-      type: String,
-      maxlength: [250, "panjang email harus di antara 3 - 250 karakter"],
-      validate: {
-        validator: (email) => {
-          const emailRegex =
-            /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
-          return emailRegex.test(email);
+      content: {
+        type: String,
+        maxlength: [250, "panjang email harus di antara 3 - 250 karakter"],
+        validate: {
+          validator: (email) => {
+            const emailRegex =
+              /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
+            return emailRegex.test(email);
+          },
+          message: (props) => `${props.value} email tidak valid`,
         },
-        message: (props) => `${props.value} email tidak valid`,
       },
+      isVerified: {
+        type: Boolean,
+        default: false
+      }
     },
     password: {
       type: String,
@@ -25,8 +31,14 @@ const userModels = mongoose.Schema(
       minlength: [3, "panjang password harus di antara 3 - 250 karakter"],
     },
     phone: {
-      type: String,
-      minlength: [9, "panjang password harus di antara 3 - 250 karakter"],
+      content:{
+        type: String,
+        minlength: [9, "panjang password harus di antara 3 - 250 karakter"],
+      },
+      isVerified: {
+        type: Boolean,
+        default: false
+      }
     },
     role: {
       type: String,

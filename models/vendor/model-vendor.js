@@ -30,6 +30,10 @@ const vendorModel = mongoose.Schema({
     legalitasBadanUsaha:{
         type: String, 
         required: false
+    },
+    profile_pict:{
+        type: String,
+        default: "http://localhost:4000/public/profile_picts/default.jpg"
     }
 })
 

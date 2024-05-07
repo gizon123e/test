@@ -48,6 +48,10 @@ const modelDistributtor = mongoose.Schema({
     harga_ongkir: {
         type: Number,
         required: [true, 'harga ongkir harus di isi']
+    },
+    profile_pict:{
+        type: String,
+        default: "http://localhost:4000/public/profile_picts/default.jpg"
     }
 }, { timestamp: true });
 

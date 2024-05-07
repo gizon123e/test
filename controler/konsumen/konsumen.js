@@ -26,8 +26,9 @@ module.exports = {
 
     getDetailKonsumen: async (req, res, next) => {
         try {
-            const dataKonsumen = await Konsumen.findById(req.params.id).populate('userId', '-password').populate('addressId')
-            if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.params.id} not Found` })
+            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password').populate('addressId');
+
+            if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.params.id} not Found` });
 
             res.status(200).json({ message: 'success', datas: dataKonsumen })
         } catch (error) {

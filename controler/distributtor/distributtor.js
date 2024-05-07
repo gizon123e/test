@@ -34,7 +34,7 @@ module.exports = {
 
     getDetailDistributtor: async (req, res, next) => {
         try {
-            const dataDistributtor = await Distributtor.findOne({ _id: req.params.id }).populate('userId', '-password').populate('addressId')
+            const dataDistributtor = await Distributtor.findOne({ userId: req.user.id }).populate('userId', '-password').populate('addressId')
             if (!dataDistributtor) return res.status(404).json({ error: `data Distriuttor id :${req.params.id} not Found` })
 
             res.status(200).json({ message: 'success', datas: dataDistributtor })

@@ -25,7 +25,7 @@ module.exports = {
 
     getDetailVendor: async (req, res, next) => {
         try {
-            const dataVendor = await Vendor.findById(req.params.id).populate('userId', '-password').populate('addressId')
+            const dataVendor = await Vendor.findOne({userId: req.user.id}).populate('userId', '-password').populate('addressId')
             if (!dataVendor) return res.status(404).json({ error: `data Vendor id :${req.params.id} not Found` })
 
             res.status(200).json({ message: 'success', datas: dataVendor })

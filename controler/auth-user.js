@@ -11,7 +11,7 @@ module.exports = {
 
       if(!email) return res.status(400).json({message:"Tidak ada email yang dikirimkan"});
 
-      const isEmailRegister = await User.exists({ email });
+      const isEmailRegister = await User.exists({ 'email.content': email });
 
       if (isEmailRegister) {
         return res.status(400).json({ error: "email sudah terdaftar" });
@@ -26,7 +26,7 @@ module.exports = {
       };
 
       const newUser = await User.create({
-        email,
+        'email.content': email,
         codeOtp
       });
 
@@ -59,7 +59,7 @@ module.exports = {
       };
 
       const newUser = await User.create({
-        phone,
+        'phone.content': phone,
         codeOtp
       });
 
@@ -118,29 +118,33 @@ module.exports = {
   login: async (req, res, next) => {
     try {
       const { email, password, phone } = req.body;
-      let user;
-      if(!password) return res.status(400).json({message:"password tidak boleh kosong"});
+      let newUser;
       if(email && !phone){
-        user = await User.findOne({ email });
+        newUser = await User.findOne({ 'email.content': email });
       }else if(phone && !email){
-        user = await User.findOne({ phone });
+        newUser = await User.findOne({ 'phone.content': phone });
       }else if(phone && email){
         return res.status(400).json({message: "Masukan hanya email atau no hp aja cukup ya kalo untuk login"});
       }
+      if(!newUser) return res.status(404).json({message: "Email atau No Hp yang dimasukkan tidak ditemukan"});
 
-      if(!user) return res.status(400).json({message: "Email atau No Hp yang dimasukkan tidak ditemukan"});
+      if(email && !newUser.email.isVerified && !phone) return res.status(403).json({message: "Email Belum diverifikasi", verification: false});
 
-      const validationPassword = await bcrypt.compare(
-        password,
-        user.password
-      );
+      if(phone && !newUser.phone.isVerified && !email) return res.status(403).json({message: "No Hp Belum diverifikasi", verification: false});
 
-      if (!validationPassword) {
-        return res.status(400).json({
-          error: true,
-          message: "invalid password",
-        });
-      };
+      if(email && !phone){
+        const validationPassword = await bcrypt.compare(
+          password,
+          newUser.password
+        );
+
+        if (!validationPassword) {
+          return res.status(400).json({
+            error: true,
+            message: "invalid password",
+          });
+        };
+      }
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
       const kode = await bcrypt.hash(kode_random.toString(), 3);
@@ -151,18 +155,18 @@ module.exports = {
       };
 
       const kode_otp = phone? kode_random : null
-      user.codeOtp = codeOtp
-      await user.save();
+      newUser.codeOtp = codeOtp
+      await newUser.save();
 
       if(email && !phone) sendOTP(email, kode_random, "login");
 
-
       return res.status(200).json({
         error: false,
-        message: `${phone? "SMS":"Email"} Verifikasi Sudah dikirim`,
-        id: 
+        message: `${phone? "SMS" : "Email"} sudah dikirim!`,
+        id: newUser._id,
         kode_otp
       });
+
     } catch (err) {
       if (err && err.name == "ValidationError") {
         return res.status(400).json({
