@@ -1,7 +1,6 @@
 const User = require("../models/model-auth-user");
 const sendOTP = require("../utils/sendOtp").sendOtp;
 const bcrypt = require("bcrypt");
-const jwt = require("../utils/jwt");
 
 module.exports = {
 
@@ -76,6 +75,7 @@ module.exports = {
   register: async (req, res, next) => {
     try {
       const { id, username, password, role } = req.body;
+      if(password.trim().length < 4) return res.status(400).json({message: "Password harus lebih dari 4 karakter"})
       if(!id) return res.status(400).json({message: "Tidak ada id yang dikirim"});
       // const regexNoTelepon =
       //   /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
@@ -135,6 +135,7 @@ module.exports = {
       if(phone && !newUser.phone.isVerified && !email) return res.status(403).json({message: "No Hp Belum diverifikasi", verification: false});
 
       if(email && !phone){
+        if(!password || password.trim().length < 4) return res.status(400).json({message: "Password Kosong", error: true})
         const validationPassword = await bcrypt.compare(
           password,
           newUser.password
@@ -180,4 +181,13 @@ module.exports = {
       next(err);
     }
   },
+  successLoginWithEmail: async(req, res, next) =>{
+    try {
+      console.log(req.query)
+      res.json({message: "Berhasil", data: req.user});
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
 };

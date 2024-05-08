@@ -7,12 +7,17 @@ const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const websocket = require("./websocket/index-ws");
+const session = require("express-session");
 const app = express();
 
 app.use(cors());
 app.use(logger("dev"));
 app.use(cookieParser());
 app.use(express.json());
+app.use(session({
+  secret: process.env.SECRETKEY,
+  cookie: { secure: true }
+}));
 app.use(bodyParser.json({limit: '250mb'}));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
@@ -20,8 +25,8 @@ app.use(fileUpload());
 global.__basedir = __dirname;
 
 // router
-app.get('', (req, res)=>{
-  res.send("Server is working!");
+app.get('/failed', (req, res)=>{
+  res.send("Failed");
 });
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
 app.use('/api/user', require('./routes/router-user'));
@@ -41,6 +46,8 @@ app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen'));
 app.use('/api/order-distributor', require('./routes/router-order-distributtor'));
 app.use('/api/payment', require('./routes/router-payment'));
+app.use('/api/google-oauth', require('./routes/router-google-oauth'));
+
 
 // midelware error
 app.use(require("./midelware/error-midelware"));
