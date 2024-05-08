@@ -105,6 +105,7 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
+      const allowedTypes = [".jpg", ".png", ".jpeg"];
       if(!req.files || !req.files.ImageProduct) return res.status(400).json({message:"Produk Minimal Punya 1 Foto, kirimkan file foto dengan nama ImageProduct"});
 
       if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"});
@@ -155,23 +156,23 @@ module.exports = {
       dataProduct.image_product = imgPaths
       const user = await User.findById(req.user.id);
       dataProduct.userId = user._id;
-      const newProduct = await Product.create(dataProduct);
+      // const newProduct = await Product.create(dataProduct);
 
-      await Performance.create({
-        productId: newProduct._id,
-        impressions: [{ time: new Date(), amount: 0 }],
-        views: [{ time: new Date(), amount: 0 }]
-      });
+      // await Performance.create({
+      //   productId: newProduct._id,
+      //   impressions: [{ time: new Date(), amount: 0 }],
+      //   views: [{ time: new Date(), amount: 0 }]
+      // });
 
-      await SalesReport.create({
-        productId: newProduct._id,
-        track: [{ time: new Date(), soldAtMoment: 0 }]
-      });
+      // await SalesReport.create({
+      //   productId: newProduct._id,
+      //   track: [{ time: new Date(), soldAtMoment: 0 }]
+      // });
 
       return res.status(201).json({
         error: false,
         message: "Upload Product Success",
-        datas: newProduct,
+        // datas: newProduct,
       });
     } catch (err) {
       console.log(err);
