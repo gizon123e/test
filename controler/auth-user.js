@@ -44,7 +44,7 @@ module.exports = {
     try {
       const { phone } = req.body;
       if(!phone) return res.status(400).json({message:"Tidak ada phone number yang dikirimkan"});
-      const isPhoneRegistered = await User.exists({ phone });
+      const isPhoneRegistered = await User.exists({ 'phone.content': phone });
 
       if (isPhoneRegistered) {
         return res.status(400).json({ error: "phone sudah terdaftar" });
