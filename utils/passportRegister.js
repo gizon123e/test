@@ -5,9 +5,9 @@ const dotenv = require('dotenv');
 dotenv.config()
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.CLIENT_ID_OAUTH,
-    clientSecret: process.env.CLIENT_SECRET_OAUTH,
-    callbackURL: "https://gull-assuring-pigeon.ngrok-free.app/api/google-oauth/success"
+    clientID: process.env.CLIENT_ID_REGISTER_OAUTH,
+    clientSecret: process.env.CLIENT_SECRET_REGISTER_OAUTH,
+    callbackURL: "https://gull-assuring-pigeon.ngrok-free.app/api/register/google-oauth/success"
   },
   function(accessToken, refreshToken, profile, cb) {
     
@@ -15,7 +15,7 @@ passport.use(new GoogleStrategy({
       googleId: profile.id,
       name: profile.displayName,
       email: profile.emails[0].value
-    }
+    };
 
     return cb(null, user);
   }

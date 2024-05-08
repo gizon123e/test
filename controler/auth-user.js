@@ -165,7 +165,7 @@ module.exports = {
 
       return res.status(200).json({
         error: false,
-        message: `${phone? "SMS" : "Email"} sudah dikirim!`,
+        message: `${phone? "SMS" : "Email"} verifikasi sudah dikirim!`,
         id: newUser._id,
         kode_otp
       });
@@ -181,10 +181,52 @@ module.exports = {
       next(err);
     }
   },
+  
   successLoginWithEmail: async(req, res, next) =>{
     try {
-      console.log(req.query)
-      res.json({message: "Berhasil", data: req.user});
+      const user = await User.findOne({'email.content': req.user.email});
+      if(!user) return res.status(404).json({message:`Email ${req.user.email} belum terdaftar`});
+
+      const kode_random = Math.floor(1000 + Math.random() * 9000);
+      const kode = await bcrypt.hash(kode_random.toString(), 3);
+      
+      const codeOtp = {
+        code: kode,
+        expire: new Date(new Date().getTime() + 5 * 60 * 1000)
+      };
+
+      user.codeOtp = codeOtp;
+      await user.save();
+
+      sendOTP(email, kode_random, "login");
+
+      return res.json({message: "Berhasil", data: req.user});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
+  successRegisterWithEmail: async (req, res, next) =>{
+    try {
+      const registeredUser = await User.exists({'email.content': req.user.email})
+      if(registeredUser) return res.status(403).json({message: "Email Sudah Terdaftar"});
+      const kode_random = Math.floor(1000 + Math.random() * 9000);
+      const kode = await bcrypt.hash(kode_random.toString(), 3);
+
+      const codeOtp = {
+        code: kode,
+        expire: new Date(new Date().getTime() + 5 * 60 * 1000)
+      };
+
+      const newUser = await User.create({
+        'email.content': req.user.email,
+        codeOtp
+      });
+
+      sendOTP(req.user.email, kode_random, "register");
+
+      return res.status(201).json({message: "Email Verifikasi Sudah Dikirim", id: newUser._id});
     } catch (error) {
       console.log(error)
       next(error)
