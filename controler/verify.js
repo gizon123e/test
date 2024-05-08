@@ -28,7 +28,9 @@ module.exports = {
     verifyOtpLogin: async (req, res, next ) =>{
         try {
             const { kode_otp, id } = req.body;
+
             const { type } = req.query
+            
             let user = await User.findById(id);
 
             if(!user) return res.status(400).json({message:"User tidak ditemukan"});

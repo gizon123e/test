@@ -1,4 +1,5 @@
 module.exports = (req, res, next) => {
+  if(Object.keys(req.body).length === 0) return res.status(400).json({message:"Request Body Tidak Boleh Kosong", data_yang_dikirim: req.body})
   Object.keys(req.body).forEach((e) => {
     if (
       !req.body[e] ||

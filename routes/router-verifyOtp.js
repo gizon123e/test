@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const controllerOtp = require('../controler/verify');
-
-router.post('/register', controllerOtp.verifyOtpRegister);
-router.post('/login', controllerOtp.verifyOtpLogin)
+const emptyData = require('../midelware/emptyData')
+router.post('/register', emptyData, controllerOtp.verifyOtpRegister);
+router.post('/login', emptyData, controllerOtp.verifyOtpLogin)
 
 module.exports = router
