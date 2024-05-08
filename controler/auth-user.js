@@ -135,7 +135,7 @@ module.exports = {
       if(phone && !newUser.phone.isVerified && !email) return res.status(403).json({message: "No Hp Belum diverifikasi", verification: false});
 
       if(email && !phone){
-        if(!password || password.trim().length < 4) return res.status(400).json({message: "Password Kosong", error: true})
+        if(!password || password.trim().length < 4) return res.status(400).json({message: "Password Kosong atau kurang dari 4", error: true})
         const validationPassword = await bcrypt.compare(
           password,
           newUser.password
