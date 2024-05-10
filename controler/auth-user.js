@@ -217,16 +217,16 @@ module.exports = {
   validateUser: async (req, res, next) => {
     try {
       const { phone, email } = req.body
-      console.log(phone)
+
       let user;
       if(phone && !email){
         user = await User.findOne({'phone.content': phone});
         if(!user) return res.status(404).json({message:`${phone} belum terdaftar`, isVerified: false});
-        if(!user.phone.isVerified) return res.status(403).json({message: "Nomor Hp belum terverifikasi", isVerified: false});
+        if(!user.phone.isVerified) return res.status(200).json({message: "Nomor Hp belum terverifikasi", isVerified: false});
       }else if(!phone && email){
         user = await User.findOne({'email.content': email});
         if(!user) return res.status(404).json({message:`${email} belum terdaftar`, isVerified: false});
-        if(!user.email.isVerified) return res.status(403).json({message: "Email belum terverifikasi", isVerified: false});
+        if(!user.email.isVerified) return res.status(200).json({message: "Email belum terverifikasi", isVerified: false});
       }
 
       return res.status(200).json({message:`${phone? "Phone": "Email"} Sudah Terverifikasi`, isVerified: true});
