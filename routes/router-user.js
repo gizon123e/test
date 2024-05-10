@@ -9,6 +9,7 @@ const router = require("express").Router();
 // router auth user
 router.post("/login", controlerAuthUser.login);
 router.post("/register", controlerAuthUser.register);
+router.post("/check-verified", controlerAuthUser.validateUser);
 router.post("/register/send_otp_email", controlerAuthUser.sendOtpWithEmail);
 router.post("/register/send_otp_phone", controlerAuthUser.sendOtpWithPhone);
 

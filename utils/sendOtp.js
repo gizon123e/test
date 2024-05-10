@@ -4,7 +4,7 @@ dotenv.config()
 
 module.exports = {
     sendOtp: (email, kode, status) => {
-        const subject = status === "login" ? "Login Otp Code" : "Register Otp Code"
+        const subject = status === "login" ? "Login Otp Code" : status === "register" ? "Register Otp Code" : "Resend Otp Code";
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 465,

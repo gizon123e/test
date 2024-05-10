@@ -46,6 +46,7 @@ app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen'));
 app.use('/api/order-distributor', require('./routes/router-order-distributtor'));
 app.use('/api/payment', require('./routes/router-payment'));
+app.use('/api/resend-otp', require('./routes/router-resendOtp'));
 app.use('/api/login/google-oauth', require('./routes/router-login-google-oauth'));
 app.use('/api/register/google-oauth', require('./routes/router-register-google-oauth'));
 
