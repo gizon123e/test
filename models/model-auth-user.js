@@ -2,11 +2,6 @@ const mongoose = require("mongoose");
 
 const userModels = mongoose.Schema(
   {
-    username: {
-      type: String,
-      maxlength: [250, "panjang nama harus antara 3 - 250 karakter"],
-      minlength: [3, "panjang nama harus antara 3 - 250 karakter"],
-    },
     email: {
       content: {
         type: String,
@@ -34,21 +29,26 @@ const userModels = mongoose.Schema(
       content:{
         type: String,
         minlength: [9, "panjang password harus di antara 3 - 250 karakter"],
+        validate: {
+          validator: (phone) => {
+            const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
+            return regexNoTelepon.test(phone)
+          },
+          message: (props) => `${props.value} nomor handphone tidak valid`
+        }
       },
       isVerified: {
         type: Boolean,
         default: false
       }
     },
+    pin: {
+      type: String,
+    },
     role: {
       type: String,
       enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
       message: "{VALUE} is not supported",
-    },
-    verifikasi: {
-      type: Boolean,
-      required: [true, 'verifikasi harus di isi'],
-      default: false
     },
     codeOtp:{
       code: {
