@@ -10,6 +10,7 @@ const router = require("express").Router();
 router.post("/login", controlerAuthUser.login);
 router.post("/register", controlerAuthUser.register);
 router.post("/check-verified", controlerAuthUser.validateUser);
+router.post("/add-pin", authorization, controlerAuthUser.addPinForPhoneAccount);
 router.post("/register/send_otp_email", controlerAuthUser.sendOtpWithEmail);
 router.post("/register/send_otp_phone", controlerAuthUser.sendOtpWithPhone);
 

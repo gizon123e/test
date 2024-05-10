@@ -75,28 +75,23 @@ module.exports = {
 
   register: async (req, res, next) => {
     try {
-      const { id, password, role, pin } = req.body;
+      const { id, password, role } = req.body;
       if(!id) return res.status(400).json({message: "Tidak ada id yang dikirim"});
       const user = await User.findById(id);
       if(!user.phone.isVerified && !user.email.isVerified) return res.status(403).json({message: "User belum terverifikasi"});
       let data = {}
-      if(password && !pin){
+      if(password){
         const handleHashPassword = await bcrypt.hash(password, 10);
         data = {
           role,
           password: handleHashPassword
         }
-      }else if(pin && !password){
-        const handleHashPin = await bcrypt.hash(pin, 10);
-        data = {
-          role,
-          pin: handleHashPin
-        }
       }else{
-        return res.status(400).json({message: "Error Request, ada pin dan password dalam body request"})
-      };
+        data = {
+          role
+        }
+      }
 
-      
       const newUser = await User.findByIdAndUpdate(id, data, {new: true});
       
       if(!newUser) return res.status(404).json({message: `id ${id} tidak ditemukan`});
@@ -202,6 +197,20 @@ module.exports = {
       }
       console.log(err)
       next(err);
+    }
+  },
+
+  addPinForPhoneAccount: async(req, res, next) =>{
+    try {
+      const { pin } = req.body;
+      const user = await User.findById(req.user.id);
+      const hashedPin = await bcrypt.hash(pin, 10);
+      user.pin = hashedPin;
+      await user.save();
+      return res.status(201).json({message: "Berhasil Menambahkan Pin"});
+    } catch (error) {
+      console.log(error);
+      next(error)
     }
   },
 
