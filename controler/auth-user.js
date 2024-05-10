@@ -170,7 +170,7 @@ module.exports = {
         
         if(!validPin) return res.status(401).json({message: "Invalid Pin"});
 
-        return res.status(200).json({message: "Login Berhasil", data: tokenPayload, token});
+        return res.status(200).json({message: "Login Berhasil", data: {...tokenPayload, token}});
       }
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
