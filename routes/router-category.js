@@ -7,7 +7,7 @@ const controlerCategory = require('../controler/category')
 const router = require("express").Router();
 
 router.get('/list', authorization, controlerCategory.getCategory)
-router.post('/create', authorization, controlerCategory.createCategory)
+router.post('/create', controlerCategory.createCategory)
 router.put('/update/:id', authorization, controlerCategory.updateCategory)
 router.delete('/delete/:id', authorization, controlerCategory.deleteCategory)
 

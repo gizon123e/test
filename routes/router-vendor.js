@@ -10,7 +10,7 @@ const router = require("express").Router();
 // router auth user
 router.get('/listAll', authorization, controllerVendor.getAllVendor);
 router.get('/detail/:id', authorization, controllerVendor.getDetailVendor)
-router.post("/create", authorization, fileType, controllerVendor.createVendor);
+router.post("/create", controllerVendor.createVendor);
 router.put("/update/:id", authorization, fileType, controllerVendor.updateVendor);
 router.delete("/delete/:id", authorization, controllerVendor.deleteVendor);
 

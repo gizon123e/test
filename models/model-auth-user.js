@@ -57,6 +57,14 @@ const userModels = mongoose.Schema(
       expire: {
         type: Date
       }
+    },
+    poin: {
+      type: Number,
+      default: 0
+    },
+    isFinish:{
+      type: Boolean,
+      default: false
     }
   },
   { temestamp: true }

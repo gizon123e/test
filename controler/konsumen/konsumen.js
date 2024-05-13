@@ -1,4 +1,5 @@
 const Konsumen = require('../../models/konsumen/model-konsumen')
+const Address = require("../../models/models-address")
 const path = require('path')
 const fs = require('fs')
 
@@ -26,7 +27,7 @@ module.exports = {
 
     getDetailKonsumen: async (req, res, next) => {
         try {
-            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password').populate('addressId');
+            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password')
 
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.params.id} not Found` });
 
@@ -39,21 +40,28 @@ module.exports = {
                     fields: error.fields
                 })
             }
+            console.log(error)
             next(error)
         }
     },
 
     createKonsumen: async (req, res, next) => {
         try {
-            if(req.user.role != "konsumen") return res.status(403).json({message:"User bukan konsumen!"});
-
-            const samaUser = await Konsumen.findOne({userId: req.user.id});
+            // if(req.user.role != "konsumen") return res.status(403).json({message:"User bukan konsumen!"});
+            const samaUser = await Konsumen.findOne({userId: req.body.id}).populate('userId', '-password');
 
             if(samaUser) return res.status(400).json({message: "User ini sudah memiliki data detail Konsumen", data: samaUser});
 
-            const { nama, namaBadanUsaha, penanggungJawab, noTeleponKantor, registerAs, addressId } = req.body;
+            const { nama, namaBadanUsaha, penanggungJawab, noTeleponKantor, registerAs, province, subdistrict, regency, village, code_pos, address_description } = req.body;
             
-            if(!addressId) return res.status(400).json({message: "Harus ada alamat"});
+            const address = {
+                province,
+                subdistrict,
+                regency,
+                village,
+                code_pos,
+                address_description
+            };
 
             if(registerAs === "not_individu" && (!namaBadanUsaha || !penanggungJawab || !noTeleponKantor || !req.files)){
                 return res.status(403).json({message: "Jika daftar sebagai bukan individu, wajib mengisi namaBadanUsaha, penanggungJawab, noTeleponKantor, dan file legalitas badan usaha dengan nama legalitasBadanUsaha"});
@@ -62,6 +70,7 @@ module.exports = {
             
             if(registerAs === "individu" && (namaBadanUsaha || noTeleponKantor || penanggungJawab || req.files)) return res.status(400).json({message:"Jika daftar sebagai individu payload yang dibutuhkan cuman nama, dan addressId"});
             
+            const newAddress = await Address.create({...address, userId: req.body.id});
             async function dataMake(){
                 if(registerAs === "not_individu"){
                     const { legalitasBadanUsaha } = req.files;
@@ -71,26 +80,26 @@ module.exports = {
                     };
 
                     
-                    const legalitasFile = `${Date.now()}_${req.user.name}_${path.extname(legalitasBadanUsaha.name)}`;
+                    const legalitasFile = `${Date.now()}_${namaBadanUsaha}_${path.extname(legalitasBadanUsaha.name)}`;
                     
                     const legalitasPath = path.join(__dirname, '../../public', 'legalitas-img', legalitasFile);
                     
                     await legalitasBadanUsaha.mv(legalitasPath);
                     return {
-                        userId: req.user.id,
+                        userId: req.body.id,
                         namaBadanUsaha,
                         penanggungJawab,
                         noTeleponKantor,
-                        addressId,
+                        address: newAddress._id,
                         legalitasBadanUsaha: `${req.protocol}://${req.get('host')}/public/legalitas-img/${legalitasFile}`,
                     };
                 };
 
                 if(registerAs !== "not_individu"){
                     return {
-                        userId: req.user.id,
+                        userId: req.body.id,
                         nama,
-                        addressId,
+                        address,
                     };
                 };
             }
@@ -98,7 +107,7 @@ module.exports = {
             
             const dataKonsumen = await Konsumen.create(data);
 
-            res.status(201).json({
+            res.status(200).json({
                 message: 'Konsumen Successfully Created',
                 data: dataKonsumen
             });
@@ -111,16 +120,18 @@ module.exports = {
                     fields: error.fields
                 });
             };
-
+            console.log(error)
             next(error);
         }
     },
 
     updateKonsumen: async (req, res, next) => {
         try {
-            const konsumen = await Konsumen.findById(req.params.id);
+            const konsumen = await Konsumen.findOne({userId: req.params.id});
+
             if(!konsumen) return res.status(404).json({message: `Konsumen dengan id ${req.params.id} tidak ditemukan`});
-            let filePath = konsumen.legalitasBadanUsaha
+
+            let filePath = konsumen.profile_pict
             if(req.body.noTeleponKantor){
                 const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
                 if (!regexNoTelepon.test(req.body[noTeleponKantor].toString())) {
@@ -128,10 +139,10 @@ module.exports = {
                 }
             }
 
-            if(req.files && req.files.legalitasBadanUsaha){
-                const name = konsumen.legalitasBadanUsaha.split('/')
-                if(fs.existsSync(path.join(__dirname, '../../public', 'legalitas-img', name[5]))){
-                    fs.unlink(path.join(__dirname, '../../public', 'legalitas-img', name[5]), (err) => {
+            if(req.files && req.files.profile_pict){
+                const name = konsumen.profile_pict.split('/')
+                if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
+                    fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
                         if (err) {
                             console.error('Error while deleting file:', err);
                         } else {
@@ -139,15 +150,15 @@ module.exports = {
                         }
                     });
                 }
-                const legalitasFile = `${Date.now()}_${req.user.name}_${path.extname(req.files.legalitasBadanUsaha.name)}`;
+                const profile_pict_file = `${Date.now()}_${konsumen.namaBadanUsaha || konsumen.nama}_${path.extname(req.files.profile_pict.name)}`;
                     
-                const legalitasPath = path.join(__dirname, '../../public', 'legalitas-img', legalitasFile);
-                filePath = `${req.protocol}://${req.get('host')}/public/legalitas-img/${legalitasFile}`
-                await req.files.legalitasBadanUsaha.mv(legalitasPath);
+                const profile_pict = path.join(__dirname, '../../public', 'profile_picts', profile_pict_file);
+                filePath = `${req.protocol}://${req.get('host')}/public/profile_picts/${profile_pict_file}`
+                await req.files.profile_pict.mv(profile_pict);
             }
 
 
-            const updatedData = await Konsumen.findByIdAndUpdate( req.params.id, { ...req.body, legalitasBadanUsaha: filePath }, {new: true});
+            const updatedData = await Konsumen.findOneAndUpdate({userId: req.params.id}, { ...req.body, profile_pict: filePath }, {new: true});
 
             res.status(200).json({
                 message: 'Konsumen updated successfully',
@@ -161,6 +172,7 @@ module.exports = {
                     fields: error.fields
                 })
             }
+            console.log(error)
             next(error)
         }
     },

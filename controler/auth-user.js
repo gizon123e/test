@@ -148,6 +148,7 @@ module.exports = {
         if(!validPassword) return res.status(401).json({message:"Invalid Password"});
         
       }else if(!email && phone && pin){
+        if(!newUser.phone.isVerified) return res.status(403).json({message: "No Hp belum diverifikasi"});
         if(!newUser.pin) return res.status(404).json({message:"User belum memiliki pin"});
         const validPin = await bcrypt.compare(
           pin,
@@ -211,7 +212,7 @@ module.exports = {
     } catch (error) {
       console.log(error);
       next(error)
-    }
+    };
   },
 
   validateUser: async (req, res, next) => {
@@ -222,17 +223,38 @@ module.exports = {
       if(phone && !email){
         user = await User.findOne({'phone.content': phone});
         if(!user) return res.status(404).json({message:`${phone} belum terdaftar`, isVerified: false});
-        if(!user.phone.isVerified) return res.status(200).json({message: "Nomor Hp belum terverifikasi", isVerified: false});
+        if(!user.phone.isVerified) return res.status(200).json({message: "Nomor Hp belum terverifikasi", isVerified: false, id: user._id});
       }else if(!phone && email){
         user = await User.findOne({'email.content': email});
         if(!user) return res.status(404).json({message:`${email} belum terdaftar`, isVerified: false});
-        if(!user.email.isVerified) return res.status(200).json({message: "Email belum terverifikasi", isVerified: false});
+        if(!user.email.isVerified) return res.status(200).json({message: "Email belum terverifikasi", isVerified: false, id: user._id});
       }
 
-      return res.status(200).json({message:`${phone? "Phone": "Email"} Sudah Terverifikasi`, isVerified: true});
+      return res.status(200).json({message:`${phone? "Phone": "Email"} Sudah Terverifikasi`, isVerified: true, id: user._id});
     } catch (error) {
       console.log(error)
       next(error)
+    }
+  },
+
+  editUser: async (req, res, next) => {
+    try {
+      console.log(req.body)
+      if(Object.keys(req.body).length === 0) return res.status(400).json({message: "Request body tidak boleh kosong"});
+      const { email, phone } = req.body;
+      const id = req.user.id;
+      let user;
+      if(email && !phone) {
+        user = await User.findByIdAndUpdate(id, {'email.content': email}, {new: true});
+      }else if(!email && phone){
+        user = await User.findByIdAndUpdate(id, {'phone.content': phone}, {new: true});
+      }else if(email && phone){
+        user = await User.findByIdAndUpdate(id, {'email.content': email, 'phone.content': phone}, {new: true});
+      }
+      return res.status(201).json({message: "Data User berhasil diperbarui", data: user});
+    } catch (error) {
+      console.log(error);
+      next(error);
     }
   },
   

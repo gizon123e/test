@@ -13,7 +13,7 @@ const konsumenModel = mongoose.Schema({
         type: String,
         required: false
     },
-    addressId:{
+    address:{
         type: mongoose.Types.ObjectId,
         ref: "Address",
         required: [true, "Harus memiliki alamat"]
@@ -37,12 +37,8 @@ const konsumenModel = mongoose.Schema({
     },
     profile_pict:{
         type: String,
-        default: "http://localhost:4000/public/profile_picts/default.jpg"
+        default: "https://gull-assuring-pigeon.ngrok-free.app/public/profile_picts/default.jpg"
     },
-    coinApps:{
-        type: Number,
-        default: 0
-    }
 });
 
 const Konsumen = mongoose.model("Konsumen", konsumenModel);

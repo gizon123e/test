@@ -155,24 +155,25 @@ module.exports = {
 
       dataProduct.image_product = imgPaths
       const user = await User.findById(req.user.id);
+      console.log(req.user)
       dataProduct.userId = user._id;
-      // const newProduct = await Product.create(dataProduct);
+      const newProduct = await Product.create(dataProduct);
 
-      // await Performance.create({
-      //   productId: newProduct._id,
-      //   impressions: [{ time: new Date(), amount: 0 }],
-      //   views: [{ time: new Date(), amount: 0 }]
-      // });
+      await Performance.create({
+        productId: newProduct._id,
+        impressions: [{ time: new Date(), amount: 0 }],
+        views: [{ time: new Date(), amount: 0 }]
+      });
 
-      // await SalesReport.create({
-      //   productId: newProduct._id,
-      //   track: [{ time: new Date(), soldAtMoment: 0 }]
-      // });
+      await SalesReport.create({
+        productId: newProduct._id,
+        track: [{ time: new Date(), soldAtMoment: 0 }]
+      });
 
       return res.status(201).json({
         error: false,
         message: "Upload Product Success",
-        // datas: newProduct,
+        datas: newProduct,
       });
     } catch (err) {
       console.log(err);
