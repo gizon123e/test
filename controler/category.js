@@ -13,15 +13,19 @@ module.exports = {
             if(!dataCategory || dataCategory.length === 0) return res.status(404).json({message: "Tidak Ada Category"});
             let data;
             const requestFrom = req.headers['user-agent'];
-            if(requestFrom.includes("Mobile")){
-                data = dataCategory.filter(item => item.showAt === "mobile" || "mobile dan web");
+            if(requestFrom && requestFrom.includes("Mobile")){
+                console.log('masuk mobile')
+                data = dataCategory.filter(item => item.showAt === "mobile" || item.showAt === "mobile dan web");
                 if(data.length > 7){
                     data = data.slice(0,7);
                 }
-            }else if(requestFrom.includes("Web")){
-                data = dataCategory.filter(item => item.showAt === "web" || "mobile dan web");
+            }else if(requestFrom && requestFrom.includes("Web")){
+                data = dataCategory.filter(item => item.showAt === "web" || item.showAt === "mobile dan web");
+                if(data.length > 9){
+                    data = data.slice(0,9);
+                }
             }else{
-                data = dataCategory;
+                data = dataCategory.filter(item => item.showAt === "all" || item.showAt === "web" || item.showAt === "mobile dan web" || item.showAt === "mobile");
             };
             return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data });
         } catch (error) {
@@ -55,7 +59,7 @@ module.exports = {
             let specific_category;
 
             if(main){
-                const iconName = `${Date.now()}_${icon.name}_${path.extname(icon.name)}`
+                const iconName = `${Date.now()}_${main}_${path.extname(icon.name)}`
                 const pathIcon = path.join(__dirname, '../public', 'icon', iconName);
                 await icon.mv(pathIcon)
                 main_category = await MainCategory.findOne({ name: { $regex: new RegExp(main, 'i')} });
@@ -66,7 +70,6 @@ module.exports = {
 
             if(sub){
                 sub_category = await SubCategory.findOne({ name: { $regex: new RegExp('^' + sub + '$', 'i')}});
-                console.log(sub_category)
                 if(!sub_category){
                     sub_category = await SubCategory.create({name: sub});
                 }
@@ -149,14 +152,28 @@ module.exports = {
 
     updateCategory: async (req, res, next) => {
         try {
-            const dataCategory = await MainCategory.findByIdAndUpdate( req.params.id , { name: req.body.name }, { new: true })
+            const data = req.body;
+            Object.keys(req.body).forEach(item => {
+                if(!req.body[item] || req.body[item].trim().length === 0) return res.status(400).json({message: `${item} tidak boleh string kosong`})
+            });
+
+            if(req.files && req.files.icon){
+                const { icon } = req.files
+                const iconName = `${Date.now()}_${icon.name}_${path.extname(icon.name)}`
+                const pathIcon = path.join(__dirname, '../public', 'icon', iconName);
+                await icon.mv(pathIcon)
+
+                data.icon = `${process.env.HOST}/public/icon/${iconName}`
+            };
+
+            const dataCategory = await MainCategory.findByIdAndUpdate( req.params.id ,  data , { new: true });
             return res.status(201).json({
                 message: 'Update Category success',
                 datas: dataCategory
-            })
+            });
         } catch (error) {
-            console.log(error)
-            next(error)
+            console.log(error);
+            next(error);
         }
     },
 

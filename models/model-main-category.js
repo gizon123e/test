@@ -17,8 +17,9 @@ const mainModelCategory = mongoose.Schema({
     },
     showAt:{
         type: String,
-        enum: ["mobile", "web", "mobile dan web"],
-        required: ['true', "show at harus adas"]
+        enum: ["mobile", "web", "mobile dan web", "all"],
+        default: "all",
+        required: ['true', "show at harus ada"]
     }
 }, { timestamp: true })
 
