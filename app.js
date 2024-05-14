@@ -51,6 +51,8 @@ app.use('/api/login/google-oauth', require('./routes/router-login-google-oauth')
 app.use('/api/register/google-oauth', require('./routes/router-register-google-oauth'));
 app.use('/api/login/user-system', require('./routes/router-system-user'));
 app.use('/api/promo', require('./routes/router-promo'));
+app.use('/api/minat', require('./routes/router-minat'));
+
 
 
 // midelware error

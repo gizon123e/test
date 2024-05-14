@@ -13,7 +13,7 @@ module.exports = (err, req, res, next) => {
 
     if(err=="Error: Token has expired") return res.status(403).json({ ...validateError, message: "Token Sudah Kadaluarsa" });
 
-    if(err="Error: Invalid File Type") return res.status(400).json({ ...validateError , message: "Gambar yang dikirimkan harus berupa jpg, png, atau jpeg"});
+    // if(err="Error: Invalid File Type") return res.status(400).json({ ...validateError , message: "Gambar yang dikirimkan harus berupa jpg, png, atau jpeg"});
 
     res.status(500).json({ ...validateError, message: 'internal server error', error: err })
 }

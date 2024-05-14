@@ -14,7 +14,7 @@ module.exports = {
       const isEmailRegister = await User.exists({ 'email.content': email });
 
       if (isEmailRegister) {
-        return res.status(400).json({ error: "email sudah terdaftar" });
+        return res.status(400).json({ message: "email sudah terdaftar" });
       };
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
@@ -47,7 +47,7 @@ module.exports = {
       const isPhoneRegistered = await User.exists({ 'phone.content': phone });
       
       if (isPhoneRegistered) {
-        return res.status(400).json({ error: "phone sudah terdaftar" });
+        return res.status(400).json({ message: "phone sudah terdaftar" });
       };
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
@@ -123,7 +123,6 @@ module.exports = {
     try {
       const { email, password, phone, pin } = req.body;
       let newUser;
-
       if(email && !phone){
         newUser = await User.findOne({ 'email.content': email });
         if(!newUser) return res.status(404).json({message: "Email yang dimasukkan tidak ditemukan"});
@@ -239,7 +238,6 @@ module.exports = {
 
   editUser: async (req, res, next) => {
     try {
-      console.log(req.body)
       if(Object.keys(req.body).length === 0) return res.status(400).json({message: "Request body tidak boleh kosong"});
       const { email, phone } = req.body;
       const id = req.user.id;

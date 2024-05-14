@@ -1,6 +1,8 @@
 const Promo = require('../models/model-promo');
-const Konsumen = require("../models/konsumen/model-konsumen")
-const path = require('path')
+const Konsumen = require("../models/konsumen/model-konsumen");
+const Minat = require("../models/model-minat-user");
+const path = require('path');
+const dotenv = require("dotenv");
 
 module.exports = {
     addPromo: async (req, res, next) => {
@@ -21,6 +23,26 @@ module.exports = {
             });
 
             return res.status(200).json({message: "Berhasil Membuat Promo", data: newPromo});
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+    getPromo: async (req, res, next) =>{
+        try {
+            const promo = await Promo.find().populate({
+                path: 'productId',
+                select: 'categoryId _id'
+            });
+            const minat = await Minat.findOne({userId: req.user.id});
+            const categoryInterested = minat.categoryMinat.map(item => item.categoryId.toString())
+            const data = [];
+            promo.forEach((e,i)=>{
+                if(categoryInterested.includes(e.productId.categoryId.toString())){
+                    data.push(e)
+                };
+            });
+            return res.status(200).json({message:"Berhasil Menampilkan Rekomendasi Promo Untuk User", data})
         } catch (error) {
             console.log(error);
             next(error);

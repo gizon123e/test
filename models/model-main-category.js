@@ -10,7 +10,16 @@ const mainModelCategory = mongoose.Schema({
             type: mongoose.Types.ObjectId,
             ref: "SubCategory"
         }
-    ]
+    ],
+    icon:{
+        type: String,
+        default: ""
+    },
+    showAt:{
+        type: String,
+        enum: ["mobile", "web", "mobile dan web"],
+        required: ['true', "show at harus adas"]
+    }
 }, { timestamp: true })
 
 const MainCategory = mongoose.model('MainCategory', mainModelCategory)

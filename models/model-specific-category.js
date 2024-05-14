@@ -4,6 +4,9 @@ const modelSpecificCategory = mongoose.Schema({
     name: {
         required: [true, 'name Category harus di isi'],
         type: String
+    },
+    icon: {
+        type: String
     }
 }, { timestamp: true })
 

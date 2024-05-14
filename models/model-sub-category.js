@@ -10,7 +10,7 @@ const subModelCategory = mongoose.Schema({
             type: mongoose.Types.ObjectId,
             ref: "SpecificCategory"
         }
-    ]
+    ],
 }, { timestamp: true })
 
 const SubCategory = mongoose.model('SubCategory', subModelCategory)
