@@ -89,62 +89,16 @@ module.exports = {
         }
     },
 
-    // createCategory: async (req, res, next) => {
-    //     try {
-    //         const data = []
-    //         const { dataCategory } = req.body;
-    //         if(!dataCategory) return res.status(400).json({message: "dibutuhkan payload dataCategory yang berisi array of object"});
-    //         if(!Array.isArray(dataCategory)) return res.status(400).json({message: "dataCategory harus array of object"});
-
-    //         for (const category of dataCategory) {
-    //             let mainCategory = await MainCategory.findOne({ name: { $regex: new RegExp(category.category, 'i') } });
-        
-    //             let subCategory;
-    //             if (!mainCategory) {
-    //                 mainCategory = await MainCategory.create({ name: category.category });
-    //                 subCategory = await SubCategory.findOne({ name: { $regex: new RegExp(category.productCategory, 'i') } });
-    //                 if (!subCategory) {
-    //                     subCategory = await SubCategory.create({ name: category.productCategory });
-    //                     mainCategory.contents.push(subCategory._id);
-    //                     await mainCategory.save();
-    //                 }else if(subCategory && !mainCategory.contents.includes(subCategory._id)){
-    //                     mainCategory.contents.push(subCategory._id);
-    //                     await mainCategory.save();
-    //                 }
-    //             } else {
-    //                 subCategory = await SubCategory.findOne({ name: { $regex: new RegExp(category.productCategory, 'i') } });
-    //                 if (!subCategory) {
-    //                     subCategory = await SubCategory.create({ name: category.productCategory });
-    //                     mainCategory.contents.push(subCategory._id);
-    //                     await mainCategory.save();
-    //                 }else if(subCategory && !mainCategory.contents.includes(subCategory._id)){
-    //                     mainCategory.contents.push(subCategory._id);
-    //                     await mainCategory.save();
-    //                 }
-    //             }
-        
-    //             let specificCategory;
-    //             if (subCategory) {
-    //                 specificCategory = await SpecificCategory.findOne({ name: { $regex: new RegExp(category.product, 'i') } });
-    //                 if (!specificCategory) {
-    //                     specificCategory = await SpecificCategory.create({ name: category.product });
-    //                     subCategory.contents.push(specificCategory._id);
-    //                     await subCategory.save();
-    //                 }else if( specificCategory && !subCategory.contents.includes(specificCategory._id)){
-    //                     subCategory.contents.push(specificCategory._id);
-    //                     await subCategory.save();
-    //                 }
-    //             }
-        
-    //             data.push({ mainCategory, subCategory, specificCategory });
-    //         };
-
-    //         return res.status(201).json({ message: "Berhasil membuat Category", data })
-    //     } catch (error) {
-    //         console.log(error);
-    //         next(error);
-    //     }
-    // },
+    updateSubCategory: async (req, res, next) => {
+        try {
+            const sub_category = await SubCategory.findByIdAndUpdate(req.params.id, { name: req.body.name }, {new: true});
+            if(!sub_category) return res.status(404).json({message: `Sub Category dengan id ${req.body.id} tidak ditemukan`});
+            return res.status(200).json({message: "Berhasil Mengedit Sub Category", data: sub_category});
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
 
     updateCategory: async (req, res, next) => {
         try {

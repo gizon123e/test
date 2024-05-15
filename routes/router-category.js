@@ -10,6 +10,8 @@ router.get('/list', controlerCategory.getCategory);
 router.post('/create', controlerCategory.createCategory);
 router.post('/detail', controlerCategory.getDetailCategory);
 router.put('/update/:id', controlerCategory.updateCategory);
+router.put('/update-sub/:id', controlerCategory.updateSubCategory);
+
 router.delete('/delete/:id', controlerCategory.deleteCategory);
 
 module.exports = router
