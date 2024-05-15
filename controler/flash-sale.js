@@ -51,13 +51,6 @@ module.exports = {
                 for (const item of categorys){
                     let stokAwal;
                     const product = await Product.findOne({categoryId: item.value.toString()});
-                    if(!stokAwalMap.get(product._id.toString())){
-                        stokAwalMap.set(product._id.toString(), product.stok);
-                        stokAwal = stokAwalMap.get(product._id.toString())
-                    }else{
-                        stokAwal = stokAwalMap.get(product._id.toString())
-                    }
-                    if(!stokAwal) stokAwal = product.stok
                     const objectProduct = product.toObject();
                     flashSalesProducts.push({...objectProduct, stokAwal});
                 }
