@@ -20,7 +20,18 @@ const flashSaleModel = mongoose.Schema({
     },
     potonganHarga:{
         type: Number
-    }
+    },
+    stokAwal:[
+        {
+            _id: false,
+            productId: {
+                type: mongoose.Types.ObjectId
+            },
+            value: {
+                type: Number
+            }
+        }
+    ]
 })
 
 const FlashSale = mongoose.model('FlashSale', flashSaleModel);

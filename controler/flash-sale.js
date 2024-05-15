@@ -19,9 +19,6 @@ module.exports = {
             })
             const mappedCategorys = categorys.map(item => ({ value: item._id }));
 
-            console.log('mapped', mappedCategorys)
-            // console.log(start, end);
-            // console.log(createDate(start).toString(), createDate(end).toString())
             const startTime = createDate(start);
             const endTime = createDate(end);
             const newFlashSale = await FlashSale.create({
@@ -40,7 +37,6 @@ module.exports = {
     },
     getFlashSale: async(req, res, next) => {
         try {
-            const stokAwalMap = new Map()
             const flashSales = await FlashSale.find()
             if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-event"})
             const flashSalesProducts = []
@@ -49,8 +45,16 @@ module.exports = {
             for ( const flashSale of flashSales){
                 categorys = flashSale.categoryId
                 for (const item of categorys){
-                    let stokAwal;
                     const product = await Product.findOne({categoryId: item.value.toString()});
+                    const stokAwalEntry = flashSale.stokAwal.find(entry => entry.productId.toString() === product._id.toString());
+                    if (stokAwalEntry) {
+                        stokAwal = stokAwalEntry.value;
+                    } else {
+                        stokAwal = product.stok;
+                        flashSale.stokAwal.push({ productId: product._id, value: stokAwal });
+                        await flashSale.save(); // Save the updated flashSale document
+                    };
+
                     const objectProduct = product.toObject();
                     flashSalesProducts.push({...objectProduct, stokAwal});
                 }
