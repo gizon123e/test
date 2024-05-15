@@ -1,4 +1,5 @@
 const Konsumen = require('../../models/konsumen/model-konsumen')
+const PicKonsumen = require('../../models/konsumen/model-penanggung-jawab');
 const Address = require("../../models/models-address")
 const path = require('path');
 const dotenv = require('dotenv')
@@ -54,28 +55,70 @@ module.exports = {
 
             if(samaUser) return res.status(400).json({message: "User ini sudah memiliki data detail Konsumen", data: samaUser});
 
-            const { nama, namaBadanUsaha, penanggungJawab, noTeleponKantor, registerAs, province, subdistrict, regency, village, code_pos, address_description } = req.body;
+            const { 
+                nama, 
+                namaBadanUsaha,
+                nomorAktaPerusahaan,
+                noTeleponKantor,
+                registerAs, 
+                province, 
+                regency, 
+                district, 
+                village, 
+                code_pos, 
+                address_description,
+                long_pin_alamat,
+                lat_pin_alamat,
+                nomorNpwpPerusahaan
+            } = req.body;
             
             const address = {
                 province,
-                subdistrict,
                 regency,
+                district,
                 village,
                 code_pos,
                 address_description
             };
 
-            if(registerAs === "not_individu" && (!namaBadanUsaha || !penanggungJawab || !noTeleponKantor || !req.files)){
-                return res.status(403).json({message: "Jika daftar sebagai bukan individu, wajib mengisi namaBadanUsaha, penanggungJawab, noTeleponKantor, dan file legalitas badan usaha dengan nama legalitasBadanUsaha"});
+            if(registerAs === "not_individu" && (
+                    !namaBadanUsaha || 
+                    !nomorAktaPerusahaan ||
+                    !noTeleponKantor ||
+                    !req.files.legalitasBadanUsaha ||
+                    !req.files.npwpFile||
+                    !province ||
+                    !regency ||
+                    !district ||
+                    !village ||
+                    !code_pos || 
+                    !address_description ||
+                    !long_pin_alamat ||
+                    !lat_pin_alamat ||
+                    !nomorNpwpPerusahaan
+                )){
+                return res.status(403).json({message: "Data Kurang Lengkap"});
             };
             
             
-            if(registerAs === "individu" && (namaBadanUsaha || noTeleponKantor || penanggungJawab || req.files)) return res.status(400).json({message:"Jika daftar sebagai individu payload yang dibutuhkan cuman nama, dan addressId"});
+            if(registerAs === "individu" && (
+                namaBadanUsaha || 
+                nomorAktaPerusahaan ||
+                noTeleponKantor ||
+                !province ||
+                !regency ||
+                !district ||
+                !village ||
+                !code_pos || 
+                !address_description ||
+                !long_pin_alamat ||
+                !lat_pin_alamat
+            )) return res.status(400).json({message:"Data yang dikirim kurang baik"});
             
             const newAddress = await Address.create({...address, userId: req.body.id});
             async function dataMake(){
                 if(registerAs === "not_individu"){
-                    const { legalitasBadanUsaha } = req.files;
+                    const { legalitasBadanUsaha, npwpFile } = req.files;
                     const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
                     if (!regexNoTelepon.test(noTeleponKantor.toString())) {
                         return res.status(400).json({ error: 'no telepon tidak valid' });
@@ -87,21 +130,48 @@ module.exports = {
                     const legalitasPath = path.join(__dirname, '../../public', 'legalitas-img', legalitasFile);
                     
                     await legalitasBadanUsaha.mv(legalitasPath);
+
+                    const npwp_file = `${Date.now()}_${namaBadanUsaha}_${path.extname(npwpFile.name)}`;
+                    
+                    const npwp_file_path = path.join(__dirname, '../../public', 'npwp-img', npwp_file);
+                    
+                    await npwpFile.mv(npwp_file_path);
                     return {
                         userId: req.body.id,
-                        namaBadanUsaha,
+                        nomorAktaPerusahaan,
                         penanggungJawab,
                         noTeleponKantor,
                         address: newAddress._id,
-                        legalitasBadanUsaha: `${req.protocol}://${req.get('host')}/public/legalitas-img/${legalitasFile}`,
+                        nomorNpwpPerusahaan,
+                        pinAlamat:{
+                            long: long_pin_alamat,
+                            lat: lat_pin_alamat
+                        },
+                        npwpFile: `${process.env.HOST}/public/npwp-img/${npwp_file}`,
+                        legalitasBadanUsaha: `${process.env.HOST}/public/legalitas-img/${legalitasFile}`,
                     };
                 };
 
                 if(registerAs !== "not_individu"){
+                    const { npwpFile } = req.files
+                    let npwp_file
+                    if(npwpFile){
+                        npwp_file = `${Date.now()}_${namaBadanUsaha}_${path.extname(npwpFile.name)}`;
+                    
+                        const npwp_file_path = path.join(__dirname, '../../public', 'npwp-img', npwp_file);
+                    
+                        await npwpFile.mv(npwp_file_path);
+                    }
                     return {
                         userId: req.body.id,
                         nama,
-                        address,
+                        address: newAddress._id,
+                        pinAlamat:{
+                            long: long_pin_alamat,
+                            lat: lat_pin_alamat
+                        },
+                        nomorNpwp: req.body.nomorNpwp? req.body.nomorNpwp : undefined,
+                        npwpFile: npwpFile? `${process.env.HOST}/public/npwp-img/${npwp_file}` : undefined,
                     };
                 };
             }

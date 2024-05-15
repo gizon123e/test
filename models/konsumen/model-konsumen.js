@@ -1,17 +1,35 @@
 const mongoose = require("mongoose");
+const { Decimal128 } = require('mongodb')
 
 const konsumenModel = mongoose.Schema({
     nama: {
         type: String,
         required: false
     },
+    nik: {
+        type: String
+    },
+    file_ktp:{
+        type: String,
+    },
     namaBadanUsaha: {
         type: String,
         required: false
     },
-    penanggungJawab:{
+    nomorAktaPerusahaan:{
         type: String,
-        required: false
+    },
+    nomorNpwpPerusahaan:{
+        type: String,
+    },
+    npwpFile:{
+        type: String,
+    },
+    nomorNpwp: {
+        type: String,
+    },
+    penanggungJawab:{
+        type: mongoose.Types.ObjectId
     },
     address:{
         type: mongoose.Types.ObjectId,
@@ -37,7 +55,15 @@ const konsumenModel = mongoose.Schema({
     },
     profile_pict:{
         type: String,
-        default: "https://gull-assuring-pigeon.ngrok-free.app/public/profile_picts/default.jpg"
+        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
+    },
+    pinAlamat: {
+        long:{
+            type: Decimal128
+        },
+        lat:{
+            type: Decimal128
+        }
     },
 });
 

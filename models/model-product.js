@@ -69,6 +69,7 @@ const productModels = mongoose.Schema(
     },
     rating: {
       type: Number,
+      default: 0
     },
     bahanBaku:[
       {
