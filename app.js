@@ -53,6 +53,7 @@ app.use('/api/login/user-system', require('./routes/router-system-user'));
 app.use('/api/promo', require('./routes/router-promo'));
 app.use('/api/minat', require('./routes/router-minat'));
 app.use('/api/flash-sale', require('./routes/router-flash-sale'));
+app.use('/api/alamat', require('./routes/router-alamat'));
 
 
 

@@ -4,6 +4,8 @@ const SpecificCategory = require('../models/model-specific-category');
 const path = require("path");
 const dotenv = require('dotenv').config()
 const randomIndex = require("../utils/randomIndex");
+const { ObjectId } = require('mongodb');
+const { default: mongoose } = require('mongoose');
 
 
 module.exports = {
@@ -69,9 +71,15 @@ module.exports = {
                 if(!sub_category){
                     sub_category = await SubCategory.create({name: sub});
                 }
-                main_category.contents.push(sub_category._id);
-                await main_category.save();
-            }
+                const check = main_category.contents.find(item => {
+                    return item.toString() === sub_category._id.toString()
+                });
+                console.log(check)
+                if(!check){
+                    main_category.contents.push(sub_category._id);
+                    await main_category.save();
+                }
+            };
 
             if(specific){
                 specific_category = await SpecificCategory.findOne({ name: { $regex: new RegExp(specific, 'i')}});
@@ -80,7 +88,7 @@ module.exports = {
                 }
                 sub_category.contents.push(specific_category._id);
                 await sub_category.save();
-            }
+            };
             
             return res.status(201).json({message: "Berhasil Menambahkan Category", main_category, sub_category, specific_category});
         } catch (error) {
@@ -129,7 +137,23 @@ module.exports = {
 
     deleteCategory: async (req, res, next) => {
         try {
-            const dataCategory = await MainCategory.findOne({ _id: req.params.id })
+            const dataCategory = await MainCategory.findOne({ _id: req.params.id });
+            if(req.query.sub){
+                const sub_category = await SubCategory.findById(req.params.id);
+                if(sub_category.contents.length > 0) return res.status(403).json({message: "Sub Category memiliki specific category. Tidak Bisa Menghapus"})
+                const main = await MainCategory.findOne({contents: { $in: req.params.id }});
+                if(main){
+                    const index = main.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
+                    main.contents.splice(index, 1);
+                    await main.save();
+                }
+                await SubCategory.deleteOne({_id: req.params.id});
+                if(!sub_category){
+                    return res.status(404).json({message: `Sub Category dengan id ${req.params.id} tidak ditemukan`});
+                }else{
+                    return res.status(200).json({message: "Berhasil Menghapus Sub Category"});
+                };
+            };
             if (!dataCategory) return res.status(404).json({ message: 'delete data category not found' });
             if(dataCategory.contents.length > 0) return res.status(403).json({message: `Tidak bisa menghapus category ${dataCategory.name}, karena sudah memiliki sub category`});
 
