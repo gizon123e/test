@@ -1,81 +1,56 @@
-const csv_parser = require("csv-parse").parse;
-const fs = require('fs');
-const path = require('path');
-const provinsiPath = path.join('./', 'utils', 'data-alamat', 'provinsi.csv');
-const kabkotPath = path.join('./', 'utils', 'data-alamat', 'kabkot.csv');
-const jenis_kabkotPath = path.join('./', 'utils', 'data-alamat', 'jenis_kabkot.csv');
-const kecamatanPath = path.join('./', 'utils', 'data-alamat', 'kecamatan.csv');
-const deskelPath = path.join('./', 'utils', 'data-alamat', 'deskel.csv');
-
-
+const Indonesia = require('../models/IndonesiaProvince')
 module.exports = {
-    getProvinsi: async (req, res, next) => {
+    getProvinsi: async(req, res, next) => {
         try {
-            fs.readFile(provinsiPath, 'utf8', (err, data) => {
-                if (err) {
-                    console.error(err);
-                    next(err);
-                }
-                
-                // Memisahkan baris-baris CSV
-                const lines = data.trim().split('\n');
-                
-                // Mendapatkan header
-                const headers = lines.shift().split(',');
-            
-                // Menguraikan setiap baris ke dalam objek
-                const provinsi = lines.map(line => {
-                    const values = line.split(',');
-                    const obj = {};
-                    headers.forEach((header, index) => {
-                        obj[header.trim()] = values[index].trim();
-                    });
-                    return obj;
-                });
-            
-                fs.readFile(kabkotPath, 'utf-8', (err, data) => {
-                    if(err){
-                        console.log(err);
-                        next(err)
-                    }
-
-                    const lines = data.trim().split('\n');
-
-                    const headers = lines.shift().split(',');
-
-                    const kabkot = lines.map(line => {
-                        const values = line.split(',');
-                        const obj = {}
-                        headers.forEach((header, index)=>{
-                            obj[header.trim()] = values[index].trim();
-                        });
-                        return obj
-                    })
-                })
-            });
-            // const data = await new Promise((resolve, reject) => {
-            //     const results = [];
-            //     fs.createReadStream(provinsiPath)
-            //     .pipe(csv_parser({ delimiter:",", from_line: 1}))
-            //     .on("data", async function(row){
-            //         const provinsi = row;
-            //         const kota = await new Promise((resolve, reject))
-            //     })
-            //     .on("error", function(err){
-            //         console.log(err);
-            //         reject(err);
-            //     })
-            //     .on('end', function(){
-            //         console.log("beres");
-            //         resolve(results);
-            //     });
-            // });
-    
-            // console.log(data);
-            // res.status(200).json(data);
+            const result = await Indonesia.getAllProvince()
+            res.json({message: "Berhasil Mendapatkan Semua Provinsi",data: result})
         } catch (error) {
-            console.error(error);
-            res.status(500).send('Internal Server Error');
+            console.log(error);
+            next(error)
+        }
+    },
+    getDetailProvinsi: async (req, res, next) =>{
+        try {
+            const id_prov  = req.params.id
+            const result = await Indonesia.getProvince(parseInt(id_prov))
+            if(!result || result.length === 0) return res.status(404).json({message: `Tidak ada provinsi dengan id ${id_prov}`})
+            res.json({message: "Berhasil Mendapatkan Semua Provinsi",data: result})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    getRegency: async(req, res, next) => {
+        try {
+            const id_regency  = req.params.id
+            const result = await Indonesia.getRegency(parseInt(id_regency));
+            if(!result || result.length === 0) return res.status(404).json({message: `Tidak ada kabupaten/kota dengan id ${id_regency}`})
+            res.json({message: "Berhasil Mendapatkan Regency", data: result})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    getDistrict: async(req, res, next) =>{
+        try {
+            const id_district  = req.params.id
+            const result = await Indonesia.getDistrict(parseInt(id_district));
+            if(!result || result.length === 0) return res.status(404).json({message: `Tidak ada kecamatan dengan id ${id_district}`})
+            res.json({message: "Berhasil Mendapatkan Kecamatan", data: result})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    getVillage: async(req, res, next) => {
+        try {
+            const id_village  = req.params.id
+            const result = await Indonesia.getVillage(parseInt(id_village));
+            if(!result || result.length === 0) return res.status(404).json({message: `Tidak ada kelurahan dengan id ${id_village}`})
+            res.json({message: "Berhasil Mendapatkan Desa / Kelurahan", data: result})
+        } catch (error) {
+            console.log(error);
+            next(error)
         }
     }
 }
