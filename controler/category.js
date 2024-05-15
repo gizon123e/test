@@ -9,7 +9,7 @@ const randomIndex = require("../utils/randomIndex");
 module.exports = {
     getCategory: async (req, res, next) => {
         try {
-            const dataCategory = await MainCategory.find()
+            const dataCategory = await MainCategory.find().populate('contents')
             if(!dataCategory || dataCategory.length === 0) return res.status(404).json({message: "Tidak Ada Category"});
             let data;
             const requestFrom = req.headers['user-agent'];
@@ -37,10 +37,7 @@ module.exports = {
     getDetailCategory: async(req, res, next) => {
         try {
             const id = req.body.mainCategoryId
-            const mainCategory = await MainCategory.findById(id).populate({
-                path: contents,
-                model:"SubCategory"
-            });
+            const mainCategory = await MainCategory.findById(id).populate("contents");
             if(!mainCategory) return res.status(404).json({message: `Main category dengan id ${id} tidak ditemukan`});
             return res.status(200).json({message: "Berhasil mendapatkan detail main category", data: mainCategory})
         } catch (error) {
@@ -52,17 +49,16 @@ module.exports = {
     createCategory: async (req, res, next) => {
         try {
             const { main, sub, specific, showAt } = req.body;
-            if(req.files === undefined) return res.status(400).json({message: "Tidak ada file icon yang dikirimkan"})
-            const { icon } = req.files
+            // if(req.files === undefined) return res.status(400).json({message: "Tidak ada file icon yang dikirimkan"})
             let main_category;
             let sub_category
             let specific_category;
-
-            if(main){
+            main_category = await MainCategory.findOne({ name: { $regex: new RegExp(main, 'i')} }).populate("contents");
+            if(main && req.files){
+                const { icon } = req.files;
                 const iconName = `${Date.now()}_${main}_${path.extname(icon.name)}`
                 const pathIcon = path.join(__dirname, '../public', 'icon', iconName);
                 await icon.mv(pathIcon)
-                main_category = await MainCategory.findOne({ name: { $regex: new RegExp(main, 'i')} });
                 if(!main_category){
                     main_category = await MainCategory.create({name: main, showAt, icon: `${process.env.HOST}/public/icon/${iconName}`});
                 };

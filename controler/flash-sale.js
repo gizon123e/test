@@ -40,19 +40,31 @@ module.exports = {
     },
     getFlashSale: async(req, res, next) => {
         try {
+            const stokAwalMap = new Map()
             const flashSales = await FlashSale.find()
+            if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-event"})
             const flashSalesProducts = []
             const data = []
             let categorys = [];
             for ( const flashSale of flashSales){
                 categorys = flashSale.categoryId
                 for (const item of categorys){
+                    let stokAwal;
                     const product = await Product.findOne({categoryId: item.value.toString()});
-                    flashSalesProducts.push(product);
+                    if(!stokAwalMap.get(product._id.toString())){
+                        stokAwalMap.set(product._id.toString(), product.stok);
+                        stokAwal = stokAwalMap.get(product._id.toString())
+                    }else{
+                        stokAwal = stokAwalMap.get(product._id.toString())
+                    }
+                    if(!stokAwal) stokAwal = product.stok
+                    const objectProduct = product.toObject();
+                    flashSalesProducts.push({...objectProduct, stokAwal});
                 }
                 const object = flashSale.toObject()
                 delete object.categoryId
-                data.push({object, flashSalesProducts})
+                if(flashSale.endTime.getTime() < new Date().getTime()) return res.status(403).jons({message: "Flash Sale Sudah Berakhir"});
+                data.push({ flash_sale: object, flashSalesProducts})
             }
             
 

@@ -84,6 +84,10 @@ const productModels = mongoose.Schema(
         }
       }
     ],
+    minimalOrder: {
+      type: Number,
+      default: 1
+    }
   },
   { timestamp: true }
 );
