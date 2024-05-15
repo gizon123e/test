@@ -49,11 +49,11 @@ module.exports = {
     createCategory: async (req, res, next) => {
         try {
             const { main, sub, specific, showAt } = req.body;
-            // if(req.files === undefined) return res.status(400).json({message: "Tidak ada file icon yang dikirimkan"})
             let main_category;
             let sub_category
             let specific_category;
             main_category = await MainCategory.findOne({ name: { $regex: new RegExp(main, 'i')} }).populate("contents");
+            if(req.files === undefined && !main_category && main) return res.status(400).json({message: "Tidak ada file icon yang dikirimkan"})
             if(main && req.files){
                 const { icon } = req.files;
                 const iconName = `${Date.now()}_${main}_${path.extname(icon.name)}`
