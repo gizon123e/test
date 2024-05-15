@@ -44,6 +44,7 @@ app.use("/api/vendor", require('./routes/router-vendor'));
 app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen'));
+app.use("/api/konsumen/pic", require('./routes/router-konsumen-pic'));
 app.use('/api/order-distributor', require('./routes/router-order-distributtor'));
 app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));

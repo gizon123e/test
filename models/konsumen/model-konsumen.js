@@ -19,10 +19,10 @@ const konsumenModel = mongoose.Schema({
     nomorAktaPerusahaan:{
         type: String,
     },
-    nomorNpwpPerusahaan:{
+    npwpFile:{
         type: String,
     },
-    npwpFile:{
+    nomorNpwpPerusahaan:{
         type: String,
     },
     nomorNpwp: {
@@ -38,10 +38,6 @@ const konsumenModel = mongoose.Schema({
     },
     noTeleponKantor:{
         type: String,
-        required: false
-    },
-    jumlahAnggota:{
-        type: Number,
         required: false
     },
     userId: {

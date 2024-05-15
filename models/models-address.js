@@ -9,8 +9,8 @@ const modelAddress = mongoose.Schema({
         required: [true, 'Regency harus di isi'],
         type: String
     },
-    subdistrict: {
-        required: [true, 'Subdistrict harus di isi'],
+    district: {
+        required: [true, 'district harus di isi'],
         type: String
     },
     village: {
@@ -29,6 +29,9 @@ const modelAddress = mongoose.Schema({
         type: mongoose.Types.ObjectId,
         required: [true, 'userId harus di isi'],
         ref: 'User'
+    },
+    isPic:{
+        typ: Boolean
     }
 }, { timestamp: true })
 

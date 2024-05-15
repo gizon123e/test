@@ -1,10 +1,9 @@
 const Konsumen = require('../../models/konsumen/model-konsumen')
-const PicKonsumen = require('../../models/konsumen/model-penanggung-jawab');
 const Address = require("../../models/models-address")
 const path = require('path');
 const dotenv = require('dotenv')
-const fs = require('fs')
 dotenv.config()
+const fs = require('fs')
 
 module.exports = {
 
@@ -69,7 +68,9 @@ module.exports = {
                 address_description,
                 long_pin_alamat,
                 lat_pin_alamat,
-                nomorNpwpPerusahaan
+                nomorNpwpPerusahaan,
+                nik,
+                nomorNpwp
             } = req.body;
             
             const address = {
@@ -80,40 +81,63 @@ module.exports = {
                 code_pos,
                 address_description
             };
+            
+            if (registerAs === "not_individu") {
+                let missingFields = [];
+                if (!namaBadanUsaha) missingFields.push("namaBadanUsaha");
+                if (!nomorAktaPerusahaan) missingFields.push("nomorAktaPerusahaan");
+                if (!noTeleponKantor) missingFields.push("noTeleponKantor");
+                if (!req.files?.legalitasBadanUsaha) missingFields.push("legalitasBadanUsaha");
+                if (!req.files?.npwpFile) missingFields.push("npwpFile");
+                if (!province) missingFields.push("province");
+                if (!regency) missingFields.push("regency");
+                if (!district) missingFields.push("district");
+                if (!village) missingFields.push("village");
+                if (!code_pos) missingFields.push("code_pos");
+                if (!address_description) missingFields.push("address_description");
+                if (!long_pin_alamat) missingFields.push("long_pin_alamat");
+                if (!lat_pin_alamat) missingFields.push("lat_pin_alamat");
+                if (!nomorNpwpPerusahaan) missingFields.push("nomorNpwpPerusahaan");
+            
+                if (missingFields.length > 0) {
+                    return res.status(403).json({
+                        message: "Data Kurang Lengkap",
+                        missingFields: missingFields
+                    });
+                }
+            }
+            
+            
+            if (registerAs === "individu") {
+                let missingFields = [];
+            
+                if (namaBadanUsaha) missingFields.push("Nama Badan Usaha tidak seharusnya diisi");
+                if (nomorAktaPerusahaan) missingFields.push("Nomor Akta Perusahaan tidak seharusnya diisi");
+                if (noTeleponKantor) missingFields.push("Nomor Telepon Kantor tidak seharusnya diisi");
+                if (nomorNpwpPerusahaan) missingFields.push("Nomor Nomor NPWP Perusahaan tidak seharusnya diisi");
+                if (req.files?.legalitasBadanUsaha) missingFields.push("Legalitas Badan Usah tidak seharusnya diisi");
+                if (!nama) missingFields.push("Nama");
+                if (!province) missingFields.push("Province");
+                if (!regency) missingFields.push("Regency");
+                if (!district) missingFields.push("District");
+                if (!village) missingFields.push("Village");
+                if (!code_pos) missingFields.push("Kode Pos");
+                if (!address_description) missingFields.push("Deskripsi Alamat");
+                if (!long_pin_alamat) missingFields.push("Longitude Alamat");
+                if (!lat_pin_alamat) missingFields.push("Latitude Alamat");
+                if (!nik) missingFields.push("NIK");
+                if (!req.files?.file_ktp) missingFields.push("File KTP");
+                if (req.files?.npwpFile && !nomorNpwp) missingFields.push("Nomor NPWP");
+                if (!req.files?.npwpFile && nomorNpwp) missingFields.push("File NPWP");
 
-            if(registerAs === "not_individu" && (
-                    !namaBadanUsaha || 
-                    !nomorAktaPerusahaan ||
-                    !noTeleponKantor ||
-                    !req.files.legalitasBadanUsaha ||
-                    !req.files.npwpFile||
-                    !province ||
-                    !regency ||
-                    !district ||
-                    !village ||
-                    !code_pos || 
-                    !address_description ||
-                    !long_pin_alamat ||
-                    !lat_pin_alamat ||
-                    !nomorNpwpPerusahaan
-                )){
-                return res.status(403).json({message: "Data Kurang Lengkap"});
-            };
             
-            
-            if(registerAs === "individu" && (
-                namaBadanUsaha || 
-                nomorAktaPerusahaan ||
-                noTeleponKantor ||
-                !province ||
-                !regency ||
-                !district ||
-                !village ||
-                !code_pos || 
-                !address_description ||
-                !long_pin_alamat ||
-                !lat_pin_alamat
-            )) return res.status(400).json({message:"Data yang dikirim kurang baik"});
+                if (missingFields.length > 0) {
+                    return res.status(400).json({
+                        message: "Data yang dikirim kurang baik",
+                        missingFields
+                    });
+                }
+            }
             
             const newAddress = await Address.create({...address, userId: req.body.id});
             async function dataMake(){
@@ -139,10 +163,10 @@ module.exports = {
                     return {
                         userId: req.body.id,
                         nomorAktaPerusahaan,
-                        penanggungJawab,
                         noTeleponKantor,
                         address: newAddress._id,
                         nomorNpwpPerusahaan,
+                        namaBadanUsaha,
                         pinAlamat:{
                             long: long_pin_alamat,
                             lat: lat_pin_alamat
@@ -152,16 +176,19 @@ module.exports = {
                     };
                 };
 
-                if(registerAs !== "not_individu"){
-                    const { npwpFile } = req.files
+                if(registerAs === "individu"){
+                    const { npwpFile, file_ktp } = req.files
                     let npwp_file
                     if(npwpFile){
-                        npwp_file = `${Date.now()}_${namaBadanUsaha}_${path.extname(npwpFile.name)}`;
+                        npwp_file = `${Date.now()}_${nama}_${path.extname(npwpFile.name)}`;
                     
                         const npwp_file_path = path.join(__dirname, '../../public', 'npwp-img', npwp_file);
                     
                         await npwpFile.mv(npwp_file_path);
                     }
+                    const fileKtp = `${Date.now()}_ktp_of_${nama}_${path.extname(file_ktp.name)}`;
+                    const file_file_path = path.join(__dirname, '../../public', 'image-ktp', fileKtp);
+                    await file_ktp.mv(file_file_path)
                     return {
                         userId: req.body.id,
                         nama,
@@ -170,6 +197,7 @@ module.exports = {
                             long: long_pin_alamat,
                             lat: lat_pin_alamat
                         },
+                        file_ktp: `${process.env.HOST}/public/image-ktp/${fileKtp}`,
                         nomorNpwp: req.body.nomorNpwp? req.body.nomorNpwp : undefined,
                         npwpFile: npwpFile? `${process.env.HOST}/public/npwp-img/${npwp_file}` : undefined,
                     };
