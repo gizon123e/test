@@ -79,7 +79,11 @@ module.exports = {
                 district,
                 village,
                 code_pos,
-                address_description
+                address_description,
+                pinAlamat:{
+                    long: long_pin_alamat,
+                    lat: lat_pin_alamat
+                }
             };
             
             if (registerAs === "not_individu") {

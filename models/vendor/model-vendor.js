@@ -5,27 +5,44 @@ const vendorModel = mongoose.Schema({
         type: String,
         required: false
     },
+    nik: {
+        type: String
+    },
+    file_ktp:{
+        type: String,
+    },
     namaBadanUsaha: {
         type: String,
         required: false
     },
-    penanggungJawab:{
+    nomorAktaPerusahaan:{
         type: String,
-        required: false
     },
-    addressId:{
+    npwpFile:{
+        type: String,
+    },
+    nomorNpwpPerusahaan:{
+        type: String,
+    },
+    nomorNpwp: {
+        type: String,
+    },
+    penanggungJawab:{
+        type: mongoose.Types.ObjectId
+    },
+    address:{
         type: mongoose.Types.ObjectId,
         ref: "Address",
         required: [true, "Harus memiliki alamat"]
+    },
+    noTeleponKantor:{
+        type: String,
+        required: false
     },
     userId: {
         type: mongoose.Types.ObjectId,
         required: [true, 'userId harus di isi'],
         ref: 'User'
-    },
-    noTeleponKantor:{
-        type: String,
-        required: false
     },
     legalitasBadanUsaha:{
         type: String, 
@@ -33,7 +50,7 @@ const vendorModel = mongoose.Schema({
     },
     profile_pict:{
         type: String,
-        default: "http://localhost:4000/public/profile_picts/default.jpg"
+        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
     }
 })
 

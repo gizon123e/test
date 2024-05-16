@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const { Decimal128 } = require('mongodb')
 
 const modelAddress = mongoose.Schema({
     province: {
@@ -32,7 +33,15 @@ const modelAddress = mongoose.Schema({
     },
     isPic:{
         typ: Boolean
-    }
+    },
+    pinAlamat: {
+        long:{
+            type: Decimal128
+        },
+        lat:{
+            type: Decimal128
+        }
+    },
 }, { timestamp: true })
 
 const Address = mongoose.model('Address', modelAddress)

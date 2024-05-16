@@ -60,7 +60,7 @@ module.exports = {
                 }
                 const object = flashSale.toObject()
                 delete object.categoryId
-                if(flashSale.endTime.getTime() < new Date().getTime()) return res.status(403).jons({message: "Flash Sale Sudah Berakhir"});
+                if(flashSale.endTime.getTime() < new Date().getTime()) return res.status(403).json({message: "Flash Sale Sudah Berakhir"});
                 data.push({ flash_sale: object, flashSalesProducts})
             }
             

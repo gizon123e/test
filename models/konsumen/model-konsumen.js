@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { Decimal128 } = require('mongodb')
 
 const konsumenModel = mongoose.Schema({
     nama: {
@@ -52,15 +51,7 @@ const konsumenModel = mongoose.Schema({
     profile_pict:{
         type: String,
         default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
-    },
-    pinAlamat: {
-        long:{
-            type: Decimal128
-        },
-        lat:{
-            type: Decimal128
-        }
-    },
+    }
 });
 
 const Konsumen = mongoose.model("Konsumen", konsumenModel);
