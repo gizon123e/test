@@ -6,53 +6,24 @@ const modelDistributtor = mongoose.Schema({
         ref: 'User',
         required: [true, 'userId harus di isi']
     },
-    name_kantor: {
+    nama_distributor: {
         type: String,
-        required: false
+        required: [true, 'name distributtor harus di isi']
     },
-    no_telepon: {
+    no_telp: {
         type: String,
         require: [true, 'no_telepon harus di isi']
     },
-    armada_pengiriman: {
+    is_kendaraan: {
         type: String,
-        enum: ['Sepeda Motor', 'Mobil', 'Truck', 'Mobil Box'],
+        enum: ['Motor', 'Mobil', 'Mobil dan Moto'],
         message: '{VALUE} is not supported',
-        required: [true, 'armada_pengiriman harus di isi']
+        required: [true, 'is_kendaraan harus di isi']
     },
-    name_penanggung_jawab: {
-        type: String,
-        required: [true, 'name_penanggung_jawab harus di isi']
+    is_active: {
+        type: Boolean,
+        required: [true, "is active harus di isi"]
     },
-    nik_ktp: {
-        type: Number,
-        required: [true, 'nik_ktp harus di isi']
-    },
-    image_ktp: {
-        type: String,
-        required: [true, 'image_ktp harus di isi']
-    },
-    image_sim: {
-        type: String,
-        required: [true, 'image sim harus di isi']
-    },
-    addressId: {
-        type: mongoose.Types.ObjectId,
-        required: [true, 'addressId harus di isi'],
-        ref: 'Address'
-    },
-    jam_oprasi: {
-        type: String,
-        required: [true, 'jam_oprasi harus di isi']
-    },
-    harga_ongkir: {
-        type: Number,
-        required: [true, 'harga ongkir harus di isi']
-    },
-    profile_pict:{
-        type: String,
-        default: "http://localhost:4000/public/profile_picts/default.jpg"
-    }
 }, { timestamp: true });
 
 const Distributtor = mongoose.model('Distributtor', modelDistributtor);
