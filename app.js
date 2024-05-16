@@ -19,14 +19,14 @@ app.use(session({
   secret: process.env.SECRETKEY,
   cookie: { secure: true }
 }));
-app.use(bodyParser.json({limit: '250mb'}));
+app.use(bodyParser.json({ limit: '250mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
 global.__basedir = __dirname;
 
 // router
-app.get('/failed', (req, res)=>{
+app.get('/failed', (req, res) => {
   res.send("Failed");
 });
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
@@ -40,13 +40,21 @@ app.use("/api/report", require("./routes/router-laporan"));
 app.use("/api/produsen", require("./routes/router-produsen"));
 app.use("/api/comment", require("./routes/router-komentar"));
 app.use("/api/export", require("./routes/router-export"));
-app.use("/api/distributor", require('./routes/router-distributtor'));
 app.use("/api/vendor", require('./routes/router-vendor'));
 app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen-pic'));
-app.use('/api/order-distributor', require('./routes/router-order-distributtor'));
+
+// router distributtor
+app.use("/api/distributor", require('./routes/router-distributtor/router-distributtor'));
+app.use('/api/document-distributor', require('./routes/router-distributtor/router-document-distributtor'));
+app.use('/api/alamat-ditributtor', require('./routes/router-distributtor/router-alamat-distributtor'))
+app.use('/api/penanggung-jawab-distributtor', require('./routes/router-distributtor/router-penanggungjawab'))
+app.use('/api/document-penanggungan-jawab', require('./routes/router-distributtor/router-document-penanggungJawab'))
+app.use('/api/alamat-penanggung-jawab', require('./routes/router-distributtor/router-alamatPenanggungJawab'))
+app.use('/api/kendaraan-distributtor', require('./routes/router-distributtor/router-kendaraaanDistributtor'))
+
 app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));
 app.use('/api/login/google-oauth', require('./routes/router-login-google-oauth'));
