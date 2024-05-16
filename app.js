@@ -1,4 +1,5 @@
 require("./database/database");
+const flash_sale_checker = require('./utils/flash-sale-checker');
 const express = require("express");
 const cors = require("cors");
 const logger = require("morgan");
@@ -57,13 +58,11 @@ app.use('/api/flash-sale', require('./routes/router-flash-sale'));
 app.use('/api/alamat', require('./routes/router-alamat'));
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 
-
-
-
 // midelware error
 app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
+  flash_sale_checker.start()
   console.log("connection express success");
   websocket.listen(5000, () => {
     console.log("Connection websocket success");

@@ -200,10 +200,11 @@ module.exports = {
     }
   },
 
-  addPinForPhoneAccount: async(req, res, next) =>{
+  addPin: async(req, res, next) =>{
     try {
       const { pin } = req.body;
       const user = await User.findById(req.user.id);
+      if(user.pin) return res.status(403).json({message: "User sudah memiliki pin"});
       const hashedPin = await bcrypt.hash(pin, 10);
       user.pin = hashedPin;
       await user.save();
@@ -212,6 +213,50 @@ module.exports = {
       console.log(error);
       next(error)
     };
+  },
+
+  verifyPin: async(req, res, next) =>{
+    try {
+      const { pin } = req.body
+      if(!pin || pin.trim().length === 0) return res.status(400).json({message: "Pin Kosong"})
+      const user = await User.findById(req.user.id);
+      const validatePin = await bcrypt.compare(
+        pin,
+        user.pin
+      );
+      if(!validatePin) return res.status(401).json({message: "Pin Salah"});
+      const pinToken = {
+        userId: req.user.id,
+        pin: pin
+      }
+
+      const token = jwt.createToken(pinToken)
+      return res.status(200).json({message: "Pin Benar", token});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
+  editPin: async(req, res, next) =>{
+    try {
+      const { pin, token } = req.body;
+      if(!pin || pin.trim().length === 0) return res.status(400).json({message: "Pin Kosong"});
+      const hashedPin =  await bcrypt.hash(pin, 10);
+      const verifyToken = jwt.verifyToken(token);
+
+      if(!verifyToken) return res.status(401).json({message: "Token Salah"});
+      if(verifyToken.userId !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Pin Orang Lain"});
+
+      await User.findByIdAndUpdate(req.user.id, {
+        pin: hashedPin
+      });
+      
+      return res.status(201).json({message: "Berhasil Mengubah Pin"});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
   },
 
   validateUser: async (req, res, next) => {

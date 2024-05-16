@@ -34,6 +34,10 @@ const modelAddress = mongoose.Schema({
     isPic:{
         typ: Boolean
     },
+    isMain: {
+        type: Boolean,
+        default: false
+    },
     pinAlamat: {
         long:{
             type: Decimal128

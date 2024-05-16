@@ -86,7 +86,20 @@ module.exports = {
 
     createOrder: async (req, res, next) => {
         try {
-            const { product = [], addressId, cartId = [] } = req.body
+            const { 
+                product = [], 
+                addressId, 
+                cartId = [],
+                catatan_produk,
+                poinTerpakai,
+                biaya_proteksi,
+                biaya_asuransi,
+                ongkir,
+                potongan_ongkir,
+                biaya_jasa_aplikasi,
+                biaya_layanan,
+                dp
+            } = req.body
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -143,12 +156,23 @@ module.exports = {
             }
 
             if (dataArrayProduct.length > 0) {
+                total_price += (parseInt(biaya_jasa_aplikasi) + parseInt(biaya_layanan))
+                if( biaya_asuransi || biaya_proteksi ) {
+                    total_price += (parseInt(biaya_proteksi) + parseInt(biaya_asuransi))
+                }
                 const dataOrder = await Orders.create({
                     product: dataArrayProduct,
                     addressId,
                     userId: req.user.id,
                     date_order,
-                    total_price
+                    total_price,
+                    catatan_produk,
+                    poinTerpakai,
+                    ongkir,
+                    dp,
+                    potongan_ongkir,
+                    biaya_asuransi: biaya_asuransi? true : false,
+                    biaya_proteksi: biaya_proteksi? true : false
                 });
 
                 for (const produk of dataArrayProduct){

@@ -3,7 +3,7 @@ const Address = require('../models/models-address')
 module.exports = {
     getAddress: async (req, res, next) => {
         try {
-            const dataAddress = await Address.find({ userId: req.user.id }).populate('userId', '-password')
+            const dataAddress = await Address.find({ userId: req.user.id })
             return res.status(200).json({ message: 'get data all Address success', datas: dataAddress })
         } catch (error) {
             if (error && error.name === 'ValidationError') {

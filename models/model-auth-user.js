@@ -44,6 +44,7 @@ const userModels = mongoose.Schema(
     },
     pin: {
       type: String,
+      default: null
     },
     role: {
       type: String,

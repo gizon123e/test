@@ -1,3 +1,4 @@
+const { Decimal128 } = require('mongodb');
 const mongoose = require('mongoose');
 
 const modelOrder = mongoose.Schema({
@@ -37,6 +38,29 @@ const modelOrder = mongoose.Schema({
         required: [true, 'status harus di isi'],
         enum: ["Belum Bayar", "Sedang diproses", "Dikirim", "Selesai", "Dibatalkan"],
         default: "Belum Bayar"
+    },
+    catatan_produk:{
+        type: "String"
+    },
+    poinTerpakai:{
+        type: Number
+    },
+    biaya_proteksi:{
+        type: Boolean,
+        default: false
+    },
+    biaya_asuransi:{
+        type: Boolean,
+        default: false
+    },
+    ongkir:{
+        type: Number
+    },
+    potongan_ongkir:{
+        type: Number
+    },
+    dp:{
+        type: Number
     }
 }, { timestamp: true })
 

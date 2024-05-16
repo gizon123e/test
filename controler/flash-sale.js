@@ -6,10 +6,19 @@ const createDate = require('../utils/createDateString');
 module.exports = {
     addFlashSale: async(req, res, next) => {
         try {
+            console.time('test')
             const { categoryIds = [], potonganHarga, start, end } = req.body
             
             const categorys = await SpecificCategory.find({_id: { $in: categoryIds }});
-            // console.log(categorys)
+            const productFlashSale = await Product.find({categoryId: {$in: categoryIds}});
+            const productIds = []
+            for (const product of productFlashSale){
+                productIds.push(product._id)
+            }
+            await Product.updateMany(
+                {_id: {$in: productIds}},
+                { $set: { isFlashSale: true }}
+            );
             const idCategorys = []
             categorys.forEach(item => {
                 idCategorys.push(item._id.toString());
@@ -27,7 +36,7 @@ module.exports = {
                 endTime,
                 potonganHarga
             });
-
+            console.timeEnd('test')
             return res.status(201).json({message: "Berhasil Menambahkan Flash Sale", data: newFlashSale});
 
         } catch (error) {
@@ -52,7 +61,7 @@ module.exports = {
                     } else {
                         stokAwal = product.stok;
                         flashSale.stokAwal.push({ productId: product._id, value: stokAwal });
-                        await flashSale.save(); // Save the updated flashSale document
+                        await flashSale.save();
                     };
 
                     const objectProduct = product.toObject();

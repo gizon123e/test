@@ -7,8 +7,8 @@ const controlerCategory = require('../controler/category')
 const router = require("express").Router();
 
 router.get('/list', controlerCategory.getCategory);
+router.get('/detail', controlerCategory.getDetailCategory);
 router.post('/create', controlerCategory.createCategory);
-router.post('/detail', controlerCategory.getDetailCategory);
 router.put('/update/:id', controlerCategory.updateCategory);
 router.put('/update-sub/:id', controlerCategory.updateSubCategory);
 

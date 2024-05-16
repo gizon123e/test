@@ -88,6 +88,10 @@ const productModels = mongoose.Schema(
     minimalOrder: {
       type: Number,
       default: 1
+    },
+    isFlashSale:{
+      type: Boolean,
+      default: false
     }
   },
   { timestamp: true }
