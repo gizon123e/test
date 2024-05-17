@@ -6,7 +6,7 @@ const controllerPayment = require('../controler/payment');
 
 const router = require('express').Router();
 
-router.get('/get_payment', authorization, controllerPayment.getPayment);
+router.get('/create', authorization, controllerPayment.getPayment);
 router.get('/status_payment', authorization, controllerPayment.statusPayment);
 
 module.exports = router;

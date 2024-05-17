@@ -28,9 +28,8 @@ module.exports = {
                     secure: true
                 },
                 customer_details:{
-                    first_name: order.userId.username,
-                    email: order.userId.email,
-                    phone: order.userId.phone
+                    email: order.userId.email.content,
+                    phone: order.userId.phone.content
                 }
             };
 

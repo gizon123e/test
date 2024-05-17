@@ -2,6 +2,9 @@ const mongoose = require('mongoose')
 const { Decimal128 } = require('mongodb')
 
 const modelAddress = mongoose.Schema({
+    label_alamat:{
+        type: String
+    },
     province: {
         required: [true, 'Province harus di isi'],
         type: String
@@ -32,7 +35,8 @@ const modelAddress = mongoose.Schema({
         ref: 'User'
     },
     isPic:{
-        typ: Boolean
+        type: Boolean,
+        default: false
     },
     isMain: {
         type: Boolean,

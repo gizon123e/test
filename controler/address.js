@@ -4,8 +4,10 @@ module.exports = {
     getAddress: async (req, res, next) => {
         try {
             const dataAddress = await Address.find({ userId: req.user.id })
+            if(!dataAddress || dataAddress.length === 0) return res.status(404).json({message: "User tidak memiliki alamat"})
             return res.status(200).json({ message: 'get data all Address success', datas: dataAddress })
         } catch (error) {
+            console.log(error)
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
                     error: true,
@@ -19,9 +21,21 @@ module.exports = {
 
     createAddress: async (req, res, next) => {
         try {
-            const { province, regency, subdistrict, village, code_pos, address_description } = req.body
+            const { province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat } = req.body
 
-            const dataAddress = await Address.create({ province, regency, subdistrict, village, code_pos, address_description, userId: req.user.id })
+            const dataAddress = await Address.create({ 
+                province, 
+                regency, 
+                district, 
+                village, 
+                code_pos, 
+                address_description, 
+                userId: req.user.id,
+                pinAlamat:{
+                    long: long_pin_alamat,
+                    lat: lat_pin_alamat
+                }
+            })
             return res.status(201).json({ message: 'create data address success', datas: dataAddress })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
@@ -30,8 +44,9 @@ module.exports = {
                     message: error.message,
                     fields: error.fields
                 })
-            }
-            next(error)
+            };
+            console.log(error);
+            next(error);
         }
     },
 

@@ -4,7 +4,6 @@ const SpecificCategory = require('../models/model-specific-category');
 const path = require("path");
 const dotenv = require('dotenv').config()
 const randomIndex = require("../utils/randomIndex");
-const { ObjectId } = require('mongodb');
 const { default: mongoose } = require('mongoose');
 
 module.exports = {
@@ -188,7 +187,21 @@ module.exports = {
                 } else {
                     return res.status(200).json({ message: "Berhasil Menghapus Sub Category" });
                 };
-            };
+            }else if(req.query.specific){
+                const specific_category = await SpecificCategory.findById(req.params.id);
+                const sub_category = await SubCategory.findOne({ contents: { $in: req.params.id } });
+                if (sub_category) {
+                    const index = main.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
+                    sub_category.contents.splice(index, 1);
+                    await sub_category.save();
+                }
+                await SpecificCategory.deleteOne({ _id: req.params.id });
+                if (!specific_category) {
+                    return res.status(404).json({ message: `Specific Category dengan id ${req.params.id} tidak ditemukan` });
+                } else {
+                    return res.status(200).json({ message: "Berhasil Menghapus Specific Category" });
+                };
+            }
             if (!dataCategory) return res.status(404).json({ message: 'delete data category not found' });
             if (dataCategory.contents.length > 0) return res.status(403).json({ message: `Tidak bisa menghapus category ${dataCategory.name}, karena sudah memiliki sub category` });
 

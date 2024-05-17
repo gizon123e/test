@@ -31,7 +31,7 @@ module.exports = {
         try {
             const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password')
 
-            if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.params.id} not Found` });
+            if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
 
             res.status(200).json({ message: 'success', datas: dataKonsumen })
         } catch (error) {

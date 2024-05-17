@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const Product = require('../models/model-product');
 const FlashSale = require('../models/model-flashsale');
 
-const cronJob = cron.schedule('* * * * *', async function() {
+const cronJob = cron.schedule('0 * * * *', async function() {
     console.log('setiap 1 jam dijalankan');
     
     const flashSale = await FlashSale.find({
