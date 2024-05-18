@@ -18,7 +18,7 @@ module.exports = {
 
             const order = await Order.findById(id).populate('userId');
 
-            if(!order) return res.status(400).json({message:`Order dengan id ${id} tidak ditemukan`});
+            if(!order) return res.status(404).json({message:`Order dengan id ${id} tidak ditemukan`});
             const midtransPayload = {
                 transaction_details:{
                     order_id: id,

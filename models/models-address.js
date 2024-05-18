@@ -44,11 +44,13 @@ const modelAddress = mongoose.Schema({
     },
     pinAlamat: {
         long:{
-            type: Decimal128
+            type: Decimal128,
+            required: ['true', "Tidak Ada Pin Alamat"]
         },
         lat:{
-            type: Decimal128
-        }
+            type: Decimal128,
+            required: ['true', "Tidak Ada Pin Alamat"]
+        },
     },
 }, { timestamp: true })
 

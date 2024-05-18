@@ -3,16 +3,25 @@ const Report = require("../models/model-laporan-kinerja-product");
 const productId = "661f6ab005432c70eed53377"
 const BiayaTetap = require("../models/model-biaya-tetap");
 const Product = require('../models/model-product');
-const Tarif = require("../models/model-tarif")
+const Tarif = require("../models/model-tarif");
+// const MethodPembayaran = require("../models/model-metode-pembayaran")
+// const paylater = require("../models/model-paylater")
+// paylater.create({
+//     nama_paylater: "kredivo"
+// })
+// .then(()=>{
+//     console.log("berhasil membuat data")
+// })
 
-Tarif.create({
-    jenis_kendaraan: "mobil",
-    jenis_jasa: "hemat",
-    tarif_dasar: 10000,
-    tarif_per_km: 4000
-}).then(()=>{
-    console.log("berhasil membuat data")
-})
+
+// Tarif.create({
+//     jenis_kendaraan: "mobil",
+//     jenis_jasa: "hemat",
+//     tarif_dasar: 10000,
+//     tarif_per_km: 4000
+// }).then(()=>{
+//     console.log("berhasil membuat data")
+// })
 
 // BiayaTetap.create({
 //     biaya_proteksi: 2000,

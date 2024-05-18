@@ -61,9 +61,10 @@ const modelOrder = mongoose.Schema({
     },
     dp:{
         type: Number
-    }
-}, { timestamp: true })
+    },
+}, { timestamp: true }
+)
 
-const Orders = mongoose.model('Orders', modelOrder)
+const Pesanan = mongoose.model('Pesanan', modelOrder)
 
-module.exports = Orders
+module.exports = Pesanan

@@ -65,6 +65,8 @@ app.use('/api/minat', require('./routes/router-minat'));
 app.use('/api/flash-sale', require('./routes/router-flash-sale'));
 app.use('/api/alamat', require('./routes/router-alamat'));
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
+app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
+
 
 // midelware error
 app.use(require("./midelware/error-midelware"));
