@@ -7,6 +7,9 @@ const modelVirtualAccount = mongoose.Schema({
     kode_perusahaan:{
         type: String
     },
+    icon:{
+        type: String
+    }
 }, { collection: 'virtualaccounts' })
 
 const VirtualAccount = mongoose.model("VirtualAccount", modelVirtualAccount);
