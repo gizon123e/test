@@ -30,7 +30,7 @@ module.exports = {
           ...handlerFilter,
           name_product: { $regex: new RegExp(name, "i") },
         };
-      }
+      };
 
       if (category) {
         const categoryResoul = await SpecificCategory.findOne({
@@ -39,7 +39,7 @@ module.exports = {
 
         if(!categoryResoul) return res.status(404).json({message: `Tidak Ditemukan product dengan kategori ${category}`})
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
-      }
+      };
 
       const list_product = await Product.find(handlerFilter)
         .populate("userId", "-password")
@@ -105,7 +105,6 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
-      const allowedTypes = [".jpg", ".png", ".jpeg"];
       if(!req.files || !req.files.ImageProduct) return res.status(400).json({message:"Produk Minimal Punya 1 Foto, kirimkan file foto dengan nama ImageProduct"});
 
       if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"});

@@ -21,9 +21,10 @@ module.exports = {
 
     createAddress: async (req, res, next) => {
         try {
-            const { province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat } = req.body
+            const { label, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat } = req.body
 
             const dataAddress = await Address.create({ 
+                label_alamat: label,
                 province, 
                 regency, 
                 district, 

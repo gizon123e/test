@@ -30,7 +30,7 @@ module.exports = {
                 customer_details:{
                     email: order.userId.email.content,
                     phone: order.userId.phone.content
-                }
+                },
             };
 
             const transaksi = await snap.createTransaction(JSON.stringify(midtransPayload));

@@ -4,6 +4,22 @@ const productId = "661f6ab005432c70eed53377"
 const BiayaTetap = require("../models/model-biaya-tetap");
 const Product = require('../models/model-product');
 const Tarif = require("../models/model-tarif");
+const VaUser = require("../models/model-user-va");
+const Saldo = require("../models/model-saldoApp");
+const Fintech = require("../models/model-fintech");
+const User = require("../models//model-auth-user")
+
+User.findById("664565fcff8c264b3711e373")
+.then((data)=> console.log(data.kode_role))
+// Fintech.create({
+//     nama_fintech: "gopay paylater"
+// }).then(()=>console.log("berhasil"))
+
+// VaUser.create({
+//     userId:"6639b6557b19203735a48505",
+//     nomor_va:"6238240301620983",
+//     nama_bank: "6648a44355062c7fcdf7cd68"
+// }).then(()=> console.log('berhasil'))
 // const MethodPembayaran = require("../models/model-metode-pembayaran")
 // const paylater = require("../models/model-paylater")
 // paylater.create({

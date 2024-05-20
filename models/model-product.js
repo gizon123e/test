@@ -92,6 +92,12 @@ const productModels = mongoose.Schema(
     isFlashSale:{
       type: Boolean,
       default: false
+    },
+    ukuran:{
+      type: String
+    },
+    berat:{
+      type: String
     }
   },
   { timestamp: true }

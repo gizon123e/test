@@ -7,6 +7,7 @@ const controlerAuthUser = require("../controler/auth-user");
 const router = require("express").Router();
 
 // router auth user
+router.get("/check-verified-detail", authorization, controlerAuthUser.validateDetail)
 router.post("/login", controlerAuthUser.login);
 router.post("/register", controlerAuthUser.register);
 router.post("/check-verified", controlerAuthUser.validateUser);

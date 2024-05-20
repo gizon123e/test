@@ -51,6 +51,19 @@ const userModels = mongoose.Schema(
       enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
       message: "{VALUE} is not supported",
     },
+    kode_role:{
+      type: String,
+      get: function() {
+        const roleCodes = {
+          vendor: "VND",
+          konsumen: "KNS",
+          produsen: "PDS",
+          supplier: "SPL",
+          distributor: "DBR"
+        };
+        return roleCodes[this.role] || null;
+      }
+    },
     codeOtp:{
       code: {
         type: String
@@ -66,9 +79,13 @@ const userModels = mongoose.Schema(
     isFinish:{
       type: Boolean,
       default: false
+    },
+    isDetailVerified:{
+      type: Boolean,
+      default: false
     }
   },
-  { temestamp: true }
+  { timestamps: true }
 );
 
 const User = mongoose.model("User", userModels);

@@ -4,6 +4,9 @@ const User = require('../../models/model-auth-user')
 module.exports = {
     getAllDistributtor: async (req, res, next) => {
         try {
+            //kasih filter maksimal untuk motor:
+            //ukuran 100x30x40cm
+            //berat 20kg
             const dataDistributtor = await Distributtor.find().populate("userId", '-password')
 
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })

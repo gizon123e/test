@@ -2,6 +2,8 @@ const Orders = require('../models/models-orders')
 const Product = require('../models/model-product')
 const Carts = require('../models/model-cart')
 const Report = require("../models/model-laporan-penjualan");
+const DetailPesanan = require('../models/model-detail-pesanan');
+const VaUser = require("../models/model-user-va");
 
 module.exports = {
 
@@ -98,8 +100,13 @@ module.exports = {
                 potongan_ongkir,
                 biaya_jasa_aplikasi,
                 biaya_layanan,
-                dp
+                metode_pembayaran,
+                dp,
+                total
             } = req.body
+
+            if(Object.keys(req.body).length === 0) return res.status(400).json({message: "Request Body tidak boleh kosong!"});
+
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -133,7 +140,8 @@ module.exports = {
                     dataArrayProduct.push({productId: cart.productId, quantity: cart.quantity});
                     await Carts.deleteOne({_id: cart._id});
                 }
-            } else if (product.length > 0) {
+            } 
+            else if (product.length > 0) {
                 for (const element of product) {
                     const dataTotalProduct = await Product.findById(element.productId).populate('userId');
 
@@ -156,56 +164,75 @@ module.exports = {
             }
 
             if (dataArrayProduct.length > 0) {
-                total_price += (parseInt(biaya_jasa_aplikasi) + parseInt(biaya_layanan))
-                if( biaya_asuransi || biaya_proteksi ) {
-                    total_price += (parseInt(biaya_proteksi) + parseInt(biaya_asuransi))
-                }
+
                 const dataOrder = await Orders.create({
                     product: dataArrayProduct,
                     addressId,
                     userId: req.user.id,
                     date_order,
-                    total_price,
                     catatan_produk,
                     poinTerpakai,
                     ongkir,
-                    dp,
+                    dp: dp? true: false,
                     potongan_ongkir,
                     biaya_asuransi: biaya_asuransi? true : false,
                     biaya_proteksi: biaya_proteksi? true : false
                 });
 
-                for (const produk of dataArrayProduct){
+                const detailOrder = await DetailPesanan.create({
+                    id_pesanan: dataOrder._id,
+                    total_price: total,
+                    biaya_jasa_aplikasi,
+                    biaya_layanan,
+                    biaya_asuransi,
+                    biaya_proteksi,
+                    id_va: metode_pembayaran.metode === "Virtual Account"? metode_pembayaran.id : null,
+                    id_fintech: metode_pembayaran.metode === "Fintech"? metode_pembayaran.id : null,
+                    id_gerai_tunai: metode_pembayaran.metode === "Gerai"? metode_pembayaran.id : null,
+                    id_ewallet: metode_pembayaran.metode === "E-Wallet"? metode_pembayaran.id : null,
+                    jumlah_dp: dp
+                });
 
-                    const laporan = await Report.findOne({productId: produk.productId})
-                    if(!laporan){
-                        const report = await Report.create({
-                            productId: produk.productId,
-                            track: [ { time: new Date(), soldAtMoment: produk.quantity } ]
-                        })
-                    }else{
-                        const noww = new Date()
-                        let isDateFound = false;
-
-                        for (const item of laporan.track) {
-                            if (item.time.getDate() === noww.getDate() && 
-                                item.time.getMonth() === noww.getMonth() &&
-                                item.time.getFullYear() === noww.getFullYear()) {
-                                item.soldAtMoment += produk.quantity;
-                                isDateFound = true;
-                                break;
-                            }
-                        }
-
-                        if (!isDateFound) {
-                            laporan.track.push({ time: noww, soldAtMoment: produk.quantity });
-                        }
-
-                        await laporan.save()
-                    }
-                }
+                let paymentNumber;
                 
-                return res.status(201).json({ message: 'Create order(s) success', datas: dataOrder });
+                if(metode_pembayaran.metode === "Virtual Account"){
+                    const va_user = await VaUser.findOne({userId: req.user.id});
+                    if(!va_user) return res.status(403).json({mesage:"Data detail user belum terverifikasi"});
+                    paymentNumber = va_user.nomor_va;
+                }else{
+                    paymentNumber = "123"
+                }
+                // for (const produk of dataArrayProduct){
+
+                //     const laporan = await Report.findOne({productId: produk.productId})
+                //     if(!laporan){
+                //         const report = await Report.create({
+                //             productId: produk.productId,
+                //             track: [ { time: new Date(), soldAtMoment: produk.quantity } ]
+                //         })
+                //     }else{
+                //         const noww = new Date()
+                //         let isDateFound = false;
+
+                //         for (const item of laporan.track) {
+                //             if (item.time.getDate() === noww.getDate() && 
+                //                 item.time.getMonth() === noww.getMonth() &&
+                //                 item.time.getFullYear() === noww.getFullYear()) {
+                //                 item.soldAtMoment += produk.quantity;
+                //                 isDateFound = true;
+                //                 break;
+                //             }
+                //         }
+
+                //         if (!isDateFound) {
+                //             laporan.track.push({ time: noww, soldAtMoment: produk.quantity });
+                //         }
+
+                //         await laporan.save()
+                //     }
+                // }
+                
+                return res.status(201).json({ message: 'Create order(s) success', datas: dataOrder, paymentNumber });
             } else {
                 return res.status(400).json({ message: 'data create tidak valid' })
             }

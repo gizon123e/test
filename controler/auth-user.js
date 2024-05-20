@@ -281,6 +281,19 @@ module.exports = {
     }
   },
 
+  validateDetail: async(req, res, next)=>{
+    try {
+      const user = await User.findById(req.user.id);
+      if(!user.isDetailVerified) return res.status(403).json({
+        message: "User Datanya Belum Terverifikasi"
+      });
+      return res.status(200).json({message:"Data Detail User Sudah Terverifikasi"});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
   editUser: async (req, res, next) => {
     try {
       if(Object.keys(req.body).length === 0) return res.status(400).json({message: "Request body tidak boleh kosong"});

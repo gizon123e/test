@@ -1,8 +1,8 @@
-const { Decimal128 } = require('mongodb');
 const mongoose = require('mongoose');
 
 const modelOrder = mongoose.Schema({
     product: [{
+        _id: false,
         productId: {
             type: mongoose.Types.ObjectId,
             required: [true, 'Productid harus di isi'],
@@ -20,10 +20,6 @@ const modelOrder = mongoose.Schema({
         required: [true, 'userId harus di isi'],
         ref: 'User'
     },
-    total_price: {
-        type: Number,
-        required: [true, 'total Price harus di isi']
-    },
     addressId: {
         type: mongoose.Types.ObjectId,
         required: [true, 'addressId harus di isi'],
@@ -40,7 +36,7 @@ const modelOrder = mongoose.Schema({
         default: "Belum Bayar"
     },
     catatan_produk:{
-        type: "String"
+        type: String
     },
     poinTerpakai:{
         type: Number
@@ -60,8 +56,12 @@ const modelOrder = mongoose.Schema({
         type: Number
     },
     dp:{
-        type: Number
+        type: Boolean
     },
+    is_dibatalkan: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamp: true }
 )
 
