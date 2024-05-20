@@ -30,10 +30,8 @@ module.exports = {
     getDetailKonsumen: async (req, res, next) => {
         try {
             const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password')
-
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
-
-            res.status(200).json({ message: 'success', datas: dataKonsumen })
+            return res.status(200).json({ message: 'success', datas: dataKonsumen })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({

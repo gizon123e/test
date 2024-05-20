@@ -145,9 +145,9 @@ module.exports = {
                 for (const element of product) {
                     const dataTotalProduct = await Product.findById(element.productId).populate('userId');
 
-                    if( req.user.role === "konsumen" && ( dataTotalProduct.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor. Produk ini dari user role ${dataTotalProduct.userId.role}`})
-                    if( req.user.role === "vendor" && ( dataTotalProduct.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier. Produk ini dari user role ${dataTotalProduct.userId.role}`})
-                    if( req.user.role === "supplier" && ( dataTotalProduct.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+                    // if( req.user.role === "konsumen" && ( dataTotalProduct.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+                    // if( req.user.role === "vendor" && ( dataTotalProduct.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+                    // if( req.user.role === "supplier" && ( dataTotalProduct.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen. Produk ini dari user role ${dataTotalProduct.userId.role}`})
                     if (!dataTotalProduct) {
                         return res.status(404).json({ error: true, message: `Product with ID ${element.productId} not found` });
                     }
@@ -179,29 +179,35 @@ module.exports = {
                     biaya_proteksi: biaya_proteksi? true : false
                 });
 
-                const detailOrder = await DetailPesanan.create({
+                let paymentNumber;
+                let idPay;
+
+                if(metode_pembayaran.includes("Virtual Account")){
+                    const splitted = metode_pembayaran.split("/ ");
+                    const va_user = await VaUser.find({ userId: req.user.id }).populate('nama_bank');
+                    const num = va_user.find(item => {
+                        return item.nama_bank.nama_bank === splitted[1];
+                    });
+                    if(!va_user || va_user.length === 0) return res.status(403).json({mesage:"Data detail user belum terverifikasi"});
+                    paymentNumber = num.nomor_va;
+                    idPay = num.nama_bank._id
+                }else{
+                    paymentNumber = "123"
+                }
+
+                const detailPesanan = await DetailPesanan.create({
                     id_pesanan: dataOrder._id,
                     total_price: total,
                     biaya_jasa_aplikasi,
                     biaya_layanan,
                     biaya_asuransi,
                     biaya_proteksi,
-                    id_va: metode_pembayaran.metode === "Virtual Account"? metode_pembayaran.id : null,
-                    id_fintech: metode_pembayaran.metode === "Fintech"? metode_pembayaran.id : null,
-                    id_gerai_tunai: metode_pembayaran.metode === "Gerai"? metode_pembayaran.id : null,
-                    id_ewallet: metode_pembayaran.metode === "E-Wallet"? metode_pembayaran.id : null,
+                    id_va: metode_pembayaran.includes("Virtual Account")? idPay : null,
+                    id_fintech: metode_pembayaran.includes("Fintech")? idPay : null,
+                    id_gerai_tunai: metode_pembayaran.includes("Gerai")? idPay : null,
+                    id_ewallet: metode_pembayaran.includes("E-Wallet")? idPay : null,
                     jumlah_dp: dp
                 });
-
-                let paymentNumber;
-                
-                if(metode_pembayaran.metode === "Virtual Account"){
-                    const va_user = await VaUser.findOne({userId: req.user.id});
-                    if(!va_user) return res.status(403).json({mesage:"Data detail user belum terverifikasi"});
-                    paymentNumber = va_user.nomor_va;
-                }else{
-                    paymentNumber = "123"
-                }
                 // for (const produk of dataArrayProduct){
 
                 //     const laporan = await Report.findOne({productId: produk.productId})
@@ -232,19 +238,13 @@ module.exports = {
                 //     }
                 // }
                 
-                return res.status(201).json({ message: 'Create order(s) success', datas: dataOrder, paymentNumber });
+                return res.status(201).json({ message: 'Create order(s) success', datas: dataOrder, paymentNumber, total_tagihan: detailPesanan.total_price  });
             } else {
                 return res.status(400).json({ message: 'data create tidak valid' })
             }
 
         } catch (error) {
-            if (error && error.name === 'ValidationError') {
-                return res.status(400).json({
-                    error: true,
-                    message: error.message,
-                    fields: error.fields
-                })
-            }
+            console.log(error)
             next(error)
         }
     },

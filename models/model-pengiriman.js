@@ -18,7 +18,7 @@ const modelPengiriman = mongoose.Schema({
     },
     status_pengiriman:{
         type: String,
-        enum: ["diproses", "dikirim", "tiba di tujuan"],
+        enum: ["diproses", "dikirim", "pesanan selesai"],
         default: "diproses"
     }
 })

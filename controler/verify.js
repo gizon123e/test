@@ -33,7 +33,6 @@ module.exports = {
             const { kode_otp, id } = req.body;
             
             let user = await User.findById(id);
-
             if(!user) return res.status(400).json({message:"User tidak ditemukan"});
             
             if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
@@ -42,12 +41,11 @@ module.exports = {
 
             const tokenPayload = {
                 id: user._id,
-                name: user.username,
                 email: user.email,
                 phone: user.phone,
                 role: user.role,
             };
-
+            
             const jwtToken = jwt.createToken(tokenPayload);
 
             return res.status(200).json({message: "Verifikasi Berhasil", data: {
