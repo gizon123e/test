@@ -177,7 +177,7 @@ module.exports = {
             const dataCategory = await MainCategory.findOne({ _id: req.params.id });
             if (req.query.sub) {
                 const sub_category = await SubCategory.findById(req.params.id);
-                if (sub_category.contents.length > 0) return res.status(403).json({ message: "Sub Category memiliki specific category. Tidak Bisa Menghapus" })
+                if (sub_category.contents.length > 1) return res.status(403).json({ message: "Sub Category memiliki specific category. Tidak Bisa Menghapus" })
                 const main = await MainCategory.findOne({ contents: { $in: req.params.id } });
                 if (main) {
                     const index = main.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
@@ -206,7 +206,7 @@ module.exports = {
                 };
             }
             if (!dataCategory) return res.status(404).json({ message: 'delete data category not found' });
-            if (dataCategory.contents.length > 0) return res.status(403).json({ message: `Tidak bisa menghapus category ${dataCategory.name}, karena sudah memiliki sub category` });
+            if (dataCategory.contents.length > 1) return res.status(403).json({ message: `Tidak bisa menghapus category ${dataCategory.name}, karena sudah memiliki sub category` });
 
             await MainCategory.deleteOne({ _id: req.params.id });
             return res.status(200).json({ message: 'delete success' });
