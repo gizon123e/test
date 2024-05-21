@@ -201,12 +201,11 @@ module.exports = {
                     return res.status(404).json({ message: `Specific Category dengan id ${req.params.id} tidak ditemukan` });
                 }
                 const subCategory = await SubCategory.findOne({ contents: { $in: req.params.id } });
+
                 if (!subCategory) {
                     return res.status(404).json({ message: `Sub Category dengan item ${req.params.id} tidak ditemukan` });
                 }
-                // const subCategory = await SubCategory.find({ 'contents._id': req.params.id });
-                // const subCategory = data.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
-                // console.log("sub", subCategory)
+
                 if (subCategory) {
                     subCategory.contents = subCategory.contents.filter(item => item._id.toString() !== req.params.id.toString());
                     await subCategory.save();
