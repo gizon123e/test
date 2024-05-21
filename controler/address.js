@@ -53,9 +53,22 @@ module.exports = {
 
     updateAddress: async (req, res, next) => {
         try {
-            const { province, regency, subdistrict, village, code_pos, address_description } = req.body
-            const dataAddress = await Address.findByIdAndUpdate({ _id: req.params.id }, { province, regency, subdistrict, village, code_pos, address_description, userId: req.user.id }, { new: true })
-            return res.status(201).json({ message: 'create data address success', datas: dataAddress })
+            const address = await Address.findById(req.params.id);
+            if(address.isMain) return res.status(403).json({message: "Tidak Bisa Mengubah Alamat Utama, Silahkan hubungi Customer Service untuk mengubah"})
+            const { province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat } = req.body
+            const dataAddress = await Address.findByIdAndUpdate({ _id: req.params.id }, { 
+                province, 
+                regency, 
+                district, 
+                village, 
+                code_pos, 
+                address_description, 
+                pinAlamat:{
+                    long: long_pin_alamat,
+                    lat: lat_pin_alamat
+                }
+            }, { new: true })
+            return res.status(201).json({ message: 'edit data address success', datas: dataAddress })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
@@ -64,6 +77,7 @@ module.exports = {
                     fields: error.fields
                 })
             }
+            console.log(error)
             next(error)
         }
     },

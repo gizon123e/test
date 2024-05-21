@@ -7,6 +7,10 @@ const modelVirtualAccount = mongoose.Schema({
     kode_perusahaan:{
         type: String
     },
+    nama_va:{
+        type: String,
+        //{SuperApp - Nama Lengkap User}
+    },
     icon:{
         type: String
     }
