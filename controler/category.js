@@ -41,7 +41,7 @@ module.exports = {
 
     getDetailCategory: async (req, res, next) => {
         try {
-            const id = req.body.mainCategoryId
+            const id = req.params.id
             const mainCategory = await MainCategory.findById(id).populate("contents");
             if (!mainCategory) return res.status(404).json({ message: `Main category dengan id ${id} tidak ditemukan` });
             return res.status(200).json({ message: "Berhasil mendapatkan detail main category", data: mainCategory })
@@ -94,12 +94,11 @@ module.exports = {
                     sub_category = await SubCategory.create({ name: sub });
                 }
                 const check = main_category.contents.find(item => {
-                    return item.toString() === sub_category._id.toString()
+                    return item._id.equals(sub_category._id);
                 });
-                console.log(check)
                 if (!check) {
-                    main_category.contents.push(sub_category._id);
-                    await main_category.save();
+                    const id = main_category._id
+                    main_category = await MainCategory.findByIdAndUpdate(id, { $push : { contents: sub_category._id }}, {new: true});
                 }
             };
 
@@ -108,8 +107,13 @@ module.exports = {
                 if (!specific_category) {
                     specific_category = await SpecificCategory.create({ name: specific });
                 }
-                sub_category.contents.push(specific_category._id);
-                await sub_category.save();
+                const check = sub_category.contents.find(item => {
+                    return item._id.equals(specific_category._id);
+                });
+                if (!check) {
+                    const id = sub_category._id
+                    sub_category = await SubCategory.findByIdAndUpdate(id, { $push : { contents: specific_category._id }}, {new: true});
+                }
             };
 
             return res.status(201).json({ message: "Berhasil Menambahkan Category", main_category, sub_category, specific_category });
