@@ -46,9 +46,19 @@ const productModels = mongoose.Schema(
       type: String,
       enum: ["small", "medium", "big"],
     },
-    categoryId: {
+    id_main_category: {
       type: mongoose.Types.ObjectId,
       required: true,
+      ref: "MainCategory",
+    },
+    id_sub_category: {
+      type: mongoose.Types.ObjectId,
+      required: true,
+      ref: "SubCategory",
+    },
+    categoryId: {
+      type: mongoose.Types.ObjectId,
+      required: false,
       ref: "SpecificCategory",
     },
     varianRasa: {
@@ -70,15 +80,15 @@ const productModels = mongoose.Schema(
     rating: {
       type: Number,
     },
-    bahanBaku:[
+    bahanBaku: [
       {
         _id: false,
         bahanBakuId: {
-            type: mongoose.Types.ObjectId,
-            ref: "BahanBaku",
-            required: true
+          type: mongoose.Types.ObjectId,
+          ref: "BahanBaku",
+          required: true
         },
-        quantityNeed:{
+        quantityNeed: {
           type: Number,
           required: true
         }
@@ -96,7 +106,7 @@ const productModels = mongoose.Schema(
 productModels.pre("save", function (next) {
   if (this.diskon) {
     this.total_price = this.price - (this.price * this.diskon) / 100;
-  }else{
+  } else {
     this.total_price = this.price
   }
   return next();

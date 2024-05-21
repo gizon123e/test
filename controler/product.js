@@ -13,11 +13,11 @@ module.exports = {
   search: async (req, res, next) => {
     try {
 
-      function auth(){
+      function auth() {
         const token = getToken(req)
-      
+
         const verifyToken = jwt.verify(token);
-        if(!verifyToken) return null
+        if (!verifyToken) return null
         return verifyToken
       };
 
@@ -37,7 +37,7 @@ module.exports = {
           name: { $regex: category, $options: "i" },
         });
 
-        if(!categoryResoul) return res.status(404).json({message: `Tidak Ditemukan product dengan kategori ${category}`})
+        if (!categoryResoul) return res.status(404).json({ message: `Tidak Ditemukan product dengan kategori ${category}` })
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
       }
 
@@ -47,13 +47,13 @@ module.exports = {
 
       req.user = auth();
       let datas = []
-      if(!req.user){
-        datas = list_product.filter((data)=>{
+      if (!req.user) {
+        datas = list_product.filter((data) => {
           return data.userId.role === "vendor";
         });
-      }else{
-        datas = list_product.filter((data)=>{
-          switch(req.user.role){
+      } else {
+        datas = list_product.filter((data) => {
+          switch (req.user.role) {
             case "konsumen":
               return data.userId.role === "vendor";
             case "vendor":
@@ -63,11 +63,25 @@ module.exports = {
           };
         });
       }
-      
-      if(!list_product || list_product.length === 0 ) return res.status(404).json({message:`Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan`})
-      if( (!datas || datas.length === 0) && (list_product || list_product.length > 0) ) return res.status(403).json({message: "Produk yang dicari tidak boleh untuk user " + req.user.role})
+
+      if (!list_product || list_product.length === 0) return res.status(404).json({ message: `Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan` })
+      if ((!datas || datas.length === 0) && (list_product || list_product.length > 0)) return res.status(403).json({ message: "Produk yang dicari tidak boleh untuk user " + req.user.role })
 
       return res.status(200).json({ datas });
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
+  list_product_adminPanel: async (req, res, next) => {
+    try {
+      const data = await Product.find().populate('userId', '-password').populate('id_main_category').populate('id_sub_category').populate('categoryId')
+
+      res.status(200).json({
+        message: 'get data success',
+        data
+      })
     } catch (error) {
       console.log(error);
       next(error)
@@ -77,7 +91,7 @@ module.exports = {
   list_all: async (req, res, next) => {
     try {
       if (req.user.role === "konsumen") return res.status(403).json({ message: "Konsumen tidak bisa memiliki product" })
-      const data = await Product.find({ userId: req.user.id }).populate('userId', '-password')
+      const data = await Product.find().populate('userId', '-password').populate('id_main_category').populate('id_sub_category').populate('categoryId')
       if (data) {
         return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data })
       } else {
@@ -106,49 +120,49 @@ module.exports = {
   upload: async (req, res, next) => {
     try {
       const allowedTypes = [".jpg", ".png", ".jpeg"];
-      if(!req.files || !req.files.ImageProduct) return res.status(400).json({message:"Produk Minimal Punya 1 Foto, kirimkan file foto dengan nama ImageProduct"});
+      if (!req.files || !req.files.ImageProduct) return res.status(400).json({ message: "Produk Minimal Punya 1 Foto, kirimkan file foto dengan nama ImageProduct" });
 
-      if(req.user.role === "konsumen") return res.status(403).json({message: "User dengan role konsumen tidak bisa menambah product"});
+      if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });
 
-      if((req.user.role === "vendor" || req.user.role === "supplier") && (req.body.bahanBaku !== undefined)) return  res.status(400).json({message:"Payload bahan baku hanya untuk user produsen"});
+      if ((req.user.role === "vendor" || req.user.role === "supplier") && (req.body.bahanBaku !== undefined)) return res.status(400).json({ message: "Payload bahan baku hanya untuk user produsen" });
 
-      if(req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))){
+      if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
         return res.status(400).json({
           message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object dengan property bahanBakuId dan quantityNeed"
-        }) ;
+        });
       };
 
-      if(req.body.bahanBaku && req.user.role === "produsen"){
+      if (req.body.bahanBaku && req.user.role === "produsen") {
         const obj = []
-        for(const bahan of req.body.bahanBaku){
+        for (const bahan of req.body.bahanBaku) {
           obj.push(JSON.parse(bahan))
         };
         req.body.bahanBaku = obj;
-        
-        for(const bahan of req.body.bahanBaku){
+
+        for (const bahan of req.body.bahanBaku) {
           const bahanFound = await BahanBaku.findById(bahan.bahanBakuId)
-          if(!bahanFound) return res.status(404).json({message:"Bahan baku tidak ditemukan"})
+          if (!bahanFound) return res.status(404).json({ message: "Bahan baku tidak ditemukan" })
         }
       };
 
 
       const category = await SpecificCategory.findById(req.body.categoryId);
-      if(!category) return res.status(400).json({message: `Category dengan id: ${req.body.categoryId} tidak ada`});
-      
+      if (!category) return res.status(400).json({ message: `Category dengan id: ${req.body.categoryId} tidak ada` });
+
       const dataProduct = req.body;
       const imgPaths = [];
-      if(Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0){
-        req.files.ImageProduct.forEach((img, i)=>{
+      if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
+        req.files.ImageProduct.forEach((img, i) => {
           const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`;
-          img.mv(pathImg, function(err){
-            if(err) return res.status(507).json({message:"Ada masalah saat mencoba nyimpan file gambar", error: err});
+          img.mv(pathImg, function (err) {
+            if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
             imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`);
           });
         });
-      }else{
+      } else {
         const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`;
-        req.files.ImageProduct.mv(pathImg, function(err){
-          if(err) return res.status(507).json({message:"Ada masalah saat mencoba nyimpan file gambar", error: err});
+        req.files.ImageProduct.mv(pathImg, function (err) {
+          if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
           imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`);
         })
       };
@@ -228,10 +242,10 @@ module.exports = {
           datas: product,
         });
       }
-      if (product.userId.toString() !== req.user.id)
-        return res
-          .status(403)
-          .json({ message: "Tidak bisa mengubah produk orang lain!" });
+      // if (product.userId.toString() !== req.user.id)
+      //   return res
+      //     .status(403)
+      //     .json({ message: "Tidak bisa mengubah produk orang lain!" });
 
       return res.status(201).json({
         error: false,
@@ -260,7 +274,7 @@ module.exports = {
         return komen.userId.toString() == req.user.id;
       });
 
-      if (sameUser) return res.status(403).json({message:"User yang sama tidak bisa memberikan komentar dan rating lebih dari satu kali",});
+      if (sameUser) return res.status(403).json({ message: "User yang sama tidak bisa memberikan komentar dan rating lebih dari satu kali", });
 
       produk.komentar.push(komentar);
       await produk.save();
@@ -270,7 +284,7 @@ module.exports = {
       next(err);
     }
   },
-  
+
   pemasok: async (req, res, next) => {
     try {
       const { product_id, pemasok } = req.body;
@@ -287,33 +301,33 @@ module.exports = {
     }
   },
 
-  updateProductPerformance: async(req, res, next) => {
+  updateProductPerformance: async (req, res, next) => {
     try {
       const { views, impressions } = req.query
 
-      if(!views && !impressions ) return res.status(400).json({message:"Harus ada query views atau impressionss"})
+      if (!views && !impressions) return res.status(400).json({ message: "Harus ada query views atau impressionss" })
 
-      if(!req.body.productId) return res.status(400).json({message:"Dibutuh kan payload productId"})
+      if (!req.body.productId) return res.status(400).json({ message: "Dibutuh kan payload productId" })
 
-      const kinerja = await Performance.findOne({productId: req.body.productId}).populate("productId")
+      const kinerja = await Performance.findOne({ productId: req.body.productId }).populate("productId")
 
-      if(!kinerja) return res.status(404).json({message: `Tidak ditemukan product dengan id: ${req.body.productId}`})
+      if (!kinerja) return res.status(404).json({ message: `Tidak ditemukan product dengan id: ${req.body.productId}` })
 
-      if(views && parseInt(views) !== NaN){
-        for ( perform of kinerja.views ){
-          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(views) : kinerja.views.push({ time: new Date(), amount: views})
-        }
-      }
-      
-      if(impressions && parseInt(impressions) !== NaN){
-        for (perform of kinerja.impressions){
-          perform.time.getDate() == new Date().getDate()? perform.amount+=parseInt(impressions) : kinerja.impressions.push({ time: new Date(), amount: impressions})
+      if (views && parseInt(views) !== NaN) {
+        for (perform of kinerja.views) {
+          perform.time.getDate() == new Date().getDate() ? perform.amount += parseInt(views) : kinerja.views.push({ time: new Date(), amount: views })
         }
       }
 
-      await kinerja.save({new: true})
+      if (impressions && parseInt(impressions) !== NaN) {
+        for (perform of kinerja.impressions) {
+          perform.time.getDate() == new Date().getDate() ? perform.amount += parseInt(impressions) : kinerja.impressions.push({ time: new Date(), amount: impressions })
+        }
+      }
 
-      return res.status(200).json({message: "Berhasil update performance product!", data:kinerja})
+      await kinerja.save({ new: true })
+
+      return res.status(200).json({ message: "Berhasil update performance product!", data: kinerja })
     } catch (error) {
       console.log(error)
       next(error)
