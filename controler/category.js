@@ -16,17 +16,15 @@ module.exports = {
                     module: "SpecificCategory"
                 }
             })
-            console.log(dataCategory.length)
             if (!dataCategory || dataCategory.length === 0) return res.status(404).json({ message: "Tidak Ada Category" });
             let data;
             const requestFrom = req.headers['user-agent'];
-            if (requestFrom && requestFrom.includes("Mobile")) {
-                console.log('masuk mobile')
+            if (requestFrom && requestFrom === "Mobile") {
                 data = dataCategory.filter(item => item.showAt === "mobile" || item.showAt === "mobile dan web");
                 if (data.length > 7) {
                     data = data.slice(0, 7);
                 }
-            } else if (requestFrom && requestFrom.includes("Web")) {
+            } else if (requestFrom && requestFrom === "Web") {
                 data = dataCategory.filter(item => item.showAt === "web" || item.showAt === "mobile dan web");
                 if (data.length > 9) {
                     data = data.slice(0, 9);

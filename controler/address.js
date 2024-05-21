@@ -19,6 +19,17 @@ module.exports = {
         }
     },
 
+    getDetailAddress: async(req, res, next) =>{
+        try {
+            const address = await Address.findById(req.params.id);
+            if(!address) return res.status(404).json({message: "Tidak ada address dengan id " + req.params.id});
+            return res.status(200).json({message: "Berhasil Mendapatkan Detail Address", data: address});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     createAddress: async (req, res, next) => {
         try {
             const { label, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat } = req.body

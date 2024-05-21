@@ -59,13 +59,13 @@ app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));
 app.use('/api/login/google-oauth', require('./routes/router-login-google-oauth'));
 app.use('/api/register/google-oauth', require('./routes/router-register-google-oauth'));
-app.use('/api/login/user-system', require('./routes/router-system-user'));
 app.use('/api/promo', require('./routes/router-promo'));
 app.use('/api/minat', require('./routes/router-minat'));
 app.use('/api/flash-sale', require('./routes/router-flash-sale'));
 app.use('/api/alamat', require('./routes/router-alamat'));
 
 // Admin Panel
+app.use('/api/user-system', require('./routes/router-system-user'));
 app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
