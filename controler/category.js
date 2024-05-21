@@ -16,6 +16,7 @@ module.exports = {
                     module: "SpecificCategory"
                 }
             })
+            console.log(dataCategory.length)
             if (!dataCategory || dataCategory.length === 0) return res.status(404).json({ message: "Tidak Ada Category" });
             let data;
             const requestFrom = req.headers['user-agent'];
