@@ -1,9 +1,10 @@
-const Orders = require('../models/models-orders')
+const Orders = require('../models/model-orders')
 const Product = require('../models/model-product')
 const Carts = require('../models/model-cart')
 const Report = require("../models/model-laporan-penjualan");
 const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
+const VA = require("../models/model-virtual-account")
 
 module.exports = {
 
@@ -182,15 +183,17 @@ module.exports = {
                 let paymentNumber;
                 let idPay;
 
-                if(metode_pembayaran.includes("Virtual Account")){
-                    const splitted = metode_pembayaran.split("/ ");
-                    const va_user = await VaUser.find({ userId: req.user.id }).populate('nama_bank');
-                    const num = va_user.find(item => {
-                        return item.nama_bank.nama_bank === splitted[1];
-                    });
-                    if(!va_user || va_user.length === 0) return res.status(403).json({mesage:"Data detail user belum terverifikasi"});
-                    paymentNumber = num.nomor_va;
-                    idPay = num.nama_bank._id
+                const splitted = metode_pembayaran.split(" / ");
+                if(splitted[1].includes("Virtual Account")){
+                    const va_user = await VaUser.findOne({ 
+                        nama_bank: splitted[0], 
+                        userId: req.user.id 
+                    }).populate('nama_bank');
+                    
+                    const VirtualAccount = await VA.findById(splitted[0]);
+                    if(!va_user) return res.status(404).json({message: "User belum memiliki virtual account " + VirtualAccount.nama_bank});
+                    idPay = va_user.nama_bank._id;
+                    paymentNumber = va_user.nomor_va;
                 }else{
                     paymentNumber = "123"
                 }
@@ -238,7 +241,7 @@ module.exports = {
                 //     }
                 // }
                 
-                return res.status(201).json({ message: 'Create order(s) success', datas: dataOrder, paymentNumber, total_tagihan: detailPesanan.total_price  });
+                return res.status(201).json({ message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}` , datas: dataOrder, paymentNumber, total_tagihan: detailPesanan.total_price  });
             } else {
                 return res.status(400).json({ message: 'data create tidak valid' })
             }

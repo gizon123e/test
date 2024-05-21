@@ -1,5 +1,5 @@
 const Konsumen = require('../../models/konsumen/model-konsumen')
-const Address = require("../../models/models-address")
+const Address = require("../../models/model-address")
 const path = require('path');
 const dotenv = require('dotenv')
 dotenv.config()

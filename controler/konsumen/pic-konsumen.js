@@ -1,5 +1,5 @@
 const PicKonsumen = require('../../models/konsumen/model-penanggung-jawab');
-const Address = require('../../models/models-address');
+const Address = require('../../models/model-address');
 const dotenv = require('dotenv')
 const path = require('path')
 dotenv.config()

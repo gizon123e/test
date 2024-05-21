@@ -1,4 +1,4 @@
-const KendaraanDistributor = require('../../models/distributtor/model-kendaraanDistributtor')
+const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
 
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {

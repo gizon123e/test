@@ -1,6 +1,24 @@
 const mongoose = require("mongoose");
+const Cart = require("./model-cart");
+const Conversation = require("./model-conversation");
+const Invoice = require("./model-invoice");
+const Comment = require("./model-komentar");
+const Minat = require("./model-minat-user");
+const Pembatalan = require("./model-pembatalan");
+const Product = require("./model-product")
+const Produksi = require("./model-produksi");
+const VirtualAccountUser = require("./model-user-va");
+const Address = require("./model-address");
+const BahanBaku = require("./model-bahan-baku");
+const Pesanan = require("./model-orders");
+const Vendor = require("./vendor/model-vendor");
+const Distributor = require("./distributor/model-distributor");
+const Supplier = require("./supplier/model-supplier");
+const Produsen = require("./produsen/model-produsen");
+const Konsumen = require("./konsumen/model-konsumen");
 
-const userModels = mongoose.Schema(
+
+const userModels = new mongoose.Schema(
   {
     email: {
       content: {
@@ -91,6 +109,40 @@ const userModels = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+userModels.post("findOneAndDelete", async function(doc){
+  try {
+    const data = await Promise.all([
+      Cart.find({userId: doc._id}),
+      Conversation.find({participants: { $in:doc._id }}),
+      Invoice.find({userId: doc._id}),
+      Comment.find({userId: doc._id}),
+      Minat.find({userId: doc._id}),
+      Pembatalan.find({userId: doc._id}),
+      Product.find({userId: doc._id}),
+      Produksi.find({userId: doc._id}),
+      VirtualAccountUser.find({userId: doc._id}),
+      Address.find({userId: doc._id}),
+      BahanBaku.find({userId: doc._id}),
+      Pesanan.find({userId: doc._id}),
+      Vendor.find({userId: doc._id}),
+      Distributor.find({userId: doc._id}),
+      Supplier.find({userId: doc._id}),
+      Produsen.find({userId: doc._id}),
+      Konsumen.find({userId: doc._id})
+    ]);
+
+    await Promise.all(data.map(async (modelData) => {
+      await Promise.all(modelData.map(async (document) => {
+        await document.deleteOne();
+      }));
+    }));
+
+  } catch (error) {
+      console.log(error)
+  }
+  
+});
 
 const User = mongoose.model("User", userModels);
 

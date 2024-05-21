@@ -1,5 +1,4 @@
-const mongoose = require("mongoose");
-require("./model-auth-user");
+const mongoose = require("mongoose")
 
 const bahanBakuModels = mongoose.Schema({
     name:{

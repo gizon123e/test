@@ -1,6 +1,6 @@
 const dotenv = require('dotenv')
 const midtransClient = require('midtrans-client');
-const Order = require('../models/models-orders');
+const Order = require('../models/model-orders');
 dotenv.config();
 
 const snap = new midtransClient.Snap({

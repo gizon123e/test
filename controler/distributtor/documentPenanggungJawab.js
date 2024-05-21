@@ -1,4 +1,4 @@
-const DokumenPenanggungJawab = require('../../models/distributtor/model-documenPenanggungJawab')
+const DokumenPenanggungJawab = require('../../models/distributor/model-documenPenanggungJawab')
 const path = require('path')
 const fs = require('fs')
 const { updateDocumentDistributtor } = require('./documentDistributtor')

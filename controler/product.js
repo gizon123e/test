@@ -2,7 +2,7 @@ const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
 const SpecificCategory = require("../models/model-specific-category");
 const Performance = require('../models/model-laporan-kinerja-product');
-const BahanBaku = require("../models/models-bahan_baku");
+const BahanBaku = require("../models/model-bahan-baku");
 const SalesReport = require("../models/model-laporan-penjualan");
 const path = require('path');
 const jwt = require('../utils/jwt');
@@ -106,7 +106,7 @@ module.exports = {
   productDetail: async (req, res, next) => {
     try {
       const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId');
-
+      
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
 
       return res.status(200).json({ datas: dataProduct });

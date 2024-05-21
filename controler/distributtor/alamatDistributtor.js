@@ -1,4 +1,4 @@
-const AlamatDistributor = require("../../models/distributtor/model-alamat-distributtor")
+const AlamatDistributor = require("../../models/distributor/model-alamat-distributtor")
 
 module.exports = {
     getDataAlamatDistributtor: async (req, res, next) => {

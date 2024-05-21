@@ -1,4 +1,4 @@
-const DokumenDistributor = require('../../models/distributtor/model-Dokumen-Distributor')
+const DokumenDistributor = require('../../models/distributor/model-Dokumen-Distributor')
 const path = require("path")
 const fs = require('fs')
 
