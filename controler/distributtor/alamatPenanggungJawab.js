@@ -1,4 +1,4 @@
-const AlamatPenanggungJawab = require('../../models/distributtor/model-penanggungjawab-distributtor')
+const AlamatPenanggungJawab = require('../../models/distributor/model-penanggungjawab-distributtor')
 
 module.exports = {
     getDataAlamatDistributtor: async (req, res, next) => {

@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
 
-require("./model-auth-user");
-require("./model-specific-category");
-require("./models-bahan_baku")
-
-const productModels = mongoose.Schema(
+const productModels = new mongoose.Schema(
   {
     name_product: {
       type: String,
@@ -75,7 +71,7 @@ const productModels = mongoose.Schema(
     },
     pemasok: {
       type: mongoose.Types.ObjectId,
-      ref: "Product",
+      ref: "Supplier",
     },
     rating: {
       type: Number,

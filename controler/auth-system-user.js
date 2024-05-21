@@ -136,46 +136,86 @@ module.exports = {
     editUser: async(req, res, next) =>{
         try {
             const id = req.params.id;
-            let user;
+            let userAuth;
+            let detail;
             const data = req.body
             const allowed = ["nama", "namaBadanUsaha", "role", "phone", "email"];
             Object.keys(data).forEach(item =>{
                 if(!allowed.includes(item) && item !== "model") return res.status(403).json({message:"Tidak bisa mengubah properti " + item })
             });
-            delete data.email;
-            delete data.phone;
-            switch(req.body.model){
-                case "konsumen":
-                    user = await Konsumen.findByIdAndUpdate(id, {
-                        ...data,
-                        'phone.content': data.phone,
-                        'email.content': data.phone
-                    }, {new: true});
-                case "vendor":
-                    user = await Vendor.findByIdAndUpdate(id, {
-                        ...data,
-                        'phone.content': data.phone,
-                        'email.content': data.phone
-                    }, {new: true});
-                case "supplier":
-                    user = await Supplier.findByIdAndUpdate(id, {
-                        ...data,
-                        'phone.content': data.phone,
-                        'email.content': data.phone
-                    }, {new: true});
-                case "produsen":
-                    user = await Produsen.findByIdAndUpdate(id, {
-                        ...data,
-                        'phone.content': data.phone,
-                        'email.content': data.phone
-                    }, {new: true});
-            };
+            if(data.nama || data.namaBadanUsaha){
+                delete data.email;
+                delete data.role;
+                delete data.phone;
+                switch(data.model){
+                    case "konsumen":
+                        detail = await Konsumen.findOneAndUpdate({ userId: id }, data, {new: true});
+                        break;
+                    case "vendor":
+                        detail = await Vendor.findOneAndUpdate({ userId: id }, data, {new: true});
+                        break;
+                    case "supplier":
+                        detail = await Supplier.findOneAndUpdate({ userId: id }, data, {new: true});
+                        break;
+                    case "produsen":
+                        detail = await Produsen.findOneAndUpdate({ userId: id }, data, {new: true});
+                        break;
+                };
+            }else if(data.role || data.email || data.phone){
+                delete data.nama;
+                delete data.namaBadanUsaha;
+                userAuth = await User.findByIdAndUpdate(id, {
+                    'phone.content': data.phone,
+                    'email.content': data.email,
+                    role: data.role
+                }, { new: true })
+            }
             
-            return res.status(200).json({message: "Berhasil Mengubah Data User", data: user});
+            
+
+            return res.status(200).json({message: "Berhasil Mengubah Data User", data: {
+                userAuth,
+                detail
+            }});
 
         } catch (error) {
             console.log(error);
             next(error)
+        }
+    },
+
+    verifyOrBlockUser: async(req, res, next) =>{
+        try {
+            let user;
+            const { block , verify } = req.body;
+            if(block){
+                user = await User.findByIdAndUpdate(req.params.id, {
+                    isBlocked: true
+                }, { new: true });
+            }else if(verify){
+                user = await User.findByIdAndUpdate(req.params.id, {
+                    isDetailVerified: true
+                }, { new: true });
+            }
+
+            return res.status(200).json({message: `Berhasil ${block? "Memblock" : "Memverify"} user dengan id ${req.params.id}`, data: user})
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
+    deleteUser: async(req, res, next) =>{
+        try {
+            if(req.user.role !== "administrator") return res.status(403).json({message: "Menghapus User hanya boleh dilakukan oleh administrasi!"});
+            const user = await User.findByIdAndDelete(req.params.id);
+
+            if(!user) return res.status(404).json({message: `Tidak ada user dengan id ${req.params.id}`});
+
+            return res.status(200).json({message: "Berhasil Menghapus User", data: user})
+        } catch (error) {
+            console.log(error);
+            next(error);
         }
     }
 }

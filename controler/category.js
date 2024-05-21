@@ -190,7 +190,7 @@ module.exports = {
                 const specific_category = await SpecificCategory.findById(req.params.id);
                 const sub_category = await SubCategory.findOne({ contents: { $in: req.params.id } });
                 if (sub_category) {
-                    const index = main.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
+                    const index = sub_category.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
                     sub_category.contents.splice(index, 1);
                     await sub_category.save();
                 }

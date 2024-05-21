@@ -1,4 +1,4 @@
-const Distributtor = require('../../models/distributtor/model-distributtor')
+const Distributtor = require('../../models/distributor/model-distributor')
 const User = require('../../models/model-auth-user')
 
 module.exports = {

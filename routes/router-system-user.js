@@ -4,6 +4,8 @@ const authorization = require("../midelware/authorization")
 
 router.get("/getAll", authorization, systemUser.getAllUser);
 router.put("/edit/:id", authorization, systemUser.editUser);
-router.post("/login", systemUser.login),
+router.put('/verify-or-block/:id', authorization, systemUser.verifyOrBlockUser);
+router.post("/login", systemUser.login);
+router.delete("/delete/:id", authorization, systemUser.deleteUser)
 
 module.exports = router;
