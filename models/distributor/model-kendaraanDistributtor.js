@@ -1,0 +1,46 @@
+const mongoose = require('mongoose');
+
+const kendaraanDistributorSchema = mongoose.Schema({
+    id_distributor: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Distributtor',
+        required: [true, 'ID distributor harus diisi']
+    },
+    id_jenis_kendaraan: {
+        type: mongoose.Types.ObjectId,
+        ref: 'JenisKendaraan',  //ubah dengan relasi yang benar
+        required: [true, 'ID jenis kendaraan harus diisi']
+    },
+    merk: {
+        type: String,
+        required: [true, 'Merk kendaraan harus diisi']
+    },
+    tipe: {
+        type: String,
+        required: [true, 'Tipe kendaraan harus diisi']
+    },
+    tnkb: {
+        type: String,
+        required: [true, 'TNKB kendaraan harus diisi']
+    },
+    no_mesin: {
+        type: String,
+        required: [true, 'Nomor mesin kendaraan harus diisi']
+    },
+    no_rangka: {
+        type: String,
+        required: [true, 'Nomor rangka kendaraan harus diisi']
+    },
+    tahun: {
+        type: Number,
+        required: [true, 'Tahun kendaraan harus diisi']
+    },
+    warna: {
+        type: String,
+        required: [true, 'Warna kendaraan harus diisi']
+    }
+}, { timestamps: true });
+
+const KendaraanDistributor = mongoose.model('KendaraanDistributor', kendaraanDistributorSchema);
+
+module.exports = KendaraanDistributor;
