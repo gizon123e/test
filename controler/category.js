@@ -91,18 +91,23 @@ module.exports = {
             }
 
             if (sub) {
+                const dataSubCategory = await SubCategory.findOne({ name: sub })
                 sub_category = await SubCategory.findOne({ name: { $regex: new RegExp('^' + sub + '$', 'i') } });
-                if (!sub_category) {
-                    sub_category = await SubCategory.create({ name: sub });
+                if (!dataSubCategory) {
+                    if (!sub_category) {
+                        sub_category = await SubCategory.create({ name: sub });
+                    }
+                    const check = main_category.contents.find(item => {
+                        return item.toString() === sub_category._id.toString()
+                    });
+                    console.log(check)
+                    if (!check) {
+                        main_category.contents.push(sub_category._id);
+                        await main_category.save();
+                    }
                 }
-                const check = main_category.contents.find(item => {
-                    return item.toString() === sub_category._id.toString()
-                });
-                console.log(check)
-                if (!check) {
-                    main_category.contents.push(sub_category._id);
-                    await main_category.save();
-                }
+
+                console.log(sub)
             };
 
             if (specific) {
@@ -110,6 +115,7 @@ module.exports = {
                 if (!specific_category) {
                     specific_category = await SpecificCategory.create({ name: specific });
                 }
+
                 sub_category.contents.push(specific_category._id);
                 await sub_category.save();
             };
@@ -188,20 +194,26 @@ module.exports = {
                 } else {
                     return res.status(200).json({ message: "Berhasil Menghapus Sub Category" });
                 };
-            }else if(req.query.specific){
-                const specific_category = await SpecificCategory.findById(req.params.id);
-                const sub_category = await SubCategory.findOne({ contents: { $in: req.params.id } });
-                if (sub_category) {
-                    const index = main.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
-                    sub_category.contents.splice(index, 1);
-                    await sub_category.save();
-                }
-                await SpecificCategory.deleteOne({ _id: req.params.id });
-                if (!specific_category) {
+            } else if (req.query.specific) {
+
+                const specificCategory = await SpecificCategory.findById(req.params.id);
+                if (!specificCategory) {
                     return res.status(404).json({ message: `Specific Category dengan id ${req.params.id} tidak ditemukan` });
-                } else {
-                    return res.status(200).json({ message: "Berhasil Menghapus Specific Category" });
-                };
+                }
+                const subCategory = await SubCategory.findOne({ contents: { $in: req.params.id } });
+                if (!subCategory) {
+                    return res.status(404).json({ message: `Sub Category dengan item ${req.params.id} tidak ditemukan` });
+                }
+                // const subCategory = await SubCategory.find({ 'contents._id': req.params.id });
+                // const subCategory = data.contents.indexOf(new mongoose.Types.ObjectId(req.params.id));
+                // console.log("sub", subCategory)
+                if (subCategory) {
+                    subCategory.contents = subCategory.contents.filter(item => item._id.toString() !== req.params.id.toString());
+                    await subCategory.save();
+                }
+
+                await SpecificCategory.deleteOne({ _id: req.params.id });
+                return res.status(200).json({ message: "Berhasil Menghapus Specific Category" });
             }
             if (!dataCategory) return res.status(404).json({ message: 'delete data category not found' });
             if (dataCategory.contents.length > 0) return res.status(403).json({ message: `Tidak bisa menghapus category ${dataCategory.name}, karena sudah memiliki sub category` });
