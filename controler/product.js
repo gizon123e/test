@@ -13,20 +13,147 @@ const { getToken } = require('../utils/getToken');
 module.exports = {
   getProductWithMain: async(req, res, next) =>{
     try {
-      const id = req.params.id
-      const main = await MainCategory.aggregate([
+      const id = req.params.id;
+      const userRole = req.user.role
+      const dataProds = await Product.aggregate([
         {
-          $match:{
-            _id: id
-          }
+            $match:{
+                id_main_category: id
+            }
         },
         {
-          $unwind:{
-            contents
-          }
+            $lookup:{
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "userData"
+            }
         },
-        
-      ])
+        {
+            $unwind: "$userData"
+        }
+      ]);
+
+      let userVendor = [];
+      let userSupplier = [];
+      let userProdusens = [];
+      let flashSaleProducts = [];
+      let ordinaryProducts = [];
+
+      dataProds.forEach(item => {
+
+          if(item.userData.role === "vendor"){
+              userVendor.push(item.userId)
+          }else if(item.userData.role === 'supplier'){
+              userSupplier.push(item.userId)
+          }else if(item.userData.role === "produsen"){
+              userProdusens.push(item.userId)
+          }
+          
+          if(item.isFlashSale){
+              flashSaleProducts.push({...item, produkFrom: item.userData.role});
+          }else{
+              ordinaryProducts.push({...item, produkFrom: item.userData.role});
+          };
+      });
+
+      const dataVendors = await Vendor.aggregate([
+          {
+              $match:{
+                  userId: { $in: userVendor }
+              }
+          }
+      ]);
+
+      const dataSuppliers = await Supplier.aggregate([
+          {
+              $match:{
+                  userId: { $in: userSupplier }
+              }
+          }
+      ]);
+
+      const dataProdusens = await Produsen.aggregate([
+          {
+              $match:{
+                  userId: { $in: userProdusens }
+              }
+          }
+      ]);
+
+      flashSaleProducts.map(produk => {
+          if(produk.produkFrom === "vendor"){
+              const dataVendor = dataVendors.filter(vnd => {
+                  return vnd.userId.equals(produk.userId)
+              });
+              produk.dataVendor = dataVendor
+          }else if(produk.produkFrom === "supplier"){
+              const dataSupplier = dataSuppliers.filter(vnd => {
+                  return vnd.userId.equals(produk.userId)
+              });
+              produk.dataSupplier = dataSupplier
+          }else if(produk.produkFrom === "produsen"){
+              const dataProduen = dataProdusens.filter(vnd => {
+                  return vnd.userId.equals(produk.userId)
+              });
+              produk.dataProduen = dataProduen
+          }
+      });
+
+      ordinaryProducts.map(produk => {
+          if(produk.produkFrom === "vendor"){
+              const dataVendor = dataVendors.filter(vnd => {
+                  return vnd.userId.equals(produk.userId)
+              });
+              produk.dataVendor = dataVendor
+          }else if(produk.produkFrom === "supplier"){
+              const dataSupplier = dataSuppliers.filter(vnd => {
+                  return vnd.userId.equals(produk.userId)
+              });
+              produk.dataSupplier = dataSupplier
+          }else if(produk.produkFrom === "produsen"){
+              const dataProduen = dataProdusens.filter(vnd => {
+                  return vnd.userId.equals(produk.userId)
+              });
+              produk.dataProduen = dataProduen
+          }
+      })
+
+      let finalDataFlashSale;
+      let finalDataNotFlashSale;
+
+      switch(userRole){
+          case("konsumen"):
+              finalDataFlashSale =flashSaleProducts.filter(item => {
+                  return item.produkFrom === "vendor"
+              });
+              finalDataNotFlashSale = ordinaryProducts.filter(item => {
+                  return item.produkFrom === "vendor"
+              })
+              break;
+          case("vendor"):
+              finalDataFlashSale =flashSaleProducts.filter(item => {
+                  return item.produkFrom === "supplier"
+              });
+              finalDataNotFlashSale = ordinaryProducts.filter(item => {
+                  return item.produkFrom === "supplier"
+              })
+              break;
+          case("supplier"):
+              finalDataFlashSale = flashSaleProducts.filter(item => {
+                  return item.produkFrom === "produsen"
+              });
+              finalDataNotFlashSale = ordinaryProducts.filter(item => {
+                  return item.produkFrom === "produsen"
+              })
+              break;
+      }
+      
+
+      console.log({
+          finalDataFlashSale,
+          finalDataNotFlashSale
+      })
     } catch (error) {
       console.log(error);
       next(error)
