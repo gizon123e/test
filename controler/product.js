@@ -43,7 +43,10 @@ module.exports = {
         model: "Product"
       });
 
-      console.log(productsPromo)
+      const banner = productsPromo.filter(item => {
+        return item.productId.id_main_category
+      });
+
       let userVendor = [];
       let userSupplier = [];
       let userProdusens = [];
@@ -202,7 +205,8 @@ module.exports = {
       return res.status(200).json({
         message: "Berhasil Mendapatkan Data",
         finalDataFlashSale,
-        finalDataNotFlashSale
+        finalDataNotFlashSale,
+        banner
       })
     } catch (error) {
       console.log(error);
