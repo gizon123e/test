@@ -40,7 +40,8 @@ module.exports = {
 
       const productsPromo = await Promo.find().populate({
         path: 'productId',
-        model: "Product"
+        model: "Product",
+        select: "id_main_category"
       });
 
       const banner = productsPromo.filter(item => {
