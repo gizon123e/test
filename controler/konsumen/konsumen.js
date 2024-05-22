@@ -210,19 +210,12 @@ module.exports = {
             
             const dataKonsumen = await Konsumen.create(data);
 
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'Konsumen Successfully Created',
                 data: dataKonsumen
             });
 
         } catch (error) {
-            if (error && error.name === 'ValidationError') {
-                return res.status(400).json({
-                    error: true,
-                    message: error.message,
-                    fields: error.fields
-                });
-            };
             console.log(error)
             next(error);
         }
