@@ -303,7 +303,7 @@ module.exports = {
       if(email && !phone) {
         user = await User.findByIdAndUpdate(id, {'email.content': email}, {new: true});
       }else if(!email && phone){
-        user = await User.findByIdAndUpdate(id, {$set :{'phone.content': phone}}, {new: true});
+        user = await User.findByIdAndUpdate(id, {'phone.content': phone}, {new: true});
       }else if(email && phone){
         user = await User.findByIdAndUpdate(id, {'email.content': email, 'phone.content': phone}, {new: true});
       }
