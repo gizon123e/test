@@ -4,7 +4,8 @@ const Supplier = require("../models/supplier/model-supplier");
 const mongoose = require('mongoose')
 const Produsen = require("../models/produsen/model-produsen")
 const SpecificCategory = require("../models/model-specific-category");
-const MainCategory = require("../models/model-main-category")
+const Promo = require('../models/model-promo');
+// const MainCategory = require("../models/model-main-category")
 const Performance = require('../models/model-laporan-kinerja-product');
 const BahanBaku = require("../models/model-bahan-baku");
 const SalesReport = require("../models/model-laporan-penjualan");
@@ -37,6 +38,12 @@ module.exports = {
         }
       ]);
 
+      const productsPromo = await Promo.find().populate({
+        path: 'productId',
+        model: "Product"
+      });
+
+      console.log(productsPromo)
       let userVendor = [];
       let userSupplier = [];
       let userProdusens = [];
@@ -80,7 +87,7 @@ module.exports = {
             preserveNullAndEmptyArrays: true
           }
         }
-      ]);
+      ])
 
       const dataSuppliers = await Supplier.aggregate([
           {

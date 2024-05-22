@@ -1,5 +1,5 @@
 const Promo = require('../models/model-promo');
-const Konsumen = require("../models/konsumen/model-konsumen");
+const Vendor = require("../models/vendor/model-vendor");
 const Minat = require("../models/model-minat-user");
 const path = require('path');
 const dotenv = require("dotenv");
@@ -7,14 +7,13 @@ const dotenv = require("dotenv");
 module.exports = {
     addPromo: async (req, res, next) => {
         try {
-            const promo = await Promo.findOne({productId: req.body.productId})
-            const konsumen = await Konsumen.findOne({userId: req.user.id});
-            // if(promo.productId.userId.toString() != req.user.id) return res.status(403).json({message: "Tidak bisa menambahkan Promo untuk produk orang lain"})
+            const promo = await Promo.findOne({productId: req.body.productId}).populate('productId')
+            const vendor = await Vendor.findOne({userId: req.user.id});
             if(promo) return res.status(400).json({message: "Product Sedang Promo"});
+            if(promo.productId.userId.toString() !== req.user.id) return res.status(403).json({message: "Tidak bisa menambahkan Promo untuk produk orang lain"})
             if(!req.files.banner) return res.status(400).json({message: "Harus Mengirimkan Banner!"});
-            const bannerFile = `${Date.now()}_${konsumen.namaBadanUsaha || konsumen.nama}_${path.extname(req.files.banner.name)}`;
+            const bannerFile = `${Date.now()}_${vendor.namaBadanUsaha || vendor.nama}_${path.extname(req.files.banner.name)}`;
             const bannerPath = path.join(__dirname, '../public', 'profile_picts', bannerFile);
-            console.log(bannerPath)
             await req.files.banner.mv(bannerPath);
 
             const newPromo = await Promo.create({
