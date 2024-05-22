@@ -9,8 +9,12 @@ const Saldo = require("../models/model-saldoApp");
 const Fintech = require("../models/model-fintech");
 const User = require("../models//model-auth-user")
 
-User.findById("664565fcff8c264b3711e373")
-.then((data)=> console.log(data.kode_role))
+Product.updateMany({userId: "661de72d7cdcebb1ed1bfbe0"}, {userId: "6645655aff8c264b3711e36c"}).then(data=>{
+    console.log(data)
+})
+
+// User.findById("664565fcff8c264b3711e373")
+// .then((data)=> console.log(data.kode_role))
 // Fintech.create({
 //     nama_fintech: "gopay paylater"
 // }).then(()=>console.log("berhasil"))

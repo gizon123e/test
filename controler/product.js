@@ -1,15 +1,37 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
 const SpecificCategory = require("../models/model-specific-category");
+const MainCategory = require("../models/model-main-category")
 const Performance = require('../models/model-laporan-kinerja-product');
 const BahanBaku = require("../models/model-bahan-baku");
 const SalesReport = require("../models/model-laporan-penjualan");
+const Vendor = require("../models/vendor/model-vendor")
 const path = require('path');
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
 
 module.exports = {
-
+  getProductWithMain: async(req, res, next) =>{
+    try {
+      const id = req.params.id
+      const main = await MainCategory.aggregate([
+        {
+          $match:{
+            _id: id
+          }
+        },
+        {
+          $unwind:{
+            contents
+          }
+        },
+        
+      ])
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
   search: async (req, res, next) => {
     try {
 
@@ -90,10 +112,18 @@ module.exports = {
 
   list_all: async (req, res, next) => {
     try {
-      if (req.user.role === "konsumen") return res.status(403).json({ message: "Konsumen tidak bisa memiliki product" })
-      const data = await Product.find().populate('userId', '-password').populate('id_main_category').populate('id_sub_category').populate('categoryId')
-      if (data) {
-        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data })
+      const data = await Product.find().populate("id_main_category").populate("id_sub_category").populate("categoryId")
+      const dataProds = [];
+      for(const produk of data){
+        console.log(produk)
+        const namaVendor = await Vendor.findOne({userId: produk.userId});
+        dataProds.push({
+          ...produk.toObject(),
+          nama: namaVendor?.nama || namaVendor?.namaBadanUsaha
+        });
+      };
+      if (data && data.length > 0) {
+        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds })
       } else {
         return res.status(404).json({ message: "User tidak memiliki produk", data })
       }
