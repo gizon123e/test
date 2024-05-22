@@ -82,8 +82,6 @@ module.exports = {
         }
       ]);
 
-      console.log(dataVendors)
-
       const dataSuppliers = await Supplier.aggregate([
           {
               $match:{
