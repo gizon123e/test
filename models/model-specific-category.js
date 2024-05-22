@@ -8,6 +8,10 @@ const modelSpecificCategory = mongoose.Schema({
     },
     icon: {
         type: String
+    },
+    show_at_web:{
+        type: Boolean,
+        default: false
     }
 }, { timestamp: true })
 

@@ -123,6 +123,31 @@ module.exports = {
         }
     },
 
+    getAllSpecificCategory: async(req, res, next) =>{
+        try {
+            const categories = await SpecificCategory.find({show_at_web: true});
+            return res.status(200).json({message: "Berhasil Mendapatkan Semua Specific Category", data: categories});
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
+    editShowSpecificCategory: async(req, res, next) =>{
+        try {
+            if(req.user.role !== "administrator") return res.status(403).json({message: "Ngedit Category hanya cuman boleh sama admin!"})
+
+            const edited = await SpecificCategory.findByIdAndUpdate(req.params.id, {
+                show_at_web: true
+            }, { new: true })
+
+            return res.status(200).json({message:"Berhasil Mengedit Specific Category", data: edited})
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
     updateSubCategory: async (req, res, next) => {
         try {
             const sub_category = await SubCategory.findByIdAndUpdate(req.params.id, { name: req.body.name }, { new: true });

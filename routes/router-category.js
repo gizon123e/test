@@ -8,8 +8,10 @@ const router = require("express").Router();
 
 router.get('/list', controlerCategory.getCategory);
 router.get('/detail-main/:id', controlerCategory.getDetailCategory);
-router.get('/list-subCategory/:id', controlerCategory.getCategorySub)
+router.get('/list-subCategory/:id', controlerCategory.getCategorySub);
+router.get('/specific-category', controlerCategory.getAllSpecificCategory);
 router.post('/create', controlerCategory.createCategory);
+router.put('/specific-category/:id', authorization, controlerCategory.editShowSpecificCategory);
 router.put('/update/:id', controlerCategory.updateCategory);
 router.put('/update-sub/:id', controlerCategory.updateSubCategory);
 router.put('/update-specific/:id', controlerCategory.updateSpacific)

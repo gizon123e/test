@@ -460,10 +460,10 @@ module.exports = {
           datas: product,
         });
       }
-      // if (product.userId.toString() !== req.user.id)
-      //   return res
-      //     .status(403)
-      //     .json({ message: "Tidak bisa mengubah produk orang lain!" });
+      if (product.userId.toString() !== req.user.id && req.user.role !== "administrator")
+        return res
+          .status(403)
+          .json({ message: "Tidak bisa mengubah produk orang lain!" });
 
       return res.status(201).json({
         error: false,
