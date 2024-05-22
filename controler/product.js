@@ -61,17 +61,33 @@ module.exports = {
       });
 
       const dataVendors = await Vendor.aggregate([
-          {
-              $match:{
-                  userId: { $in: userVendor }
-              }
-          }
+        {
+            $match: {
+              userId: { $in: userVendor }
+            }
+        },
+        {
+            $lookup: {
+                from: 'addresses',
+                localField: 'address',
+                foreignField: '_id',
+                as: 'alamat'
+            }
+        },
+        {
+            $unwind: {
+              path: '$alamat',
+              preserveNullAndEmptyArrays: true
+            }
+        }
       ]);
+
+      console.log(dataVendors)
 
       const dataSuppliers = await Supplier.aggregate([
           {
               $match:{
-                  userId: { $in: userSupplier }
+                userId: { $in: userSupplier }
               }
           }
       ]);
@@ -79,7 +95,7 @@ module.exports = {
       const dataProdusens = await Produsen.aggregate([
           {
               $match:{
-                  userId: { $in: userProdusens }
+                userId: { $in: userProdusens }
               }
           }
       ]);
