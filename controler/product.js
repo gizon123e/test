@@ -75,18 +75,32 @@ module.exports = {
             }
         },
         {
-            $unwind: {
-              path: '$alamat',
-              preserveNullAndEmptyArrays: true
-            }
+          $unwind: {
+            path: '$alamat',
+            preserveNullAndEmptyArrays: true
+          }
         }
       ]);
 
       const dataSuppliers = await Supplier.aggregate([
           {
-              $match:{
-                userId: { $in: userSupplier }
-              }
+            $match:{
+              userId: { $in: userSupplier }
+            }
+          },
+          {
+            $lookup: {
+                from: 'addresses',
+                localField: 'address',
+                foreignField: '_id',
+                as: 'alamat'
+            }
+          },
+          {
+            $unwind: {
+              path: '$alamat',
+              preserveNullAndEmptyArrays: true
+            }
           }
       ]);
 
@@ -95,6 +109,20 @@ module.exports = {
               $match:{
                 userId: { $in: userProdusens }
               }
+          },
+          {
+            $lookup: {
+                from: 'addresses',
+                localField: 'address',
+                foreignField: '_id',
+                as: 'alamat'
+            }
+          },
+          {
+            $unwind: {
+              path: '$alamat',
+              preserveNullAndEmptyArrays: true
+            }
           }
       ]);
 
