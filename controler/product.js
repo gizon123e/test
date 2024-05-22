@@ -131,17 +131,17 @@ module.exports = {
               const dataVendor = dataVendors.filter(vnd => {
                   return vnd.userId.equals(produk.userId)
               });
-              produk.dataVendor = dataVendor
+              produk.dataToko = dataVendor
           }else if(produk.produkFrom === "supplier"){
               const dataSupplier = dataSuppliers.filter(vnd => {
                   return vnd.userId.equals(produk.userId)
               });
-              produk.dataSupplier = dataSupplier
+              produk.dataToko = dataSupplier
           }else if(produk.produkFrom === "produsen"){
               const dataProduen = dataProdusens.filter(vnd => {
                   return vnd.userId.equals(produk.userId)
               });
-              produk.dataProduen = dataProduen
+              produk.dataToko = dataProduen
           }
       });
 
@@ -150,17 +150,17 @@ module.exports = {
               const dataVendor = dataVendors.filter(vnd => {
                   return vnd.userId.equals(produk.userId)
               });
-              produk.dataVendor = dataVendor
+              produk.dataToko = dataVendor
           }else if(produk.produkFrom === "supplier"){
               const dataSupplier = dataSuppliers.filter(vnd => {
                   return vnd.userId.equals(produk.userId)
               });
-              produk.dataSupplier = dataSupplier
+              produk.dataToko = dataSupplier
           }else if(produk.produkFrom === "produsen"){
               const dataProduen = dataProdusens.filter(vnd => {
                   return vnd.userId.equals(produk.userId)
               });
-              produk.dataProduen = dataProduen
+              produk.dataToko = dataProduen
           }
       })
       let finalDataFlashSale;
