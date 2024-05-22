@@ -1,5 +1,8 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
+const Supplier = require("../models/supplier/model-supplier");
+const mongoose = require('mongoose')
+const Produsen = require("../models/produsen/model-produsen")
 const SpecificCategory = require("../models/model-specific-category");
 const MainCategory = require("../models/model-main-category")
 const Performance = require('../models/model-laporan-kinerja-product');
@@ -13,7 +16,7 @@ const { getToken } = require('../utils/getToken');
 module.exports = {
   getProductWithMain: async(req, res, next) =>{
     try {
-      const id = req.params.id;
+      const id = new mongoose.Types.ObjectId(req.params.id);
       const userRole = req.user.role
       const dataProds = await Product.aggregate([
         {
@@ -118,7 +121,6 @@ module.exports = {
               produk.dataProduen = dataProduen
           }
       })
-
       let finalDataFlashSale;
       let finalDataNotFlashSale;
 
@@ -148,11 +150,10 @@ module.exports = {
               })
               break;
       }
-      
-
-      console.log({
-          finalDataFlashSale,
-          finalDataNotFlashSale
+      return res.status(200).json({
+        message: "Berhasil Mendapatkan Data",
+        finalDataFlashSale,
+        finalDataNotFlashSale
       })
     } catch (error) {
       console.log(error);
