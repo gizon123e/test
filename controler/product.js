@@ -98,24 +98,9 @@ module.exports = {
 
   list_product_adminPanel: async (req, res, next) => {
     try {
-      const data = await Product.find().populate('userId', '-password').populate('id_main_category').populate('id_sub_category').populate('categoryId')
-
-      res.status(200).json({
-        message: 'get data success',
-        data
-      })
-    } catch (error) {
-      console.log(error);
-      next(error)
-    }
-  },
-
-  list_all: async (req, res, next) => {
-    try {
-      const data = await Product.find().populate("id_main_category").populate("id_sub_category").populate("categoryId")
+      const data = await Product.find().populate({path:"userId", select: "_id role"}).populate("id_main_category").populate("id_sub_category").populate("categoryId")
       const dataProds = [];
       for(const produk of data){
-        console.log(produk)
         const namaVendor = await Vendor.findOne({userId: produk.userId});
         dataProds.push({
           ...produk.toObject(),
@@ -132,6 +117,28 @@ module.exports = {
       next(error)
     }
   },
+
+  // list_all: async (req, res, next) => {
+  //   try {
+  //     const data = await Product.find().populate({path:"userId", select: "_id role"}).populate("id_main_category").populate("id_sub_category").populate("categoryId")
+  //     const dataProds = [];
+  //     for(const produk of data){
+  //       const namaVendor = await Vendor.findOne({userId: produk.userId});
+  //       dataProds.push({
+  //         ...produk.toObject(),
+  //         nama: namaVendor?.nama || namaVendor?.namaBadanUsaha
+  //       });
+  //     };
+  //     if (data && data.length > 0) {
+  //       return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds })
+  //     } else {
+  //       return res.status(404).json({ message: "User tidak memiliki produk", data })
+  //     }
+  //   } catch (error) {
+  //     console.log(error)
+  //     next(error)
+  //   }
+  // },
 
   productDetail: async (req, res, next) => {
     try {
