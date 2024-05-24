@@ -25,12 +25,12 @@ module.exports = {
     getMinat: async (req, res, next) => {
         try {
             const minatUser = await Minat.findOne({userId: req.user.id});
-            const categoriesId = []
-            minatUser.categoryMinat.forEach(minat => {
-                categoriesId.push(minat.categoryId)
-            });
-            const products = await Product.find({ categoryId : { $in: categoriesId }});
-            return res.status(200).json({ message: "Berhasil Mendapatkan Rekomendasi Produk" , data: products})
+            // const categoriesId = []
+            // minatUser.categoryMinat.forEach(minat => {
+            //     categoriesId.push(minat.categoryId)
+            // });
+            // const products = await Product.find({ categoryId : { $in: categoriesId }});
+            return res.status(200).json({ message: "Berhasil Mendapatkan Minat User" , data: minatUser})
         } catch (error) {
             console.log(error);
             next(error);
