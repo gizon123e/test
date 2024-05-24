@@ -96,14 +96,17 @@ const userModels = new mongoose.Schema(
     },
     isActive:{
       type: Boolean,
-      default: false
+      default: false,
+      required: true
     },
     isDetailVerified:{
       type: Boolean,
+      required: true,
       default: false
     },
     isBlocked:{
       type: Boolean,
+      required: true,
       default: false
     }
   },
