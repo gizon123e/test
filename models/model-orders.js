@@ -32,7 +32,7 @@ const modelOrder = mongoose.Schema({
     status: {
         type: String,
         required: [true, 'status harus di isi'],
-        enum: ["Belum Bayar", "Sedang diproses", "Dikirim", "Selesai", "Dibatalkan"],
+        enum: ["Belum Bayar", "Berlangsung",  "Berhasil", "Dibatalkan"],
         default: "Belum Bayar"
     },
     catatan_produk:{

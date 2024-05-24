@@ -164,14 +164,42 @@ module.exports = {
             }else if(data.role || data.email || data.phone){
                 delete data.nama;
                 delete data.namaBadanUsaha;
-                userAuth = await User.findByIdAndUpdate(id, {
-                    'phone.content': data.phone,
-                    'email.content': data.email,
-                    role: data.role
-                }, { new: true })
+                let detail
+                userAuth = await User.findById(id)
+                switch(userAuth.role){
+                    case "konsumen":
+                        detail = await Konsumen.findOne({userId: userAuth._id});
+                        await Konsumen.findOneAndDelete({userId: userAuth._id});
+                        break;
+                    case "vendor":
+                        detail = await Vendor.findOne({userId: userAuth._id});
+                        await Vendor.findOneAndDelete({userId: userAuth._id});
+                        break;
+                    case "supplier":
+                        detail = await Supplier.findOne({userId: userAuth._id});
+                        await Supplier.findOneAndDelete({userId: userAuth._id});
+                        break;
+                    case "produsen": 
+                        detail = await Produsen.findOne({userId: userAuth._id})
+                        await Produsen.findOneAndDelete({userId: userAuth._id});
+                        break;
+                }
+
+                switch(data.role){
+                    case "konsumen":
+                        await Konsumen.create(detail);
+                        break;
+                    case "vendor":
+                        await Vendor.create(detail);
+                        break;
+                    case "supplier":
+                        await Supplier.create(detail);
+                        break;
+                    case "produsen": 
+                        await Produsen.create(detail);
+                        break;
+                }
             }
-            
-            
 
             return res.status(200).json({message: "Berhasil Mengubah Data User", data: {
                 userAuth,
