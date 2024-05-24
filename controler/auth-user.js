@@ -32,9 +32,9 @@ module.exports = {
           codeOtp
         });
       }else{
-        newUser = await User.updateOne({_id: isEmailRegister._id} , {
+        newUser = await User.findByIdAndUpdate( isEmailRegister._id , {
           codeOtp
-        })
+        }, {new: true})
       }
 
       sendOTP(email, kode_random, "register");
