@@ -46,10 +46,6 @@ module.exports = {
       const { phone } = req.body;
       if(!phone) return res.status(400).json({message:"Tidak ada phone number yang dikirimkan"});
       const isPhoneRegistered = await User.exists({ 'phone.content': phone });
-      
-      if (isPhoneRegistered) {
-        return res.status(400).json({ message: "phone sudah terdaftar" });
-      };
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
       const kode = await bcrypt.hash(kode_random.toString(), 3);
