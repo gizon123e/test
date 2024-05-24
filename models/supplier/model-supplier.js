@@ -1,19 +1,36 @@
 const mongoose = require("mongoose");
 
-const supplierModel = mongoose.Schema({
+const supplierModel = new mongoose.Schema({
     nama: {
         type: String,
         required: false
+    },
+    nik: {
+        type: String
+    },
+    file_ktp:{
+        type: String,
     },
     namaBadanUsaha: {
         type: String,
         required: false
     },
-    penanggungJawab:{
+    nomorAktaPerusahaan:{
         type: String,
-        required: false
     },
-    addressId:{
+    npwpFile:{
+        type: String,
+    },
+    nomorNpwpPerusahaan:{
+        type: String,
+    },
+    nomorNpwp: {
+        type: String,
+    },
+    penanggungJawab:{
+        type: mongoose.Types.ObjectId
+    },
+    address:{
         type: mongoose.Types.ObjectId,
         ref: "Address",
         required: [true, "Harus memiliki alamat"]
@@ -27,13 +44,21 @@ const supplierModel = mongoose.Schema({
         required: [true, 'userId harus di isi'],
         ref: 'User'
     },
+    jenis_kelamin:{
+        type: String,
+        enum: ["laki", "perempuan"]
+    },
+    jenis_perusahaan:{
+        type: String,
+        enum: ["PT", "CV"]
+    },
     legalitasBadanUsaha:{
         type: String, 
         required: false
     },
     profile_pict:{
         type: String,
-        default: "http://localhost:4000/public/profile_picts/default.jpg"
+        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
     }
 })
 

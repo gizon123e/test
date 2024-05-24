@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const vendorModel = mongoose.Schema({
+const vendorModel = new mongoose.Schema({
     nama: {
         type: String,
         required: false
@@ -43,6 +43,14 @@ const vendorModel = mongoose.Schema({
         type: mongoose.Types.ObjectId,
         required: [true, 'userId harus di isi'],
         ref: 'User'
+    },
+    jenis_kelamin:{
+        type: String,
+        enum: ["laki", "perempuan"]
+    },
+    jenis_perusahaan:{
+        type: String,
+        enum: ["PT", "CV"]
     },
     legalitasBadanUsaha:{
         type: String, 

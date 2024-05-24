@@ -164,22 +164,27 @@ module.exports = {
             }else if(data.role || data.email || data.phone){
                 delete data.nama;
                 delete data.namaBadanUsaha;
-                let detail
+                let detail;
                 userAuth = await User.findById(id)
+
                 switch(userAuth.role){
                     case "konsumen":
+                        console.log('masuk konsumen')
                         detail = await Konsumen.findOne({userId: userAuth._id});
                         await Konsumen.findOneAndDelete({userId: userAuth._id});
                         break;
                     case "vendor":
+                        console.log('masuk vendor')
                         detail = await Vendor.findOne({userId: userAuth._id});
                         await Vendor.findOneAndDelete({userId: userAuth._id});
                         break;
                     case "supplier":
+                        console.log('masuk supplier')
                         detail = await Supplier.findOne({userId: userAuth._id});
                         await Supplier.findOneAndDelete({userId: userAuth._id});
                         break;
                     case "produsen": 
+                        console.log('masuk produsen')
                         detail = await Produsen.findOne({userId: userAuth._id})
                         await Produsen.findOneAndDelete({userId: userAuth._id});
                         break;
@@ -187,18 +192,36 @@ module.exports = {
 
                 switch(data.role){
                     case "konsumen":
-                        await Konsumen.create(detail);
-                        break;
+                        try {
+                            delete detail._doc._id
+                            const dataKonsumen = {...detail._doc}
+                            const newKonsumen = await Konsumen.create(dataKonsumen)
+                        } catch (error) {
+                            console.log(error)
+                        }
                     case "vendor":
-                        await Vendor.create(detail);
+                        delete detail._doc._id
+                        const dataVendor = {...detail._doc}
+                        await Vendor.create( dataVendor );
                         break;
                     case "supplier":
-                        await Supplier.create(detail);
+                        delete detail._doc._id
+                        const dataSupp = {...detail._doc}
+                        await Supplier.create(dataSupp);
                         break;
                     case "produsen": 
-                        await Produsen.create(detail);
+                        delete detail._doc._id
+                        const dataProdusen = {...detail._doc}
+                        await Produsen.create(dataProdusen);
                         break;
                 }
+
+                await User.updateOne({_id: id}, {
+                    'phone.content' : data.phone,
+                    'email.content': data.email,
+                    role: data.role
+                });
+
             }
 
             return res.status(200).json({message: "Berhasil Mengubah Data User", data: {

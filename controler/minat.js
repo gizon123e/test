@@ -13,7 +13,8 @@ module.exports = {
                     categoryMinat: [{categoryId}]
                 });
             }else{
-                minat.categoryMinat.push({categoryId});
+                const ada = minat.categoryMinat.some(item => item.categoryId === categoryId)
+                if(!ada) minat.categoryMinat.push({categoryId});
             }
             await minat.save();
 

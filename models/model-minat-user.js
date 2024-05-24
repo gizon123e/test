@@ -21,15 +21,8 @@ const minatModels = new mongoose.Schema({
                 default: Date.now()
             }
         }],
-        validate: [arrayLimit, '{PATH} maksimal 3 category']
     }
 });
 
-function arrayLimit(val) {
-    if (val.length > 4) {
-        val.shift();
-    }
-    return true;
-}
 const Minat = mongoose.model("Minat", minatModels);
 module.exports = Minat;
