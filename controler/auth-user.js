@@ -25,9 +25,9 @@ module.exports = {
         code: kode,
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
-
+      let newUser
       if(!isEmailRegister) {
-        const newUser = await User.create({
+        newUser = await User.create({
           'email.content': email,
           codeOtp
         });
