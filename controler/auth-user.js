@@ -26,10 +26,16 @@ module.exports = {
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
 
-      const newUser = await User.create({
-        'email.content': email,
-        codeOtp
-      });
+      if(!isEmailRegister) {
+        const newUser = await User.create({
+          'email.content': email,
+          codeOtp
+        });
+      }else{
+        await User.updateOne({_id: isEmailRegister._id} , {
+          codeOtp
+        })
+      }
 
       sendOTP(email, kode_random, "register");
 
