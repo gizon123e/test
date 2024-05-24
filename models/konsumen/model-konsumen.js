@@ -44,6 +44,14 @@ const konsumenModel = mongoose.Schema({
         required: [true, 'userId harus di isi'],
         ref: 'User'
     },
+    jenis_kelamin:{
+        type: String,
+        enum: ["laki", "perempuan"]
+    },
+    jenis_perusahaan:{
+        type: String,
+        enum: ["PT", "CV"]
+    },
     legalitasBadanUsaha:{
         type: String, 
         required: false
