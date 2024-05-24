@@ -16,7 +16,7 @@ module.exports = {
             },
         });
         
-        transporter.sendMail({
+        return transporter.sendMail({
             from: process.env.EMAIL_SENDER,
             to: email,
             subject: subject,
@@ -27,8 +27,6 @@ module.exports = {
               accessToken: process.env.ACCESS_TOKEN,
               expires: 1484314697598,
             },
-        }).then(()=>{
-            console.log('Email sudah terkirim')
         })
     },
 

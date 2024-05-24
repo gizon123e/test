@@ -37,8 +37,7 @@ module.exports = {
         }, {new: true})
       }
 
-      sendOTP(email, kode_random, "register");
-
+      await sendOTP(email, kode_random, "register");
       return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newUser._id});
 
     } catch (error) {
