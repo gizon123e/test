@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const minatModels = mongoose.Schema({
+const minatModels = new mongoose.Schema({
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User"

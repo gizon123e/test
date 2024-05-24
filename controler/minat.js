@@ -1,4 +1,5 @@
 const Minat = require("../models/model-minat-user");
+const mongoose = require('mongoose')
 const Product = require("../models/model-product");
 
 module.exports = {
@@ -24,12 +25,10 @@ module.exports = {
     },
     getMinat: async (req, res, next) => {
         try {
-            const minatUser = await Minat.findOne({userId: req.user.id});
-            // const categoriesId = []
-            // minatUser.categoryMinat.forEach(minat => {
-            //     categoriesId.push(minat.categoryId)
-            // });
-            // const products = await Product.find({ categoryId : { $in: categoriesId }});
+            console.log(req.user.id)
+            const minatUser = await Minat.findOne({userId: req.user.id}).populate({
+                path: 'categoryMinat.categoryId'
+            })
             return res.status(200).json({ message: "Berhasil Mendapatkan Minat User" , data: minatUser})
         } catch (error) {
             console.log(error);
