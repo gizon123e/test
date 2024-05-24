@@ -12,6 +12,10 @@ const modelSpecificCategory = mongoose.Schema({
     show_at_web:{
         type: Boolean,
         default: false
+    },
+    icon:{
+        type: String,
+        default: "https://staging-backend.superdigitalapps.my.id/public/icon/kursi.jpg"
     }
 }, { timestamp: true })
 
