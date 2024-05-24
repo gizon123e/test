@@ -14,7 +14,7 @@ module.exports = {
 
       const isEmailRegister = await User.exists({ 'email.content': email });
 
-      if (isEmailRegister) {
+      if (isEmailRegister.isActive) {
         return res.status(400).json({ message: "email sudah terdaftar" });
       };
 
