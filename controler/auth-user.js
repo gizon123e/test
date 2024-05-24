@@ -1,5 +1,6 @@
 const User = require("../models/model-auth-user");
 const sendOTP = require("../utils/sendOtp").sendOtp;
+const sendPhoneOTP = require('../utils/sendOtp').sendOtpPhone
 const jwt = require("../utils/jwt");
 const bcrypt = require("bcrypt");
 
@@ -63,9 +64,9 @@ module.exports = {
         codeOtp
       });
 
-      // function sendOTP with phone
+      sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
 
-      return res.status(200).json({message: "SMS Verifikasi Sudah dikirim", id: newUser._id, kode_otp: kode_random});
+      return res.status(200).json({message: "SMS Verifikasi Sudah dikirim", id: newUser._id });
 
     } catch (error) {
       console.log(error);
@@ -153,19 +154,8 @@ module.exports = {
           pin,
           newUser.pin
         );
-
-        const tokenPayload = {
-          id: newUser._id,
-          email: newUser.email,
-          phone: newUser.phone,
-          role: newUser.role,
-        };
-
-        const token = jwt.createToken(tokenPayload);
         
         if(!validPin) return res.status(401).json({message: "Invalid Pin"});
-
-        return res.status(200).json({message: "Login Berhasil", data: {...tokenPayload, token}});
       }
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
@@ -179,11 +169,17 @@ module.exports = {
       newUser.codeOtp = codeOtp;
       await newUser.save();
 
-      if(email && !phone) sendOTP(email, kode_random, "login");
+      if(email && !phone){ 
+        sendOTP(email, kode_random, "login")
+      }else if(!email && phone) {
+        console.log('masuk')
+        sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
+      }
+      
 
       return res.status(200).json({
         error: false,
-        message: `Email verifikasi sudah dikirim!`,
+        message: `${phone? "Phone" : "Email"} verifikasi sudah dikirim!`,
         id: newUser._id,
       });
 

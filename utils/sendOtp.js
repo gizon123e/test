@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
+const axios = require('axios')
 dotenv.config()
 
 module.exports = {
@@ -30,5 +31,27 @@ module.exports = {
         }).then(()=>{
             console.log('Email sudah terkirim')
         })
+    },
+
+    sendOtpPhone: async (nomor, content) => {
+        try {
+            const splittedNomor = nomor.split('08');
+            const params = {
+                from: "KBI",
+                to: `628${splittedNomor[1]}`,
+                text: content
+            }
+            const res = await fetch(`${process.env.URL_SEND_PHONE_OTP}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "authorization": `${process.env.API_KEY_SEND_OTP}`
+                },
+                body: JSON.stringify(params)
+            })
+            const hasil = await res.json()
+        } catch (error) {
+            console.log(error);
+        }
     }
 }
