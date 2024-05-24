@@ -32,7 +32,7 @@ module.exports = {
           codeOtp
         });
       }else{
-        await User.updateOne({_id: isEmailRegister._id} , {
+        newUser = await User.updateOne({_id: isEmailRegister._id} , {
           codeOtp
         })
       }
