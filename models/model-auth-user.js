@@ -94,7 +94,7 @@ const userModels = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    isFinish:{
+    isActive:{
       type: Boolean,
       default: false
     },
