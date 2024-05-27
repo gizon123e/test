@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 
 const flashSaleModel = mongoose.Schema({
+    nama: {
+        type: String
+    },
     categoryId:{
         type:[{
             _id: false,

@@ -1,5 +1,8 @@
 const Carts = require('../models/model-cart')
-const Product = require('../models/model-product')
+const Product = require('../models/model-product');
+const Supplier = require("../models/supplier/model-supplier");
+const Produsen = require("../models/produsen/model-produsen")
+const Vendor = require("../models/vendor/model-vendor")
 
 module.exports = {
 
@@ -8,12 +11,39 @@ module.exports = {
             const dataCart = await Carts.find({ userId: req.user.id })
                 .populate({
                     path: 'productId',
+                    select: "_id categoryId name_product total_price image_product",
                     populate: {
-                        path: 'categoryId',
-                        select: 'name'
+                        path: 'userId',
+                        select: '_id role'
                     }
-                })
-                .populate('userId', '-password')
+                });
+            
+            const idUserToko = []
+            let product;
+
+            dataCart.forEach(item => {
+                idUserToko.push({id: item.productId.userId._id, role: item.productId.userId.role})
+            });
+            
+            idUserToko.forEach( async (item) => {
+                let detailToko
+                switch(item.role){
+                    case "vendor": 
+                        detailToko = await Vendor.findOne({userId: item.id});
+                        break;
+                    case "supplier":
+                        detailToko = await Supplier.findOne({userId: item.id});
+                        break;
+                    case "produsen":
+                        detailToko = await Produsen.findOne({userId: item.id});
+                        break;
+                };
+
+                const filteredProduct = dataCart.filter(item => {
+                    return item.productId.userId._id.toString() === detailToko.userId.toString()
+                });
+                console.log(filteredProduct)
+            })
 
             if(!dataCart || dataCart.length == 0) return res.status(404).json({message:"User belum memiliki cart"});
 
@@ -25,7 +55,8 @@ module.exports = {
                     message: error.message,
                     fields: error.fields
                 })
-            }
+            };
+            console.log(error)
             next(error)
         }
     },

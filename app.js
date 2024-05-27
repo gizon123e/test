@@ -29,6 +29,7 @@ global.__basedir = __dirname;
 app.get('/failed', (req, res) => {
   res.send("Failed");
 });
+app.use("/api/temporary", require('./routes/router-temporary'));
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
 app.use('/api/user', require('./routes/router-user'));
 app.use('/api/product', require('./routes/router-product'));

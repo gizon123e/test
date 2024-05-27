@@ -1,4 +1,5 @@
 const User = require("../models/model-auth-user");
+const { TemporaryUser } = require('../models/model-temporary-user')
 const sendOTP = require("../utils/sendOtp").sendOtp;
 const sendPhoneOTP = require('../utils/sendOtp').sendOtpPhone
 const jwt = require("../utils/jwt");
@@ -17,6 +18,10 @@ module.exports = {
       if (isEmailRegister) {
         return res.status(400).json({ message: "email sudah terdaftar" });
       };
+      
+      const temporaryUser = await TemporaryUser.exists({ email });
+
+      let newTemporary;
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
       const kode = await bcrypt.hash(kode_random.toString(), 3);
@@ -26,13 +31,17 @@ module.exports = {
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
 
-      const newUser = await User.create({
-        'email.content': email,
-        codeOtp
-      });
-
+      if(!temporaryUser){
+        newTemporary = await TemporaryUser.create({
+          'email.content': email,
+          codeOtp
+        });
+      }else{
+        newTemporary = await TemporaryUser.findByIdAndUpdate(temporaryUser._id, { codeOtp }, { new: true })
+      }
+      console.log('kode otp', kode_random)
       await sendOTP(email, kode_random, "register");
-      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newUser._id});
+      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id});
 
     } catch (error) {
       console.log(error);
@@ -73,31 +82,21 @@ module.exports = {
 
   register: async (req, res, next) => {
     try {
-      const { id, password, role } = req.body;
+      const { id, password } = req.body;
       if(!id) return res.status(400).json({message: "Tidak ada id yang dikirim"});
-      const user = await User.findById(id);
-      if(!user.phone.isVerified && !user.email.isVerified) return res.status(403).json({message: "User belum terverifikasi"});
-      let data = {}
-      if(password){
-        const handleHashPassword = await bcrypt.hash(password, 10);
-        data = {
-          role,
-          password: handleHashPassword
-        }
-      }else{
-        data = {
-          role
-        }
-      }
-
-      const newUser = await User.findByIdAndUpdate(id, data, {new: true});
+      if(!password) return res.status(400).json({message: "Tidak ada password yang dikirim"});
+      const temporary = await TemporaryUser.findById(id);
+      if(!temporary) return res.status(404).json({message: "Tidak ada user dengan id " + id});
+      if(!temporary.phone.isVerified && !temporary.email.isVerified) return res.status(403).json({message: "User belum terverifikasi"});
       
-      if(!newUser) return res.status(404).json({message: `id ${id} tidak ditemukan`});
-      const newUserWithoutPassword = { ...newUser._doc };
+      const user = await User.create({ _id: temporary._id, ...temporary._doc, password});
+
+      const newUserWithoutPassword = { ...user._doc };
       delete newUserWithoutPassword.password;
       delete newUserWithoutPassword.codeOtp;
-      delete newUserWithoutPassword.pin
-
+      delete newUserWithoutPassword.pin;
+      
+      await TemporaryUser.deleteOne({_id: id});
       return res.status(201).json({
         error: false,
         message: "register success",

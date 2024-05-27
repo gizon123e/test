@@ -57,7 +57,6 @@ module.exports = {
 
     createKonsumen: async (req, res, next) => {
         try {
-            // if(req.user.role != "konsumen") return res.status(403).json({message:"User bukan konsumen!"});
             const samaUser = await Konsumen.findOne({userId: req.body.id}).populate('userId', '-password');
 
             if(samaUser) return res.status(400).json({message: "User ini sudah memiliki data detail Konsumen", data: samaUser});
@@ -127,7 +126,7 @@ module.exports = {
                 if (namaBadanUsaha) missingFields.push("Nama Badan Usaha tidak seharusnya diisi");
                 if (nomorAktaPerusahaan) missingFields.push("Nomor Akta Perusahaan tidak seharusnya diisi");
                 if (noTeleponKantor) missingFields.push("Nomor Telepon Kantor tidak seharusnya diisi");
-                if (nomorNpwpPerusahaan) missingFields.push("Nomor Nomor NPWP Perusahaan tidak seharusnya diisi");
+                if (nomorNpwpPerusahaan) missingFields.push("Nomor NPWP Perusahaan tidak seharusnya diisi");
                 if (req.files?.legalitasBadanUsaha) missingFields.push("Legalitas Badan Usah tidak seharusnya diisi");
                 if (!nama) missingFields.push("Nama");
                 if (!province) missingFields.push("Province");
