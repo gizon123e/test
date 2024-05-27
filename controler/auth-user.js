@@ -52,10 +52,18 @@ module.exports = {
         }
       };
 
+      function verification(){
+        if(newTemporary.email.isVerified || newTemporary.phone.isVerified) return true
+        return false
+      }
+
+      const isVerified = verification()
+
       const checkPoint = check();
 
-      await sendOTP(email, kode_random, "register");
-      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint});
+      if(!isVerified) await sendOTP(email, kode_random, "register");
+      
+      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint, isVerified});
 
     } catch (error) {
       console.log(error);
