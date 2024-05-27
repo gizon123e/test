@@ -22,18 +22,6 @@ module.exports = {
       
       const temporaryUser = await TemporaryUser.findOne({ 'email.content': email });
 
-      function check(){
-
-        const { role, ...rest} = temporaryUser._doc;
-        if (role && Object.keys(rest).length <= 6) {
-          return "role";
-        }else if (role && Object.keys(rest).length > 6) {
-          return "detail";
-        }
-      };
-
-      const checkPoint = check();
-
       let newTemporary;
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
@@ -51,8 +39,21 @@ module.exports = {
         });
       }else{
         newTemporary = await TemporaryUser.findByIdAndUpdate(temporaryUser._id, { codeOtp }, { new: true })
-      }
-      console.log('kode otp', kode_random)
+      };
+
+      function check(){
+        const { role, ...rest} = newTemporary;
+        if (role && Object.keys(rest).length <= 6) {
+          return "role";
+        }else if (role && Object.keys(rest).length > 6) {
+          return "detail";
+        }else{
+          return null
+        }
+      };
+
+      const checkPoint = check();
+
       await sendOTP(email, kode_random, "register");
       return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint});
 
