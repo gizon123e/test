@@ -52,6 +52,9 @@ const konsumenModel = new mongoose.Schema({
         type: String,
         enum: ["PT", "CV"]
     },
+    tanggal_lahir:{
+        type: String,
+    },
     legalitasBadanUsaha:{
         type: String, 
         required: false
