@@ -32,30 +32,30 @@ const modelOrder = mongoose.Schema({
     status: {
         type: String,
         required: [true, 'status harus di isi'],
-        enum: ["Belum Bayar", "Berlangsung",  "Berhasil", "Dibatalkan"],
+        enum: ["Belum Bayar", "Berlangsung", "Berhasil", "Dibatalkan"],
         default: "Belum Bayar"
     },
-    catatan_produk:{
+    catatan_produk: {
         type: String
     },
-    poinTerpakai:{
+    poinTerpakai: {
         type: Number
     },
-    biaya_proteksi:{
+    biaya_proteksi: {
         type: Boolean,
         default: false
     },
-    biaya_asuransi:{
+    biaya_asuransi: {
         type: Boolean,
         default: false
     },
-    ongkir:{
+    ongkir: {
         type: Number
     },
-    potongan_ongkir:{
+    potongan_ongkir: {
         type: Number
     },
-    dp:{
+    dp: {
         type: Boolean
     },
     is_dibatalkan: {

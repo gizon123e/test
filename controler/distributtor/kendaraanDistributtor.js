@@ -25,7 +25,7 @@ module.exports = {
 
     getKendaraanDistributorById: async (req, res, next) => {
         try {
-            const data = await KendaraanDistributor.findOne({ _id: req.params.id })
+            const data = await KendaraanDistributor.findOne({ id_distributor: req.params.id })
             if (!data) return res.status(404).json({ message: "data Not Found" })
 
             res.status(200).json({
