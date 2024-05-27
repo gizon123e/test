@@ -1,5 +1,8 @@
 const Distributtor = require('../../models/distributor/model-distributor')
-const User = require('../../models/model-auth-user')
+const Address = require('../../models/model-address')
+const Pesanan = require('../../models/model-orders')
+const Vendor = require('../../models/vendor/model-vendor')
+const { calculateDistance } = require('../../utils/menghitungJarak')
 
 module.exports = {
     getAllDistributtor: async (req, res, next) => {
@@ -7,7 +10,40 @@ module.exports = {
             //kasih filter maksimal untuk motor:
             //ukuran 100x30x40cm
             //berat 20kg
+
+            const { orderId } = req.body
             const { name } = req.query
+
+            const orderData = await Pesanan.findById(orderId).populate({
+                path: 'product.productId',
+                populate: {
+                    path: 'categoryId',
+                },
+                populate: {
+                    path: 'userId',
+                    select: '-password'
+                },
+            })
+                .populate('userId', '-password').populate('addressId')
+
+            const latitudeUser = parseFloat(orderData.addressId.pinAlamat.lat)
+            const longitudeUser = parseFloat(orderData.addressId.pinAlamat.long);
+
+
+            let addresVendor = {}
+            for (let vendor of orderData.product) {
+                const vendorId = vendor.productId.userId._id ? vendor.productId.userId._id : null
+                addresVendor = await Vendor.findOne({ userId: vendorId }).populate('address')
+            }
+
+            const latitudeVendor = parseFloat(addresVendor.address.pinAlamat.lat)
+            const longitudeVendor = parseFloat(addresVendor.address.pinAlamat.long)
+
+            const distance = calculateDistance(latitudeUser, longitudeUser, latitudeVendor, longitudeVendor, 25);
+
+            if (isNaN(distance)) {
+                return res.status(400).json({ message: "Distance exceeds the maximum allowed" });
+            }
 
             let query = {}
             if (name) {
@@ -20,7 +56,8 @@ module.exports = {
 
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas: dataDistributtor
+                datas: dataDistributtor,
+                jarakTempu: Math.round(distance)
             })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
