@@ -1,15 +1,15 @@
 const Product = require("../models/model-product");
 const User = require("../models/model-auth-user");
 const Supplier = require("../models/supplier/model-supplier");
-const mongoose = require('mongoose')
 const Produsen = require("../models/produsen/model-produsen")
+const Vendor = require("../models/vendor/model-vendor")
+const mongoose = require('mongoose')
 const SpecificCategory = require("../models/model-specific-category");
 const Promo = require('../models/model-promo');
 // const MainCategory = require("../models/model-main-category")
 const Performance = require('../models/model-laporan-kinerja-product');
 const BahanBaku = require("../models/model-bahan-baku");
 const SalesReport = require("../models/model-laporan-penjualan");
-const Vendor = require("../models/vendor/model-vendor")
 const path = require('path');
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
@@ -337,9 +337,20 @@ module.exports = {
 
   productDetail: async (req, res, next) => {
     try {
-      const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId')
+      const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId').populate('userId')
+      let toko;
 
-      const toko = await Vendor.findOne({userId: dataProduct.userId}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan')
+      switch(dataProduct.userId.role){
+        case "vendor":
+          toko = await Vendor.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          break;  
+        case "supplier":
+          toko = await Supplier.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          break;  
+        case "produsen":
+          toko = await Produsen.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          break;
+      }
       
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
 

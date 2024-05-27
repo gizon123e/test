@@ -5,6 +5,10 @@ const vendorModel = new mongoose.Schema({
         type: String,
         required: false
     },
+    namaUsaha: {
+        type: String,
+        required: true
+    },
     nik: {
         type: String
     },

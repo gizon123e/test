@@ -1,6 +1,9 @@
 const FlashSale = require("../models/model-flashsale");
 const SpecificCategory = require("../models/model-specific-category");
 const Product = require("../models/model-product");
+const Supplier = require("../models/supplier/model-supplier");
+const Produsen = require("../models/produsen/model-produsen")
+const Vendor = require("../models/vendor/model-vendor")
 const createDate = require('../utils/createDateString');
 
 module.exports = {
@@ -54,7 +57,11 @@ module.exports = {
             for ( const flashSale of flashSales){
                 categorys = flashSale.categoryId
                 for (const item of categorys){
-                    const product = await Product.findOne({categoryId: item.value.toString()});
+                    const product = await Product.findOne({categoryId: item.value.toString()}).populate({
+                        path: 'userId',
+                        select: '-pin -password'
+                    });
+                    let toko;
                     const stokAwalEntry = flashSale.stokAwal.find(entry => entry.productId.toString() === product._id.toString());
                     if (stokAwalEntry) {
                         stokAwal = stokAwalEntry.value;
@@ -63,9 +70,19 @@ module.exports = {
                         flashSale.stokAwal.push({ productId: product._id, value: stokAwal });
                         await flashSale.save();
                     };
-
+                    switch(product.userId.role){
+                        case "vendor":
+                            toko = await Vendor.findOne({userId: product.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+                            break;
+                        case "supplier":
+                            toko = await Supplier.findOne({userId: product.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+                            break;
+                        case "produsen":
+                            toko = await Produsen.findOne({userId: product.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+                            break;
+                    }
                     const objectProduct = product.toObject();
-                    flashSalesProducts.push({...objectProduct, stokAwal});
+                    flashSalesProducts.push({...objectProduct, stokAwal, toko});
                 }
                 const object = flashSale.toObject()
                 delete object.categoryId
