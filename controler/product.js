@@ -20,7 +20,7 @@ module.exports = {
     try {
       const id = req.params.id
       if(!id) return res.status(400).json({message: "Tolong kirimkan id specific category"})
-      const products = await Product.find({categoryId: id})
+      const products = await Product.find({categoryId: id}).populate('categoryId').populate('id_main_category').populate("id_sub_category")
       return res.status(200).json({message: "Berhasil mendapatkan Products", data: products})
     } catch (error) {
       console.log(error)
