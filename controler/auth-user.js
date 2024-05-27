@@ -20,6 +20,8 @@ module.exports = {
         return res.status(400).json({ message: "email sudah terdaftar" });
       };
       
+      //temporary User
+      
       const temporaryUser = await TemporaryUser.findOne({ 'email.content': email });
 
       let newTemporary;
@@ -62,7 +64,7 @@ module.exports = {
       const checkPoint = check();
 
       if(!isVerified) await sendOTP(email, kode_random, "register");
-      
+
       return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint, isVerified});
 
     } catch (error) {
@@ -74,10 +76,16 @@ module.exports = {
   sendOtpWithPhone: async (req, res, next) =>{
     try {
       const { phone } = req.body;
+
       if(!phone) return res.status(400).json({message:"Tidak ada phone number yang dikirimkan"});
+
       const isPhoneRegistered = await User.exists({ 'phone.content': phone });
 
-      if(isPhoneRegistered.isActive) return res.status(400).json({message:`Nomor handphone ${phone} sudah terdaftar`})
+      if(isPhoneRegistered) return res.status(400).json({message:`Nomor handphone ${phone} sudah terdaftar`})
+
+      const temporaryUser = await TemporaryUser.findOne({ 'phone.content': phone });
+
+      let newTemporary;
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
       const kode = await bcrypt.hash(kode_random.toString(), 3);
@@ -87,14 +95,38 @@ module.exports = {
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
 
-      const newUser = await User.create({
-        'phone.content': phone,
-        codeOtp
-      });
+      if(!temporaryUser){
+        newTemporary = await TemporaryUser.create({
+          'phone.content': phone,
+          codeOtp
+        });
+      }else{
+        newTemporary = await TemporaryUser.findByIdAndUpdate(temporaryUser._id, { codeOtp }, { new: true })
+      };
 
-      sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
+      function check(){
+        const { role, ...rest} = newTemporary;
+        if (role && Object.keys(rest).length <= 6) {
+          return "role";
+        }else if (role && Object.keys(rest).length > 6) {
+          return "detail";
+        }else{
+          return null
+        }
+      };
 
-      return res.status(200).json({message: "SMS Verifikasi Sudah dikirim", id: newUser._id });
+      function verification(){
+        if(newTemporary.email.isVerified || newTemporary.phone.isVerified) return true
+        return false
+      }
+
+      const isVerified = verification()
+
+      const checkPoint = check();
+
+      if(!isVerified) await sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
+
+      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint, isVerified});
 
     } catch (error) {
       console.log(error);

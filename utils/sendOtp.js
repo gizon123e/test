@@ -47,6 +47,8 @@ module.exports = {
                 body: JSON.stringify(params)
             })
             const hasil = await res.json()
+
+            return hasil
         } catch (error) {
             console.log(error);
         }

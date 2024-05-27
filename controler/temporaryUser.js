@@ -11,6 +11,17 @@ module.exports = {
             return res.status(201).json({message: "Berhasil mengedit temporary data", data: update})
         } catch (error) {
             console.log(error)
+            next(error)
+        }
+    },
+
+    getDetailTemporary: async (req, res, next) => {
+        try {
+            const data = await TemporaryUser.findById(req.body.id);
+            return res.status(200).json({message: "Berhasil mendapatkan detail temporary", data})
+        } catch (error) {
+            console.log(error)
+            next(error)
         }
     }
 }
