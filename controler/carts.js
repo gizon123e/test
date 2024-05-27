@@ -149,11 +149,7 @@ module.exports = {
 
     deleteCarts: async (req, res, next) => {
         try {
-            const dataCart = await Carts.findOne({ _id: req.params.id })
-            if (dataCart.userId.toString() !== req.user.id) return res.status(403).json({message: "Tidak bisa menghapus data orang lain!"})
-            if (!dataCart) return res.status(404).json({ message: 'delete data cart not foud' })
-
-            await Carts.deleteOne({ _id: req.params.id })
+            await Carts.deleteMany({ userId: req.user.id })
             return res.status(200).json({ message: 'delete data success' })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
