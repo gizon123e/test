@@ -6,11 +6,6 @@ const kendaraanDistributorSchema = mongoose.Schema({
         ref: 'Distributtor',
         required: [true, 'ID distributor harus diisi']
     },
-    id_jenis_kendaraan: {
-        type: mongoose.Types.ObjectId,
-        ref: 'JenisKendaraan',  //ubah dengan relasi yang benar
-        required: [true, 'ID jenis kendaraan harus diisi']
-    },
     merk: {
         type: String,
         required: [true, 'Merk kendaraan harus diisi']

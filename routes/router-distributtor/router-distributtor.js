@@ -8,9 +8,9 @@ const controlerDistributtor = require('../../controler/distributtor/distributtor
 const router = require('express').Router()
 
 router.get('/list', controlerDistributtor.getAllDistributtor)
-router.get('/detail/:id', authorization, controlerDistributtor.getDetailDistributtor)
+router.get('/detail/:id', controlerDistributtor.getDetailDistributtor)
 router.post('/create', controlerDistributtor.createDistributtor)
-router.put('/update/:id', authorization, controlerDistributtor.updateDistributtor)
-router.delete('/delete/:id', authorization, controlerDistributtor.deleteDistributtor)
+router.put('/update/:id', controlerDistributtor.updateDistributtor)
+router.delete('/delete/:id', controlerDistributtor.deleteDistributtor)
 
 module.exports = router

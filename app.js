@@ -70,6 +70,8 @@ app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
 
+app.use('/api/tarif', require('./routes/router-tarif'))
+
 
 // midelware error
 app.use(require("./midelware/error-midelware"));
