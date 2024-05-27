@@ -151,6 +151,7 @@ module.exports = {
         if(!validPassword) return res.status(401).json({message:"Invalid Password"});
         
       }else if(!email && phone && pin){
+         if(!newUser.phone.content) return res.status(403).json({message: "No Hp belum ditambahkan"});
         if(!newUser.phone.isVerified) return res.status(403).json({message: "No Hp belum diverifikasi"});
         if(!newUser.pin) return res.status(404).json({message:"User belum memiliki pin"});
         const validPin = await bcrypt.compare(
@@ -163,7 +164,6 @@ module.exports = {
 
       const kode_random = Math.floor(1000 + Math.random() * 9000);
       const kode = await bcrypt.hash(kode_random.toString(), 3);
-      
       const codeOtp = {
         code: kode,
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)

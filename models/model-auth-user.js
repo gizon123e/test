@@ -32,6 +32,7 @@ const userModels = new mongoose.Schema(
           },
           message: (props) => `${props.value} email tidak valid`,
         },
+        default: undefined
       },
       isVerified: {
         type: Boolean,
@@ -53,7 +54,8 @@ const userModels = new mongoose.Schema(
             return regexNoTelepon.test(phone)
           },
           message: (props) => `${props.value} nomor handphone tidak valid`
-        }
+        },
+        default: undefined
       },
       isVerified: {
         type: Boolean,
@@ -93,6 +95,10 @@ const userModels = new mongoose.Schema(
     poin: {
       type: Number,
       default: 0
+    },
+    saldo:{
+        type: Number,
+        default: 0
     },
     isActive:{
       type: Boolean,

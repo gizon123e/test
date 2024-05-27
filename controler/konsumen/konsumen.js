@@ -29,9 +29,18 @@ module.exports = {
 
     getDetailKonsumen: async (req, res, next) => {
         try {
-            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password')
+            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password').select('-file_ktp')
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
-            return res.status(200).json({ message: 'success', datas: dataKonsumen })
+            let modifiedDataKonsumen = dataKonsumen
+            const isIndividu = dataKonsumen.nama? true : false
+            if(!isIndividu){
+                const { namaBadanUsaha, ...rest } = dataKonsumen.toObject();
+                modifiedDataKonsumen = {
+                    ...rest,
+                    nama: namaBadanUsaha
+                };
+            }
+            return res.status(200).json({ message: 'success', datas: modifiedDataKonsumen, isIndividu })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
