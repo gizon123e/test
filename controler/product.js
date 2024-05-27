@@ -337,7 +337,10 @@ module.exports = {
 
   productDetail: async (req, res, next) => {
     try {
-      const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId').populate('userId')
+      const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId').populate({
+        path: 'userId',
+        select: '-password -codeOtp -pin -saldo -poin'
+      })
       let toko;
 
       switch(dataProduct.userId.role){

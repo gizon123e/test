@@ -50,7 +50,7 @@ module.exports = {
     getFlashSale: async(req, res, next) => {
         try {
             const flashSales = await FlashSale.find()
-            if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-event"})
+            if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-start"})
             const flashSalesProducts = []
             const data = []
             let categorys = [];
