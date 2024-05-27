@@ -337,11 +337,13 @@ module.exports = {
 
   productDetail: async (req, res, next) => {
     try {
-      const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId');
+      const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId')
+
+      const toko = await Vendor.findOne({userId: dataProduct.userId}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan')
       
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
 
-      return res.status(200).json({ datas: dataProduct });
+      return res.status(200).json({ datas: dataProduct, toko });
 
     } catch (error) {
       console.log(error);

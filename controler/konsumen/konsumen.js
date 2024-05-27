@@ -1,4 +1,5 @@
-const Konsumen = require('../../models/konsumen/model-konsumen')
+const Konsumen = require('../../models/konsumen/model-konsumen');
+const User = require('../../models/model-auth-user')
 const Address = require("../../models/model-address")
 const path = require('path');
 const dotenv = require('dotenv')
@@ -235,7 +236,6 @@ module.exports = {
             const konsumen = await Konsumen.findOne({userId: req.user.id});
 
             if(!konsumen) return res.status(404).json({message: `User belum mengisi detail`});
-            if(!req.files || !req.files.profile_pict) return res.status(400).json({message: "Foto Profile Kosong!"})
             let filePath = konsumen.profile_pict;
             // if(req.body.noTeleponKantor){
             //     const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
@@ -263,12 +263,20 @@ module.exports = {
             }
 
 
-            const updatedData = await Konsumen.findOneAndUpdate({userId: req.user.id}, { profile_pict: filePath }, {new: true});
+            const updatedData = await Konsumen.findOneAndUpdate({userId: req.user.id}, { 
+                profile_pict: filePath,
+                jenis_kelamin: req.body.jenis_kelamin,
+                jenis_perusahaan: req.body.jenis_perusahaan,
+                tanggal_lahir: req.body.tanggal_lahir
+            }, {new: true});
 
-            res.status(200).json({
+            if((updatedData.jenis_kelamin || updatedData.jenis_perusahaan) && (updatedData.tanggal_lahir) ) await User.findByIdAndUpdate(req.user.id, { isActive: true})
+
+            return res.status(200).json({
                 message: 'Konsumen updated successfully',
                 data: updatedData
             });
+            
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
