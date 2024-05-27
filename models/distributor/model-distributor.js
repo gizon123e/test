@@ -10,13 +10,18 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         required: [true, 'name distributtor harus di isi']
     },
+    alamat_id: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Address',
+        required: [true, 'alamat_id harus di isi']
+    },
     no_telp: {
         type: String,
         require: [true, 'no_telepon harus di isi']
     },
     is_kendaraan: {
         type: String,
-        enum: ['Motor', 'Mobil', 'Mobil dan Moto'],
+        enum: ['Motor', 'Mobil', 'Mobil dan Motor'],
         message: '{VALUE} is not supported',
         required: [true, 'is_kendaraan harus di isi']
     },

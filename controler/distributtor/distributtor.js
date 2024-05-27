@@ -7,7 +7,14 @@ module.exports = {
             //kasih filter maksimal untuk motor:
             //ukuran 100x30x40cm
             //berat 20kg
-            const dataDistributtor = await Distributtor.find().populate("userId", '-password')
+            const { name } = req.query
+
+            let query = {}
+            if (name) {
+                query.nama_distributor = { $regex: name, $options: 'i' }
+            }
+
+            const dataDistributtor = await Distributtor.find(query).populate("userId", '-password').populate('alamat_id')
 
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
 
@@ -51,16 +58,12 @@ module.exports = {
 
     createDistributtor: async (req, res, next) => {
         try {
-            const { nama_distributor, no_telp, is_kendaraan, userId } = req.body
-
-            const dataUser = await User.findOne({ _id: userId })
-            if (!dataUser) return res.status(404).json({ message: `data user id ${userId} Not Found` })
-
+            const { nama_distributor, no_telp, is_kendaraan, userId, alamat_id } = req.body
 
             const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
             if (!regexNoTelepon.test(no_telp.toString())) return res.status(400).json({ message: "no telepon tidak valid" })
 
-            const data = await Distributtor.create({ nama_distributor, no_telp, is_kendaraan, is_active: true, userId })
+            const data = await Distributtor.create({ nama_distributor, no_telp, is_kendaraan, is_active: true, userId, alamat_id })
 
             res.status(201).json({
                 message: "create data success",

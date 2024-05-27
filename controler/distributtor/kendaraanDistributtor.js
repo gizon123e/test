@@ -47,9 +47,9 @@ module.exports = {
 
     createKendaraandistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun } = req.body
+            const { id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun } = req.body
 
-            const data = await KendaraanDistributor.create({ id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun })
+            const data = await KendaraanDistributor.create({ id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun })
 
             res.status(201).json({
                 message: "create data success",
