@@ -14,7 +14,7 @@ module.exports = {
 
       const isEmailRegister = await User.exists({ 'email.content': email });
 
-      if (isEmailRegister?.isActive) {
+      if (isEmailRegister) {
         return res.status(400).json({ message: "email sudah terdaftar" });
       };
 
@@ -25,17 +25,11 @@ module.exports = {
         code: kode,
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
-      let newUser
-      if(!isEmailRegister) {
-        newUser = await User.create({
-          'email.content': email,
-          codeOtp
-        });
-      }else{
-        newUser = await User.findByIdAndUpdate( isEmailRegister._id , {
-          codeOtp
-        }, {new: true})
-      }
+
+      const newUser = await User.create({
+        'email.content': email,
+        codeOtp
+      });
 
       await sendOTP(email, kode_random, "register");
       return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newUser._id});
