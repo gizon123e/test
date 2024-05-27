@@ -9,6 +9,8 @@ const router = require("express").Router();
 router.get('/list', authorization, controlerCarts.getCarts)
 router.post('/create', authorization, controlerCarts.createCarts)
 router.put('/update/:id', authorization, controlerCarts.updateCart)
-router.delete('/delete/:id', authorization, controlerCarts.deleteCarts)
+router.delete('/delete/:id', authorization, controlerCarts.deleteCarts);
+router.delete('/delete/', authorization, controlerCarts.deleteAllCarts);
+
 
 module.exports = router
