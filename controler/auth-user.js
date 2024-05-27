@@ -53,7 +53,7 @@ module.exports = {
         newTemporary = await TemporaryUser.findByIdAndUpdate(temporaryUser._id, { codeOtp }, { new: true })
       }
       console.log('kode otp', kode_random)
-      // await sendOTP(email, kode_random, "register");
+      await sendOTP(email, kode_random, "register");
       return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint});
 
     } catch (error) {
