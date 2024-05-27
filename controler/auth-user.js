@@ -4,6 +4,7 @@ const sendOTP = require("../utils/sendOtp").sendOtp;
 const sendPhoneOTP = require('../utils/sendOtp').sendOtpPhone
 const jwt = require("../utils/jwt");
 const bcrypt = require("bcrypt");
+const temporaryUser = require("./temporaryUser");
 
 module.exports = {
 
@@ -19,7 +20,19 @@ module.exports = {
         return res.status(400).json({ message: "email sudah terdaftar" });
       };
       
-      const temporaryUser = await TemporaryUser.exists({ email });
+      const temporaryUser = await TemporaryUser.findOne({ 'email.content': email });
+
+      function check(){
+
+        const { role, ...rest} = temporaryUser._doc;
+        if (role && Object.keys(rest).length <= 6) {
+          return "role";
+        }else if (role && Object.keys(rest).length > 6) {
+          return "detail";
+        }
+      };
+
+      const checkPoint = check();
 
       let newTemporary;
 
@@ -40,8 +53,8 @@ module.exports = {
         newTemporary = await TemporaryUser.findByIdAndUpdate(temporaryUser._id, { codeOtp }, { new: true })
       }
       console.log('kode otp', kode_random)
-      await sendOTP(email, kode_random, "register");
-      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id});
+      // await sendOTP(email, kode_random, "register");
+      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint});
 
     } catch (error) {
       console.log(error);
