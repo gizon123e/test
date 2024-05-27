@@ -54,7 +54,7 @@ const vendorModel = new mongoose.Schema({
     },
     jenis_perusahaan:{
         type: String,
-        enum: ["PT", "CV"]
+        enum: ["PT", "CV", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Koperasi", "Yayasan"]
     },
     legalitasBadanUsaha:{
         type: String, 
