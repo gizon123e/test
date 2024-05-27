@@ -41,7 +41,8 @@ module.exports = {
             if (!data) return res.status(404).json({ message: "data Not Found" })
 
             res.status(200).json({
-                message: `get data by id ${req.params.id} suucess`
+                message: `get data by id ${req.params.id} suucess`,
+                data
             })
 
         } catch (error) {
