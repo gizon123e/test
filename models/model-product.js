@@ -99,7 +99,13 @@ const productModels = new mongoose.Schema(
       type: Boolean,
       default: false
     },
-    ukuran: {
+    panjang: {
+      type: Number
+    },
+    lebar: {
+      type: Number
+    },
+    tinggi: {
       type: Number
     },
     berat: {
