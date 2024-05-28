@@ -28,6 +28,18 @@ module.exports = {
     }
   },
 
+  getProductWithSub: async(req, res, next) => {
+    try {
+      const id = req.params.id
+      if(!id) return res.status(400).json({message: "Tolong kirimkan id sub category"});
+      const products = await Product.find({id_sub_category: id}).populate('categoryId').populate('id_main_category').populate("id_sub_category");
+      return res.status(200).json({message: "Berhasil mendapatkan Products", data: products});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
   getProductWithMain: async(req, res, next) =>{
     try {
       const id = new mongoose.Types.ObjectId(req.params.id);
