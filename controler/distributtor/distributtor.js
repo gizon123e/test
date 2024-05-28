@@ -27,7 +27,7 @@ module.exports = {
 
             const isHeavyOrLarge = product.berat < 20 || ukuranVolumeProduct < ukuranVolumeMotor;
             if (isHeavyOrLarge) {
-                query.is_kendaraan = { $in: ["Mobil", "Mobil dan Motor"] };
+                query.is_kendaraan = { $in: "Motor" };
             }
 
             let datas = []
@@ -51,7 +51,7 @@ module.exports = {
 
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas: dataDistributtor
+                datas
             })
 
         } catch (error) {
