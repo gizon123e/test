@@ -24,7 +24,7 @@ module.exports = {
         try {
             const data = await TemporaryUser.findById(req.params.id);
             const pic = await TemporaryPic.findOne({temporary_user: req.params.id});
-            return res.status(200).json({message: "Berhasil mendapatkan detail temporary", user: data, pic})
+            return res.status(200).json({message: "Berhasil mendapatkan detail temporary", user: data, pic: data.registerAs === "not_individu" ? pic : undefined})
         } catch (error) {
             console.log(error);
             next(error);
