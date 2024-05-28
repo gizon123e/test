@@ -101,7 +101,7 @@ const modelTemporaryPic = new mongoose.Schema({
     village: String,
     address_description: String,
     label: String,
-    kode_pos: String,
+    code_pos: String,
     pinAlamat: {
       long: Decimal128,
       lat: Decimal128
