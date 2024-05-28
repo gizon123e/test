@@ -83,11 +83,11 @@ const modelTemporary = new mongoose.Schema({
 
 const modelTemporaryPic = new mongoose.Schema({
     nama: String,
-    NIK: {
-        type: String
+    nik: {
+      type: String
     },
     npwp: {
-        type: String
+      type: String
     },
     jabatan: String,
     alamat: {

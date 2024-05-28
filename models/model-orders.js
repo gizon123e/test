@@ -29,6 +29,17 @@ const modelOrder = mongoose.Schema({
         type: String,
         required: [true, 'date Order harus di isi']
     },
+    deadline:{
+        type: Date,
+        validate: {
+            validator: (date) => {
+                const currentDate = new Date();
+                const minDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+                return date >= minDate
+            },
+            message: "Deadline minimal 7 hari ke depan"
+        }
+    },
     status: {
         type: String,
         required: [true, 'status harus di isi'],
