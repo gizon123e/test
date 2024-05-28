@@ -4,6 +4,8 @@ const Product = require('../../models/model-product')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
 const fs = require('fs')
+const dotenv = require('dotenv')
+dotenv.config()
 
 module.exports = {
     getAllDistributtor: async (req, res, next) => {
@@ -120,7 +122,7 @@ module.exports = {
                 is_kendaraan,
                 is_active: true,
                 userId, alamat_id,
-                imageDistributtor: `${req.protocol}://${req.get('host')}/public/image-profile-distributtor/${imageName}`
+                imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`
             })
 
             res.status(201).json({
@@ -176,11 +178,13 @@ module.exports = {
                 }
             });
 
+            console.log(process.env.HOST)
+
             const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
                 nama_distributor,
                 no_telp,
                 is_kendaraan,
-                imageDistributtor: `${req.protocol}://${req.get('host')}/public/image-profile-distributtor/${imageName}`
+                imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`
             }, { new: true })
 
             res.status(201).json({
