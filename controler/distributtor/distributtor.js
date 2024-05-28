@@ -14,6 +14,8 @@ module.exports = {
             const product = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
 
+            console.log(product)
+
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
