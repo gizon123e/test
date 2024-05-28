@@ -14,7 +14,8 @@ module.exports = {
             const product = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
 
-            console.log(product)
+            const ukuranVolumeMotor = 100 * 30 * 40
+            const ukuranVolumeProduct = product.tinggi * product.lebar * product.panjang
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
@@ -22,6 +23,11 @@ module.exports = {
             let query = {}
             if (name) {
                 query.nama_distributor = { $regex: name, $options: 'i' }
+            }
+
+            const isHeavyOrLarge = product.berat < 20 || ukuranVolumeProduct < ukuranVolumeMotor;
+            if (isHeavyOrLarge) {
+                query.is_kendaraan = { $in: ["Mobil", "Mobil dan Motor"] };
             }
 
             let datas = []
@@ -45,7 +51,7 @@ module.exports = {
 
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas
+                datas: dataDistributtor
             })
 
         } catch (error) {
