@@ -33,10 +33,10 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         required: [true, 'imageDistributor harus di isi'],
     },
-    profile_pict: {
-        type: String,
-        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
-    }
+    // profile_pict: {
+    //     type: String,
+    //     default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
+    // }
 }, { timestamp: true });
 
 const Distributtor = mongoose.model('Distributtor', modelDistributtor);

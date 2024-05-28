@@ -122,7 +122,7 @@ module.exports = {
                 is_kendaraan,
                 is_active: true,
                 userId, alamat_id,
-                imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`
+                imageDistributtor: `${process.env.HOST}public/image-profile-distributtor/${imageName}`
             })
 
             res.status(201).json({
