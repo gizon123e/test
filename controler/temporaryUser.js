@@ -34,6 +34,7 @@ module.exports = {
 
     updatePic: async(req, res, next) => {
         try {
+            const { long_pin_alamat, lat_pin_alamat } = req.body
             const updatePic = await TemporaryPic.findOneAndUpdate({temporary_user: req.body.id}, { ...req.body, pinAlamat: {
                 long: long_pin_alamat,
                 lat: lat_pin_alamat
