@@ -95,15 +95,15 @@ const productModels = new mongoose.Schema(
       type: Number,
       default: 1
     },
-    isFlashSale:{
+    isFlashSale: {
       type: Boolean,
       default: false
     },
-    ukuran:{
-      type: String
+    ukuran: {
+      type: Number
     },
-    berat:{
-      type: String
+    berat: {
+      type: Number
     }
   },
   { timestamp: true }

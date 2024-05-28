@@ -6,6 +6,7 @@ const kendaraanDistributorSchema = mongoose.Schema({
         ref: 'Distributtor',
         required: [true, 'ID distributor harus diisi']
     },
+    
     merk: {
         type: String,
         required: [true, 'Merk kendaraan harus diisi']
