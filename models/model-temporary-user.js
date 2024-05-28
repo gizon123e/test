@@ -79,6 +79,11 @@ const modelTemporary = new mongoose.Schema({
           type: Date
         }
     },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      index: { expires: '7d' }  // TTL index to expire documents 7 days after creation
+    }  
 });
 
 const modelTemporaryPic = new mongoose.Schema({
@@ -104,7 +109,12 @@ const modelTemporaryPic = new mongoose.Schema({
     temporary_user:{
         type: mongoose.Types.ObjectId,
         ref: "TemporaryUser"
-    }
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      index: { expires: '7d' }  // TTL index to expire documents 7 days after creation
+    }  
 });
 
 const TemporaryUser = mongoose.model("TemporaryUser", modelTemporary);
