@@ -29,6 +29,10 @@ const modelDistributtor = mongoose.Schema({
         type: Boolean,
         required: [true, "is active harus di isi"]
     },
+    imageDistributtor: {
+        type: String,
+        required: [true, 'imageDistributor harus di isi']
+    }
 }, { timestamp: true });
 
 const Distributtor = mongoose.model('Distributtor', modelDistributtor);

@@ -2,6 +2,8 @@ const Distributtor = require('../../models/distributor/model-distributor')
 const Vendor = require('../../models/vendor/model-vendor')
 const Product = require('../../models/model-product')
 const { calculateDistance } = require('../../utils/menghitungJarak')
+const path = require('path')
+const fs = require('fs')
 
 module.exports = {
     getAllDistributtor: async (req, res, next) => {
@@ -93,11 +95,33 @@ module.exports = {
     createDistributtor: async (req, res, next) => {
         try {
             const { nama_distributor, no_telp, is_kendaraan, userId, alamat_id } = req.body
+            const files = req.files;
+            const imageDistributtor = files ? files.imageDistributtor : null;
+
+            if (!imageDistributtor) {
+                return res.status(400).json({ message: "kamu gagal masukan file imageDistributtor" });
+            }
+
+            const imageName = `${Date.now()}${path.extname(imageDistributtor.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+
+            imageDistributtor.mv(imagePath, (err) => {
+                if (err) {
+                    return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
+                }
+            });
 
             const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
             if (!regexNoTelepon.test(no_telp.toString())) return res.status(400).json({ message: "no telepon tidak valid" })
 
-            const data = await Distributtor.create({ nama_distributor, no_telp, is_kendaraan, is_active: true, userId, alamat_id })
+            const data = await Distributtor.create({
+                nama_distributor,
+                no_telp,
+                is_kendaraan,
+                is_active: true,
+                userId, alamat_id,
+                imageDistributtor: `${req.protocol}://${req.get('host')}/public/image-profile-distributtor/${imageName}`
+            })
 
             res.status(201).json({
                 message: "create data success",
@@ -105,6 +129,7 @@ module.exports = {
             })
 
         } catch (error) {
+            console.log(error)
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
                     error: true,
@@ -120,19 +145,50 @@ module.exports = {
     updateDistributtor: async (req, res, next) => {
         try {
             const { nama_distributor, no_telp, is_kendaraan } = req.body
+            const imageDistributtor = req.files ? req.files.imageDistributtor : null;
 
             const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
             if (!regexNoTelepon.test(no_telp.toString())) {
                 return res.status(400).json({ error: 'no telepon tidak valid' })
             }
 
-            const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, { nama_distributor, no_telp, is_kendaraan }, { new: true })
+            const dataDistributtor = await Distributtor.findById(req.params.id)
+            if (!dataDistributtor) return res.status(404).json({ message: "data Distributtor Not Found" })
+            if (dataDistributtor.imageDistributtor) {
+                const nibFilename = path.basename(dataDistributtor.imageDistributtor);
+
+                const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
+                if (fs.existsSync(currentNibPath)) {
+                    fs.unlinkSync(currentNibPath);
+                }
+            }
+
+            if (!imageDistributtor) {
+                return res.status(400).json({ message: "kamu gagal masukan file imageDistributtor" });
+            }
+
+            const imageName = `${Date.now()}${path.extname(imageDistributtor.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+
+            imageDistributtor.mv(imagePath, (err) => {
+                if (err) {
+                    return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
+                }
+            });
+
+            const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+                nama_distributor,
+                no_telp,
+                is_kendaraan,
+                imageDistributtor: `${req.protocol}://${req.get('host')}/public/image-profile-distributtor/${imageName}`
+            }, { new: true })
 
             res.status(201).json({
                 message: "update data success",
                 data
             })
         } catch (error) {
+            console.log(error)
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
                     error: true,
@@ -149,6 +205,13 @@ module.exports = {
             const dataDistributtor = await Distributtor.findOne({ _id: req.params.id })
             if (!dataDistributtor) {
                 return res.status(404).json({ error: `data id ${req.params.id} not found` })
+            }
+
+            const nibFilename = path.basename(dataDistributtor.imageDistributtor);
+
+            const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
+            if (fs.existsSync(currentNibPath)) {
+                fs.unlinkSync(currentNibPath);
             }
 
             await Distributtor.deleteOne({ _id: req.params.id })
