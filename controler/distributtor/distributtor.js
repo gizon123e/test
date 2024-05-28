@@ -168,7 +168,7 @@ module.exports = {
             const imageName = `${Date.now()}${path.extname(imageDistributtor.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
-            imageDistributtor.mv(imagePath, (err) => {
+            await imageDistributtor.mv(imagePath, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
                 }
