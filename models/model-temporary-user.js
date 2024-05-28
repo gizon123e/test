@@ -49,7 +49,7 @@ const modelTemporary = new mongoose.Schema({
     nama: {
         type: String
     },
-    NIK: {
+    nik: {
         type: String
     },
     npwp: {
