@@ -9,11 +9,9 @@ module.exports = {
             //kasih filter maksimal untuk motor:
             //ukuran 100x30x40cm
             //berat 20kg
-
-            const { productId } = req.body
             const { name } = req.query
 
-            const product = await Product.findOne({ _id: productId }).populate('userId')
+            const product = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)

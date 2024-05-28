@@ -7,7 +7,7 @@ const controlerDistributtor = require('../../controler/distributtor/distributtor
 
 const router = require('express').Router()
 
-router.get('/list', controlerDistributtor.getAllDistributtor)
+router.get('/list/:id', controlerDistributtor.getAllDistributtor)
 router.get('/detail/:id', controlerDistributtor.getDetailDistributtor)
 router.post('/create', controlerDistributtor.createDistributtor)
 router.put('/update/:id', controlerDistributtor.updateDistributtor)
