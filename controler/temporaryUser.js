@@ -23,6 +23,7 @@ module.exports = {
     getDetailTemporary: async (req, res, next) => {
         try {
             const data = await TemporaryUser.findById(req.params.id);
+            if(!data) return res.status(404).json({message:"Tidak ada id " + req.params.id})
             const pic = await TemporaryPic.findOne({temporary_user: req.params.id});
             return res.status(200).json({message: "Berhasil mendapatkan detail temporary", user: data, pic: data.registerAs === "not_individu" ? pic : undefined})
         } catch (error) {
@@ -33,7 +34,11 @@ module.exports = {
 
     updatePic: async(req, res, next) => {
         try {
-            const updatePic = await TemporaryPic.findOneAndUpdate({temporary_user: req.body.id}, req.body);
+            const { long_pin_alamat, lat_pin_alamat } = req.body
+            const updatePic = await TemporaryPic.findOneAndUpdate({temporary_user: req.body.id}, { ...req.body, pinAlamat: {
+                long: long_pin_alamat,
+                lat: lat_pin_alamat
+            }});
             return res.status(200).json({message: "Berhasil Mengupdate Pic"});
         } catch (error) {
             console.log(error);
