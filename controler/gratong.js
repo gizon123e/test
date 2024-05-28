@@ -19,7 +19,17 @@ module.exports = {
             return res.status(201).json({message: "Berhasil Menambahkan Event Gratis Ongkir", data: newGratong})
         } catch (error) {
             console.log(error);
-            next(error)
+            next(error);
+        }
+    },
+    getGratong: async (req, res, next) => {
+        try {
+            const gratongs = await Gratong.find();
+            if(!gratongs || gratongs.length === 0) return res.status(404).json({message: "No-Event"});
+            return res.status(200).json({message: "Berhasil mendapatkan gratong", data: gratongs})
+        } catch (error) {
+            console.log(error);
+            next(error);
         }
     }
 }

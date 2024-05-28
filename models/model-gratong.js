@@ -19,6 +19,9 @@ const modelGratong = new mongoose.Schema({
     endTime: {
         type: Date,
         required: true
+    },
+    nama: {
+        type: String
     }
 });
 
