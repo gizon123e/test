@@ -9,12 +9,12 @@ const bcrypt = require('bcrypt')
 module.exports = {
     login: async(req, res, next)=>{
         try {
-           const { username, password } = req.body;
-           const user = await UserSystem.findOne({username})
+           const { email, password } = req.body;
+           const user = await UserSystem.findOne({email})
            if(!user) return res.status(404).json({message: "User tidak ada"});
            const payloadToken = {
                 id: user._id,
-                username: user.username,
+                email: user.email,
                 role: user.role
            }
            const token = jwt.createToken(payloadToken);
