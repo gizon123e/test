@@ -20,6 +20,10 @@ const mainModelCategory = mongoose.Schema({
         enum: ["mobile", "web", "mobile dan web", "all"],
         default: "all",
         required: ['true', "show at harus ada"]
+    },
+    for:{
+        type: String,
+        enum: ["konsumen", "vendor", "supplier", "produsen"]
     }
 }, { timestamp: true })
 
