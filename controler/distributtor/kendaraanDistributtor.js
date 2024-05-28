@@ -1,8 +1,43 @@
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
+const Vendor = require('../../models/vendor/model-vendor')
+const { calculateDistance } = require('../../utils/menghitungJarak')
 
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
+            const { orderId } = req.body
+
+            const orderData = await Pesanan.findById(orderId).populate({
+                path: 'product.productId',
+                populate: {
+                    path: 'categoryId',
+                },
+                populate: {
+                    path: 'userId',
+                    select: '-password'
+                },
+            })
+                .populate('userId', '-password').populate('addressId')
+
+            const latitudeUser = parseFloat(orderData.addressId.pinAlamat.lat)
+            const longitudeUser = parseFloat(orderData.addressId.pinAlamat.long);
+
+
+            let addresVendor = {}
+            for (let vendor of orderData.product) {
+                const vendorId = vendor.productId.userId._id ? vendor.productId.userId._id : null
+                addresVendor = await Vendor.findOne({ userId: vendorId }).populate('address')
+            }
+
+            const latitudeVendor = parseFloat(addresVendor.address.pinAlamat.lat)
+            const longitudeVendor = parseFloat(addresVendor.address.pinAlamat.long)
+
+            const distance = calculateDistance(latitudeUser, longitudeUser, latitudeVendor, longitudeVendor, 25);
+
+            if (isNaN(distance)) {
+                return res.status(400).json({ message: "Distance exceeds the maximum allowed" });
+            }
+
             const data = await KendaraanDistributor.find()
             if (!data) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 

@@ -1,7 +1,6 @@
 const Distributtor = require('../../models/distributor/model-distributor')
-const Address = require('../../models/model-address')
-const Pesanan = require('../../models/model-orders')
 const Vendor = require('../../models/vendor/model-vendor')
+const Product = require('../../models/model-product')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 
 module.exports = {
@@ -11,55 +10,46 @@ module.exports = {
             //ukuran 100x30x40cm
             //berat 20kg
 
-            const { orderId } = req.body
+            const { productId } = req.body
             const { name } = req.query
 
-            const orderData = await Pesanan.findById(orderId).populate({
-                path: 'product.productId',
-                populate: {
-                    path: 'categoryId',
-                },
-                populate: {
-                    path: 'userId',
-                    select: '-password'
-                },
-            })
-                .populate('userId', '-password').populate('addressId')
+            const product = await Product.findOne({ _id: productId }).populate('userId')
+            const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
 
-            const latitudeUser = parseFloat(orderData.addressId.pinAlamat.lat)
-            const longitudeUser = parseFloat(orderData.addressId.pinAlamat.long);
-
-
-            let addresVendor = {}
-            for (let vendor of orderData.product) {
-                const vendorId = vendor.productId.userId._id ? vendor.productId.userId._id : null
-                addresVendor = await Vendor.findOne({ userId: vendorId }).populate('address')
-            }
-
-            const latitudeVendor = parseFloat(addresVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addresVendor.address.pinAlamat.long)
-
-            const distance = calculateDistance(latitudeUser, longitudeUser, latitudeVendor, longitudeVendor, 25);
-
-            if (isNaN(distance)) {
-                return res.status(400).json({ message: "Distance exceeds the maximum allowed" });
-            }
+            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
+            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
             let query = {}
             if (name) {
                 query.nama_distributor = { $regex: name, $options: 'i' }
             }
 
+            let datas = []
             const dataDistributtor = await Distributtor.find(query).populate("userId", '-password').populate('alamat_id')
 
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
 
+            for (let distributor of dataDistributtor) {
+                const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
+                const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
+
+                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 25);
+
+                if (distance < 25) {
+                    datas.push({
+                        distributor,
+                        jarakTempu: Math.round(distance)
+                    })
+                }
+            }
+
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas: dataDistributtor,
-                jarakTempu: Math.round(distance)
+                datas
             })
+
         } catch (error) {
+            console.log(error)
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
                     error: true,
