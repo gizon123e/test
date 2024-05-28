@@ -42,19 +42,23 @@ module.exports = {
       }else{
         newTemporary = await TemporaryUser.findByIdAndUpdate(temporaryUser._id, { codeOtp }, { new: true })
       };
+      console.log(newTemporary)
 
-      function check(){
-        const { role, ...rest} = newTemporary;
-        if (role && Object.keys(rest).length <= 6) {
-          return "role";
-        }else if (role && Object.keys(rest).length > 6) {
+      function check() {
+        const { role, ...rest } = newTemporary._doc;
+        if (role && Object.keys(rest).length > 6 && newTemporary.registerAs === "not_individu") {
+          console.log('pic')
+          return "pic";
+        } else if (role && Object.keys(rest).length >= 6) {
+          console.log('detail')
           return "detail";
-        }else if(role && Object.keys(res).length > 6 && newTemporary.registerAs === "not_individu"){
-          return "pic"
-        }else{
-          return null
+        } else if (role && Object.keys(rest).length <= 6) {
+          console.log('role')
+          return "role";
+        } else {
+          return null;
         }
-      };
+      }
 
       function verification(){
         if(newTemporary.email.isVerified || newTemporary.phone.isVerified) return true
@@ -106,18 +110,21 @@ module.exports = {
         newTemporary = await TemporaryUser.findByIdAndUpdate(temporaryUser._id, { codeOtp }, { new: true })
       };
 
-      function check(){
-        const { role, ...rest} = newTemporary;
-        if (role && Object.keys(rest).length <= 6) {
-          return "role";
-        }else if (role && Object.keys(rest).length > 6) {
+      function check() {
+        const { role, ...rest } = newTemporary._doc;
+        if (role && Object.keys(rest).length > 6 && newTemporary.registerAs === "not_individu") {
+          console.log('pic')
+          return "pic";
+        } else if (role && Object.keys(rest).length >= 6) {
+          console.log('detail')
           return "detail";
-        }else if(role && Object.keys(res).length > 6 && newTemporary.registerAs === "not_individu"){
-          return "pic"
-        }else{
-          return null
+        } else if (role && Object.keys(rest).length <= 6) {
+          console.log('role')
+          return "role";
+        } else {
+          return null;
         }
-      };
+      }
 
       function verification(){
         if(newTemporary.email.isVerified || newTemporary.phone.isVerified) return true
