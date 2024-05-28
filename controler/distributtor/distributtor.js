@@ -125,7 +125,7 @@ module.exports = {
                 imageDistributtor: `${process.env.HOST}public/image-profile-distributtor/${imageName}`
             })
 
-            res.status(201).json({
+            return res.status(201).json({
                 message: "create data success",
                 data
             })
