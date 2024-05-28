@@ -49,7 +49,7 @@ module.exports = {
         if (role && Object.keys(rest).length > 6 && newTemporary.registerAs === "not_individu") {
           console.log('pic')
           return "pic";
-        } else if (role && Object.keys(rest).length >= 6) {
+        } else if (role && Object.keys(rest).length > 6) {
           console.log('detail')
           return "detail";
         } else if (role && Object.keys(rest).length <= 6) {
