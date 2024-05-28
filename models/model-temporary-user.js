@@ -90,18 +90,16 @@ const modelTemporaryPic = new mongoose.Schema({
       type: String
     },
     jabatan: String,
-    alamat: {
-        province: String,
-        regency: String,
-        district: String,
-        village: String,
-        address_description: String,
-        label: String,
-        kode_pos: String,
-        pinAlamat: {
-            long: Decimal128,
-            lat: Decimal128
-        }
+    province: String,
+    regency: String,
+    district: String,
+    village: String,
+    address_description: String,
+    label: String,
+    kode_pos: String,
+    pinAlamat: {
+      long: Decimal128,
+      lat: Decimal128
     },
     temporary_user:{
         type: mongoose.Types.ObjectId,
