@@ -32,6 +32,20 @@ module.exports = {
             } else {
                 data = dataCategory.filter(item => item.showAt === "all" || item.showAt === "web" || item.showAt === "mobile dan web" || item.showAt === "mobile");
             };
+            switch(req.user.role){
+                case "konsumen":
+                    data = data.filter(item => item.for === "konsumen");
+                    break;
+                case "vendor":
+                    data = data.filter(item => item.for === "vendor");
+                    break;
+                case "supplier":
+                    data = data.filter(item => item.for === "supplier");
+                    break;
+                case "produsen":
+                    data = data.filter(item => item.for === "produsen");
+                    break;
+            }
             return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data });
         } catch (error) {
             console.log(error)

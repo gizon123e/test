@@ -49,6 +49,8 @@ module.exports = {
           return "role";
         }else if (role && Object.keys(rest).length > 6) {
           return "detail";
+        }else if(role && Object.keys(res).length > 6 && newTemporary.registerAs === "not_individu"){
+          return "pic"
         }else{
           return null
         }
@@ -110,6 +112,8 @@ module.exports = {
           return "role";
         }else if (role && Object.keys(rest).length > 6) {
           return "detail";
+        }else if(role && Object.keys(res).length > 6 && newTemporary.registerAs === "not_individu"){
+          return "pic"
         }else{
           return null
         }
