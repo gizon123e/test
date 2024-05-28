@@ -17,7 +17,7 @@ module.exports = {
 
     getDetailTemporary: async (req, res, next) => {
         try {
-            const data = await TemporaryUser.findById(req.body.id);
+            const data = await TemporaryUser.findById(req.params.id);
             return res.status(200).json({message: "Berhasil mendapatkan detail temporary", data})
         } catch (error) {
             console.log(error)
