@@ -140,8 +140,8 @@ module.exports = {
       const temporary = await TemporaryUser.findById(id);
       if(!temporary) return res.status(404).json({message: "Tidak ada user dengan id " + id});
       if(!temporary.phone.isVerified && !temporary.email.isVerified) return res.status(403).json({message: "User belum terverifikasi"});
-      
-      const user = await User.create({ _id: temporary._id, ...temporary._doc, password});
+      const hashedPassword = await bcrypt.hash(password, 10)
+      const user = await User.create({ _id: temporary._id, ...temporary._doc, password: hashedPassword});
 
       const newUserWithoutPassword = { ...user._doc };
       delete newUserWithoutPassword.password;

@@ -4,11 +4,11 @@ const createDate = require('../utils/createDateString');
 module.exports = {
     createGratong: async (req, res, next) =>{
         try {
-            const { jenis, tarif, nilai_gratong, start, end } = req.body
-            console.log(req.body)
+            const { jenis, tarif, nilai_gratong, start, end, nama } = req.body
             const startTime = createDate(start);
             const endTime = createDate(end)
             const newGratong = await Gratong.create({
+                nama,
                 startTime,
                 endTime,
                 jenis,
@@ -32,6 +32,20 @@ module.exports = {
         } catch (error) {
             console.log(error);
             next(error);
+        }
+    },
+
+    deteleGratong: async(req, res, next) => {
+        try {
+            const id = req.params.id
+            const gratong = await Gratong.findById(id);
+            if(new Date(gratong.startTime) < new Date() && new Date(gratong.endTime) > new Date()) return res.status(403).json({message: "Tidak Bisa Menghapus Gratis Ongkir yang sedang Berlangsung"})
+            await gratong.deleteOne({_id: id});
+
+            return res.status(200).json({message: "Berhasil Menghapus Gratis Ongkir"})
+        } catch (error) {
+            console.log(error)
+            next(error)
         }
     }
 }

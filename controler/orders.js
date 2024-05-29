@@ -130,7 +130,8 @@ module.exports = {
                 biaya_layanan,
                 metode_pembayaran,
                 dp,
-                total
+                total,
+                deadline
             } = req.body
 
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
@@ -204,7 +205,8 @@ module.exports = {
                     dp: dp ? true : false,
                     potongan_ongkir,
                     biaya_asuransi: biaya_asuransi ? true : false,
-                    biaya_proteksi: biaya_proteksi ? true : false
+                    biaya_proteksi: biaya_proteksi ? true : false,
+                    deadline: new Date(deadline)
                 });
 
                 let paymentNumber;

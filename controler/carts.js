@@ -8,45 +8,58 @@ module.exports = {
 
     getCarts: async (req, res, next) => {
         try {
+            const idProducts = []
             const dataCart = await Carts.find({ userId: req.user.id })
-                .populate({
-                    path: 'productId',
-                    select: "_id categoryId name_product total_price image_product",
-                    populate: {
-                        path: 'userId',
-                        select: '_id role'
-                    }
-                });
-            
-            const idUserToko = []
-            let product;
 
-            dataCart.forEach(item => {
-                idUserToko.push({id: item.productId.userId._id, role: item.productId.userId.role})
+            dataCart.forEach(element => {
+                idProducts.push(element.productId)
             });
-            
-            idUserToko.forEach( async (item) => {
-                let detailToko
-                switch(item.role){
-                    case "vendor": 
-                        detailToko = await Vendor.findOne({userId: item.id});
+            // const sellerId = [];
+
+            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id userId total_price name_product').populate({
+                path: "userId",
+                select: "_id role"
+            })
+            .lean();
+
+            const storeMap = {};
+              
+            for (let product of productsChoosed) {
+                const storeId = product.userId._id.toString(); // Pastikan _id diubah menjadi string untuk pemetaan
+                const getCart = dataCart.find(cart => { return cart.productId.toString() === product._id.toString() })
+                if (!storeMap[storeId]) {
+                  storeMap[storeId] = {
+                    id: storeId,
+                    role: product.userId.role,
+                    arrayProduct: []
+                  };
+                }
+                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity});
+            };
+            const finalData = []
+            const keys = Object.keys(storeMap)
+            for (let key of keys){
+                let detailToko;
+                switch(storeMap[key].role){
+                    case "vendor":
+                        detailToko = await Vendor.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
                         break;
                     case "supplier":
-                        detailToko = await Supplier.findOne({userId: item.id});
+                        detailToko = await Supplier.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
                         break;
                     case "produsen":
-                        detailToko = await Produsen.findOne({userId: item.id});
+                        detailToko = await Produsen.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
                         break;
-                };
-
-                const filteredProduct = dataCart.filter(item => {
-                    return item.productId.userId._id.toString() === detailToko.userId.toString
-                });
-            })
+                }
+                finalData.push({
+                    nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
+                    products: storeMap[key].arrayProduct
+                })
+            }
 
             if(!dataCart || dataCart.length == 0) return res.status(404).json({message:"User belum memiliki cart"});
 
-            return res.status(200).json({ datas: dataCart })
+            return res.status(200).json({ datas: finalData });
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({

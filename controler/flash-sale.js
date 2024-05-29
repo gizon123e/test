@@ -96,5 +96,26 @@ module.exports = {
             console.log(error);
             next(error);
         }
+    },
+    deleteFlashSale: async(req, res, next) =>{
+        try {
+            const id = req.params.id
+            const fs = await FlashSale.findById(id);
+            if(new Date(fs.startTime) < new Date() && new Date(fs.endTime) > new Date()) return res.status(403).json({message: "Tidak Bisa Menghapus Flash Sale yang sedang Berlangsung"})
+            await FlashSale.deleteOne({_id: id})
+            return res.status(200).json({message: "Berhasil Menghapus Flash Sale"});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    getFlashSaleAdmin: async(req, res, next) => {
+        try {
+            const fs = await FlashSale.find()
+            return res.status(200).json({data: fs})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }
