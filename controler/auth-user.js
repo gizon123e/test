@@ -44,10 +44,12 @@ module.exports = {
       };
 
       function check() {
-        if( newTemporary._doc && Object.keys(newTemporary._doc).length > 6){
+        if( newTemporary._doc.registerAs && Object.keys(newTemporary._doc).length > 6){
           return "detail"
         }else if(!newTemporary.registerAs && newTemporary.role){
           return "role"
+        }else{
+          return null
         }
       }
 
@@ -102,12 +104,12 @@ module.exports = {
       };
 
       function check() {
-        if(newTemporary._doc.registerAs === "not_individu" && Object.keys(newTemporary._doc).length > 6){
+        if(newTemporary._doc.registerAs && Object.keys(newTemporary._doc).length > 6){
           return "detail"
-        }else if(newTemporary._doc.registerAs){
-          return "pic"
         }else if(!newTemporary.registerAs && newTemporary.role){
           return "role"
+        }else{
+          return null
         }
       }
 
