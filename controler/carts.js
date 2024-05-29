@@ -20,6 +20,7 @@ module.exports = {
                 path: "userId",
                 select: "_id role"
             });
+            console.log(productsChoosed.length === dataCart.length)
 
             const storeMap = {};
               

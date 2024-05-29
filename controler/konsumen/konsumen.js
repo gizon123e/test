@@ -155,11 +155,6 @@ module.exports = {
             async function dataMake(){
                 if(registerAs === "not_individu"){
                     const { legalitasBadanUsaha, npwpFile } = req.files;
-                    const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
-                    if (!regexNoTelepon.test(noTeleponKantor.toString())) {
-                        return res.status(400).json({ error: 'no telepon tidak valid' });
-                    };
-
                     
                     const legalitasFile = `${Date.now()}_${namaBadanUsaha}_${path.extname(legalitasBadanUsaha.name)}`;
                     
