@@ -87,7 +87,6 @@ module.exports = {
     createCategory: async (req, res, next) => {
         try {
             const { main, sub, specific, showAt, forShow } = req.body;
-
             let main_category;
             let sub_category
             let specific_category;
@@ -99,7 +98,7 @@ module.exports = {
                 const pathIcon = path.join(__dirname, '../public', 'icon', iconName);
                 await icon.mv(pathIcon)
                 if (!main_category) {
-                    main_category = await MainCategory.create({ name: main, showAt, icon: `${process.env.HOST}/public/icon/${iconName}` });
+                    main_category = await MainCategory.create({ name: main, showAt, icon: `${process.env.HOST}/public/icon/${iconName}`, for: forShow });
                 };
             }
 
@@ -120,7 +119,7 @@ module.exports = {
             if (specific) {
                 specific_category = await SpecificCategory.findOne({ name: { $regex: new RegExp(specific, 'i') } });
                 if (!specific_category) {
-                    specific_category = await SpecificCategory.create({ name: specific, for: forShow });
+                    specific_category = await SpecificCategory.create({ name: specific });
                 }
                 const check = sub_category.contents.find(item => {
                     return item._id.equals(specific_category._id);
