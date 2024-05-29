@@ -8,7 +8,7 @@ const controlerKendaraanDistributtor = require('../../controler/distributtor/ken
 const router = require('express').Router()
 
 router.get('/list', controlerKendaraanDistributtor.getKendaraanDistributor)
-router.post('/detail/:id', controlerKendaraanDistributtor.getKendaraanDistributorById)
+router.get('/detail/:id', authorization, controlerKendaraanDistributtor.getKendaraanDistributorById)
 router.post('/create', controlerKendaraanDistributtor.createKendaraandistributtor)
 router.put('/update/:id', controlerKendaraanDistributtor.updateKendaraanDistributtor)
 router.delete('/delete/:id', controlerKendaraanDistributtor.deleteKendaraanDistributtor)

@@ -1,7 +1,6 @@
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
 const Vendor = require('../../models/vendor/model-vendor')
 const Product = require('../../models/model-product')
-const Tarif = require('../../models/model-tarif')
 const Konsumen = require('../../models/konsumen/model-konsumen')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 
@@ -30,14 +29,15 @@ module.exports = {
 
     getKendaraanDistributorById: async (req, res, next) => {
         try {
-            const { productId, konsumenId } = req.body
+            const { productId } = req.body
+            const { id } = req.query
 
-            const product = await Product.findOne({ _id: productId }).populate('userId')
+            const product = await Product.findOne({ _id: id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
             const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
-            const dataKonsumen = await Konsumen.findOne({ userId: konsumenId }).populate("address")
+            const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
             const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
             const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
 
