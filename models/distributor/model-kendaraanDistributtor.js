@@ -6,7 +6,7 @@ const kendaraanDistributorSchema = mongoose.Schema({
         ref: 'Distributtor',
         required: [true, 'ID distributor harus diisi']
     },
-    
+
     merk: {
         type: String,
         required: [true, 'Merk kendaraan harus diisi']
@@ -34,6 +34,11 @@ const kendaraanDistributorSchema = mongoose.Schema({
     warna: {
         type: String,
         required: [true, 'Warna kendaraan harus diisi']
+    },
+    tarifId: {
+        type: mongoose.Types.ObjectId,
+        required: [true, 'tarifId harus di isi'],
+        ref: "Tarif"
     }
 }, { timestamps: true });
 
