@@ -19,13 +19,14 @@ module.exports = {
             const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id userId total_price name_product').populate({
                 path: "userId",
                 select: "_id role"
-            });
-            console.log(productsChoosed.length === dataCart.length)
+            })
+            .lean();
 
             const storeMap = {};
               
             for (let product of productsChoosed) {
                 const storeId = product.userId._id.toString(); // Pastikan _id diubah menjadi string untuk pemetaan
+                const getCart = dataCart.find(cart => { return cart.productId.toString() === product._id.toString() })
                 if (!storeMap[storeId]) {
                   storeMap[storeId] = {
                     id: storeId,
@@ -33,7 +34,7 @@ module.exports = {
                     arrayProduct: []
                   };
                 }
-                storeMap[storeId].arrayProduct.push(product);
+                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity});
             };
             const finalData = []
             const keys = Object.keys(storeMap)
