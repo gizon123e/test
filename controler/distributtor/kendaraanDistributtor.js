@@ -30,8 +30,9 @@ module.exports = {
     getKendaraanDistributorById: async (req, res, next) => {
         try {
             const { productId } = req.body
+            const { id } = req.query
 
-            const product = await Product.findOne({ _id: productId }).populate('userId')
+            const product = await Product.findOne({ _id: id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
             const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
