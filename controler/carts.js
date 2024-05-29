@@ -50,7 +50,7 @@ module.exports = {
                         break;
                 }
                 finalData.push({
-                    nama_toko: detailToko,
+                    nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
                     products: storeMap[key].arrayProduct
                 })
             }
