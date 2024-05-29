@@ -1,44 +1,14 @@
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
 const Vendor = require('../../models/vendor/model-vendor')
+const Product = require('../../models/model-product')
+const Tarif = require('../../models/model-tarif')
+const Konsumen = require('../../models/konsumen/model-konsumen')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
-            const { orderId } = req.body
-
-            const orderData = await Pesanan.findById(orderId).populate({
-                path: 'product.productId',
-                populate: {
-                    path: 'categoryId',
-                },
-                populate: {
-                    path: 'userId',
-                    select: '-password'
-                },
-            })
-                .populate('userId', '-password').populate('addressId')
-
-            const latitudeUser = parseFloat(orderData.addressId.pinAlamat.lat)
-            const longitudeUser = parseFloat(orderData.addressId.pinAlamat.long);
-
-
-            let addresVendor = {}
-            for (let vendor of orderData.product) {
-                const vendorId = vendor.productId.userId._id ? vendor.productId.userId._id : null
-                addresVendor = await Vendor.findOne({ userId: vendorId }).populate('address')
-            }
-
-            const latitudeVendor = parseFloat(addresVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addresVendor.address.pinAlamat.long)
-
-            const distance = calculateDistance(latitudeUser, longitudeUser, latitudeVendor, longitudeVendor, 25);
-
-            if (isNaN(distance)) {
-                return res.status(400).json({ message: "Distance exceeds the maximum allowed" });
-            }
-
-            const data = await KendaraanDistributor.find()
+            const data = await KendaraanDistributor.find().populate("id_distributor")
             if (!data) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 
             res.status(200).json({
@@ -60,8 +30,45 @@ module.exports = {
 
     getKendaraanDistributorById: async (req, res, next) => {
         try {
-            const data = await KendaraanDistributor.find({ id_distributor: req.params.id })
-            if (!data) return res.status(404).json({ message: "data Not Found" })
+            const { productId, konsumenId } = req.body
+
+            const product = await Product.findOne({ _id: productId }).populate('userId')
+            const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
+            const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
+            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+
+            const dataKonsumen = await Konsumen.findOne({ userId: konsumenId }).populate("address")
+            const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
+            const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
+
+            const distance = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVebdor, longitudeVendor, 1000);
+
+            let data = []
+            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id }).populate('tarifId')
+                .populate({
+                    path: "id_distributor",
+                    populate: "alamat_id"
+                })
+
+            if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
+
+            for (let kendaraan of dataKendaraan) {
+                if (distance > 4) {
+                    const dataJara = Math.round(distance) - 4
+                    const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
+                    const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
+
+                    data.push({
+                        kendaraan,
+                        hargaOngkir
+                    })
+                } else {
+                    data.push({
+                        kendaraan,
+                        hargaOngkir: kendaraan.tarifId.tarif_dasar
+                    })
+                }
+            }
 
             res.status(200).json({
                 message: "get data success",
