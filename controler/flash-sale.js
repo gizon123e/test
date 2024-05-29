@@ -34,12 +34,12 @@ module.exports = {
             const startTime = createDate(start);
             const endTime = createDate(end);
             const newFlashSale = await FlashSale.create({
+                nama: req.body.nama,
                 categoryId: mappedCategorys,
                 startTime,
                 endTime,
                 potonganHarga
             });
-            console.timeEnd('test')
             return res.status(201).json({message: "Berhasil Menambahkan Flash Sale", data: newFlashSale});
 
         } catch (error) {
