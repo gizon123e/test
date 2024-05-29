@@ -32,7 +32,7 @@ module.exports = {
             } else {
                 data = dataCategory.filter(item => item.showAt === "all" || item.showAt === "web" || item.showAt === "mobile dan web" || item.showAt === "mobile");
             };
-            switch(req.user.role){
+            switch (req.user.role) {
                 case "konsumen":
                     data = data.filter(item => item.for === "konsumen");
                     break;
@@ -98,7 +98,7 @@ module.exports = {
                 const pathIcon = path.join(__dirname, '../public', 'icon', iconName);
                 await icon.mv(pathIcon)
                 if (!main_category) {
-                    main_category = await MainCategory.create({ name: main, showAt, icon: `${process.env.HOST}/public/icon/${iconName}` });
+                    main_category = await MainCategory.create({ name: main, showAt, icon: `${process.env.HOST}/public/icon/${iconName}`, for: forShow });
                 };
             }
 
@@ -119,7 +119,7 @@ module.exports = {
             if (specific) {
                 specific_category = await SpecificCategory.findOne({ name: { $regex: new RegExp(specific, 'i') } });
                 if (!specific_category) {
-                    specific_category = await SpecificCategory.create({ name: specific, for: forShow });
+                    specific_category = await SpecificCategory.create({ name: specific });
                 }
                 const check = sub_category.contents.find(item => {
                     return item._id.equals(specific_category._id);
@@ -137,7 +137,7 @@ module.exports = {
         }
     },
 
-    getAllSpecificCategory: async(req, res, next) =>{
+    getAllSpecificCategory: async (req, res, next) => {
         try {
             let categories = await SpecificCategory.aggregate([
                 {
@@ -147,23 +147,23 @@ module.exports = {
                     }
                 }
             ]);
-            if(req.headers["user-agent"] == "web") categories = await SpecificCategory.find({show_at_web: true})
-            return res.status(200).json({message: "Berhasil Mendapatkan Semua Specific Category", data: categories});
+            if (req.headers["user-agent"] == "web") categories = await SpecificCategory.find({ show_at_web: true })
+            return res.status(200).json({ message: "Berhasil Mendapatkan Semua Specific Category", data: categories });
         } catch (error) {
             console.log(error);
             next(error);
         }
     },
 
-    editShowSpecificCategory: async(req, res, next) =>{
+    editShowSpecificCategory: async (req, res, next) => {
         try {
-            if(req.user.role !== "administrator") return res.status(403).json({message: "Ngedit Category hanya cuman boleh sama admin!"})
+            if (req.user.role !== "administrator") return res.status(403).json({ message: "Ngedit Category hanya cuman boleh sama admin!" })
 
             const edited = await SpecificCategory.findByIdAndUpdate(req.params.id, {
                 show_at_web: true
             }, { new: true })
 
-            return res.status(200).json({message:"Berhasil Mengedit Specific Category", data: edited})
+            return res.status(200).json({ message: "Berhasil Mengedit Specific Category", data: edited })
         } catch (error) {
             console.log(error);
             next(error);

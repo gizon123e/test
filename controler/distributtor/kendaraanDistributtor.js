@@ -29,7 +29,6 @@ module.exports = {
 
     getKendaraanDistributorById: async (req, res, next) => {
         try {
-            const { productId } = req.body
             const { id } = req.query
 
             const product = await Product.findOne({ _id: id }).populate('userId')
