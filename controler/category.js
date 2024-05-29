@@ -139,7 +139,15 @@ module.exports = {
 
     getAllSpecificCategory: async(req, res, next) =>{
         try {
-            const categories = await SpecificCategory.find({show_at_web: true});
+            let categories = await SpecificCategory.aggregate([
+                {
+                    $project: {
+                        _id: 1,
+                        name: 1
+                    }
+                }
+            ]);
+            if(req.headers["user-agent"] == "web") categories = await SpecificCategory.find({show_at_web: true})
             return res.status(200).json({message: "Berhasil Mendapatkan Semua Specific Category", data: categories});
         } catch (error) {
             console.log(error);
