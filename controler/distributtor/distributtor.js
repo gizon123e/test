@@ -39,19 +39,14 @@ module.exports = {
 
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
 
-            // const distance = calculateDistance(-6.167350, 106.820926, -6.187499, 106.959382, 50);
-            // console.log(Math.round(distance))
-
             for (let distributor of dataDistributtor) {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
-                // console.log("distributtor", latitudeDistributtot)
-                // console.log("distributtor", longitudeDistributtor)
 
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
                 console.log("tes", distance)
 
-                if (Math.round(distance) < 50 && distance !== NaN) {
+                if (Math.round(distance) < 50 && distance !== NaN && distance) {
                     datas.push({
                         distributor,
                         jarakTempu: Math.round(distance)
@@ -102,7 +97,7 @@ module.exports = {
 
     createDistributtor: async (req, res, next) => {
         try {
-            const { nama_distributor, no_telp, is_kendaraan, userId, alamat_id } = req.body
+            const { nama_distributor, no_telp, is_kendaraan, userId, alamat_id, jenisUsaha } = req.body
             const files = req.files;
             const imageDistributtor = files ? files.imageDistributtor : null;
 
@@ -124,7 +119,8 @@ module.exports = {
                 is_kendaraan,
                 is_active: true,
                 userId, alamat_id,
-                imageDistributtor: `${process.env.HOST}public/image-profile-distributtor/${imageName}`
+                imageDistributtor: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                jenisUsaha
             })
 
             return res.status(201).json({
@@ -148,7 +144,7 @@ module.exports = {
 
     updateDistributtor: async (req, res, next) => {
         try {
-            const { nama_distributor, no_telp, is_kendaraan } = req.body
+            const { nama_distributor, no_telp, is_kendaraan, jenisUsaha } = req.body
             const imageDistributtor = req.files ? req.files.imageDistributtor : null;
 
             const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
@@ -180,13 +176,12 @@ module.exports = {
                 }
             });
 
-            console.log(process.env.HOST)
-
             const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
                 nama_distributor,
                 no_telp,
                 is_kendaraan,
-                imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`
+                imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`,
+                jenisUsaha
             }, { new: true })
 
             res.status(201).json({

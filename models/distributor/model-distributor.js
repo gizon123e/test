@@ -33,6 +33,11 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         required: [true, 'imageDistributor harus di isi'],
     },
+    jenisUsaha: {
+        type: String,
+        required: [true, 'jenis Usaha harus di isi'],
+        enum: ["Company", "Individu"]
+    }
 }, { timestamp: true });
 
 const Distributtor = mongoose.model('Distributtor', modelDistributtor);
