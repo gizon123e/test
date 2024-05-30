@@ -89,7 +89,7 @@ module.exports = {
             }
 
             if (req.user.role === 'konsumen') {
-                const validateCart = await Carts.findOne({ productId }).populate('userId')
+                const validateCart = await Carts.findOne({ productId, userId: req.user.id }).populate('userId')
 
                 if (validateCart) {
                     

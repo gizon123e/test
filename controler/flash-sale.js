@@ -115,7 +115,17 @@ module.exports = {
             return res.status(200).json({data: fs})
         } catch (error) {
             console.log(error);
-            next(error)
+            next(error);
+        }
+    },
+    editFlashSale: async(req, res, next) => {
+        try {
+            console.log(req.body)
+            const fs = await FlashSale.findByIdAndUpdate(req.params.id, {...req.body, startTime: createDate(req.body.startTime), endTime: createDate(req.body.endTime)});
+            return res.status(200).json({message: "Berhasil Mengedit Flash-Sale"})
+        } catch (error) {
+            console.log(error);
+            next(error);
         }
     }
 }

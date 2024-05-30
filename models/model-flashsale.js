@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const flashSaleModel = mongoose.Schema({
+const flashSaleModel = new mongoose.Schema({
     nama: {
         type: String
     },
@@ -36,7 +36,17 @@ const flashSaleModel = mongoose.Schema({
         }
     ]
 })
+flashSaleModel.pre('findOneAndUpdate', async function(next){
+    const fs = await this.model.findOne(this.getQuery());
+    if(new Date(fs.startTime) < new Date() && new Date(fs.endTime) > new Date()) {
+        return next(new Error("Tidak Bisa mengedit Flash Sale yang Sedang Berlangsung"));
+    }
 
+    if(new Date(fs.endTime) < new Date()){
+        return next(new Error("Tidak Bisa mengedit Flash Sale yang Sudah Berlangsung"));
+    }
+    next()
+})
 const FlashSale = mongoose.model('FlashSale', flashSaleModel);
 
 module.exports = FlashSale
