@@ -36,11 +36,24 @@ module.exports = {
             const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
+            console.log('vendorLat', latitudeVebdor)
+            console.log('vendortLong', longitudeVendor)
+
             const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
             const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
             const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
+            console.log("konsumenLat", latitudeKonsumen)
+            console.log("konsumenLong", longitudeKonsumen)
 
-            const distance = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVebdor, longitudeVendor, 1000);
+            const distance = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVebdor, longitudeVendor, 100);
+
+            if (isNaN(distance)) {
+                return res.status(400).json({
+                    message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                });
+            }
+
+            const jarakTempu = Math.round(distance)
 
             let data = []
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id }).populate('tarifId')
@@ -52,10 +65,11 @@ module.exports = {
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
             for (let kendaraan of dataKendaraan) {
-                if (distance > 4) {
-                    const dataJara = Math.round(distance) - 4
+                if (jarakTempu > 4) {
+                    const dataJara = jarakTempu - 4
                     const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
                     const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
+                    console.log(hargaOngkir)
 
                     data.push({
                         kendaraan,
@@ -66,6 +80,7 @@ module.exports = {
                         kendaraan,
                         hargaOngkir: kendaraan.tarifId.tarif_dasar
                     })
+
                 }
             }
 
