@@ -42,10 +42,12 @@ module.exports = {
             const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
             const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
             const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
+
             console.log("konsumenLat", latitudeKonsumen)
             console.log("konsumenLong", longitudeKonsumen)
 
             const distance = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVebdor, longitudeVendor, 100);
+            // const distance = calculateDistance(-6.167350, 106.820926, -6.187499, 106.959382, 100);
 
             if (isNaN(distance)) {
                 return res.status(400).json({
@@ -54,6 +56,7 @@ module.exports = {
             }
 
             const jarakTempu = Math.round(distance)
+            console.log(jarakTempu)
 
             let data = []
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id }).populate('tarifId')

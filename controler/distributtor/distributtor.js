@@ -45,12 +45,13 @@ module.exports = {
             for (let distributor of dataDistributtor) {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
-                console.log("distributtor", latitudeDistributtot)
-                console.log("distributtor", longitudeDistributtor)
+                // console.log("distributtor", latitudeDistributtot)
+                // console.log("distributtor", longitudeDistributtor)
 
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+                console.log("tes", distance)
 
-                if (Math.round(distance) < 50) {
+                if (Math.round(distance) < 50 && distance !== NaN) {
                     datas.push({
                         distributor,
                         jarakTempu: Math.round(distance)

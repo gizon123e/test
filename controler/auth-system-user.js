@@ -7,7 +7,8 @@ const Konsumen = require('../models/konsumen/model-konsumen');
 const Produsen = require('../models/produsen/model-produsen');
 const UserSystem = require("../models/model-user-system");
 const jwt = require("../utils/jwt")
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const Distributtor = require("../models/distributor/model-distributor");
 module.exports = {
     login: async (req, res, next) => {
         try {
@@ -129,12 +130,15 @@ module.exports = {
                 }
             };
 
+            const dataDistributor = await Distributtor.find().populate('userId').populate("alamat_id")
+
             return res.status(200).json({
                 message: "Berhasil Mendapatkan Semua User",
                 konsumen: userKonsumen,
                 vendor: userVendor,
                 supplier: userSupplier,
-                produsen: userProdusens
+                produsen: userProdusens,
+                distributor: dataDistributor
             });
         } catch (error) {
             console.log(error)
@@ -259,34 +263,34 @@ module.exports = {
                     isDetailVerified: true
                 }, { new: true });
 
-                if(user.isDetailVerified){
+                if (user.isDetailVerified) {
                     const virtualAccounts = await VA.find();
-                    for ( const va of virtualAccounts ){
+                    for (const va of virtualAccounts) {
                         let detailUser;
-                        switch(user.role){
+                        switch (user.role) {
                             case "konsumen":
-                                detailUser = await Konsumen.findOne({userId: user._id});
+                                detailUser = await Konsumen.findOne({ userId: user._id });
                                 break;
                             case "vendor":
-                                detailUser = await Vendor.findOne({userId: user._id});
+                                detailUser = await Vendor.findOne({ userId: user._id });
                                 break;
                             case "supplier":
-                                detailUser = await Supplier.findOne({userId: user._id});
+                                detailUser = await Supplier.findOne({ userId: user._id });
                                 break;
                             case "produsen":
-                                detailUser = await Produsen.findOne({userId: user._id});
+                                detailUser = await Produsen.findOne({ userId: user._id });
                                 break;
                         }
-                        if(!detailUser.tanggal_lahir) return res.status(403).json({message: "User Belum Mengisi Tanggal Lahir!"});
+                        if (!detailUser.tanggal_lahir) return res.status(403).json({ message: "User Belum Mengisi Tanggal Lahir!" });
                         const tanggalLahir = detailUser.tanggal_lahir.replace(/[\/?]/g, '');
                         await Va_User.create({
                             userId: user._id,
-                            nomor_va: `${va.kode_perusahaan}${tanggalLahir.slice(0,4)}${user.phone.content.slice(2)}`,
+                            nomor_va: `${va.kode_perusahaan}${tanggalLahir.slice(0, 4)}${user.phone.content.slice(2)}`,
                             nama_bank: va._id,
                             nama_virtual_account: `SuperApp ${detailUser.nama || detailUser.namaBadanUsaha}`
                         });
                     }
-                    
+
                 }
             }
 
