@@ -40,6 +40,21 @@ module.exports = {
     }
   },
 
+
+  
+  getAllProductWithMain: async(req, res, next) => {
+    try {
+      const  datas = await Product.aggregate([
+        { $match: { id_main_category: new mongoose.Types.ObjectId(req.params.id)}}
+      ]);
+
+      return res.status(200).json({message: "Berhasil Mendapatkan semua data produk dengan main category", datas})
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+    },
+
   getProductWithMain: async(req, res, next) =>{
     try {
       const id = new mongoose.Types.ObjectId(req.params.id);

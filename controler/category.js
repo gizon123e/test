@@ -2,8 +2,6 @@ const MainCategory = require('../models/model-main-category');
 const SubCategory = require('../models/model-sub-category');
 const SpecificCategory = require('../models/model-specific-category');
 const path = require("path");
-const dotenv = require('dotenv').config()
-const randomIndex = require("../utils/randomIndex");
 const { default: mongoose } = require('mongoose');
 
 module.exports = {

@@ -15,6 +15,7 @@ const router = require("express").Router();
 router.get("/search", controlerProduct.search);
 router.get("/detail/:id", controlerProduct.productDetail);
 router.get('/product_by_main_category/:id', authorization, controlerProduct.getProductWithMain);
+router.get('/all_product_by_main_category/:id', authorization, controlerProduct.getAllProductWithMain);
 router.get('/product_by_specific_category/:id', authorization, controlerProduct.getProductWithSpecific);
 router.get('/product_by_sub_category/:id', authorization, controlerProduct.getProductWithSub);
 // router.get('/list_all', authorization, controlerProduct.list_all)
