@@ -43,7 +43,7 @@ module.exports = {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
-                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 1000);
+                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (isNaN(distance)) {
                     return res.status(400).json({
@@ -51,7 +51,7 @@ module.exports = {
                     });
                 }
 
-                if (distance < 25) {
+                if (Math.round(distance) < 50) {
                     datas.push({
                         distributor,
                         jarakTempu: Math.round(distance)
