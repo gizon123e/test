@@ -1,4 +1,6 @@
 const User = require("../models/model-auth-user");
+const Va_User = require('../models/model-user-va');
+const VA = require('../models/model-virtual-account');
 const Vendor = require('../models/vendor/model-vendor');
 const Supplier = require('../models/supplier/model-supplier');
 const Konsumen = require('../models/konsumen/model-konsumen');
@@ -256,6 +258,37 @@ module.exports = {
                 user = await User.findByIdAndUpdate(req.params.id, {
                     isDetailVerified: true
                 }, { new: true });
+
+                if(user.isDetailVerified){
+                    const virtualAccounts = await VA.find();
+                    for ( const va of virtualAccounts ){
+                        let detailUser;
+                        switch(user.role){
+                            case "konsumen":
+                                detailUser = await Konsumen.findOne({userId: user._id});
+                                break;
+                            case "vendor":
+                                detailUser = await Vendor.findOne({userId: user._id});
+                                break;
+                            case "supplier":
+                                detailUser = await Supplier.findOne({userId: user._id});
+                                break;
+                            case "produsen":
+                                detailUser = await Produsen.findOne({userId: user._id});
+                                break;
+                        }
+                        if(!detailUser.tanggal_lahir) return res.status(403).json({message: "User Belum Mengisi Tanda Lahir!"});
+                        const tanggalLahir = detailUser.tanggal_lahir.replace(/[\/?]/g, '');
+
+                        await Va_User.create({
+                            userId: user._id,
+                            nomor_va: `${va.kode_perusahaan}${tanggalLahir}${user.phone.content.slice(-6)}`,
+                            nama_bank: va._id,
+                            nama_virtual_account: `SuperApp ${detailUser.nama || detailUser.namaBadanUsaha}`
+                        });
+                    }
+                    
+                }
             }
 
             return res.status(200).json({ message: `Berhasil ${block ? "Memblock" : "Memverify"} user dengan id ${req.params.id}`, data: user })
