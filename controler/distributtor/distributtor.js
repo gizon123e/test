@@ -45,6 +45,12 @@ module.exports = {
 
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 25);
 
+                if (isNaN(distance)) {
+                    return res.status(400).json({
+                        message: "Jarak antara konsumen dan vendor melebihi 25 km"
+                    });
+                }
+
                 if (distance < 25) {
                     datas.push({
                         distributor,
