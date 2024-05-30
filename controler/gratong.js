@@ -35,6 +35,16 @@ module.exports = {
         }
     },
 
+    editGratong: async(req, res, next)=>{
+        try {
+            await Gratong.findByIdAndUpdate(req.params.id, {...req.body, startTime: createDate(req.body.startTime), endTime: createDate(req.body.endTime)});
+            return res.status(200).json({message: "Berhasil Mengedit Gratis Ongkir"})
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
     deteleGratong: async(req, res, next) => {
         try {
             const id = req.params.id
