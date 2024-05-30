@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const modelVirtualAccount = mongoose.Schema({
+const modelVirtualAccount = new mongoose.Schema({
     nama_bank:{
         type: String,
     },

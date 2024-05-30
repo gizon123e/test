@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const modelVirtualAccountUser = mongoose.Schema({
+const modelVirtualAccountUser = new mongoose.Schema({
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User"
@@ -11,6 +11,10 @@ const modelVirtualAccountUser = mongoose.Schema({
     nama_bank:{
         type: mongoose.Types.ObjectId,
         ref: "VirtualAccount"
+    },
+    nama_virtual_account:{
+        type: String,
+        required: true
     }
 });
 
