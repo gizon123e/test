@@ -39,17 +39,16 @@ module.exports = {
 
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
 
+            // const distance = calculateDistance(-6.167350, 106.820926, -6.187499, 106.959382, 50);
+            // console.log(Math.round(distance))
+
             for (let distributor of dataDistributtor) {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
+                console.log("distributtor", latitudeDistributtot)
+                console.log("distributtor", longitudeDistributtor)
 
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
-
-                // if (isNaN(distance)) {
-                //     return res.status(400).json({
-                //         message: "Jarak antara konsumen dan vendor melebihi 25 km"
-                //     });
-                // }
 
                 if (Math.round(distance) < 50) {
                     datas.push({
