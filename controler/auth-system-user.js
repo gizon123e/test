@@ -268,12 +268,11 @@ module.exports = {
                                 detailUser = await Produsen.findOne({userId: user._id});
                                 break;
                         }
-                        if(!detailUser.tanggal_lahir) return res.status(403).json({message: "User Belum Mengisi Tanda Lahir!"});
+                        if(!detailUser.tanggal_lahir) return res.status(403).json({message: "User Belum Mengisi Tanggal Lahir!"});
                         const tanggalLahir = detailUser.tanggal_lahir.replace(/[\/?]/g, '');
-
                         await Va_User.create({
                             userId: user._id,
-                            nomor_va: `${va.kode_perusahaan}${tanggalLahir}${user.phone.content.slice(-6)}`,
+                            nomor_va: `${va.kode_perusahaan}${tanggalLahir.slice(0,4)}${user.phone.content.slice(2)}`,
                             nama_bank: va._id,
                             nama_virtual_account: `SuperApp ${detailUser.nama || detailUser.namaBadanUsaha}`
                         });
