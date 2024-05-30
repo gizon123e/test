@@ -49,7 +49,10 @@ module.exports = {
     },
     getFlashSale: async(req, res, next) => {
         try {
-            const flashSales = await FlashSale.find()
+            const flashSales = await FlashSale.find({
+                startTime: { $lt: new Date()},
+                endTime: { $gt: new Date()}
+            }).lean()
             if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-start"})
             const flashSalesProducts = []
             const data = []
@@ -59,8 +62,9 @@ module.exports = {
                 for (const item of categorys){
                     const product = await Product.findOne({categoryId: item.value.toString()}).populate({
                         path: 'userId',
-                        select: '-pin -password'
-                    });
+                        select: '_id role'
+                    }).lean();
+                    if(!product) continue;
                     let toko;
                     const stokAwalEntry = flashSale.stokAwal.find(entry => entry.productId.toString() === product._id.toString());
                     if (stokAwalEntry) {
@@ -81,13 +85,11 @@ module.exports = {
                             toko = await Produsen.findOne({userId: product.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
                             break;
                     }
-                    const objectProduct = product.toObject();
-                    flashSalesProducts.push({...objectProduct, stokAwal, toko});
+                    flashSalesProducts.push({...product, stokAwal, toko});
                 }
-                const object = flashSale.toObject()
-                delete object.categoryId
-                if(flashSale.endTime.getTime() < new Date().getTime()) return res.status(403).json({message: "Flash Sale Sudah Berakhir"});
-                data.push({ flash_sale: object, flashSalesProducts})
+                delete flashSale.categoryId
+                delete flashSale.stokAwal
+                data.push({ flash_sale: flashSale, flashSalesProducts})
             }
             
 

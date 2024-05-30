@@ -44,10 +44,54 @@ module.exports = {
   
   getAllProductWithMain: async(req, res, next) => {
     try {
-      const  datas = await Product.aggregate([
-        { $match: { id_main_category: new mongoose.Types.ObjectId(req.params.id)}}
-      ]);
-
+      const datas = await Product.find({id_main_category: req.params.id})
+        .select('name_product total_price userId rating image_product')
+        .populate({
+          path: 'id_main_category',
+          select: "name"
+        })
+        .populate({
+          path: 'id_sub_category',
+          select: 'name contents',
+          populate: {
+            path: 'contents',
+            select: 'name'
+          }
+        })
+        .populate({
+          path: 'categoryId',
+          select: "name"
+        })
+        .populate({
+          path: "userId",
+          select: "_id role"
+        })
+        .lean()
+      console.log(datas.length)
+      for (const produk of datas){
+        console.log(produk._id ,produk.userId)
+        switch(produk.userId.role){
+          case "vendor":
+            produk.namaToko = await Vendor.findOne({userId: produk.userId._id}).select("nama namaBadanUsaha").populate({
+              path: "address",
+              select:"regency"
+            });
+            break
+          case "supplier":
+            produk.namaToko = await Supplier.findOne({userId: produk.userId._id}).select("nama namaBadanUsaha").populate({
+              path: "address",
+              select:"regency"
+            });
+            break
+          case "produsen":
+            produk.namaToko = await Produsen.findOne({userId: produk.userId._id}).select("nama namaBadanUsaha").populate({
+              path: "address",
+              select:"regency"
+            });
+            break
+        }
+      }
+      
       return res.status(200).json({message: "Berhasil Mendapatkan semua data produk dengan main category", datas})
     } catch (error) {
       console.log(error)
