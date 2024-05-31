@@ -34,6 +34,10 @@ module.exports = {
                 await Pesanan.findByIdAndUpdate(pesanan.id_pesanan, {
                     status: "Berlangsung"
                 });
+
+                await DetailPesanan.findByIdAndUpdate(order_id, {
+                    isTerbayarkan: true
+                })
             }else if(transaction_status === "cancel"){
                 await Pesanan.findByIdAndUpdate(pesanan.id_pesanan, {
                     status: "Dibatalkan"
