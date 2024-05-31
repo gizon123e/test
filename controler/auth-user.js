@@ -344,6 +344,8 @@ module.exports = {
       const { email, phone } = req.body;
       const id = req.user.id;
       let user;
+      const duplicate = await User.exists({'email.content': email}) || await User.exists({'phone.content': phone})
+      if(duplicate) return res.status(403).json({message: `${phone? "phone" : "email"} sudah terdaftar`});
       if(email && !phone) {
         user = await User.findByIdAndUpdate(id, {'email.content': email}, {new: true});
       }else if(!email && phone){

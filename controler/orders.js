@@ -7,6 +7,7 @@ const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
 const VA = require("../models/model-virtual-account")
 const Vendor = require('../models/vendor/model-vendor');
+const fetch = require('node-fetch');
 // const Address = require('../models/model-address');
 const dotenv = require('dotenv')
 dotenv.config();
@@ -234,7 +235,6 @@ module.exports = {
                     VirtualAccount = await VA.findById(splitted[0]);
                     if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
                     idPay = va_user.nama_bank._id;
-                    paymentNumber = va_user.nomor_va;
                     nama = va_user.nama_virtual_account
                 } else {
                     paymentNumber = "123"
@@ -254,24 +254,38 @@ module.exports = {
                     jumlah_dp: dp
                 });
 
-                const midtransPayload = {
-                    transaction_details: {
-                        order_id: detailPesanan._id,
-                        gross_amount: detailPesanan.total_price,
+                const options = {
+                    method: 'POST',
+                    headers: {
+                      accept: 'application/json',
+                      'content-type': 'application/json',
+                      Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}` // Tambahkan ':' di akhir server key untuk otentikasi dasar
                     },
-                };
-                console.log(va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1])
-                if (va_user.nama_bank.nama_bank === "BCA") {
-                    midtransPayload.bca_va = { va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1] }
-                } else if (va_user.nama_bank.nama_bank === "BNI") {
-                    midtransPayload.bni_va = { va_number: va_user.nomor_va };
-                } else if (va_user.nama_bank.nama_bank === "BRI") {
-                    midtransPayload.bri_va = { va_number: va_user.nomor_va };
-                }
-
-                // console.log(JSON.stringify(midtransPayload))
-                const transaksi = await snap.createTransaction(midtransPayload);
-                return res.status(201).json({ message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, datas: dataOrder, nama, paymentNumber, total_tagihan: detailPesanan.total_price, transaksi });
+                    body: JSON.stringify({
+                      payment_type: 'bank_transfer',
+                      transaction_details: {
+                        order_id: detailPesanan._id,
+                        gross_amount: 10000
+                      },
+                      bank_transfer: {
+                        bank: 'bca',
+                        va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                      },
+                    })
+                  };
+                const respon = await fetch(process.env.MIDTRANS_URL, options)
+                const transaksi = await respon.json()
+                return res.status(201).json({ 
+                    message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, 
+                    datas: dataOrder, 
+                    nama, 
+                    paymentNumber: transaksi.va_numbers[0].va_number, 
+                    total_tagihan: detailPesanan.total_price, 
+                    transaksi: {
+                        waktu: transaksi.transaction_time,
+                        orderId: transaksi.order_id
+                    }
+                });
             } else {
                 return res.status(400).json({ message: 'data create tidak valid' })
             }
