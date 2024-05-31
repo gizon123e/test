@@ -37,14 +37,15 @@ module.exports = {
 
                 await DetailPesanan.findByIdAndUpdate(order_id, {
                     isTerbayarkan: true
-                })
+                });
+
+                await VA_Used.findOneAndDelete({orderId: order_id});
             }else if(transaction_status === "cancel"){
                 await Pesanan.findByIdAndUpdate(pesanan.id_pesanan, {
                     status: "Dibatalkan"
                 });
             }
-            await VA_Used.findOneAndDelete({orderId: order_id})
-            return res.status(200)
+            return res.status(200).json({message:"Mantap"})
         } catch (error) {
             
         }
