@@ -8,12 +8,16 @@ const modelVaUsed = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: 'DetailPesanan'
     },
+    userId: {
+        type: mongoose.Types.ObjectId,
+        ref: "User"
+    },
     createdAt: {
         type: Date,
         default: Date.now,
-        index: { expires: '1d' }  // TTL index to expire documents 7 days after creation
+        // index: { expires: '1d' }  // TTL index to expire documents 7 days after creation
     } 
 });
 
-const VA_Used = mongoose.model("VA_Used", modelVaUsed);
+const VA_Used = mongoose.model("Used_VA", modelVaUsed);
 module.exports = VA_Used
