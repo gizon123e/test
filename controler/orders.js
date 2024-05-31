@@ -253,7 +253,7 @@ module.exports = {
                     id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
                     jumlah_dp: dp
                 });
-
+                console.log(va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1])
                 const options = {
                     method: 'POST',
                     headers: {
@@ -265,21 +265,22 @@ module.exports = {
                       payment_type: 'bank_transfer',
                       transaction_details: {
                         order_id: detailPesanan._id,
-                        gross_amount: 10000
+                        gross_amount: detailPesanan.total_price
                       },
-                      bank_transfer: {
+                      bank_transfer:{
                         bank: 'bca',
-                        va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                        va_number: "1234567890"
                       },
                     })
                   };
                 const respon = await fetch(process.env.MIDTRANS_URL, options)
                 const transaksi = await respon.json()
+                console.log(transaksi)
                 return res.status(201).json({ 
                     message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, 
                     datas: dataOrder, 
                     nama, 
-                    paymentNumber: transaksi.va_numbers[0].va_number, 
+                    // paymentNumber: transaksi.va_numbers[0].va_number, 
                     total_tagihan: detailPesanan.total_price, 
                     transaksi: {
                         waktu: transaksi.transaction_time,
