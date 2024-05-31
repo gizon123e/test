@@ -17,7 +17,7 @@ module.exports = {
 
             const product = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
-
+            console.log(addressVendor)
             const ukuranVolumeMotor = 100 * 30 * 40
             const ukuranVolumeProduct = product.tinggi * product.lebar * product.panjang
 

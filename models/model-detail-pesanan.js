@@ -48,6 +48,10 @@ const ModelDetailPesanan = mongoose.Schema({
     biaya_proteksi:{
         type: Number
     },
+    isTerbayarkan:{
+        type: Boolean,
+        default: false
+    }
 });
 
 const DetailPesanan = mongoose.model("DetailPesanan", ModelDetailPesanan);

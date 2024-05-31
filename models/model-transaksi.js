@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const modelTransaksi = mongoose.Schema({
-    id_pembayaran: {
+    id_pesanan: {
         type: mongoose.Types.ObjectId,
-        ref: "Pembayaran"
+        ref: "Pesanan"
     },
     jenis_transaksi:{
         type: String,
