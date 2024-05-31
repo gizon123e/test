@@ -1,6 +1,7 @@
 const Distributtor = require('../../models/distributor/model-distributor')
 const Vendor = require('../../models/vendor/model-vendor')
 const Product = require('../../models/model-product')
+const Konsumen = require('../../models/konsumen/model-konsumen')
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
@@ -9,11 +10,84 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 module.exports = {
+    getDistributtorCariHargaTerenda: async (req, res, next) => {
+        try {
+            const product = await Product.findOne({ _id: req.params.id }).populate('userId')
+            const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
+            const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
+
+            const ukuranVolumeMotor = 100 * 30 * 40
+            const ukuranVolumeProduct = product.tinggi * product.lebar * product.panjang
+
+            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
+            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+
+            const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
+            const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
+
+            const isHeavyOrLarge = product.berat < 20 || ukuranVolumeProduct < ukuranVolumeMotor;
+            if (isHeavyOrLarge) {
+                query.is_kendaraan = { $in: "Motor" };
+            }
+
+            let dataAllDistributtor = []
+            const dataDistributtor = await Distributtor.find().populate("userId", '-password').populate('alamat_id')
+
+            if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
+
+            for (let distributor of dataDistributtor) {
+                const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
+                const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
+
+                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+
+                if (Math.round(distance) < 50 && distance !== NaN) {
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate('id_distributor').populate("tarifId")
+
+                    if (dataKendaraan.length > 0)
+                        for (let data of dataKendaraan) {
+                            const ongkir = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+                            const jarakOngkir = Math.round(ongkir)
+                            if (jarakOngkir > 4) {
+                                const angkaJarak = jarakOngkir - 4
+                                const hargaKiloMeter = angkaJarak * data.tarifId.tarif_per_km
+                                const hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar
+
+                                dataAllDistributtor.push({
+                                    distributor: data,
+                                    jarakTempu: Math.round(distance),
+                                    hargaOngkir
+                                })
+                            }
+                        }
+                }
+            }
+
+            if (dataAllDistributtor.length > 0) {
+                dataAllDistributtor.sort((a, b) => a.hargaOngkir - b.hargaOngkir);
+            }
+
+            const datas = dataAllDistributtor[0]
+            res.status(200).json({
+                message: "success get data Distributtor",
+                datas
+            })
+
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
+    },
+
     getAllDistributtor: async (req, res, next) => {
         try {
-            //kasih filter maksimal untuk motor:
-            //ukuran 100x30x40cm
-            //berat 20kg
             const { name } = req.query
 
             const product = await Product.findOne({ _id: req.params.id }).populate('userId')
@@ -45,7 +119,6 @@ module.exports = {
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
-                // console.log("id distributor", distributor._id)
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
                     const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id })
@@ -57,6 +130,7 @@ module.exports = {
                         })
                 }
             }
+
             res.status(200).json({
                 message: "success get data Distributtor",
                 datas

@@ -9,6 +9,7 @@ const router = require('express').Router()
 
 router.get('/list/:id', controlerDistributtor.getAllDistributtor)
 router.get('/detail/:id', controlerDistributtor.getDetailDistributtor)
+router.get('/harga-terendah/:id', authorization, controlerDistributtor.getDistributtorCariHargaTerenda)
 router.post('/create', controlerDistributtor.createDistributtor)
 router.put('/update/:id', controlerDistributtor.updateDistributtor)
 router.delete('/delete/:id', controlerDistributtor.deleteDistributtor)
