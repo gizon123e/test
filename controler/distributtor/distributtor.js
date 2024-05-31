@@ -1,6 +1,7 @@
 const Distributtor = require('../../models/distributor/model-distributor')
 const Vendor = require('../../models/vendor/model-vendor')
 const Product = require('../../models/model-product')
+const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
 const fs = require('fs')
@@ -44,16 +45,18 @@ module.exports = {
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
-                console.log("tes", distance)
+                // console.log("id distributor", distributor._id)
 
-                if (Math.round(distance) < 50 && distance !== NaN && distance) {
-                    datas.push({
-                        distributor,
-                        jarakTempu: Math.round(distance)
-                    })
+                if (Math.round(distance) < 50 && distance !== NaN) {
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id })
+
+                    if (dataKendaraan.length > 0)
+                        datas.push({
+                            distributor,
+                            jarakTempu: Math.round(distance)
+                        })
                 }
             }
-
             res.status(200).json({
                 message: "success get data Distributtor",
                 datas
