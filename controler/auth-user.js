@@ -354,6 +354,13 @@ module.exports = {
         if(duplicate) return res.status(403).json({message: `phone ${phone} sudah terdaftar`})
         user = await User.findByIdAndUpdate(id, {'phone.content': phone}, {new: true});
       }else if(email && phone){
+        const [phoneExists, emailExists] = await Promise.all([
+          User.exists({'phone.content': phone}),
+          User.exists({'email.content': email})
+        ]);
+        if (phoneExists || emailExists) {
+          return res.status(403).json({ message: 'phone atau email sudah terdaftar' });
+        };
         user = await User.findByIdAndUpdate(id, {'email.content': email, 'phone.content': phone}, {new: true});
       }
       return res.status(201).json({message: "Data User berhasil diperbarui", data: user});
