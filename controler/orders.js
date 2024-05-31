@@ -1,22 +1,16 @@
 const Orders = require('../models/model-orders')
 const Product = require('../models/model-product')
-const midtransClient = require('midtrans-client');
 const Carts = require('../models/model-cart')
 // const Report = require("../models/model-laporan-penjualan");
 const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
 const VA = require("../models/model-virtual-account")
+const VA_Used = require("../models/model-va-used");
 const Vendor = require('../models/vendor/model-vendor');
 const fetch = require('node-fetch');
 // const Address = require('../models/model-address');
 const dotenv = require('dotenv')
 dotenv.config();
-
-const snap = new midtransClient.Snap({
-    // Set to true if you want Production Environment (accept real transaction).
-    isProduction : false,
-    serverKey : process.env.SERVERKEY
-});
 
 module.exports = {
 
@@ -204,21 +198,6 @@ module.exports = {
 
             if (dataArrayProduct.length > 0) {
 
-                const dataOrder = await Orders.create({
-                    product: dataArrayProduct,
-                    addressId,
-                    userId: req.user.id,
-                    date_order,
-                    catatan_produk,
-                    poinTerpakai,
-                    ongkir,
-                    dp: dp ? true : false,
-                    potongan_ongkir,
-                    biaya_asuransi: biaya_asuransi ? true : false,
-                    biaya_proteksi: biaya_proteksi ? true : false,
-                    deadline: new Date(deadline)
-                });
-
                 let paymentNumber;
                 let nama;
                 let idPay;
@@ -240,6 +219,27 @@ module.exports = {
                     paymentNumber = "123"
                 }
 
+                const va_used = await VA_Used.findOne({
+                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                });
+
+                if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used})
+
+                const dataOrder = await Orders.create({
+                    product: dataArrayProduct,
+                    addressId,
+                    userId: req.user.id,
+                    date_order,
+                    catatan_produk,
+                    poinTerpakai,
+                    ongkir,
+                    dp: dp ? true : false,
+                    potongan_ongkir,
+                    biaya_asuransi: biaya_asuransi ? true : false,
+                    biaya_proteksi: biaya_proteksi ? true : false,
+                    deadline: new Date(deadline)
+                });
+
                 const detailPesanan = await DetailPesanan.create({
                     id_pesanan: dataOrder._id,
                     total_price: total,
@@ -253,7 +253,7 @@ module.exports = {
                     id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
                     jumlah_dp: dp
                 });
-                console.log(va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1])
+
                 const options = {
                     method: 'POST',
                     headers: {
@@ -269,18 +269,23 @@ module.exports = {
                       },
                       bank_transfer:{
                         bank: 'bca',
-                        va_number: "1234567890"
+                        va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
                       },
                     })
                   };
-                const respon = await fetch(process.env.MIDTRANS_URL, options)
-                const transaksi = await respon.json()
-                console.log(transaksi)
+                const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
+                const transaksi = await respon.json();
+
+                await VA_Used.create({
+                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
+                    orderId: detailPesanan._id
+                });
+
                 return res.status(201).json({ 
                     message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, 
                     datas: dataOrder, 
                     nama, 
-                    // paymentNumber: transaksi.va_numbers[0].va_number, 
+                    paymentNumber: transaksi.va_numbers[0].va_number, 
                     total_tagihan: detailPesanan.total_price, 
                     transaksi: {
                         waktu: transaksi.transaction_time,
