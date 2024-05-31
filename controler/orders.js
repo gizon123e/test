@@ -220,7 +220,8 @@ module.exports = {
                 }
 
                 const va_used = await VA_Used.findOne({
-                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
+                    userId: req.user.id
                 });
 
                 if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used})
@@ -273,13 +274,14 @@ module.exports = {
                       },
                     })
                   };
+                  
                 const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
                 const transaksi = await respon.json();
-
                 await VA_Used.create({
-                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
-                    orderId: detailPesanan._id
-                });
+                    userId: req.user.id,
+                    orderId: detailPesanan._id,
+                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                })
 
                 return res.status(201).json({ 
                     message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, 
