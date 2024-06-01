@@ -3,6 +3,7 @@ const Vendor = require('../../models/vendor/model-vendor')
 const Product = require('../../models/model-product')
 const Konsumen = require('../../models/konsumen/model-konsumen')
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
+const Address = require('../../models/model-address')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
 const fs = require('fs')
@@ -12,6 +13,8 @@ dotenv.config()
 module.exports = {
     getDistributtorCariHargaTerenda: async (req, res, next) => {
         try {
+            const { idAddress } = req.query
+
             const product = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
             const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
@@ -24,6 +27,26 @@ module.exports = {
 
             const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
             const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
+
+            let ongkir = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+
+            if (idAddress) {
+                const addressCustom = await Address.findById(idAddress)
+                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
+                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
+                ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+                if (isNaN(ongkir)) {
+                    return res.status(400).json({
+                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                    });
+                }
+            }
+
+            if (isNaN(ongkir)) {
+                return res.status(400).json({
+                    message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                });
+            }
 
             const isHeavyOrLarge = product.berat < 20 || ukuranVolumeProduct < ukuranVolumeMotor;
             if (isHeavyOrLarge) {
@@ -46,7 +69,7 @@ module.exports = {
 
                     if (dataKendaraan.length > 0)
                         for (let data of dataKendaraan) {
-                            const ongkir = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+
                             const jarakOngkir = Math.round(ongkir)
                             if (jarakOngkir > 4) {
                                 const angkaJarak = jarakOngkir - 4
@@ -88,7 +111,7 @@ module.exports = {
 
     getAllDistributtor: async (req, res, next) => {
         try {
-            const { name } = req.query
+            const { name, addressId } = req.query
 
             const product = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
@@ -98,6 +121,29 @@ module.exports = {
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+
+            const konsumenAddress = await Konsumen.findOne({ userId: req.user.id }).populate("address")
+            const latitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.lat)
+            const longitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.long)
+
+            if (addressId) {
+                const addressCustom = await Address.findById(addressId)
+                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
+                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
+                const jarakVendorKonsumen = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+                if (isNaN(jarakVendorKonsumen)) {
+                    return res.status(400).json({
+                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                    });
+                }
+            } else {
+                const jarakVendorKonsumen = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+                if (isNaN(jarakVendorKonsumen)) {
+                    return res.status(400).json({
+                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                    });
+                }
+            }
 
             let query = {}
             if (name) {

@@ -7,6 +7,7 @@ const controlerOrder = require('../controler/orders');
 
 const router = require('express').Router()
 
+router.get('/list-order-panel', controlerOrder.getOrderPanel)
 router.get('/list', authorization, controlerOrder.getOrders)
 router.get('/detail/:id', authorization, controlerOrder.getOrderDetail);
 router.post('/create', authorization, notEmptyDetailData, controlerOrder.createOrder)
