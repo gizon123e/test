@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const modelPengiriman = mongoose.Schema({
     orderId:{
         type: mongoose.Types.ObjectId,
-        ref: "Orders"
+        ref: "Pesanan"
     },
     distributorId:{
         type: mongoose.Types.ObjectId,

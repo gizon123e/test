@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const ModelDetailPesanan = mongoose.Schema({
+const ModelDetailPesanan = new mongoose.Schema({
     id_pesanan:{
         type: mongoose.Types.ObjectId,
         ref: "Pesanan",
@@ -48,6 +48,10 @@ const ModelDetailPesanan = mongoose.Schema({
     biaya_proteksi:{
         type: Number
     },
+    isTerbayarkan:{
+        type: Boolean,
+        default: false
+    }
 });
 
 const DetailPesanan = mongoose.model("DetailPesanan", ModelDetailPesanan);

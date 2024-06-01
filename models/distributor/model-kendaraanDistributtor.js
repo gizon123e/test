@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const kendaraanDistributorSchema = mongoose.Schema({
+const kendaraanDistributorSchema = new mongoose.Schema({
     id_distributor: {
         type: mongoose.Types.ObjectId,
         ref: 'Distributtor',

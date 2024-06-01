@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const modelOrder = mongoose.Schema({
+const modelOrder = new mongoose.Schema({
     product: [{
         _id: false,
         productId: {

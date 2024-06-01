@@ -24,7 +24,7 @@ module.exports = async (req, res, next) =>{
                 if(!produsen) notFoundData = true;
                 break;
         }
-        if(notFoundData) return res.status(403).json({message:`User ${req.user.name} belum mengisi data detail`})
+        if(notFoundData) return res.status(403).json({message:`User ${req.user.id} belum mengisi data detail`})
         next()
     } catch (error) {
         console.log(error)

@@ -1,12 +1,16 @@
 const Orders = require('../models/model-orders')
 const Product = require('../models/model-product')
 const Carts = require('../models/model-cart')
-const Report = require("../models/model-laporan-penjualan");
+// const Report = require("../models/model-laporan-penjualan");
 const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
 const VA = require("../models/model-virtual-account")
+const VA_Used = require("../models/model-va-used");
 const Vendor = require('../models/vendor/model-vendor');
-const Address = require('../models/model-address');
+const fetch = require('node-fetch');
+// const Address = require('../models/model-address');
+const dotenv = require('dotenv')
+dotenv.config();
 
 module.exports = {
     getOrderPanel: async (req, res, next) => {
@@ -225,6 +229,34 @@ module.exports = {
 
             if (dataArrayProduct.length > 0) {
 
+                let paymentNumber;
+                let nama;
+                let idPay;
+                let va_user;
+                let VirtualAccount;
+
+                const splitted = metode_pembayaran.split(" / ");
+                if (splitted[1].includes("Virtual Account")) {
+                    va_user = await VaUser.findOne({
+                        nama_bank: splitted[0],
+                        userId: req.user.id
+                    }).populate('nama_bank');
+
+                    VirtualAccount = await VA.findById(splitted[0]);
+                    if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
+                    idPay = va_user.nama_bank._id;
+                    nama = va_user.nama_virtual_account
+                } else {
+                    paymentNumber = "123"
+                }
+
+                const va_used = await VA_Used.findOne({
+                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
+                    userId: req.user.id
+                });
+
+                if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used})
+
                 const dataOrder = await Orders.create({
                     product: dataArrayProduct,
                     addressId,
@@ -240,24 +272,6 @@ module.exports = {
                     deadline: new Date(deadline)
                 });
 
-                let paymentNumber;
-                let idPay;
-
-                const splitted = metode_pembayaran.split(" / ");
-                if (splitted[1].includes("Virtual Account")) {
-                    const va_user = await VaUser.findOne({
-                        nama_bank: splitted[0],
-                        userId: req.user.id
-                    }).populate('nama_bank');
-
-                    const VirtualAccount = await VA.findById(splitted[0]);
-                    if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
-                    idPay = va_user.nama_bank._id;
-                    paymentNumber = va_user.nomor_va;
-                } else {
-                    paymentNumber = "123"
-                }
-
                 const detailPesanan = await DetailPesanan.create({
                     id_pesanan: dataOrder._id,
                     total_price: total,
@@ -271,37 +285,46 @@ module.exports = {
                     id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
                     jumlah_dp: dp
                 });
-                // for (const produk of dataArrayProduct){
 
-                //     const laporan = await Report.findOne({productId: produk.productId})
-                //     if(!laporan){
-                //         const report = await Report.create({
-                //             productId: produk.productId,
-                //             track: [ { time: new Date(), soldAtMoment: produk.quantity } ]
-                //         })
-                //     }else{
-                //         const noww = new Date()
-                //         let isDateFound = false;
+                const options = {
+                    method: 'POST',
+                    headers: {
+                      accept: 'application/json',
+                      'content-type': 'application/json',
+                      Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}` // Tambahkan ':' di akhir server key untuk otentikasi dasar
+                    },
+                    body: JSON.stringify({
+                      payment_type: 'bank_transfer',
+                      transaction_details: {
+                        order_id: detailPesanan._id,
+                        gross_amount: detailPesanan.total_price
+                      },
+                      bank_transfer:{
+                        bank: 'bca',
+                        va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                      },
+                    })
+                  };
+                  
+                const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
+                const transaksi = await respon.json();
+                await VA_Used.create({
+                    userId: req.user.id,
+                    orderId: detailPesanan._id,
+                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                })
 
-                //         for (const item of laporan.track) {
-                //             if (item.time.getDate() === noww.getDate() && 
-                //                 item.time.getMonth() === noww.getMonth() &&
-                //                 item.time.getFullYear() === noww.getFullYear()) {
-                //                 item.soldAtMoment += produk.quantity;
-                //                 isDateFound = true;
-                //                 break;
-                //             }
-                //         }
-
-                //         if (!isDateFound) {
-                //             laporan.track.push({ time: noww, soldAtMoment: produk.quantity });
-                //         }
-
-                //         await laporan.save()
-                //     }
-                // }
-
-                return res.status(201).json({ message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, datas: dataOrder, paymentNumber, total_tagihan: detailPesanan.total_price });
+                return res.status(201).json({ 
+                    message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, 
+                    datas: dataOrder, 
+                    nama, 
+                    paymentNumber: transaksi.va_numbers[0].va_number, 
+                    total_tagihan: detailPesanan.total_price, 
+                    transaksi: {
+                        waktu: transaksi.transaction_time,
+                        orderId: transaksi.order_id
+                    }
+                });
             } else {
                 return res.status(400).json({ message: 'data create tidak valid' })
             }
