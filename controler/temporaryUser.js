@@ -3,18 +3,22 @@ const { TemporaryPic, TemporaryUser, TemporaryDataToko } = require('../models/mo
 module.exports = {
     updateUser: async (req, res, next) => {
         try {
+            const temporaryPic = await TemporaryPic.findOne({temporary_user: req.body.id})
+            const temporaryDataToko = await TemporaryDataToko.findOne({tempSeller: req.body.id})
+
             const { long_pin_alamat, lat_pin_alamat, registerAs } = req.body
             const update = await TemporaryUser.findByIdAndUpdate(req.body.id, {...req.body, pinAlamat: {
                 long: long_pin_alamat,
                 lat: lat_pin_alamat
             }}, {new: true}).select('-codeOtp -createdAt');
-            if(registerAs === "not_individu"){
+
+            if(registerAs === "not_individu" && ! temporaryPic){
                 await TemporaryPic.create({
                     temporary_user: update._id
                 });
             };
 
-            if(update.role !== "konsumen"){
+            if(update.role !== "konsumen" && !temporaryDataToko){
                 await TemporaryDataToko.create({
                     tempSeller: update._id
                 })

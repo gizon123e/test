@@ -134,7 +134,7 @@ const modelTemporaryDataToko = new mongoose.Schema({
   },
   tempSeller: {
     type: mongoose.Types.ObjectId,
-    ref: "TemporarySeller"
+    ref: "TemporaryUser"
   }
 })
 
