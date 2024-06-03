@@ -41,18 +41,12 @@ const userModels = new mongoose.Schema(
     },
     password: {
       type: String,
-      maxlength: [250, "panjang password harus di antara 3 - 250 karakter"],
-      minlength: [3, "panjang password harus di antara 3 - 250 karakter"],
     },
     phone: {
       content:{
         type: String,
-        minlength: [9, "panjang password harus di antara 3 - 250 karakter"],
         validate: {
-          validator: (phone) => {
-            const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
-            return regexNoTelepon.test(phone)
-          },
+          validator: (phone) => validationPhone(phone),
           message: (props) => `${props.value} nomor handphone tidak valid`
         },
         default: undefined
@@ -119,6 +113,15 @@ const userModels = new mongoose.Schema(
   { timestamps: true }
 );
 
+userModels.pre('findOneAndUpdate', function(next){
+  console.log(this.getUpdate())
+  if(this.getUpdate() !== undefined){
+    const isValid =  validationPhone(this.getUpdate()['phone.content'])
+    if(!isValid) throw new Error(`${this.getUpdate()['phone.content']} nomor tidak valid`)
+  }
+  next()
+})
+
 userModels.post("findOneAndDelete", async function(doc){
   try {
     const data = await Promise.all([
@@ -152,6 +155,12 @@ userModels.post("findOneAndDelete", async function(doc){
   }
   
 });
+
+function validationPhone(phone){
+  const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
+  console.log(regexNoTelepon.test(phone))
+  return regexNoTelepon.test(phone)
+}
 
 const User = mongoose.model("User", userModels);
 
