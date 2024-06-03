@@ -1,6 +1,8 @@
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
-const User = require("../models/model-auth-user")
+const User = require("../models/model-auth-user");
+const User_System = require('../models/model-user-system');
+
 
 module.exports = async (req, res, next) => {
     try {
@@ -8,10 +10,10 @@ module.exports = async (req, res, next) => {
         if (!token) return res.status(401).json({ error: false, message: 'Token not Found' });
 
         const verifyToken = jwt.verifyToken(token);
-        console.log(verifyToken)
         req.user = verifyToken;
         const user = await User.findById(req.user.id);
-        if(!user) return res.status(401).json({message: "Tidak Ada User dengan id " + verifyToken.id + " pastikan token benar"})
+        const user_system = await User_System.findById(req.user.id)
+        if(!user && !user_system) return res.status(401).json({message: "Tidak Ada User dengan id " + verifyToken.id + " pastikan token benar"})
         next();
     } catch (error) {
         if (error.message === "Token has expired") {

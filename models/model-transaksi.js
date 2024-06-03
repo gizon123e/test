@@ -11,7 +11,7 @@ const modelTransaksi = mongoose.Schema({
     },
     status:{
         type: String,
-        enum: ["Menunggu Pembayaran", "Pembayaran Gagal", "Pembayaran Dibatalkan", "Pembayaran Berhasil"]
+        enum: ["Menunggu Pembayaran", "Pembayaran Gagal", "Pembayaran Dibatalkan", "Pembayaran Berhasil", "Kurang Bayar", "Lebih Bayar"]
     }
 });
 
