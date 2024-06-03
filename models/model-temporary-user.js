@@ -117,7 +117,29 @@ const modelTemporaryPic = new mongoose.Schema({
     }  
 });
 
+const modelTemporaryDataToko = new mongoose.Schema({
+  namaToko: {
+    type: String,
+  },
+  province: String,
+  regency: String,
+  district: String,
+  village: String,
+  address_description: String,
+  label: String,
+  code_pos: String,
+  pinAlamat: {
+    long: Decimal128,
+    lat: Decimal128
+  },
+  tempSeller: {
+    type: mongoose.Types.ObjectId,
+    ref: "TemporarySeller"
+  }
+})
+
+const TemporaryDataToko = mongoose.model("TemporaryDataToko", modelTemporaryDataToko)
 const TemporaryUser = mongoose.model("TemporaryUser", modelTemporary);
 const TemporaryPic = mongoose.model("TemporaryPic", modelTemporaryPic);
 
-module.exports = { TemporaryPic, TemporaryUser }
+module.exports = { TemporaryPic, TemporaryUser, TemporaryDataToko }
