@@ -29,8 +29,8 @@ const productModels = new mongoose.Schema(
       type: String,
     },
     long_description: {
-      tyep: String,
-      // required: [true, "deskripsi harus diisi"],
+      type: String,
+      required: [true, "deskripsi harus diisi"],
     },
     isPublished: {
       type: Boolean,
@@ -57,7 +57,21 @@ const productModels = new mongoose.Schema(
       },
       value: {
         type: String,
-
+      },
+      stok: {
+        type: Number,
+      },
+      minimalOrder: {
+        type: Number
+      },
+      harga: {
+        type: Number
+      },
+      foto:{
+        type: String
+      },
+      harga_diskon:{
+        type: String
       }
     }],
     userId: {
@@ -92,7 +106,7 @@ const productModels = new mongoose.Schema(
       type: [String],
       required: false,
     },
-    stok: {
+    total_stok: {
       type: Number,
       required: true,
     },

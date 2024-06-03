@@ -20,7 +20,7 @@ module.exports = {
             from: process.env.EMAIL_SENDER,
             to: email,
             subject: subject,
-            text: "Ini kode otp: " + kode,
+            text: `KODE OTP :  ${kode} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`,
             auth: {
               user: process.env.EMAIL_SENDER,
               refreshToken: process.env.REFRESH_TOKEN,
