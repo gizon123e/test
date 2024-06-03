@@ -13,6 +13,37 @@ const dotenv = require('dotenv')
 dotenv.config();
 
 module.exports = {
+    getOrderPanel: async (req, res, next) => {
+        try {
+            const datas = await Orders.find()
+                .populate({
+                    path: 'product.productId',
+                    populate: {
+                        path: 'categoryId',
+                    },
+                    populate: {
+                        path: 'userId',
+                        select: '-password'
+                    },
+                })
+                .populate('userId', '-password').populate('addressId')
+
+            res.status(200).json({
+                message: "Success get data orders",
+                datas
+            });
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
+    },
 
     getOrders: async (req, res, next) => {
         try {
