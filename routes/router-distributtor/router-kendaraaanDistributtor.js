@@ -10,7 +10,7 @@ const router = require('express').Router()
 router.get('/list', controlerKendaraanDistributtor.getKendaraanDistributor)
 router.get('/detail/:id', authorization, controlerKendaraanDistributtor.getKendaraanDistributorById)
 router.post('/create', controlerKendaraanDistributtor.createKendaraandistributtor)
-router.put('/update/:id', controlerKendaraanDistributtor.updateKendaraanDistributtor)
+router.put('/update/:id', authorization, controlerKendaraanDistributtor.updateKendaraanDistributtor)
 router.delete('/delete/:id', controlerKendaraanDistributtor.deleteKendaraanDistributtor)
 
 module.exports = router

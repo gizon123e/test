@@ -39,6 +39,10 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         required: [true, 'tarifId harus di isi'],
         ref: "Tarif"
+    },
+    iconKendaraan: {
+        type: String,
+        required: false
     }
 }, { timestamps: true });
 
