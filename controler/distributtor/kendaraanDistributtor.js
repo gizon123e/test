@@ -235,7 +235,7 @@ module.exports = {
                     }
                 })
 
-                const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { iconKendaraan: `${process.env.HOST}/public/image-profile-distributtor/${imageName}` }, { new: true })
+                const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { iconKendaraan: `${process.env.HOST}/public/icon-kendaraan/${imageName}` }, { new: true })
 
                 return res.status(201).json({
                     message: "update icon data success",
