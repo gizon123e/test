@@ -57,7 +57,7 @@ module.exports = {
 
     createKonsumen: async (req, res, next) => {
         try {
-            const samaUser = await Konsumen.findOne({userId: req.body.id}).populate('userId', '-password');
+            const samaUser = await Konsumen.findOne({userId: req.body.id}).populate('userId', '-password', '-codeOtp', '-saldo', '-poin');
 
             if(samaUser) return res.status(400).json({message: "User ini sudah memiliki data detail Konsumen", data: samaUser});
 

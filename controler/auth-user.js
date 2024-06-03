@@ -186,27 +186,8 @@ module.exports = {
 
       if(email && !newUser.email.isVerified && !phone) return res.status(403).json({message: "Email Belum diverifikasi", verified: false});
 
-      if(!phone && email && password){
-        if(!newUser.password) return res.status(404).json({message:"User belum memiliki password"});
-        const validPassword = await bcrypt.compare(
-          password,
-          newUser.password
-        );
-
-        if(!validPassword) return res.status(401).json({message:"Invalid Password"});
-        
-      }else if(!email && phone && pin){
-         if(!newUser.phone.content) return res.status(403).json({message: "No Hp belum ditambahkan"});
-        if(!newUser.phone.isVerified) return res.status(403).json({message: "No Hp belum diverifikasi"});
-        if(!newUser.pin) return res.status(404).json({message:"User belum memiliki pin"});
-        const validPin = await bcrypt.compare(
-          pin,
-          newUser.pin
-        );
-        
-        if(!validPin) return res.status(401).json({message: "Invalid Pin"});
-      }
-
+      const passwordValid = await bcrypt.compare(password, newUser.password)
+      if(!passwordValid) return res.status(401).json({message: "Password yang dimasukkan salah"})
       const kode_random = Math.floor(1000 + Math.random() * 9000);
       const kode = await bcrypt.hash(kode_random.toString(), 3);
       const codeOtp = {
