@@ -7,12 +7,14 @@ const { TemporarySeller } = require("../models/model-temporary-seller");
 module.exports = {
     verifyOtpRegister: async (req, res, next) =>{
         try {
-            const { jenis_temporary, type } = req.query;
+            const { type } = req.query;
 
-            if(jenis_temporary === "konsumen"){
-                const { kode_otp, id } = req.body;
-                const user = await TemporaryUser.findById(id);
-                if(!user) return res.status(400).json({message:"User tidak ditemukan"});
+            const { kode_otp, id } = req.body;
+            const user = await TemporaryUser.findById(id);
+            const seller = await TemporarySeller.findById(id);
+            if(!user || !seller) return res.status(400).json({message:`User dengan id ${id} tidak ditemukan`});
+            
+            if(user && !seller){
                 if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
                 const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
                 if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
@@ -26,8 +28,7 @@ module.exports = {
                     if(user.phone.isVerified) return res.status(400).json({message: "User sudah terverifikasi"});
                     await TemporaryUser.findByIdAndUpdate(id, {'phone.isVerified': true})
                 }
-                return res.status(200).json({message: "Verifikasi Berhasil"});
-            }else if( jenis_temporary === "seller"){
+            }else if(!user && seller){
                 const { kode_otp, id } = req.body;
                 const user = await TemporarySeller.findById(id);
                 if(!user) return res.status(400).json({message:"User tidak ditemukan"});
@@ -44,10 +45,49 @@ module.exports = {
                     if(user.phone.isVerified) return res.status(400).json({message: "User sudah terverifikasi"});
                     await TemporarySeller.findByIdAndUpdate(id, {'phone.isVerified': true})
                 }
-                return res.status(200).json({message: "Verifikasi Berhasil"});
-            }else {
-                return res.status(400).json({message: "Query Tidak Sesuai"});
             }
+            
+            return res.status(200).json({message: "Verifikasi Berhasil"});
+
+            // if(jenis_temporary === "konsumen"){
+            //     const { kode_otp, id } = req.body;
+            //     const user = await TemporaryUser.findById(id);
+            //     if(!user) return res.status(400).json({message:"User tidak ditemukan"});
+            //     if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
+            //     const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
+            //     if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
+            //     await TemporaryUser.findByIdAndUpdate(id, {verifikasi: true});
+            //     if(type === "email"){
+            //         if(!user.email.content) return res.status(400).json({message:"User tidak daftar dengan email"})
+            //         if(user.email.isVerified) return res.status(400).json({message: "User sudah terverifikasi"});
+            //         await TemporaryUser.findByIdAndUpdate(id, {'email.isVerified': true})
+            //     }else if(type === "phone"){
+            //         if(!user.phone.content) return res.status(400).json({message:"User tidak daftar dengan phone"})
+            //         if(user.phone.isVerified) return res.status(400).json({message: "User sudah terverifikasi"});
+            //         await TemporaryUser.findByIdAndUpdate(id, {'phone.isVerified': true})
+            //     }
+            //     return res.status(200).json({message: "Verifikasi Berhasil"});
+            // }else if( jenis_temporary === "seller"){
+            //     const { kode_otp, id } = req.body;
+            //     const user = await TemporarySeller.findById(id);
+            //     if(!user) return res.status(400).json({message:"User tidak ditemukan"});
+            //     if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
+            //     const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
+            //     if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
+            //     await TemporarySeller.findByIdAndUpdate(id, {verifikasi: true});
+            //     if(type === "email"){
+            //         if(!user.email.content) return res.status(400).json({message:"User tidak daftar dengan email"})
+            //         if(user.email.isVerified) return res.status(400).json({message: "User sudah terverifikasi"});
+            //         await TemporarySeller.findByIdAndUpdate(id, {'email.isVerified': true})
+            //     }else if(type === "phone"){
+            //         if(!user.phone.content) return res.status(400).json({message:"User tidak daftar dengan phone"})
+            //         if(user.phone.isVerified) return res.status(400).json({message: "User sudah terverifikasi"});
+            //         await TemporarySeller.findByIdAndUpdate(id, {'phone.isVerified': true})
+            //     }
+            //     return res.status(200).json({message: "Verifikasi Berhasil"});
+            // }else {
+            //     return res.status(400).json({message: "Query Tidak Sesuai"});
+            // }
 
         } catch (error) {
             console.log(error);
