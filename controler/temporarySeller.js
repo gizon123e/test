@@ -27,8 +27,14 @@ module.exports = {
         try {
             const data = await TemporarySeller.findById(req.params.id).select('-createdAt');
             if(!data) return res.status(404).json({message:"Tidak ada id " + req.params.id});
-            const pic = await TemporaryPic.findOne({temporary_user: req.params.id}).select('-createdAt');
-            return res.status(200).json({message: "Berhasil mendapatkan detail temporary", user: data, pic: data.registerAs === "not_individu" ? pic : undefined})
+            const pic = await TemporaryPicSeller.findOne({tempSeller: req.params.id}).select('-createdAt');
+            const dataToko = await TemporaryDataToko.findOne({tempSeller: req.params.id}).select("-createdAt")
+            return res.status(200).json({
+                message: "Berhasil mendapatkan detail temporary", 
+                user: data, 
+                pic: data.registerAs === "not_individu" ? pic : undefined,
+                dataToko
+            })
         } catch (error) {
             console.log(error);
             next(error);
