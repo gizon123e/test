@@ -16,20 +16,21 @@ module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
             if (req.user.role === "administrator") {
-                const data = await KendaraanDistributor.find().populate("id_distributor")
+                const data = await KendaraanDistributor.find().populate("id_distributor").populate('tarifId')
                 if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
-
+                console.log(data)
                 return res.status(200).json({
                     message: "get data success",
                     data
                 })
             }
-            const userId = req.user._id;
+            console.log(req.user.role)
+            const userId = req.user.id;
 
             const distributors = await Distributtor.find({ userId: userId });
             const distributorIds = distributors.map(distributor => distributor._id);
 
-            const data = await KendaraanDistributor.find({ id_distributor: { $in: distributorIds } }).populate("id_distributor")
+            const data = await KendaraanDistributor.find({ id_distributor: { $in: distributorIds } }).populate("id_distributor").populate('tarifId')
             if (!data) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 
             res.status(200).json({
