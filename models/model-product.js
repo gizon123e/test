@@ -30,7 +30,7 @@ const productModels = new mongoose.Schema(
     },
     long_description: {
       tyep: String,
-      required: [true, "deskripsi harus diisi"],
+      // required: [true, "deskripsi harus diisi"],
     },
     isPublished: {
       type: Boolean,
@@ -57,7 +57,7 @@ const productModels = new mongoose.Schema(
       },
       value: {
         type: String,
-        
+
       }
     }],
     userId: {
