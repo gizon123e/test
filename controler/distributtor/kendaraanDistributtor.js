@@ -6,6 +6,10 @@ const { calculateDistance } = require('../../utils/menghitungJarak')
 const Address = require('../../models/model-address')
 const Gratong = require('../../models/model-gratong')
 
+const path = require('path')
+const fs = require('fs')
+const dotenv = require('dotenv')
+dotenv.config()
 
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
@@ -78,8 +82,8 @@ module.exports = {
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
             for (let kendaraan of dataKendaraan) {
-                const gratong = await Gratong.findOne({tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() }});
-                
+                const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
+
 
                 if (jarakTempu > 4) {
                     let potongan_harga;
@@ -88,9 +92,9 @@ module.exports = {
                     const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
                     const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
 
-                    if( gratong ){
+                    if (gratong) {
                         kendaraan.isGratong = true
-                        switch(gratong.jenis){
+                        switch (gratong.jenis) {
                             case "persentase":
                                 console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                 potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
@@ -102,7 +106,7 @@ module.exports = {
                                 total_ongkir = hargaOngkir - potongan_harga;
                                 break;
                         }
-                    }else{
+                    } else {
                         kendaraan.isGratong = false
                         total_ongkir = hargaOngkir
                     }
@@ -117,9 +121,9 @@ module.exports = {
                     let potongan_harga;
                     let total_ongkir;
                     const hargaOngkir = kendaraan.tarifId.tarif_dasar
-                    if( gratong ){
+                    if (gratong) {
                         kendaraan.isGratong = true
-                        switch(gratong.jenis){
+                        switch (gratong.jenis) {
                             case "persentase":
                                 console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                 potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
@@ -131,7 +135,7 @@ module.exports = {
                                 total_ongkir = hargaOngkir - potongan_harga;
                                 break;
                         }
-                    }else{
+                    } else {
                         kendaraan.isGratong = false
                         total_ongkir = hargaOngkir
                     }
@@ -189,6 +193,40 @@ module.exports = {
     updateKendaraanDistributtor: async (req, res, next) => {
         try {
             const { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun } = req.body
+            const iconKendaraan = req.files ? req.files.imageDistributtor : null;
+
+            const dataIconKendaraanDistributor = await KendaraanDistributor.findById(req.params.id)
+            if (!dataIconKendaraanDistributor) return res.status(404).json({ message: "data Not Found" })
+            if (dataIconKendaraanDistributor.iconKendaraan) {
+                const iconDistributor = path.basename(dataIconKendaraanDistributor.iconKendaraan);
+
+                const deleteIcons = path.join(__dirname, '../../public/icon-kendaraan', iconDistributor);
+                if (fs.existsSync(deleteIcons)) {
+                    fs.unlinkSync(deleteIcons);
+                }
+            }
+
+            if (req.user.role === "administrator") {
+                if (!iconKendaraan) {
+                    return res.status(400).json({ message: "kamu gagal masukan file icon Kendaraan" });
+                }
+
+                const imageName = `${Date.now()}${path.extname(iconKendaraan.name)}`;
+                const imagePath = path.join(__dirname, '../../public/icon-kendaraan', imageName);
+
+                await iconKendaraan.mv(imagePath, (err) => {
+                    if (err) {
+                        return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
+                    }
+                })
+
+                const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { iconKendaraan: `${process.env.HOST}/public/image-profile-distributtor/${imageName}` }, { new: true })
+
+                return res.status(201).json({
+                    message: "update icon data success",
+                    data
+                })
+            }
 
             const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun }, { new: true })
 
