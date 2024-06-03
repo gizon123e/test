@@ -114,7 +114,6 @@ const userModels = new mongoose.Schema(
 );
 
 userModels.pre('findOneAndUpdate', function(next){
-  console.log(this.getUpdate())
   if(this.getUpdate() !== undefined){
     const isValid =  validationPhone(this.getUpdate()['phone.content'])
     if(!isValid) throw new Error(`${this.getUpdate()['phone.content']} nomor tidak valid`)
