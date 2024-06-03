@@ -80,7 +80,6 @@ module.exports = {
                     const dataJara = jarakTempu - 4
                     const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
                     const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
-
                     data.push({
                         kendaraan,
                         hargaOngkir
