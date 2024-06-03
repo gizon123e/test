@@ -16,7 +16,7 @@ module.exports = {
             });
             // const sellerId = [];
 
-            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id userId total_price name_product').populate({
+            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id userId total_price name_product minimalOrder').populate({
                 path: "userId",
                 select: "_id role"
             })

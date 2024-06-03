@@ -8,6 +8,10 @@ const productModels = new mongoose.Schema(
       minlength: [5, "panjang nama harus antara 5 - 250 karakter"],
       required: [true, "name_product harus di isi"],
     },
+    jenis_produk:{
+      type: String,
+      enum: ["makanan", "not_makanan"]
+    },
     price: {
       type: Number,
       required: [true, "price harus di isi"],
@@ -23,12 +27,39 @@ const productModels = new mongoose.Schema(
     },
     description: {
       type: String,
+    },
+    long_description: {
+      tyep: String,
       required: [true, "deskripsi harus diisi"],
+    },
+    isPublished: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    isVerified: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    minimalDp: {
+      type: Number,
+      min: 40
     },
     image_product: {
       type: [String],
       required: [true, "product harus memiliki setidaknya 1 gambar"],
     },
+    varian: [{
+      jenis_varian: {
+        type: String,
+        enum: ["ukuran", "warna", "model", "bahan", "motif"]
+      },
+      value: {
+        type: String,
+        
+      }
+    }],
     userId: {
       type: mongoose.Types.ObjectId,
       ref: "User",
