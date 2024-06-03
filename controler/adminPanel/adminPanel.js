@@ -1,19 +1,20 @@
 const UserAdminPanel = require('../../models/user-admin-panel/usert-panel')
 const bcrypt = require('bcrypt')
 const jwt = require('../../utils/jwt')
+const User_System = require('../../models/model-user-system')
 
 module.exports = {
     register: async (req, res, next) => {
         try {
-            const { username, role, password } = req.body
+            const { email, role, password } = req.body
 
-            const user = await UserAdminPanel.findOne({ username })
+            const user = await User_System.findOne({ email })
             console.log(user)
-            if (user) return res.status(400).json({ message: `name ${username} sudah register` })
+            if (user) return res.status(400).json({ message: `name ${email} sudah register` })
 
             const dataPassword = await bcrypt.hash(password, 10)
 
-            const data = await UserAdminPanel.create({ username, role, password: dataPassword })
+            const data = await User_System.create({ email, role, password: dataPassword })
 
             res.status(201).json({
                 message: 'Register Success',
@@ -28,17 +29,17 @@ module.exports = {
 
     login: async (req, res, next) => {
         try {
-            const { username, password } = req.body
+            const { email, password } = req.body
 
-            const user = await UserAdminPanel.findOne({ username })
-            if (!user) return res.status(400).json({ message: `name ${username} belom register` })
+            const user = await User_System.findOne({ email })
+            if (!user) return res.status(400).json({ message: `name ${email} belom register` })
 
             const validatePassword = await bcrypt.compare(password, user.password)
             if (!validatePassword) return res.status(400).json({ message: "Username / Password incored" })
 
             const tokenPayload = {
                 id: user._id,
-                username: user.username,
+                email: user.email,
                 password: user.password,
                 role: user.role,
             };
@@ -49,7 +50,7 @@ module.exports = {
                 message: "Login Success",
                 data: {
                     id: user._id,
-                    username: user.username,
+                    email: user.email,
                     role: user.role,
                     token
                 }
