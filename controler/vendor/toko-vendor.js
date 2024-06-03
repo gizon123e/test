@@ -1,5 +1,5 @@
-const Toko = require("../models/vendor/model-toko");
-const Address = require("../models/address")
+const Toko = require('../../models/vendor/model-toko');
+const Address = require('../../models/model-address')
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -17,7 +17,7 @@ module.exports = {
                     lat: req.body.lat_pin_alamat
                 }
             })
-            const newDataToko = await TemporaryDataToko.findOneAndUpdate({tempSeller: req.body.id}, {
+            const newDataToko = await Toko.findOneAndUpdate({userId: req.body.id}, {
                 namaToko: req.body.namaToko,
                 address: alamat._id,
                 userId: req.body.id,
