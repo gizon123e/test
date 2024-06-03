@@ -5,6 +5,7 @@ const Konsumen = require('../../models/konsumen/model-konsumen')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const Address = require('../../models/model-address')
 const Gratong = require('../../models/model-gratong')
+const Distributtor = require('../../models/distributor/model-distributor')
 
 const path = require('path')
 const fs = require('fs')
@@ -14,7 +15,21 @@ dotenv.config()
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
-            const data = await KendaraanDistributor.find().populate("id_distributor")
+            if (req.user.role === "administrator") {
+                const data = await KendaraanDistributor.find().populate("id_distributor")
+                if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
+
+                return res.status(200).json({
+                    message: "get data success",
+                    data
+                })
+            }
+            const userId = req.user._id;
+
+            const distributors = await Distributtor.find({ userId: userId });
+            const distributorIds = distributors.map(distributor => distributor._id);
+
+            const data = await KendaraanDistributor.find({ id_distributor: { $in: distributorIds } }).populate("id_distributor")
             if (!data) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 
             res.status(200).json({
@@ -193,7 +208,7 @@ module.exports = {
     updateKendaraanDistributtor: async (req, res, next) => {
         try {
             const { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun } = req.body
-            const iconKendaraan = req.files ? req.files.imageDistributtor : null;
+            const iconKendaraan = req.files ? req.files.iconKendaraan : null;
 
             const dataIconKendaraanDistributor = await KendaraanDistributor.findById(req.params.id)
             if (!dataIconKendaraanDistributor) return res.status(404).json({ message: "data Not Found" })
@@ -231,7 +246,7 @@ module.exports = {
             const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun }, { new: true })
 
             res.status(201).json({
-                message: "create data success",
+                message: "update data kendaraan success",
                 data
             })
         } catch (error) {
