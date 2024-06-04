@@ -17,7 +17,8 @@ module.exports = {
                     lat: req.body.lat_pin_alamat
                 }
             })
-            const newDataToko = await Toko.findOneAndUpdate({userId: req.body.id}, {
+            const newDataToko = await Toko.create({
+                userId: req.body.id,
                 namaToko: req.body.namaToko,
                 address: alamat._id,
                 userId: req.body.id,
