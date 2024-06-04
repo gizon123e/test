@@ -465,46 +465,51 @@ module.exports = {
       // };
 
       const category = await SpecificCategory.findById(req.body.categoryId);
+      if (!category) return res.status(400).json({ message: `Category dengan id: ${req.body.categoryId} tidak ada` });
       const subCategory = await SubCategory.findOne({contents: {$in: req.body.categoryId}});
       const mainCategory = await MainCategory.findOne({contents: {$in: subCategory._id}});
-      if (!category) return res.status(400).json({ message: `Category dengan id: ${req.body.categoryId} tidak ada` });
 
-      const dataProduct = req.body;
-      const imgPaths = [];
-      if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
-        req.files.ImageProduct.forEach((img, i) => {
-          const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`;
-          img.mv(pathImg, function (err) {
-            if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
-            imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`);
-          });
-        });
-      } else {
-        const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`;
-        req.files.ImageProduct.mv(pathImg, function (err) {
-          if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
-          imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`);
-        })
-      };
-
-      dataProduct.image_product = imgPaths
-
-      dataProduct.userId = req.user.id;
+      
       let newProduct
       if(!req.body.bervarian){
+        const dataProduct = req.body;
+
+        const imgPaths = [];
+
+        if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
+          req.files.ImageProduct.forEach((img, i) => {
+            const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`;
+            img.mv(pathImg, function (err) {
+              if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
+              imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`);
+            });
+          });
+        } else {
+          const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`;
+          req.files.ImageProduct.mv(pathImg, function (err) {
+            if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
+            imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`);
+          })
+        };
+
+        dataProduct.image_product = imgPaths
+
+        dataProduct.userId = req.user.id;
         newProduct = await Product.create({
           ...dataProduct,
           isPublished: true,
           id_sub_category: subCategory._id,
           id_main_category: mainCategory._id
         });
+        
       }else{
-        newProduct = await Product.create({
-          ...dataProduct,
-          isPublished: true,
-          id_sub_category: subCategory._id,
-          id_main_category: mainCategory._id
-        })
+        
+        // newProduct = await Product.create({
+        //   ...dataProduct,
+        //   isPublished: true,
+        //   id_sub_category: subCategory._id,
+        //   id_main_category: mainCategory._id
+        // })
       }
 
       // await Performance.create({
