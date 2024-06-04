@@ -4,7 +4,7 @@ module.exports = (err, req, res, next) => {
         method: req.method,
         url: req.url
     }
-    // console.log(err)
+    console.log(err)
     if (err.name === 'JsonWebTokenError') return res.status(401).json({ ...validateError, message: 'Authentication failed' });
 
     if (err.code && err.message) return res.status(err.code).json({ ...validateError, message: err.message });

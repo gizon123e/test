@@ -53,7 +53,7 @@ module.exports = {
                 startTime: { $lt: new Date()},
                 endTime: { $gt: new Date()}
             }).lean()
-            if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-start"})
+            if(!flashSales || flashSales.length === 0) return res.status(200).json({message: "no-start"})
             const flashSalesProducts = []
             const data = []
             let categorys = [];

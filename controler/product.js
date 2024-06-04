@@ -438,8 +438,7 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
-      if (!req.files || !req.files.ImageProduct) return res.status(400).json({ message: "Produk Minimal Punya 1 Foto, kirimkan file foto dengan nama ImageProduct" });
-
+      console.log('masuk')
       if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });
 
       // if ((req.user.role === "vendor" || req.user.role === "suppl    ier") && (req.body.bahanBaku !== undefined)) return res.status(400).json({ message: "Payload bahan baku hanya untuk user produsen" });

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const varian = new mongoose.Schema({
+const varianSchema = new mongoose.Schema({
   _id: false,
   jenis_varian: {
     type: String,
@@ -93,7 +93,7 @@ const productModels = new mongoose.Schema(
       required: [true, "product harus memiliki setidaknya 1 gambar"],
     },
     varian:{
-      type: [varian],
+      type: [varianSchema],
       maxlength: [2, 'hanya bisa memiliki 2 varian']
     },
     isPublished:{
@@ -184,6 +184,17 @@ productModels.pre("save", function (next) {
   } else {
     this.total_price = this.price
   }
+
+  if(this.bervarian){
+    this.varian.forEach(item => {
+      this.total_stok += item.stok
+    })
+  }
+
+  if(this.bervarian && this.minimalOrder){
+    return next("Atur minimal order per varian di properti objek varian")
+  }
+
   return next();
 });
 
