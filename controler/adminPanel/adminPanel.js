@@ -1,7 +1,9 @@
-const UserAdminPanel = require('../../models/user-admin-panel/usert-panel')
 const bcrypt = require('bcrypt')
 const jwt = require('../../utils/jwt')
 const User_System = require('../../models/model-user-system')
+
+// controler Virtual Acunt
+const VirtualAccountUser = require('../../models/model-user-va')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -54,6 +56,23 @@ module.exports = {
                     role: user.role,
                     token
                 }
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    userDetailId: async (req, res, next) => {
+        try {
+            const dataDetailId = await VirtualAccountUser.findOne({ userId: req.params.id }).populate("userId").populate("nama_bank")
+            if (!dataDetailId) {
+                return res.status(404).json({ message: "data Not Found" })
+            }
+
+            res.status(200).json({
+                message: "get detail success",
+                datas: dataDetailId
             })
         } catch (error) {
             console.log(error);
