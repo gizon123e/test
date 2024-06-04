@@ -15,7 +15,8 @@ module.exports = {
                 pinAlamat:{
                     long: req.body.long_pin_alamat,
                     lat: req.body.lat_pin_alamat
-                }
+                },
+                userId: req.body.id
             })
             const newDataToko = await Toko.create({
                 userId: req.body.id,
