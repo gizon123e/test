@@ -23,7 +23,7 @@ module.exports = {
                 namaToko: req.body.namaToko,
                 address: alamat._id,
                 userId: req.body.id,
-            }, {new: true});
+            });
 
             return res.status(201).json({message: "Berhasil mengubah data Toko", data: newDataToko})
         } catch (error) {
