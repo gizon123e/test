@@ -1,7 +1,49 @@
 const mongoose = require("mongoose");
 
+const varian = new mongoose.Schema({
+  _id: false,
+  jenis_varian: {
+    type: String,
+    validate: {
+      validator: (value) => {
+        const food = ['klasik', "buah", "gurih", 'rempah', 'sambal']
+        const notFood = ["ukuran", "warna", "model", "bahan", "motif"]
+        if(this.jenis_produk === 'makanan' && !food.includes(value)) return false
+        if(this.jenis_produk === 'not_makanan' && !notFood.includes(value)) return false
+        return true
+      },
+      message: (props) => `${props.value} varian tidak cocok untuk jenis produk`
+    }
+  },
+  value: {
+    type: [String]
+  },
+  stok: {
+    type: Number,
+  },
+  minimalOrder: {
+    type: Number
+  },
+  harga: {
+    type: Number
+  },
+  foto:{
+    type: String
+  },
+  harga_diskon:{
+    type: String
+  }
+})
+
 const productModels = new mongoose.Schema(
   {
+    _id:{
+      type: String,
+      default: () => `Prod-${new mongoose.Types.ObjectId().toString()}`
+    },
+    bervarian:{
+      type: Boolean,
+    },
     name_product: {
       type: String,
       maxlength: [250, "panjang nama harus antara 5 - 250 karakter"],
@@ -50,42 +92,24 @@ const productModels = new mongoose.Schema(
       type: [String],
       required: [true, "product harus memiliki setidaknya 1 gambar"],
     },
-    varian: [{
-      jenis_varian: {
-        type: String,
-        enum: ["ukuran", "warna", "model", "bahan", "motif"]
-      },
-      value: {
-        type: String,
-      },
-      stok: {
-        type: Number,
-      },
-      minimalOrder: {
-        type: Number
-      },
-      harga: {
-        type: Number
-      },
-      foto:{
-        type: String
-      },
-      harga_diskon:{
-        type: String
-      }
-    }],
+    varian:{
+      type: [varian],
+      maxlength: [2, 'hanya bisa memiliki 2 varian']
+    },
+    isPublished:{
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    isVerified: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
     userId: {
       type: mongoose.Types.ObjectId,
       ref: "User",
       required: true,
-    },
-    warna: {
-      type: [String],
-      required: false,
-    },
-    size: {
-      type: String,
-      enum: ["small", "medium", "big"],
     },
     id_main_category: {
       type: mongoose.Types.ObjectId,
@@ -102,40 +126,19 @@ const productModels = new mongoose.Schema(
       required: false,
       ref: "SpecificCategory",
     },
-    varianRasa: {
-      type: [String],
-      required: false,
-    },
     total_stok: {
       type: Number,
       required: true,
     },
-    rasaLevel: {
-      type: [String],
-      required: false,
-    },
     pemasok: {
       type: mongoose.Types.ObjectId,
       ref: "Supplier",
+      default: null
     },
     rating: {
       type: Number,
       default: 0
     },
-    bahanBaku: [
-      {
-        _id: false,
-        bahanBakuId: {
-          type: mongoose.Types.ObjectId,
-          ref: "BahanBaku",
-          required: true
-        },
-        quantityNeed: {
-          type: Number,
-          required: true
-        }
-      }
-    ],
     minimalOrder: {
       type: Number,
       default: 1
@@ -155,7 +158,21 @@ const productModels = new mongoose.Schema(
     },
     berat: {
       type: Number
-    }
+    },
+    // bahanBaku: [
+    //   {
+    //     _id: false,
+    //     bahanBakuId: {
+    //       type: mongoose.Types.ObjectId,
+    //       ref: "BahanBaku",
+    //       required: true
+    //     },
+    //     quantityNeed: {
+    //       type: Number,
+    //       required: true
+    //     }
+    //   }
+    // ],
   },
   { timestamp: true }
 );

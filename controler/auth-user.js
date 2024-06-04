@@ -194,7 +194,7 @@ module.exports = {
         code: kode,
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
-
+      console.log(kode_random)
       newUser.codeOtp = codeOtp;
       await newUser.save();
 
@@ -260,6 +260,32 @@ module.exports = {
     } catch (error) {
       console.log(error);
       next(error);
+    }
+  },
+
+  chekDuplicateNumberOrEmail: async(req, res, next) => {
+    try {
+      const { email , phone } = req.body;
+      let user
+      if(email && !phone) {
+        duplicate =  await User.exists({'email.content': email});
+        if(duplicate) return res.status(403).json({message: `email ${email} sudah terdaftar`})
+      }else if(!email && phone){
+        duplicate =  await User.exists({'phone.content': phone})
+        if(duplicate) return res.status(403).json({message: `phone ${phone} sudah terdaftar`})
+      }else if(email && phone){
+        const [phoneExists, emailExists] = await Promise.all([
+          User.exists({'phone.content': phone}),
+          User.exists({'email.content': email})
+        ]);
+        if (phoneExists || emailExists) {
+          return res.status(403).json({ message: 'phone atau email sudah terdaftar' });
+        };
+      }
+
+      return res.status(200).json({message: `${email? email : phone} bisa digunakan`});
+    } catch (error) {
+      
     }
   },
 

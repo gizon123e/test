@@ -1,18 +1,18 @@
 const Product = require("../models/model-product");
-const User = require("../models/model-auth-user");
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
 const Vendor = require("../models/vendor/model-vendor")
 const mongoose = require('mongoose')
 const SpecificCategory = require("../models/model-specific-category");
+const SubCategory = require("../models/model-sub-category");
+const MainCategory = require("../models/model-main-category");
 const Promo = require('../models/model-promo');
-// const MainCategory = require("../models/model-main-category")
 const Performance = require('../models/model-laporan-kinerja-product');
-const BahanBaku = require("../models/model-bahan-baku");
-const SalesReport = require("../models/model-laporan-penjualan");
 const path = require('path');
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
+// const BahanBaku = require("../models/model-bahan-baku");
+// const SalesReport = require("../models/model-laporan-penjualan");
 
 module.exports = {
 
@@ -442,29 +442,32 @@ module.exports = {
 
       if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });
 
-      if ((req.user.role === "vendor" || req.user.role === "supplier") && (req.body.bahanBaku !== undefined)) return res.status(400).json({ message: "Payload bahan baku hanya untuk user produsen" });
+      // if ((req.user.role === "vendor" || req.user.role === "suppl    ier") && (req.body.bahanBaku !== undefined)) return res.status(400).json({ message: "Payload bahan baku hanya untuk user produsen" });
+      
 
-      if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
-        return res.status(400).json({
-          message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object dengan property bahanBakuId dan quantityNeed"
-        });
-      };
+      //JANGAN DULU DIHAPUS!!
+      // if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
+      //   return res.status(400).json({
+      //     message: "Produsen jika ingin menambah produk harus menyertakan bahanBaku dalam bentuk array of object dengan property bahanBakuId dan quantityNeed"
+      //   });
+      // };
 
-      if (req.body.bahanBaku && req.user.role === "produsen") {
-        const obj = []
-        for (const bahan of req.body.bahanBaku) {
-          obj.push(JSON.parse(bahan))
-        };
-        req.body.bahanBaku = obj;
+      // if (req.body.bahanBaku && req.user.role === "produsen") {
+      //   const obj = []
+      //   for (const bahan of req.body.bahanBaku) {
+      //     obj.push(JSON.parse(bahan))
+      //   };
+      //   req.body.bahanBaku = obj;
 
-        for (const bahan of req.body.bahanBaku) {
-          const bahanFound = await BahanBaku.findById(bahan.bahanBakuId)
-          if (!bahanFound) return res.status(404).json({ message: "Bahan baku tidak ditemukan" })
-        }
-      };
-
+      //   for (const bahan of req.body.bahanBaku) {
+      //     const bahanFound = await BahanBaku.findById(bahan.bahanBakuId)
+      //     if (!bahanFound) return res.status(404).json({ message: "Bahan baku tidak ditemukan" })
+      //   }
+      // };
 
       const category = await SpecificCategory.findById(req.body.categoryId);
+      const subCategory = await SubCategory.findOne({contents: {$in: req.body.categoryId}});
+      const mainCategory = await MainCategory.findOne({contents: {$in: subCategory._id}});
       if (!category) return res.status(400).json({ message: `Category dengan id: ${req.body.categoryId} tidak ada` });
 
       const dataProduct = req.body;
@@ -486,21 +489,27 @@ module.exports = {
       };
 
       dataProduct.image_product = imgPaths
-      const user = await User.findById(req.user.id);
-      console.log(req.user)
-      dataProduct.userId = user._id;
-      const newProduct = await Product.create(dataProduct);
 
-      await Performance.create({
-        productId: newProduct._id,
-        impressions: [{ time: new Date(), amount: 0 }],
-        views: [{ time: new Date(), amount: 0 }]
+      dataProduct.userId = req.user.id;
+
+      const newProduct = await Product.create({
+        ...dataProduct,
+        isPublished: true,
+        categoryId: req.body.categoryId,
+        id_sub_category: subCategory._id,
+        id_main_category: mainCategory._id
       });
 
-      await SalesReport.create({
-        productId: newProduct._id,
-        track: [{ time: new Date(), soldAtMoment: 0 }]
-      });
+      // await Performance.create({
+      //   productId: newProduct._id,
+      //   impressions: [{ time: new Date(), amount: 0 }],
+      //   views: [{ time: new Date(), amount: 0 }]
+      // });
+
+      // await SalesReport.create({
+      //   productId: newProduct._id,
+      //   track: [{ time: new Date(), soldAtMoment: 0 }]
+      // });
 
       return res.status(201).json({
         error: false,
