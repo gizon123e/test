@@ -11,6 +11,7 @@ router.get('/list', authorization, controlerKendaraanDistributtor.getKendaraanDi
 router.get('/detail/:id', authorization, controlerKendaraanDistributtor.getKendaraanDistributorById)
 router.post('/create', controlerKendaraanDistributtor.createKendaraandistributtor)
 router.put('/update/:id', authorization, controlerKendaraanDistributtor.updateKendaraanDistributtor)
+router.put('/update-icon', controlerKendaraanDistributtor.updateIconKendaraan)
 router.delete('/delete/:id', controlerKendaraanDistributtor.deleteKendaraanDistributtor)
 
 module.exports = router
