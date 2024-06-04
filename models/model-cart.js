@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const modelCarts = mongoose.Schema({
     productId: {
-        type: mongoose.Types.ObjectId,
+        type: String,
         required: [true, "productId harus di isi"],
         ref: 'Product'
     },
