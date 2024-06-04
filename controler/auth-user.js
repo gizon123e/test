@@ -348,7 +348,10 @@ module.exports = {
   editUser: async (req, res, next) => {
     try {
       if(Object.keys(req.body).length === 0) return res.status(400).json({message: "Request body tidak boleh kosong"});
-      const { email, phone } = req.body;
+      const { email, phone, token } = req.body;
+      if(!token) return res.status(200).json({message:"Tidak Ada Token yang Dikirimkan"})
+      const validateToken = jwt.verifyToken(token);
+      if(validateToken !== req.user.id) return res.status(401).json({message: "Tidak Bisa Mengubah Data Orang Lain"})
       const id = req.user.id;
       let user;
       let duplicate;
