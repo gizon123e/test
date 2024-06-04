@@ -6,6 +6,7 @@ const { calculateDistance } = require('../../utils/menghitungJarak')
 const Address = require('../../models/model-address')
 const Gratong = require('../../models/model-gratong')
 const Distributtor = require('../../models/distributor/model-distributor')
+const Tarif = require('../../models/model-tarif')
 
 const path = require('path')
 const fs = require('fs')
@@ -18,7 +19,7 @@ module.exports = {
             if (req.user.role === "administrator") {
                 const data = await KendaraanDistributor.find().populate("id_distributor").populate('tarifId')
                 if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
-                console.log(data)
+
                 return res.status(200).json({
                     message: "get data success",
                     data
@@ -275,6 +276,51 @@ module.exports = {
             })
         } catch (error) {
             console.error("Error creating document:", error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+    updateIconKendaraan: async (req, res, next) => {
+        try {
+            const { jenis_kendaraan } = req.body
+            const iconKendaraan = req.files ? req.files.iconKendaraan : null;
+            console.log(jenis_kendaraan)
+
+            if (!jenis_kendaraan || !iconKendaraan) {
+                return res.status(400).json({ error: 'jenis_kendaraan and iconKendaraan are required' });
+            }
+
+            const imageName = `${Date.now()}${path.extname(iconKendaraan.name)}`;
+            const imagePath = path.join(__dirname, '../../public/icon-kendaraan', imageName);
+
+            await iconKendaraan.mv(imagePath, (err) => {
+                if (err) {
+                    return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
+                }
+            })
+
+            const tarifIds = await Tarif.find({ jenis_kendaraan }).select('_id jenis_kendaraan');
+            const tarifIdList = tarifIds.map(tarif => tarif._id);
+            console.log(tarifIdList)
+
+            const result = await KendaraanDistributor.updateMany(
+                { tarifId: { $in: tarifIdList } },
+                { iconKendaraan: `${process.env.HOST}/public/icon-kendaraan/${imageName}` }
+            );
+
+            res.status(200).json({
+                message: 'iconKendaraan updated successfully',
+                modifiedCount: result.nModified
+            });
+        } catch (error) {
+            console.error(error);
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
                     error: true,
