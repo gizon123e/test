@@ -15,24 +15,26 @@ const varianSchema = new mongoose.Schema({
       message: (props) => `${props.value} varian tidak cocok untuk jenis produk`
     }
   },
-  value: {
-    type: [String]
-  },
-  stok: {
-    type: Number,
-  },
-  minimalOrder: {
-    type: Number
-  },
-  harga: {
-    type: Number
-  },
-  foto:{
-    type: String
-  },
-  harga_diskon:{
-    type: String
-  }
+  nilai: [{
+    value:{
+      type: String
+    },
+    jenis_value: {
+      type: String
+    },
+    stok_value: {
+      type: Number
+    },
+    minimalOrder_value:{
+      type: Number
+    },
+    harga_value:{
+      type: Number
+    },
+    harga_diskon:{
+      type: Number
+    }
+  }]
 })
 
 const productModels = new mongoose.Schema(
