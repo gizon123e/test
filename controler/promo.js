@@ -12,12 +12,13 @@ module.exports = {
             const vendor = await Vendor.findOne({userId: req.user.id});
             if(!req.files.banner) return res.status(400).json({message: "Harus Mengirimkan Banner!"});
             const bannerFile = `${Date.now()}_${vendor.namaBadanUsaha || vendor.nama}_${path.extname(req.files.banner.name)}`;
-            const bannerPath = path.join(__dirname, '../public', 'banner', bannerFile);
-            await req.files.banner.mv(bannerPath);
+            // const bannerPath = path.join(__dirname, '../public', 'profile_picts', bannerFile);
+            // console.log(bannerPath)
+            // await req.files.banner.mv(bannerPath);
 
             const newPromo = await Promo.create({
                 productId: req.body.productId,
-                banner: `${req.protocol}://${req.get('host')}/public/banner/${bannerFile}`,
+                banner: `${process.env.HOST}/public/profile_picts/${bannerFile}`,
                 typePromo: req.body.typePromo
             });
 

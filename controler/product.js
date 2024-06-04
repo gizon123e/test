@@ -101,12 +101,12 @@ module.exports = {
 
   getProductWithMain: async(req, res, next) =>{
     try {
-      const id = req.params.id;
+      const id = new mongoose.Types.ObjectId(req.params.id);
       const userRole = req.user.role
       const dataProds = await Product.aggregate([
         {
             $match:{
-                id_main_category: id
+              id_main_category: id
             }
         },
         {
@@ -121,6 +121,8 @@ module.exports = {
             $unwind: "$userData"
         }
       ]);
+
+      console.log(dataProds)
 
       const productsPromo = await Promo.find().populate({
         path: 'productId',
