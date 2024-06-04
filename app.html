@@ -61,31 +61,29 @@
 
         // Mengumpulkan data dari formulir
         const formData = new FormData();
-        formData.append('name_product', document.getElementById('name_product').value);
-        formData.append('price', document.getElementById('price').value);
-        formData.append('description', document.getElementById('description').value);
-        formData.append('categoryId', document.getElementById('categoryId').value);
-        formData.append('stok', document.getElementById('stok').value);
-
-        // Mengumpulkan file-file foto
-        const fileInput = document.getElementById('photo');
-        for (let i = 0; i < fileInput.files.length; i++) {
-          formData.append('ImageProduct', fileInput.files[i]);
-        }
-        const bahanBakuArray = [
+        formData.append('name_product', "Baju Ultraman");
+        formData.append('jenis_produk', "not_makanan");
+        formData.append('price', 50000);
+        formData.append("description", "Baju Ultraman");
+        formData.append("long_description", "Baju Ultraman by Arya SenSen");
+        formData.append('bervarian', true);
+        formData.append("categoryId", "664d6b1e022983b028557972");
+        formData.append("total_stok", 65);
+        formData.append("minimalOrder", 65);
+        formData.append("panjang", 25);
+        formData.append("lebar", 25);
+        formData.append("tinggi", 10);
+        formData.append("berat", 300);
+        formData.append("minimalDp", 45);
+        
+        const varian = [
           {
-            bahanBakuId: "661f56a015aa8425f5fed2cc",
-            quantityNeed: 5
-          },
-          {
-            bahanBakuId: "661f85b4ba78463065f5088e",
-            quantityNeed: 4
+            jenis_varian: 
           }
-        ];
+        ]
 
-        for (let i = 0; i < bahanBakuArray.length; i++) {
-          formData.append('bahanBaku', JSON.stringify(bahanBakuArray[i]))
-        }
+
+
 
         // Mengirimkan formulir dengan menggunakan fetch
         fetch('http://localhost:4000/api/product/upload', {

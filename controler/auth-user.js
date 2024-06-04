@@ -349,7 +349,6 @@ module.exports = {
     try {
       if(Object.keys(req.body).length === 0) return res.status(400).json({message: "Request body tidak boleh kosong"});
       const { email, phone } = req.body;
-      const validateToken = jwt.verifyToken(token);
       const id = req.user.id;
       let user;
       let duplicate;
