@@ -37,10 +37,10 @@ const varianSchema = new mongoose.Schema({
 
 const productModels = new mongoose.Schema(
   {
-    _id:{
-      type: String,
-      default: () => `Prod-${new mongoose.Types.ObjectId().toString()}`
-    },
+    // _id:{
+    //   type: String,
+    //   default: () => `Prod-${new mongoose.Types.ObjectId().toString()}`
+    // },
     bervarian:{
       type: Boolean,
     },

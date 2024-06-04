@@ -49,11 +49,25 @@ module.exports = {
     },
     getFlashSale: async(req, res, next) => {
         try {
-            const flashSales = await FlashSale.find({
+            let flashSales
+
+            // Flash Sale No Event
+
+            flashSales = await FlashSale.find().lean()
+
+            if(!flashSales || flashSales.length === 0 ) return res.status(404).json({message: "no-event"});
+
+            flashSales  = await FlashSale.find({
+                startTime: { $gt: new Date()},
+            }).lean()
+
+            if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-start"});
+
+            flasSales  = await FlashSale.find({
                 startTime: { $lt: new Date()},
                 endTime: { $gt: new Date()}
             }).lean()
-            if(!flashSales || flashSales.length === 0) return res.status(200).json({message: "no-start"})
+
             const flashSalesProducts = []
             const data = []
             let categorys = [];

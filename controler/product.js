@@ -408,12 +408,12 @@ module.exports = {
 
   productDetail: async (req, res, next) => {
     try {
-      const dataProduct = await Product.findOne({ _id: req.params.id }).populate('categoryId').populate({
+      const dataProduct = await Product.findById(req.params.id).populate('categoryId').populate({
         path: 'userId',
         select: '-password -codeOtp -pin -saldo -poin'
       })
       let toko;
-
+      if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){
         case "vendor":
           toko = await Vendor.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
