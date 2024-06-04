@@ -26,7 +26,7 @@ module.exports = {
               
             for (let product of productsChoosed) {
                 const storeId = product.userId._id.toString(); // Pastikan _id diubah menjadi string untuk pemetaan
-                const getCart = dataCart.find(cart => { return cart.productId.toString() === product._id.toString() })
+                const getCart = dataCart.find(cart => { return cart.productId === product._id })
                 if (!storeMap[storeId]) {
                   storeMap[storeId] = {
                     id: storeId,
