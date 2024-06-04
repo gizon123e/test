@@ -438,7 +438,6 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
-      console.log('masuk')
       if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });
 
       // if ((req.user.role === "vendor" || req.user.role === "suppl    ier") && (req.body.bahanBaku !== undefined)) return res.status(400).json({ message: "Payload bahan baku hanya untuk user produsen" });
@@ -471,7 +470,8 @@ module.exports = {
 
       
       let newProduct
-      if(!req.body.bervarian){
+      if(!Boolean(req.body.varian)){
+
         const dataProduct = req.body;
 
         const imgPaths = [];
@@ -501,8 +501,9 @@ module.exports = {
           id_sub_category: subCategory._id,
           id_main_category: mainCategory._id
         });
-        
+        console.log(newProduct)
       }else{
+        console.log('masuk')
         
         // newProduct = await Product.create({
         //   ...dataProduct,
