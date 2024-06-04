@@ -122,8 +122,6 @@ module.exports = {
         }
       ]);
 
-      console.log(dataProds)
-
       const productsPromo = await Promo.find().populate({
         path: 'productId',
         model: "Product",

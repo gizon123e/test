@@ -4,7 +4,7 @@ const modelOrder = new mongoose.Schema({
     product: [{
         _id: false,
         productId: {
-            type: mongoose.Types.ObjectId,
+            type: String,
             required: [true, 'Productid harus di isi'],
             ref: 'Product',
         },
