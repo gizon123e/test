@@ -490,14 +490,22 @@ module.exports = {
       dataProduct.image_product = imgPaths
 
       dataProduct.userId = req.user.id;
-
-      const newProduct = await Product.create({
-        ...dataProduct,
-        isPublished: true,
-        categoryId: req.body.categoryId,
-        id_sub_category: subCategory._id,
-        id_main_category: mainCategory._id
-      });
+      let newProduct
+      if(!req.body.bervarian){
+        newProduct = await Product.create({
+          ...dataProduct,
+          isPublished: true,
+          id_sub_category: subCategory._id,
+          id_main_category: mainCategory._id
+        });
+      }else{
+        newProduct = await Product.create({
+          ...dataProduct,
+          isPublished: true,
+          id_sub_category: subCategory._id,
+          id_main_category: mainCategory._id
+        })
+      }
 
       // await Performance.create({
       //   productId: newProduct._id,
