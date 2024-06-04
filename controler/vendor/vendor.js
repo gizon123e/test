@@ -44,7 +44,10 @@ module.exports = {
 
     createVendor: async (req, res, next) => {
         try {
-            const samaUser = await Vendor.findOne({userId: req.body.id}).populate('userId', '-password', '-codeOtp', '-saldo', '-poin');
+            const samaUser = await Vendor.findOne({userId: req.body.id}).populate({
+                path: 'userId',
+                select: '-password -codeOtp -saldo'
+            });
 
             if(samaUser) return res.status(400).json({message: "User ini sudah memiliki data detail Vendor", data: samaUser});
 
@@ -53,7 +56,7 @@ module.exports = {
                 namaBadanUsaha,
                 nomorAktaPerusahaan,
                 noTeleponKantor,
-                registerAs, 
+                registerAs,
                 province, 
                 regency, 
                 district, 
