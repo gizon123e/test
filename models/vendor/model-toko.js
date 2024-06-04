@@ -14,10 +14,6 @@ const modelTokoVendor = new mongoose.Schema({
         type: ObjectId,
         ref: "User"
     },
-    detail: {
-        type: ObjectId,
-        ref: "Vendor"
-    }
 });
 
 const TokoVendor = mongoose.model("TokoVendor", modelTokoVendor);

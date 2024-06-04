@@ -101,7 +101,7 @@ module.exports = {
 
   getProductWithMain: async(req, res, next) =>{
     try {
-      const id = new mongoose.Types.ObjectId(req.params.id);
+      const id = req.params.id;
       const userRole = req.user.role
       const dataProds = await Product.aggregate([
         {
@@ -263,7 +263,7 @@ module.exports = {
 
       switch(userRole){
           case("konsumen"):
-              finalDataFlashSale =flashSaleProducts.filter(item => {
+              finalDataFlashSale = flashSaleProducts.filter(item => {
                   return item.produkFrom === "vendor"
               });
               finalDataNotFlashSale = ordinaryProducts.filter(item => {
@@ -271,7 +271,7 @@ module.exports = {
               })
               break;
           case("vendor"):
-              finalDataFlashSale =flashSaleProducts.filter(item => {
+              finalDataFlashSale = flashSaleProducts.filter(item => {
                   return item.produkFrom === "supplier"
               });
               finalDataNotFlashSale = ordinaryProducts.filter(item => {

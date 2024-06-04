@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const modelPromo = mongoose.Schema({
     productId: {
-        type: mongoose.Types.ObjectId,
+        type: String,
         ref: "Product"
     },
     typePromo:{

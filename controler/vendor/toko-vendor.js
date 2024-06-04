@@ -21,7 +21,6 @@ module.exports = {
                 namaToko: req.body.namaToko,
                 address: alamat._id,
                 userId: req.body.id,
-                detail: req.body.vendorId
             }, {new: true});
 
             return res.status(201).json({message: "Berhasil mengubah data Toko", data: newDataToko})

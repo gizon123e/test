@@ -8,17 +8,17 @@ module.exports = {
     addPromo: async (req, res, next) => {
         try {
             const promo = await Promo.findOne({productId: req.body.productId}).populate('productId')
-            const vendor = await Vendor.findOne({userId: req.user.id});
             if(promo) return res.status(400).json({message: "Product Sedang Promo"});
-            if(promo.productId.userId.toString() !== req.user.id) return res.status(403).json({message: "Tidak bisa menambahkan Promo untuk produk orang lain"})
+            const vendor = await Vendor.findOne({userId: req.user.id});
             if(!req.files.banner) return res.status(400).json({message: "Harus Mengirimkan Banner!"});
             const bannerFile = `${Date.now()}_${vendor.namaBadanUsaha || vendor.nama}_${path.extname(req.files.banner.name)}`;
-            const bannerPath = path.join(__dirname, '../public', 'profile_picts', bannerFile);
+            const bannerPath = path.join(__dirname, '../public', 'banner', bannerFile);
             await req.files.banner.mv(bannerPath);
 
             const newPromo = await Promo.create({
                 productId: req.body.productId,
-                banner: `${req.protocol}://${req.get('host')}/public/profile_picts/${bannerFile}`
+                banner: `${req.protocol}://${req.get('host')}/public/banner/${bannerFile}`,
+                typePromo: req.body.typePromo
             });
 
             return res.status(200).json({message: "Berhasil Membuat Promo", data: newPromo});
