@@ -1,4 +1,5 @@
 const Konsumen = require('../../models/konsumen/model-konsumen');
+const PicKonsumen = require('../../models/konsumen/model-penanggung-jawab')
 const User = require('../../models/model-auth-user')
 const Address = require("../../models/model-address")
 const path = require('path');
@@ -30,15 +31,25 @@ module.exports = {
 
     getDetailKonsumen: async (req, res, next) => {
         try {
-            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password').select('-file_ktp')
+            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).populate('userId', '-password').lean()
+            let pic;
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
             let modifiedDataKonsumen = dataKonsumen
             const isIndividu = dataKonsumen.nama? true : false
+            if(isIndividu){
+                pic = null
+                modifiedDataKonsumen = {
+                    ...modifiedDataKonsumen,
+                    pic
+                }
+            }
             if(!isIndividu){
-                const { namaBadanUsaha, ...rest } = dataKonsumen.toObject();
+                pic = await PicKonsumen.findOne({userId: req.user.id, detailId: dataKonsumen._id})
+                const { namaBadanUsaha, ...rest } = dataKonsumen
                 modifiedDataKonsumen = {
                     ...rest,
-                    nama: namaBadanUsaha
+                    nama: namaBadanUsaha,
+                    pic
                 };
             }
             return res.status(200).json({ message: 'success', datas: modifiedDataKonsumen, isIndividu })

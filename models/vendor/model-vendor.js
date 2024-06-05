@@ -3,32 +3,37 @@ const mongoose = require("mongoose");
 const vendorModel = new mongoose.Schema({
     nama: {
         type: String,
-        required: false
+        required: false,
+        default: null
     },
     nik: {
-        type: String
+        type: String,
+        default: null
     },
     file_ktp:{
         type: String,
+        default: null
     },
     namaBadanUsaha: {
         type: String,
-        required: false
+        required: false,
+        default: null
     },
     nomorAktaPerusahaan:{
         type: String,
+        default: null
     },
     npwpFile:{
         type: String,
+        default: null
     },
     nomorNpwpPerusahaan:{
         type: String,
+        default: null
     },
     nomorNpwp: {
         type: String,
-    },
-    penanggungJawab:{
-        type: mongoose.Types.ObjectId
+        default: null
     },
     address:{
         type: mongoose.Types.ObjectId,
@@ -37,7 +42,8 @@ const vendorModel = new mongoose.Schema({
     },
     noTeleponKantor:{
         type: String,
-        required: false
+        required: false,
+        default: null
     },
     userId: {
         type: mongoose.Types.ObjectId,
@@ -46,19 +52,41 @@ const vendorModel = new mongoose.Schema({
     },
     jenis_kelamin:{
         type: String,
-        enum: ["laki", "perempuan"]
+        validate: {
+            validator: function(value) {
+                if (this.namaBadanUsaha && value) {
+                    return false;
+                }
+                return true;
+            },
+            message: "Jenis Kelamin hanya untuk user individu"
+        },
+        enum: ["laki", "perempuan"],
+        default: null
     },
     jenis_perusahaan:{
         type: String,
-        enum: ["PT", "CV", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Koperasi", "Yayasan"]
+        validate: {
+            validator: function(value) {
+                if (!this.namaBadanUsaha && value) {
+                    return false;
+                }
+                return true;
+            },
+            message: "Jenis Perusahaan hanya untuk user perusahaan"
+        },
+        enum: ["PT", "CV", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
+        default: null
     },
     legalitasBadanUsaha:{
         type: String, 
-        required: false
+        required: false,
+        default: null
     },
     profile_pict:{
         type: String,
-        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
+        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
+        default: null
     }
 })
 

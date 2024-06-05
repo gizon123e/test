@@ -1,4 +1,5 @@
 const Vendor = require('../../models/vendor/model-vendor');
+const PicVendor = require("../../models/vendor/model-penanggung-jawab")
 const Address = require("../../models/model-address");
 const path = require('path')
 const fs = require('fs')
@@ -26,14 +27,28 @@ module.exports = {
 
     getDetailVendor: async (req, res, next) => {
         try {
-            const dataVendor = await Vendor.findOne({userId: req.user.id}).populate({
-                path: 'userId',
-                select: '-password -codeOtp'
-            })
-            .populate('address')
-            if (!dataVendor) return res.status(404).json({ error: `data Vendor id :${req.params.id} not Found` })
-
-            res.status(200).json({ message: 'success', datas: dataVendor })
+            const dataKonsumen = await Vendor.findOne({userId: req.user.id}).populate('userId', '-password').lean()
+            let pic;
+            if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
+            let modifiedDataKonsumen = dataKonsumen
+            const isIndividu = dataKonsumen.nama? true : false
+            if(isIndividu){
+                pic = null
+                modifiedDataKonsumen = {
+                    ...modifiedDataKonsumen,
+                    pic
+                }
+            }
+            if(!isIndividu){
+                pic = await PicVendor.findOne({userId: req.user.id, detailId: dataKonsumen._id})
+                const { namaBadanUsaha, ...rest } = dataKonsumen
+                modifiedDataKonsumen = {
+                    ...rest,
+                    nama: namaBadanUsaha,
+                    pic
+                };
+            }
+            return res.status(200).json({ message: 'success', datas: modifiedDataKonsumen, isIndividu })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
@@ -42,6 +57,7 @@ module.exports = {
                     fields: error.fields
                 })
             }
+            console.log(error)
             next(error)
         }
     },

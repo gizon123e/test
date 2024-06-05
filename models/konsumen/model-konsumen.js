@@ -3,33 +3,42 @@ const mongoose = require("mongoose");
 const konsumenModel = new mongoose.Schema({
     nama: {
         type: String,
-        required: false
+        required: false,
+        default: null
     },
     nik: {
-        type: String
+        type: String,
+        default: null
     },
     file_ktp:{
         type: String,
+        default: null
     },
     namaBadanUsaha: {
         type: String,
-        required: false
+        required: false,
+        default: null
     },
     nomorAktaPerusahaan:{
         type: String,
+        default: null
     },
     npwpFile:{
         type: String,
+        default: null
     },
     nomorNpwpPerusahaan:{
         type: String,
+        default: null
     },
     nomorNpwp: {
         type: String,
+        default: null
     },
     penanggungJawab:{
         type: mongoose.Types.ObjectId,
-        ref: "ModelPenanggungJawabKonsumen"
+        ref: "ModelPenanggungJawabKonsumen",
+        default: null
     },
     address:{
         type: mongoose.Types.ObjectId,
@@ -38,7 +47,8 @@ const konsumenModel = new mongoose.Schema({
     },
     noTeleponKantor:{
         type: String,
-        required: false
+        required: false,
+        default: null
     },
     userId: {
         type: mongoose.Types.ObjectId,
@@ -56,7 +66,8 @@ const konsumenModel = new mongoose.Schema({
             },
             message: "Jenis Kelamin hanya untuk user individu"
         },
-        enum: ["laki", "perempuan"]
+        enum: ["laki", "perempuan"],
+        default: null
     },
     jenis_perusahaan:{
         type: String,
@@ -69,18 +80,22 @@ const konsumenModel = new mongoose.Schema({
             },
             message: "Jenis Perusahaan hanya untuk user perusahaan"
         },
-        enum: ["PT", "CV", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"]
+        enum: ["PT", "CV", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
+        default: null
     },
     tanggal_lahir:{
         type: String,
+        default: null
     },
     legalitasBadanUsaha:{
         type: String, 
-        required: false
+        required: false,
+        default: null
     },
     profile_pict:{
         type: String,
-        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg"
+        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
+        default: null
     }
 });
 

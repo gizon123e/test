@@ -57,14 +57,17 @@ module.exports = {
                     {
                         $lookup: {
                             from: 'products',
-                            localField: 'product.productId',
-                            foreignField: '_id',
+                            let: { productIds: '$product.productId' },
+                            pipeline: [
+                                { $match: { $expr: { $in: ['$_id', '$$productIds'] } } },
+                                { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, varian: 1, detail_varian: 1, userId: 1 } }
+                            ],
                             as: 'productInfo'
                         }
                     },
-                    {
-                        $unwind: '$productInfo'
-                    },
+                    // {
+                    //     $unwind: '$productInfo'
+                    // },
                     // {
                     //     $lookup: {
                     //         from: 'categories',
