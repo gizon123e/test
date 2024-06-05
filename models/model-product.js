@@ -1,11 +1,32 @@
 const mongoose = require("mongoose");
 
 const varianSchema = new mongoose.Schema({
-  // idProduk,
-  varian:[{
-    // nama,
-    value: []
-  }]
+  _id: false,
+  nama_varian: {
+    type: String
+  },
+  nilai_varian:[String]
+});
+
+const detailVarianSchema = new mongoose.Schema({
+  varian:{
+    type: String
+  },
+  price: {
+    type: Number
+  },
+  stok: {
+    type: Number
+  },
+  image:{
+    type: String
+  },
+  minimalOrder: {
+    type: String
+  },
+  harga_diskon:{
+    type: String
+  }
 })
 
 const productModels = new mongoose.Schema(
@@ -69,11 +90,9 @@ const productModels = new mongoose.Schema(
       type: [varianSchema],
       maxlength: [2, 'hanya bisa memiliki 2 varian']
     },
-    detail_varian:[
-      {
-        nama: String
-      }
-    ],
+    detail_varian:[{
+      type: [detailVarianSchema],
+    }],
     isPublished:{
       type: Boolean,
       required: true,

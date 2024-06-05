@@ -46,17 +46,52 @@ module.exports = {
             }
             return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data });
         } catch (error) {
-            console.log(error)
-            next(error)
+            console.log(error);
+            next(error);
         };
     },
 
-    getDetailCategory: async (req, res, next) => {
+    getAllMainCategory: async(req, res, next) => {
+        try {
+            const mains = await MainCategory.aggregate([
+                { $match: {} },
+                {
+                    $project: { _id: 1, name: 1 }
+                }
+            ]);
+            return res.status(200).json({message: "Berhasil Mendapatkan Semua Category", data: mains})
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
+    getDetailMainCategory: async (req, res, next) => {
         try {
             const id = req.params.id
-            const mainCategory = await MainCategory.findById(id).populate("contents");
-            if (!mainCategory) return res.status(404).json({ message: `Main category dengan id ${id} tidak ditemukan` });
-            return res.status(200).json({ message: "Berhasil mendapatkan detail main category", data: mainCategory })
+            const mainCategory = await MainCategory.aggregate([
+                { 
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(id)
+                    }
+                },
+                {
+                    $lookup:{
+                        from: "subcategories",
+                        let: { subId: "$contents"},
+                        pipeline: [
+                            { $match: { $expr: { $in: ["$_id","$$subId"]}}},
+                            { $project: { contents: 0,  __v: 0 }}
+                        ],
+                        as: "sub_categories"
+                    }
+                },
+                {
+                    $project : { contents: 0, icon: 0, showAt: 0, for: 0, __v: 0 }
+                }
+            ])
+            if (!mainCategory || mainCategory.length === 0) return res.status(404).json({ message: `Main category dengan id ${id} tidak ditemukan` });
+            return res.status(200).json({ message: "Berhasil mendapatkan detail main category", data: mainCategory[0] })
         } catch (error) {
             console.log(error);
             next(error)

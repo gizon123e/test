@@ -478,18 +478,20 @@ module.exports = {
 
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
           for (const img of req.files.ImageProduct){
-            const pathImg = `${global.__basedir}/public/images`;
+            const nameImg = `${req.body.name_product}_${new Date().getTime()}${path.extname(img.name)}`
+            const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
             await img.mv(pathImg)
           }
         } else {
-          const pathImg = `${global.__basedir}/public/images`;
+          const nameImg = `${req.body.name_product}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
+          const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
           await req.files.ImageProduct.mv(pathImg)
           imgPaths.push(`http://${process.env.HOST}/public/images/produkUser_${new Date()}_${path.extname(req.files.ImageProduct.name)}`);
         };
 
         dataProduct.image_product = imgPaths
-        console.log(dataProduct.image_product)
         dataProduct.userId = req.user.id;
+        console.log(dataProduct)
         // newProduct = await Product.create({
         //   ...dataProduct,
         //   isPublished: true,
@@ -497,9 +499,7 @@ module.exports = {
         //   id_main_category: mainCategory._id
         // });
         // console.log(newProduct)
-      }else{
-        console.log('masuk')
-        
+      }else{        
         // newProduct = await Product.create({
         //   ...dataProduct,
         //   isPublished: true,

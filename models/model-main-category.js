@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const mainModelCategory = mongoose.Schema({
+const mainModelCategory = new mongoose.Schema({
     name: {
         required: [true, 'name Category harus di isi'],
         type: String

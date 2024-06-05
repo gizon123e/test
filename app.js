@@ -23,7 +23,6 @@ app.use(bodyParser.json({ limit: '250mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
-global.__basedir = __dirname;
 
 // router
 app.get('/failed', (req, res) => {
