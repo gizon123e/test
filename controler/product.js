@@ -470,12 +470,9 @@ module.exports = {
 
       
       let newProduct
-      if(!Boolean(req.body.varian)){
-
-        const dataProduct = req.body;
-
-        const imgPaths = [];
-
+      const imgPaths = [];
+      
+      if(req.files && req.files.ImageProduct.length !== 0){
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
           for (const img of req.files.ImageProduct){
             const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
@@ -493,6 +490,11 @@ module.exports = {
           })
           imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
         };
+      }
+
+      if( req.body.bervarian === "false" || !req.body.bervarian){
+
+        const dataProduct = req.body;
 
         dataProduct.image_product = imgPaths
         dataProduct.userId = req.user.id;
@@ -503,13 +505,33 @@ module.exports = {
           id_main_category: mainCategory._id
         });
         // console.log(newProduct)
-      }else{        
-        // newProduct = await Product.create({
-        //   ...dataProduct,
-        //   isPublished: true,
-        //   id_sub_category: subCategory._id,
-        //   id_main_category: mainCategory._id
-        // })
+      }else{       
+        if(!req.body.varian) return res.status(400).json({message: "Kurang Body Request *varian*"});
+        const varian = []
+        req.body.varian.forEach(item => varian.push(JSON.parse(item)))
+        const othersProperties = Object.keys({
+          stok: 50,
+          image: 'asafsafasf',
+          minimalOrder: 2,
+          hargaDiskon: 15
+        })
+        const detailVarian = []
+        for (let i = 0; i < varian[0].nilai_varian.length; i++) {
+          for (let j = 0; j < varian[1].nilai_varian.length; j++) {
+            detailVarian.push(`${varian[0].nilai_varian[i]}-${varian[1].nilai_varian[j]}`);
+          }
+        }
+        console.log(detailVarian)
+        const final = []
+
+        // for(let i = 0; i < detailVarian.length; i++ ){
+        //   for(let j = 0; j < othersProperties.length; j++){
+        //     final.push({
+        //       varian: detailVarian[i],
+        //       othersProperties[j]
+        //     })
+        //   }
+        // }
       }
 
       // await Performance.create({
