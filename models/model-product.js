@@ -88,11 +88,12 @@ const productModels = new mongoose.Schema(
     },
     varian:{
       type: [varianSchema],
-      maxlength: [2, 'hanya bisa memiliki 2 varian']
+      default: () => null
     },
-    detail_varian:[{
+    detail_varian:{
       type: [detailVarianSchema],
-    }],
+      default: () => null
+    },
     isPublished:{
       type: Boolean,
       required: true,

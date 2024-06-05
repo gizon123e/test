@@ -478,26 +478,26 @@ module.exports = {
 
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
           for (const img of req.files.ImageProduct){
-            const nameImg = `${req.body.name_product}_${new Date().getTime()}${path.extname(img.name)}`
+            const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
             const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
+            imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
             await img.mv(pathImg)
           }
         } else {
-          const nameImg = `${req.body.name_product}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
+          const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
           const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
           await req.files.ImageProduct.mv(pathImg)
-          imgPaths.push(`http://${process.env.HOST}/public/images/produkUser_${new Date()}_${path.extname(req.files.ImageProduct.name)}`);
+          imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
         };
 
         dataProduct.image_product = imgPaths
         dataProduct.userId = req.user.id;
-        console.log(dataProduct)
-        // newProduct = await Product.create({
-        //   ...dataProduct,
-        //   isPublished: true,
-        //   id_sub_category: subCategory._id,
-        //   id_main_category: mainCategory._id
-        // });
+        newProduct = await Product.create({
+          ...dataProduct,
+          isPublished: true,
+          id_sub_category: subCategory._id,
+          id_main_category: mainCategory._id
+        });
         // console.log(newProduct)
       }else{        
         // newProduct = await Product.create({
