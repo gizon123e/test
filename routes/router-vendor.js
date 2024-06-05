@@ -11,7 +11,7 @@ const router = require("express").Router();
 
 // router auth user
 router.get('/listAll', authorization, controllerVendor.getAllVendor);
-router.get('/detail/:id', authorization, controllerVendor.getDetailVendor);
+router.get('/detail', authorization, controllerVendor.getDetailVendor);
 router.post("/create", controllerVendor.createVendor);
 router.post("/create/toko", controllerToko.createToko);
 router.post("/pic/create", controllerPic.createPic);

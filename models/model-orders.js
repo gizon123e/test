@@ -72,9 +72,37 @@ const modelOrder = new mongoose.Schema({
     is_dibatalkan: {
         type: Boolean,
         default: false
+    },
+    expire:{
+        type: Date
     }
 }, { timestamp: true }
 )
+
+const updateExpiredOrderStatus = async (order) => {
+    if (order.expire && order.expire < new Date() && order.status !== "Dibatalkan") {
+        order.status = "Dibatalkan";
+        order.is_dibatalkan = true;
+        await order.save();
+    }
+};
+
+// Middleware to check expiry before executing find queries
+modelOrder.pre('find', async function (next) {
+    const orders = await this.model.find(this.getQuery());
+    for (const order of orders) {
+        await updateExpiredOrderStatus(order);
+    }
+    next();
+});
+
+modelOrder.pre('findOne', async function (next) {
+    const order = await this.model.findOne(this.getQuery());
+    if (order) {
+        await updateExpiredOrderStatus(order);
+    }
+    next();
+});
 
 const Pesanan = mongoose.model('Pesanan', modelOrder)
 

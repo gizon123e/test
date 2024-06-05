@@ -9,7 +9,8 @@ const VA_Used = require("../models/model-va-used");
 const Vendor = require('../models/vendor/model-vendor');
 const fetch = require('node-fetch');
 // const Address = require('../models/model-address');
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 dotenv.config();
 
 module.exports = {
@@ -47,35 +48,72 @@ module.exports = {
 
     getOrders: async (req, res, next) => {
         try {
+            console.log('meluncur')
             let dataOrders;
             let data = []
             if (req.user.role === 'konsumen') {
-                dataOrders = await Orders.find({ userId: req.user.id })
-                    .populate({
-                        path: 'product.productId',
-                        populate: {
-                            path: 'categoryId',
-                        },
-                        populate: {
-                            path: 'userId',
-                            select: '-password'
-                        },
-                    })
-                    .populate('userId', '-password').populate('addressId')
-                //    const dataVendor = await Vendor.findOne({_id: dataOrders.productId.userId})
-                for (let order of dataOrders) {
-                    for (let product of order.product) {
-                        const vendorId = product.productId.userId ? product.productId.userId._id : null;
-                        if (vendorId) {
-                            const dataVendor = await Vendor.findOne({ userId: vendorId }).populate("address")
-                            if (dataVendor) {
-                                data.push({ dataOrder: order, dataVendor })
-                            }
+                const dataOrders = await Orders.aggregate([
+                    { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
+                    {
+                        $lookup: {
+                            from: 'products',
+                            localField: 'product.productId',
+                            foreignField: '_id',
+                            as: 'productInfo'
                         }
-                    }
-                }
+                    },
+                    {
+                        $unwind: '$productInfo'
+                    },
+                    // {
+                    //     $lookup: {
+                    //         from: 'categories',
+                    //         localField: 'productInfo.categoryId',
+                    //         foreignField: '_id',
+                    //         as: 'productInfo.categoryInfo'
+                    //     }
+                    // },
+                    // {
+                    //     $unwind: {
+                    //         path: '$productInfo.categoryInfo',
+                    //         preserveNullAndEmptyArrays: true
+                    //     }
+                    // },
+                    // {
+                    //     $lookup: {
+                    //         from: 'vendors',
+                    //         localField: 'productInfo.userId',
+                    //         foreignField: 'userId',
+                    //         as: 'vendorInfo'
+                    //     }
+                    // },
+                    // {
+                    //     $unwind: {
+                    //         path: '$vendorInfo',
+                    //         preserveNullAndEmptyArrays: true
+                    //     }
+                    // },
+                    // {
+                    //     $project: {
+                    //         _id: 1,
+                    //         userId: 1,
+                    //         'productInfo._id': 1,
+                    //         'productInfo.name_product': 1,
+                    //         'productInfo.image_product': 1,
+                    //         'productInfo.categoryId': 1,
+                    //         'productInfo.categoryInfo': 1,
+                    //         'productInfo.varian': 1,
+                    //         'productInfo.detail_varian': 1,
+                    //         'vendorInfo._id': 1,
+                    //         'vendorInfo.nama': 1,
+                    //         'vendorInfo.namaBadanUsaha': 1,
+                    //         'vendorInfo.profile_pict': 1,
+                    //         namaToko: { $ifNull: ['$vendorInfo.nama', '$vendorInfo.namaBadanUsaha'] }
+                    //     }
+                    // }
+                ]);
 
-                return res.status(200).json({ message: 'get data all Order success', data })
+                return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
 
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
@@ -256,7 +294,7 @@ module.exports = {
                 });
 
                 if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used})
-
+                const currentDate = new Date(new Date().getTime() + 24*60*60*1000)
                 const dataOrder = await Orders.create({
                     product: dataArrayProduct,
                     addressId,
@@ -269,7 +307,8 @@ module.exports = {
                     potongan_ongkir,
                     biaya_asuransi: biaya_asuransi ? true : false,
                     biaya_proteksi: biaya_proteksi ? true : false,
-                    deadline: new Date(deadline)
+                    deadline: new Date(deadline),
+                    expire: currentDate.setDate(currentDate.getDate()+1)
                 });
 
                 const detailPesanan = await DetailPesanan.create({
