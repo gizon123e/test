@@ -50,11 +50,24 @@ module.exports = {
         try {
             console.log('meluncur')
             let dataOrders;
-            let data = []
             if (req.user.role === 'konsumen') {
                 const dataOrders = await Orders.aggregate([
                     { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
                     { $project: { product: 1}},
+                    {
+                        $lookup: {
+                            from: "detailpesanans",
+                            foreignField: "id_pesanan",
+                            localField: "_id",
+                            as: 'detail_pesanan'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            "total_price": { $arrayElemAt: ["$detail_pesanan.total_price", 0] }
+                        }
+                    },
+                    { $project: { detail_pesanan: 0 }},
                     {
                         $lookup: {
                             from: 'products',
@@ -74,14 +87,56 @@ module.exports = {
                             from: 'specificcategories',
                             let: { cat: '$productInfo.categoryId'},
                             pipeline: [
-                                { $match : { $expr: { $eq: ['$_id', "$$cat"]}}}
+                                { $match : { $expr: { $eq: ['$_id', "$$cat"]}}},
+                                { $project: { name: 1, _id: 0 } }
                             ],
                             as: "categoryInfo"
                         }
                     },
+                    {
+                        $addFields: {
+                            "productInfo.categoryId": { $arrayElemAt: ["$categoryInfo.name", 0] }
+                        }
+                    },
+                    {
+                        $project: { product: 0, categoryInfo: 0 }
+                    },
+                    {
+                        $lookup: {
+                            from: "users",
+                            let: { userId: '$productInfo.userId'},
+                            pipeline:[
+                                { $match: { $expr: { $eq: ["$_id", "$$userId"]}} },
+                                { $project: { _id: 1, role: 1} }
+                            ],
+                            as: "user_details"                        
+                        }
+                    },
+                    {
+                        $addFields: {
+                            "productInfo.userId": { $arrayElemAt: ["$user_details", 0] }
+                        }
+                    },
+                    {
+                        $project: { user_details: 0 }
+                    }
                 ]);
-
-                return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
+                let data = []
+                const promises = dataOrders.map(async (order) => {
+                    let namaToko;
+                    switch (order.productInfo.userId.role) {
+                        case "vendor":
+                            const vendor = await Vendor.findOne({ userId: order.productInfo.userId._id }).populate('address');
+                            namaToko = vendor.nama || vendor.namaBadanUsaha;
+                            break;
+                        default:
+                            namaToko = "Role other than vendor";
+                            break;
+                    }
+                    data.push({ order, namaToko });
+                });
+                await Promise.all(promises);
+                return res.status(200).json({ message: 'get data all Order success', data })
 
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
