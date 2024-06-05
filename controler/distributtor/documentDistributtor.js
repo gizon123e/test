@@ -1,6 +1,8 @@
 const DokumenDistributor = require('../../models/distributor/model-Dokumen-Distributor')
 const path = require("path")
 const fs = require('fs')
+const dotenv = require('dotenv')
+dotenv.config()
 
 module.exports = {
     getDataDocumentDistributtor: async (req, res, next) => {
@@ -63,7 +65,7 @@ module.exports = {
             const legalitasNib = `${Date.now()}${path.extname(nib.name)}`;
             const fileNib = path.join(__dirname, '../../public/image-nib', legalitasNib);
 
-            nib.mv(fileNib, (err) => {
+            await nib.mv(fileNib, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NIB file", error: err });
                 }
@@ -72,7 +74,7 @@ module.exports = {
             const legalitasNpwp = `${Date.now()}${path.extname(npwp.name)}`;
             const fileNpwp = path.join(__dirname, '../../public/image-npwp', legalitasNpwp);
 
-            npwp.mv(fileNpwp, (err) => {
+            await npwp.mv(fileNpwp, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NPWP file", error: err });
                 }
@@ -81,8 +83,8 @@ module.exports = {
             const data = await DokumenDistributor.create({
                 id_distributor,
                 no_akta,
-                nib: `${req.protocol}://${req.get('host')}/public/image-nib/${legalitasNib}`,
-                npwp: `${req.protocol}://${req.get('host')}/public/image-npwp/${legalitasNpwp}`
+                nib: `${process.env.HOST}/public/image-nib/${legalitasNib}`,
+                npwp: `${process.env.HOST}/public/image-npwp/${legalitasNpwp}`
             });
 
             res.status(201).json({
@@ -113,7 +115,6 @@ module.exports = {
             if (!nib || !npwp) {
                 return res.status(400).json({ message: "kamu gagal masukan file nib & npwp" });
             }
-            console.log(id_distributor, no_akta)
 
             const dataDistributtor = await DokumenDistributor.findOne({ _id: req.params.id })
             if (!dataDistributtor) return res.status(404).json({ message: `data Not Found ${req.params.id}` })
@@ -134,7 +135,7 @@ module.exports = {
             const legalitasNib = `${Date.now()}${path.extname(nib.name)}`;
             const fileNib = path.join(__dirname, '../../public/image-nib', legalitasNib);
 
-            nib.mv(fileNib, (err) => {
+            await nib.mv(fileNib, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NIB file", error: err });
                 }
@@ -143,7 +144,7 @@ module.exports = {
             const legalitasNpwp = `${Date.now()}${path.extname(npwp.name)}`;
             const fileNpwp = path.join(__dirname, '../../public/image-npwp', legalitasNpwp);
 
-            npwp.mv(fileNpwp, (err) => {
+            await npwp.mv(fileNpwp, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NPWP file", error: err });
                 }
@@ -152,8 +153,8 @@ module.exports = {
             const data = await DokumenDistributor.findByIdAndUpdate({ _id: req.params.id }, {
                 id_distributor,
                 no_akta,
-                nib: `${req.protocol}://${req.get('host')}/public/image-nib/${legalitasNib}`,
-                npwp: `${req.protocol}://${req.get('host')}/public/image-npwp/${legalitasNpwp}`
+                nib: `${process.env.HOST}/public/image-nib/${legalitasNib}`,
+                npwp: `${process.env.HOST}/public/image-npwp/${legalitasNpwp}`
             }, { new: true });
 
             res.status(201).json({

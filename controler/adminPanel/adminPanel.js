@@ -1,9 +1,18 @@
 const bcrypt = require('bcrypt')
 const jwt = require('../../utils/jwt')
 const User_System = require('../../models/model-user-system')
-
-// controler Virtual Acunt
 const VirtualAccountUser = require('../../models/model-user-va')
+const User = require('../../models/model-auth-user')
+const Konsumen = require('../../models/konsumen/model-konsumen')
+const Vendor = require('../../models/vendor/model-vendor')
+const ModelPenanggungJawabVendor = require("../../models/vendor/model-penanggung-jawab")
+const Distributtor = require('../../models/distributor/model-distributor')
+const Supplier = require("../../models/supplier/model-supplier")
+const Produsen = require('../../models/produsen/model-produsen')
+const DokumenPenanggungJawab = require("../../models/distributor/model-documenPenanggungJawab")
+const DokumenDistributor = require("../../models/distributor/model-Dokumen-Distributor")
+const ModelPenanggungJawabKonsumen = require('../../models/konsumen/model-penanggung-jawab')
+
 
 module.exports = {
     register: async (req, res, next) => {
@@ -74,6 +83,73 @@ module.exports = {
                 message: "get detail success",
                 datas: dataDetailId
             })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getDataDetailUser: async (req, res, next) => {
+        try {
+            const dataUser = await User.findById(req.params.id)
+            if (!dataUser) return res.status(404).json({ message: "data User Not Found" })
+
+            let dataPayload
+            if (dataUser.role === "konsumen") {
+                const data = await Konsumen.findOne({ userId: req.params.id }).populate("userId").populate("address")
+                const dataDocument = await ModelPenanggungJawabKonsumen.findOne({ userId: req.params.id })
+                console.log("konsument", data)
+                console.log("document", dataDocument)
+                if (!data || !dataDocument) return res.status(404).json({ message: "data Konsumen & Document Not Found" })
+
+                dataPayload = {
+                    dataKonsument: data,
+                    dataDocument
+                }
+            }
+
+            if (dataUser.role === "vendor") {
+                const dataVendor = await Vendor.findOne({ userId: req.params.id }).populate("address").populate("userId")
+                const dataDocument = await ModelPenanggungJawabVendor.findOne({ userId: req.params.id })
+
+                if (!dataVendor || !dataDocument) return res.status(404).json({ message: "data Vendor & Document Not Found" })
+
+                dataPayload = {
+                    dataVendor,
+                    dataDocument
+                }
+            }
+
+            if (dataUser.role === "distributor") {
+                const data = await Distributtor.findOne({ userId: req.params.id }).populate("userId").populate("alamat_id")
+                if (!data) return res.status(404).json({ message: "data Distributor Not Found" })
+
+                const dataDocument = await DokumenDistributor.findOne({ id_distributor: data._id }).populate("id_distributor")
+                const dataDocumentPenanggungJawab = await DokumenPenanggungJawab.findOne({ id_distributor: data._id })
+
+                if (!dataDocument || !dataDocumentPenanggungJawab) return res.status(404).json({ message: "data Not Found" })
+
+                dataPayload = {
+                    dataDistribuor: dataDocument,
+                    dataDocument: dataDocumentPenanggungJawab
+                }
+            }
+
+            if (dataUser.role === 'supplier') {
+                dataPayload = await Supplier.findOne({ userId: req.params.id }).populate("userId").populate("address")
+                if (!dataPayload) return res.status(404).json({ message: "data Suplier Not Found" })
+            }
+
+            if (dataUser.role === "produsen") {
+                dataPayload = await Produsen.findOne({ userId: req.params.id }).populate("userId").populate("address")
+                if (!dataPayload) return res.status(404).json({ message: "data Produsen Not Found" })
+            }
+
+            res.status(200).json({
+                message: "data Detail success",
+                datas: dataPayload
+            })
+
         } catch (error) {
             console.log(error);
             next(error)

@@ -1,10 +1,23 @@
 const mongoose = require('mongoose');
 
 const dokumenPenanggungJawabSchema = mongoose.Schema({
-    id_penanggung_jawab_distributor: {
+    id_distributor: {
         type: mongoose.Types.ObjectId,
-        ref: 'PenanggungJawab',
-        required: [true, 'ID penanggung jawab distributor harus diisi']
+        ref: 'Distributtor',
+        required: [true, 'ID distributor harus diisi']
+    },
+    address: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Address',
+        required: [true, " id_distributor harus di isi"],
+    },
+    nama_penanggungjawab: {
+        type: String,
+        required: [true, 'Nama penanggung jawab harus diisi']
+    },
+    jabatan: {
+        type: String,
+        required: [true, 'Jabatan harus diisi']
     },
     nik: {
         type: String,

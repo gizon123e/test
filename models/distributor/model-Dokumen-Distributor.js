@@ -17,10 +17,6 @@ const modelDokumenDistributor = mongoose.Schema({
     npwp: {
         type: String,
         required: [true, 'npwp harus di isi']
-    },
-    profile_pict: {
-        type: String,
-        default: "http://localhost:4000/public/profile_picts/default.jpg"
     }
 }, { timestamp: true })
 
