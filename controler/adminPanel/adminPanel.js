@@ -98,13 +98,12 @@ module.exports = {
             if (dataUser.role === "konsumen") {
                 const data = await Konsumen.findOne({ userId: req.params.id }).populate("userId").populate("address")
                 const dataDocument = await ModelPenanggungJawabKonsumen.findOne({ userId: req.params.id })
-                console.log("konsument", data)
-                console.log("document", dataDocument)
                 if (!data || !dataDocument) return res.status(404).json({ message: "data Konsumen & Document Not Found" })
 
                 dataPayload = {
                     dataKonsument: data,
-                    dataDocument
+                    dataDocument,
+                    role: dataUser.role
                 }
             }
 
@@ -116,7 +115,8 @@ module.exports = {
 
                 dataPayload = {
                     dataVendor,
-                    dataDocument
+                    dataDocument,
+                    role: dataUser.role
                 }
             }
 
@@ -134,7 +134,8 @@ module.exports = {
 
                 dataPayload = {
                     dataDistribuor: dataDocument,
-                    dataDocument: dataDocumentPenanggungJawab
+                    dataDocument: dataDocumentPenanggungJawab,
+                    role: dataUser.role
                 }
             }
 
