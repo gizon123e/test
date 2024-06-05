@@ -54,6 +54,7 @@ module.exports = {
             if (req.user.role === 'konsumen') {
                 const dataOrders = await Orders.aggregate([
                     { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
+                    { $project: { product: 1}},
                     {
                         $lookup: {
                             from: 'products',
@@ -65,55 +66,19 @@ module.exports = {
                             as: 'productInfo'
                         }
                     },
-                    // {
-                    //     $unwind: '$productInfo'
-                    // },
-                    // {
-                    //     $lookup: {
-                    //         from: 'categories',
-                    //         localField: 'productInfo.categoryId',
-                    //         foreignField: '_id',
-                    //         as: 'productInfo.categoryInfo'
-                    //     }
-                    // },
-                    // {
-                    //     $unwind: {
-                    //         path: '$productInfo.categoryInfo',
-                    //         preserveNullAndEmptyArrays: true
-                    //     }
-                    // },
-                    // {
-                    //     $lookup: {
-                    //         from: 'vendors',
-                    //         localField: 'productInfo.userId',
-                    //         foreignField: 'userId',
-                    //         as: 'vendorInfo'
-                    //     }
-                    // },
-                    // {
-                    //     $unwind: {
-                    //         path: '$vendorInfo',
-                    //         preserveNullAndEmptyArrays: true
-                    //     }
-                    // },
-                    // {
-                    //     $project: {
-                    //         _id: 1,
-                    //         userId: 1,
-                    //         'productInfo._id': 1,
-                    //         'productInfo.name_product': 1,
-                    //         'productInfo.image_product': 1,
-                    //         'productInfo.categoryId': 1,
-                    //         'productInfo.categoryInfo': 1,
-                    //         'productInfo.varian': 1,
-                    //         'productInfo.detail_varian': 1,
-                    //         'vendorInfo._id': 1,
-                    //         'vendorInfo.nama': 1,
-                    //         'vendorInfo.namaBadanUsaha': 1,
-                    //         'vendorInfo.profile_pict': 1,
-                    //         namaToko: { $ifNull: ['$vendorInfo.nama', '$vendorInfo.namaBadanUsaha'] }
-                    //     }
-                    // }
+                    {
+                        $unwind: '$productInfo'
+                    },
+                    {
+                        $lookup: {
+                            from: 'categories',
+                            let: { cat: '$productInfo.categoryId'},
+                            pipeline: [
+                                { $match : { $expr: { $eq: ['$_id', "$$cat"]}}}
+                            ],
+                            as: "categoryInfo"
+                        }
+                    },
                 ]);
 
                 return res.status(200).json({ message: 'get data all Order success', data: dataOrders })

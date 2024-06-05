@@ -32,7 +32,7 @@ const userModels = new mongoose.Schema(
           },
           message: (props) => `${props.value} email tidak valid`,
         },
-        default: undefined
+        default: null
       },
       isVerified: {
         type: Boolean,
@@ -49,7 +49,7 @@ const userModels = new mongoose.Schema(
           validator: (phone) => validationPhone(phone),
           message: (props) => `${props.value} nomor handphone tidak valid`
         },
-        default: undefined
+        default: null
       },
       isVerified: {
         type: Boolean,
