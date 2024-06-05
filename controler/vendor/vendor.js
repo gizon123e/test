@@ -27,7 +27,7 @@ module.exports = {
 
     getDetailVendor: async (req, res, next) => {
         try {
-            const dataKonsumen = await Vendor.findOne({userId: req.user.id}).populate('userId', '-password').lean()
+            const dataKonsumen = await Vendor.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
             let pic;
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
             let modifiedDataKonsumen = dataKonsumen

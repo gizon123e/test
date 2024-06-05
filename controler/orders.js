@@ -71,7 +71,7 @@ module.exports = {
                     },
                     {
                         $lookup: {
-                            from: 'categories',
+                            from: 'specificcategories',
                             let: { cat: '$productInfo.categoryId'},
                             pipeline: [
                                 { $match : { $expr: { $eq: ['$_id', "$$cat"]}}}
