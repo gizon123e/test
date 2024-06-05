@@ -481,12 +481,16 @@ module.exports = {
             const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
             const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
             imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
-            await img.mv(pathImg)
+            img.mv(pathImg, err => {
+              if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
+            })
           }
         } else {
           const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
           const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
-          await req.files.ImageProduct.mv(pathImg)
+          req.files.ImageProduct.mv(pathImg, err => {
+            if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
+          })
           imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
         };
 
