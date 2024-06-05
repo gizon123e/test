@@ -16,10 +16,12 @@ module.exports = {
                     long: req.body.long_pin_alamat,
                     lat: req.body.lat_pin_alamat
                 },
-                userId: req.body.id
+                userId: req.body.id,
+                isStore: true
             })
             const newDataToko = await Toko.create({
                 userId: req.body.id,
+                detailId,
                 namaToko: req.body.namaToko,
                 address: alamat._id,
                 userId: req.body.id,

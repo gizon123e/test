@@ -1,39 +1,10 @@
 const mongoose = require("mongoose");
 
 const varianSchema = new mongoose.Schema({
-  _id: false,
-  jenis_varian: {
-    type: String,
-    validate: {
-      validator: (value) => {
-        const food = ['klasik', "buah", "gurih", 'rempah', 'sambal']
-        const notFood = ["ukuran", "warna", "model", "bahan", "motif"]
-        if(this.jenis_produk === 'makanan' && !food.includes(value)) return false
-        if(this.jenis_produk === 'not_makanan' && !notFood.includes(value)) return false
-        return true
-      },
-      message: (props) => `${props.value} varian tidak cocok untuk jenis produk`
-    }
-  },
-  nilai: [{
-    value:{
-      type: String
-    },
-    jenis_value: {
-      type: String
-    },
-    stok_value: {
-      type: Number
-    },
-    minimalOrder_value:{
-      type: Number
-    },
-    harga_value:{
-      type: Number
-    },
-    harga_diskon:{
-      type: Number
-    }
+  // idProduk,
+  varian:[{
+    // nama,
+    value: []
   }]
 })
 

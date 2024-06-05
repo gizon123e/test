@@ -477,31 +477,26 @@ module.exports = {
         const imgPaths = [];
 
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
-          req.files.ImageProduct.forEach((img, i) => {
-            const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`;
-            img.mv(pathImg, function (err) {
-              if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
-              imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${i}${path.extname(img.name)}`);
-            });
-          });
+          for (const img of req.files.ImageProduct){
+            const pathImg = `${global.__basedir}/public/images`;
+            await img.mv(pathImg)
+          }
         } else {
-          const pathImg = `${global.__basedir}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`;
-          req.files.ImageProduct.mv(pathImg, function (err) {
-            if (err) return res.status(507).json({ message: "Ada masalah saat mencoba nyimpan file gambar", error: err });
-            imgPaths.push(`http://${req.headers.host}/public/images/produkUser${req.user.name}_${dataProduct.name_product}${1}${path.extname(req.files.ImageProduct.name)}`);
-          })
+          const pathImg = `${global.__basedir}/public/images`;
+          await req.files.ImageProduct.mv(pathImg)
+          imgPaths.push(`http://${process.env.HOST}/public/images/produkUser_${new Date()}_${path.extname(req.files.ImageProduct.name)}`);
         };
 
         dataProduct.image_product = imgPaths
-
+        console.log(dataProduct.image_product)
         dataProduct.userId = req.user.id;
-        newProduct = await Product.create({
-          ...dataProduct,
-          isPublished: true,
-          id_sub_category: subCategory._id,
-          id_main_category: mainCategory._id
-        });
-        console.log(newProduct)
+        // newProduct = await Product.create({
+        //   ...dataProduct,
+        //   isPublished: true,
+        //   id_sub_category: subCategory._id,
+        //   id_main_category: mainCategory._id
+        // });
+        // console.log(newProduct)
       }else{
         console.log('masuk')
         

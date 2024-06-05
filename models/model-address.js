@@ -42,6 +42,9 @@ const modelAddress = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isStore:{
+        type: Boolean,
+    },
     pinAlamat: {
         long:{
             type: Decimal128,
