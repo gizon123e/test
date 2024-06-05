@@ -35,11 +35,6 @@ const konsumenModel = new mongoose.Schema({
         type: String,
         default: null
     },
-    penanggungJawab:{
-        type: mongoose.Types.ObjectId,
-        ref: "ModelPenanggungJawabKonsumen",
-        default: null
-    },
     address:{
         type: mongoose.Types.ObjectId,
         ref: "Address",
@@ -81,10 +76,6 @@ const konsumenModel = new mongoose.Schema({
             message: "Jenis Perusahaan hanya untuk user perusahaan"
         },
         enum: ["PT", "CV", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
-        default: null
-    },
-    tanggal_lahir:{
-        type: String,
         default: null
     },
     legalitasBadanUsaha:{
