@@ -21,7 +21,7 @@ module.exports = {
             })
             const newDataToko = await Toko.create({
                 userId: req.body.id,
-                detailId,
+                detailId: req.body.detailId,
                 namaToko: req.body.namaToko,
                 address: alamat._id,
                 userId: req.body.id,
