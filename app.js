@@ -51,10 +51,7 @@ app.use("/api/konsumen/pic", require('./routes/router-konsumen-pic'));
 // router distributtor
 app.use("/api/distributor", require('./routes/router-distributtor/router-distributtor'));
 app.use('/api/document-distributor', require('./routes/router-distributtor/router-document-distributtor'));
-app.use('/api/alamat-ditributtor', require('./routes/router-distributtor/router-alamat-distributtor'))
-app.use('/api/penanggung-jawab-distributtor', require('./routes/router-distributtor/router-penanggungjawab'))
 app.use('/api/document-penanggungan-jawab', require('./routes/router-distributtor/router-document-penanggungJawab'))
-app.use('/api/alamat-penanggung-jawab', require('./routes/router-distributtor/router-alamatPenanggungJawab'))
 app.use('/api/kendaraan-distributtor', require('./routes/router-distributtor/router-kendaraaanDistributtor'))
 
 app.use('/api/payment', require('./routes/router-payment'));

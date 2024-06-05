@@ -3,7 +3,9 @@ const Vendor = require('../../models/vendor/model-vendor')
 const Product = require('../../models/model-product')
 const Konsumen = require('../../models/konsumen/model-konsumen')
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
+const Gratong = require('../../models/model-gratong')
 const Address = require('../../models/model-address')
+
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
 const fs = require('fs')
@@ -69,17 +71,77 @@ module.exports = {
 
                     if (dataKendaraan.length > 0)
                         for (let data of dataKendaraan) {
-
+                            const gratong = await Gratong.findOne({ tarif: data.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
                             const jarakOngkir = Math.round(ongkir)
                             if (jarakOngkir > 4) {
+                                let potongan_harga;
+                                let total_ongkir;
+
                                 const angkaJarak = jarakOngkir - 4
                                 const hargaKiloMeter = angkaJarak * data.tarifId.tarif_per_km
                                 const hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar
 
+                                if (gratong) {
+                                    data.isGratong = true
+                                    switch (gratong.jenis) {
+                                        case "persentase":
+                                            console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
+                                            potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
+                                            total_ongkir = hargaOngkir - potongan_harga
+                                            break;
+                                        case "langsung":
+                                            console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
+                                            potongan_harga = hargaOngkir - gratong.nilai_gratong;
+                                            total_ongkir = hargaOngkir - potongan_harga;
+                                            break;
+                                    }
+                                } else {
+                                    data.isGratong = false
+                                    total_ongkir = hargaOngkir
+                                }
+                                // data.push({
+                                //     kendaraan,
+                                //     hargaOngkir,
+                                //     potongan_harga,
+                                //     total_ongkir
+                                // })
+
+                                dataAllDistributtor.push({
+                                    distributor: data,
+                                    hargaOngkir,
+                                    jarakTempu: Math.round(distance),
+                                    potongan_harga,
+                                    total_ongkir
+                                })
+                            } else {
+                                let potongan_harga;
+                                let total_ongkir;
+                                const hargaOngkir = data.tarifId.tarif_dasar
+                                if (gratong) {
+                                    data.isGratong = true
+                                    switch (gratong.jenis) {
+                                        case "persentase":
+                                            console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
+                                            potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
+                                            total_ongkir = hargaOngkir - potongan_harga
+                                            break;
+                                        case "langsung":
+                                            console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
+                                            potongan_harga = hargaOngkir - gratong.nilai_gratong;
+                                            total_ongkir = hargaOngkir - potongan_harga;
+                                            break;
+                                    }
+                                } else {
+                                    data.isGratong = false
+                                    total_ongkir = hargaOngkir
+                                }
+
                                 dataAllDistributtor.push({
                                     distributor: data,
                                     jarakTempu: Math.round(distance),
-                                    hargaOngkir
+                                    hargaOngkir,
+                                    total_ongkir,
+                                    potongan_harga
                                 })
                             }
                         }

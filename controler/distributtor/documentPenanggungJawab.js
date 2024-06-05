@@ -1,7 +1,8 @@
 const DokumenPenanggungJawab = require('../../models/distributor/model-documenPenanggungJawab')
 const path = require('path')
 const fs = require('fs')
-const { updateDocumentDistributtor } = require('./documentDistributtor')
+const dotenv = require('dotenv')
+dotenv.config()
 
 module.exports = {
     getDocumentPenanggungJawab: async (req, res, next) => {
@@ -50,19 +51,19 @@ module.exports = {
 
     createDocumentPenanggungJawab: async (req, res, next) => {
         try {
-            const { id_penanggung_jawab_distributor, nik, } = req.body
+            const { id_distributor, address, nama_penanggungjawab, jabatan, nik, } = req.body
             const files = req.files;
             const ktp = files ? files.ktp : null;
             const npwp = files ? files.npwp : null;
 
-            if (!nib || !npwp) {
+            if (!ktp || !npwp) {
                 return res.status(400).json({ message: "kamu gagal masukan file nib & npwp" });
             }
 
             const legalitasKtp = `${Date.now()}${path.extname(ktp.name)}`;
             const fileKtp = path.join(__dirname, '../../public/image-ktp', legalitasKtp);
 
-            ktp.mv(fileKtp, (err) => {
+            await ktp.mv(fileKtp, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NIB file", error: err });
                 }
@@ -71,17 +72,20 @@ module.exports = {
             const legalitasNpwp = `${Date.now()}${path.extname(npwp.name)}`;
             const fileNpwp = path.join(__dirname, '../../public/image-npwp', legalitasNpwp);
 
-            npwp.mv(fileNpwp, (err) => {
+            await npwp.mv(fileNpwp, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NPWP file", error: err });
                 }
             });
 
-            const data = await DokumenDistributor.create({
-                id_penanggung_jawab_distributor,
+            const data = await DokumenPenanggungJawab.create({
+                id_distributor,
+                address,
+                nama_penanggungjawab,
+                jabatan,
                 nik,
-                ktp: `${req.protocol}://${req.get('host')}/public/image-nib/${legalitasKtp}`,
-                npwp: `${req.protocol}://${req.get('host')}/public/image-npwp/${legalitasNpwp}`
+                ktp: `${process.env.HOST}/public/image-ktp/${legalitasKtp}`,
+                npwp: `${process.env.HOST}/public/image-npwp/${legalitasNpwp}`
             });
 
             res.status(201).json({
@@ -105,7 +109,7 @@ module.exports = {
 
     updateDocumentPenanggungJawab: async (req, res, next) => {
         try {
-            const { id_penanggung_jawab_distributor, nik, } = req.body
+            const { id_distributor, address, nama_penanggungjawab, jabatan, nik, } = req.body
             const files = req.files;
             const ktp = files ? files.ktp : null;
             const npwp = files ? files.npwp : null;
@@ -120,7 +124,7 @@ module.exports = {
             const nibFilename = path.basename(dataDistributtor.ktp);
             const npwpFilename = path.basename(dataDistributtor.npwp)
 
-            const currentNibPath = path.join(__dirname, '../../public/image-nib', nibFilename);
+            const currentNibPath = path.join(__dirname, '../../public/image-ktp', nibFilename);
             const currentNpwpPath = path.join(__dirname, '../../public/image-npwp', npwpFilename);
 
             // Delete the existing files if they exist
@@ -134,7 +138,7 @@ module.exports = {
             const legalitasKtp = `${Date.now()}${path.extname(ktp.name)}`;
             const fileKtp = path.join(__dirname, '../../public/image-ktp', legalitasKtp);
 
-            ktp.mv(fileKtp, (err) => {
+            await ktp.mv(fileKtp, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NIB file", error: err });
                 }
@@ -143,17 +147,20 @@ module.exports = {
             const legalitasNpwp = `${Date.now()}${path.extname(npwp.name)}`;
             const fileNpwp = path.join(__dirname, '../../public/image-npwp', legalitasNpwp);
 
-            npwp.mv(fileNpwp, (err) => {
+            await npwp.mv(fileNpwp, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NPWP file", error: err });
                 }
             });
 
-            const data = await DokumenDistributor.findByIdAndUpdate({ _id: req.params.id }, {
-                id_penanggung_jawab_distributor,
+            const data = await DokumenPenanggungJawab.findByIdAndUpdate({ _id: req.params.id }, {
+                id_distributor,
+                address,
+                nama_penanggungjawab,
+                jabatan,
                 nik,
-                ktp: `${req.protocol}://${req.get('host')}/public/image-nib/${legalitasKtp}`,
-                npwp: `${req.protocol}://${req.get('host')}/public/image-npwp/${legalitasNpwp}`
+                ktp: `${process.env.HOST}/public/image-ktp/${legalitasKtp}`,
+                npwp: `${process.env.HOST}/public/image-npwp/${legalitasNpwp}`
             }, { new: true });
 
             res.status(201).json({
@@ -175,7 +182,7 @@ module.exports = {
 
     deleteDocumentPenanggungJawab: async (req, res, next) => {
         try {
-            const data = await DokumenDistributor.findOne({ _id: req.params.id })
+            const data = await DokumenPenanggungJawab.findOne({ _id: req.params.id })
             if (!data) return res.status(404).join({ message: `data Not Found` })
             const nibFilename = path.basename(data.ktp);
             const npwpFilename = path.basename(data.npwp)
@@ -191,7 +198,7 @@ module.exports = {
                 fs.unlinkSync(currentNpwpPath);
             }
 
-            await DokumenDistributor.deleteOne({ _id: req.params.id })
+            await DokumenPenanggungJawab.deleteOne({ _id: req.params.id })
 
             res.status(200).json({ message: "delete data success" })
         } catch (error) {
