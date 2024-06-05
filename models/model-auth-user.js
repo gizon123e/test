@@ -26,6 +26,7 @@ const userModels = new mongoose.Schema(
         maxlength: [250, "panjang email harus di antara 3 - 250 karakter"],
         validate: {
           validator: (email) => {
+            if(email === null) return true
             const emailRegex =
               /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
             return emailRegex.test(email);
@@ -157,7 +158,7 @@ userModels.post("findOneAndDelete", async function(doc){
 
 function validationPhone(phone){
   const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
-  console.log(regexNoTelepon.test(phone))
+  if(phone === null) return true
   return regexNoTelepon.test(phone)
 }
 
