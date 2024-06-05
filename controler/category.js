@@ -100,7 +100,10 @@ module.exports = {
 
     getCategorySub: async (req, res, next) => {
         try {
-            const data = await SubCategory.findById(req.params.id).populate("contents")
+            const data = await SubCategory.findById(req.params.id).populate({
+                path: "contents",
+                select: 'name _id'
+            })
             if (!data) {
                 return res.status(404).json({
                     message: "Sub Category not found",
