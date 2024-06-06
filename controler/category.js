@@ -67,13 +67,27 @@ module.exports = {
 
     getAllMainCategory: async(req, res, next) => {
         try {
-            const mains = await MainCategory.aggregate([
+            const data = await MainCategory.aggregate([
                 { $match: {} },
                 {
-                    $project: { _id: 1, name: 1 }
+                    $project: { _id: 1, name: 1, for: 1 }
                 }
             ]);
-            return res.status(200).json({message: "Berhasil Mendapatkan Semua Category", data: mains})
+            let finalData
+            switch (req.user.role) {
+                case "vendor":
+                    finalData = data.filter(item => item.for === "konsumen");
+                    break;
+                case "supplier":
+                    finalData = data.filter(item => item.for === "vendor");
+                    break;
+                case "produsen":
+                    finalData = data.filter(item => item.for === "supplier");
+                    break;
+            };
+
+            return res.status(200).json({message: "Berhasil Mendapatkan Semua Category", data: finalData});
+
         } catch (error) {
             console.log(error);
             next(error);

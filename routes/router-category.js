@@ -7,7 +7,7 @@ const controlerCategory = require('../controler/category')
 const router = require("express").Router();
 
 router.get('/list', authorization, controlerCategory.getCategory);
-router.get('/all-main-category', controlerCategory.getAllMainCategory);
+router.get('/all-main-category', authorization, controlerCategory.getAllMainCategory);
 router.get('/detail-main/:id', controlerCategory.getDetailMainCategory);
 router.get('/detail-sub-category/:id', controlerCategory.getCategorySub);
 router.get('/specific-category', controlerCategory.getAllSpecificCategory);
