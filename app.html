@@ -91,6 +91,16 @@
           formData.append("varian", JSON.stringify(item))
         })
 
+        const detailVarian = []
+
+        for(let i = 0; i < varian[0].nilai_varian.length; i++){
+          for(let j = 0; j < varian[1].nilai_varian.length; j++){
+            detailVarian.push(`${varian[0].nilai_varian[i]}-${varian[1].nilai_varian[j]}`)
+          }
+        }
+
+        console.log(detailVarian)
+
 
 
 

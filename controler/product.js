@@ -467,12 +467,11 @@ module.exports = {
       if (!category) return res.status(400).json({ message: `Category dengan id: ${req.body.categoryId} tidak ada` });
       const subCategory = await SubCategory.findOne({contents: {$in: req.body.categoryId}});
       const mainCategory = await MainCategory.findOne({contents: {$in: subCategory._id}});
-
       
       let newProduct
       const imgPaths = [];
       
-      if(req.files && req.files.ImageProduct.length !== 0){
+      if(req.files.ImageProduct && req.files.ImageProduct.length !== 0){
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
           for (const img of req.files.ImageProduct){
             const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
@@ -509,19 +508,25 @@ module.exports = {
         if(!req.body.varian) return res.status(400).json({message: "Kurang Body Request *varian*"});
         const varian = []
         req.body.varian.forEach(item => varian.push(JSON.parse(item)))
-        const othersProperties = Object.keys({
-          stok: 50,
-          image: 'asafsafasf',
-          minimalOrder: 2,
-          hargaDiskon: 15
-        })
         const detailVarian = []
-        for (let i = 0; i < varian[0].nilai_varian.length; i++) {
-          for (let j = 0; j < varian[1].nilai_varian.length; j++) {
-            detailVarian.push(`${varian[0].nilai_varian[i]}-${varian[1].nilai_varian[j]}`);
-          }
-        }
+        req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)))
+
+        console.log(varian);
         console.log(detailVarian)
+        console.log(req.files)
+        // const othersProperties = Object.keys({
+        //   stok: 50,
+        //   image: 'asafsafasf',
+        //   minimalOrder: 2,
+        //   hargaDiskon: 15
+        // })
+        // const detailVarian = []
+        // for (let i = 0; i < varian[0].nilai_varian.length; i++) {
+        //   for (let j = 0; j < varian[1].nilai_varian.length; j++) {
+        //     detailVarian.push(`${varian[0].nilai_varian[i]}-${varian[1].nilai_varian[j]}`);
+        //   }
+        // }
+        // console.log(detailVarian)
         const final = []
 
         // for(let i = 0; i < detailVarian.length; i++ ){

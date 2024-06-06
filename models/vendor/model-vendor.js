@@ -91,7 +91,6 @@ const vendorModel = new mongoose.Schema({
     profile_pict: {
         type: String,
         default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
-        default: null
     }
 })
 
