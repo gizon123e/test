@@ -76,7 +76,7 @@ app.use('/api/tarif', require('./routes/router-tarif'))
 app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
-  flash_sale_checker.start()
+  // flash_sale_checker.start()
   console.log("connection express success");
   websocket.listen(5000, () => {
     console.log("Connection websocket success");
