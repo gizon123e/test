@@ -10,7 +10,7 @@ const konsumenModel = new mongoose.Schema({
         type: String,
         default: null
     },
-    file_ktp:{
+    file_ktp: {
         type: String,
         default: null
     },
@@ -19,15 +19,15 @@ const konsumenModel = new mongoose.Schema({
         required: false,
         default: null
     },
-    nomorAktaPerusahaan:{
+    nomorAktaPerusahaan: {
         type: String,
         default: null
     },
-    npwpFile:{
+    npwpFile: {
         type: String,
         default: null
     },
-    nomorNpwpPerusahaan:{
+    nomorNpwpPerusahaan: {
         type: String,
         default: null
     },
@@ -35,12 +35,12 @@ const konsumenModel = new mongoose.Schema({
         type: String,
         default: null
     },
-    address:{
+    address: {
         type: mongoose.Types.ObjectId,
         ref: "Address",
         required: [true, "Harus memiliki alamat"]
     },
-    noTeleponKantor:{
+    noTeleponKantor: {
         type: String,
         required: false,
         default: null
@@ -50,10 +50,10 @@ const konsumenModel = new mongoose.Schema({
         required: [true, 'userId harus di isi'],
         ref: 'User'
     },
-    jenis_kelamin:{
+    jenis_kelamin: {
         type: String,
         validate: {
-            validator: function(value) {
+            validator: function (value) {
                 if (this.namaBadanUsaha && value) {
                     return false;
                 }
@@ -64,10 +64,10 @@ const konsumenModel = new mongoose.Schema({
         enum: ["laki", "perempuan"],
         default: null
     },
-    jenis_perusahaan:{
+    jenis_perusahaan: {
         type: String,
         validate: {
-            validator: function(value) {
+            validator: function (value) {
                 if (!this.namaBadanUsaha && value) {
                     return false;
                 }
@@ -78,31 +78,31 @@ const konsumenModel = new mongoose.Schema({
         enum: ["PT", "CV", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
         default: null
     },
-    legalitasBadanUsaha:{
-        type: String, 
+    legalitasBadanUsaha: {
+        type: String,
         required: false,
         default: null
     },
-    profile_pict:{
+    profile_pict: {
         type: String,
         default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
         default: null
     }
 });
 
-konsumenModel.pre('save', function(next) {
+konsumenModel.pre('save', function (next) {
     if (this.namaBadanUsaha && this.jenis_kelamin) {
         return next(new Error("Jenis Kelamin hanya untuk user individu"));
     }
     next();
 });
 
-konsumenModel.pre('findOneAndUpdate', async function(next) {
+konsumenModel.pre('findOneAndUpdate', async function (next) {
     const update = this.getUpdate();
     const docToUpdate = await this.model.findOne(this.getQuery());
     if (update && docToUpdate.namaBadanUsaha && update.jenis_kelamin) {
         return next("Jenis Kelamin hanya untuk user individu");
-    }else if (update && !docToUpdate.namaBadanUsaha && update.jenis_perusahaan ){
+    } else if (update && !docToUpdate.namaBadanUsaha && update.jenis_perusahaan) {
         return next("Jenis Perusahaan hanya untuk user Perusahaan");
     }
     next();

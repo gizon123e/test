@@ -26,7 +26,7 @@ const userModels = new mongoose.Schema(
         maxlength: [250, "panjang email harus di antara 3 - 250 karakter"],
         validate: {
           validator: (email) => {
-            if(email === null) return true
+            if (email === null) return true
             const emailRegex =
               /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
             return emailRegex.test(email);
@@ -44,7 +44,7 @@ const userModels = new mongoose.Schema(
       type: String,
     },
     phone: {
-      content:{
+      content: {
         type: String,
         validate: {
           validator: (phone) => validationPhone(phone),
@@ -66,9 +66,9 @@ const userModels = new mongoose.Schema(
       enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
       message: "{VALUE} is not supported",
     },
-    kode_role:{
+    kode_role: {
       type: String,
-      get: function() {
+      get: function () {
         const roleCodes = {
           vendor: "VND",
           konsumen: "KNS",
@@ -79,7 +79,7 @@ const userModels = new mongoose.Schema(
         return roleCodes[this.role] || null;
       }
     },
-    codeOtp:{
+    codeOtp: {
       code: {
         type: String
       },
@@ -91,57 +91,66 @@ const userModels = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    saldo:{
-        type: Number,
-        default: 0
+    saldo: {
+      type: Number,
+      default: 0
     },
-    isActive:{
+    isActive: {
       type: Boolean,
       default: false,
       required: true
     },
-    isDetailVerified:{
+    isDetailVerified: {
       type: Boolean,
       required: true,
       default: false
     },
-    isBlocked:{
+    isBlocked: {
       type: Boolean,
       required: true,
       default: false
-    }
+    },
+    pesanPenolakan: {
+      type: String,
+      required: false
+    },
+    isVerifikasiDocument: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
   },
   { timestamps: true }
 );
 
-userModels.pre('findOneAndUpdate', function(next){
-  if(this.getUpdate()['phone.content'] !== undefined){
-    const isValid =  validationPhone(this.getUpdate()['phone.content'])
-    if(!isValid) throw new Error(`${this.getUpdate()['phone.content']} nomor tidak valid`)
+userModels.pre('findOneAndUpdate', function (next) {
+  if (this.getUpdate()['phone.content'] !== undefined) {
+    const isValid = validationPhone(this.getUpdate()['phone.content'])
+    if (!isValid) throw new Error(`${this.getUpdate()['phone.content']} nomor tidak valid`)
   }
   next()
 })
 
-userModels.post("findOneAndDelete", async function(doc){
+userModels.post("findOneAndDelete", async function (doc) {
   try {
     const data = await Promise.all([
-      Cart.find({userId: doc._id}),
-      Conversation.find({participants: { $in:doc._id }}),
-      Invoice.find({userId: doc._id}),
-      Comment.find({userId: doc._id}),
-      Minat.find({userId: doc._id}),
-      Pembatalan.find({userId: doc._id}),
-      Product.find({userId: doc._id}),
-      Produksi.find({userId: doc._id}),
-      VirtualAccountUser.find({userId: doc._id}),
-      Address.find({userId: doc._id}),
-      BahanBaku.find({userId: doc._id}),
-      Pesanan.find({userId: doc._id}),
-      Vendor.find({userId: doc._id}),
-      Distributor.find({userId: doc._id}),
-      Supplier.find({userId: doc._id}),
-      Produsen.find({userId: doc._id}),
-      Konsumen.find({userId: doc._id})
+      Cart.find({ userId: doc._id }),
+      Conversation.find({ participants: { $in: doc._id } }),
+      Invoice.find({ userId: doc._id }),
+      Comment.find({ userId: doc._id }),
+      Minat.find({ userId: doc._id }),
+      Pembatalan.find({ userId: doc._id }),
+      Product.find({ userId: doc._id }),
+      Produksi.find({ userId: doc._id }),
+      VirtualAccountUser.find({ userId: doc._id }),
+      Address.find({ userId: doc._id }),
+      BahanBaku.find({ userId: doc._id }),
+      Pesanan.find({ userId: doc._id }),
+      Vendor.find({ userId: doc._id }),
+      Distributor.find({ userId: doc._id }),
+      Supplier.find({ userId: doc._id }),
+      Produsen.find({ userId: doc._id }),
+      Konsumen.find({ userId: doc._id })
     ]);
 
     await Promise.all(data.map(async (modelData) => {
@@ -151,14 +160,14 @@ userModels.post("findOneAndDelete", async function(doc){
     }));
 
   } catch (error) {
-      console.log(error)
+    console.log(error)
   }
-  
+
 });
 
-function validationPhone(phone){
+function validationPhone(phone) {
   const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
-  if(phone === null) return true
+  if (phone === null) return true
   return regexNoTelepon.test(phone)
 }
 
