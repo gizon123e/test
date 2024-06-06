@@ -276,13 +276,8 @@ module.exports = {
                             case "vendor":
                                 detailUser = await Vendor.findOne({ userId: user._id }).lean();
                                 break;
-<<<<<<< HEAD
-                            case "supplier":    
-                                detailUser = await Supplier.findOne({ userId: user._id }).lean();
-=======
                             case "supplier":
                                 detailUser = await Supplier.findOne({ userId: user._id });
->>>>>>> 69d641757ee2c64a261649d22c4a13fd7daf94b7
                                 break;
                             case "produsen":
                                 detailUser = await Produsen.findOne({ userId: user._id }).lean();
