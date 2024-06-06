@@ -269,16 +269,16 @@ module.exports = {
                         let detailUser;
                         switch (user.role) {
                             case "konsumen":
-                                detailUser = await Konsumen.findOne({ userId: user._id });
+                                detailUser = await Konsumen.findOne({ userId: user._id }).lean();
                                 break;
                             case "vendor":
-                                detailUser = await Vendor.findOne({ userId: user._id });
+                                detailUser = await Vendor.findOne({ userId: user._id }).lean();
                                 break;
                             case "supplier":    
-                                detailUser = await Supplier.findOne({ userId: user._id });
+                                detailUser = await Supplier.findOne({ userId: user._id }).lean();
                                 break;
                             case "produsen":
-                                detailUser = await Produsen.findOne({ userId: user._id });
+                                detailUser = await Produsen.findOne({ userId: user._id }).lean();
                                 break;
                         };
                         if (!detailUser.tanggal_lahir) return res.status(403).json({ message: "User Belum Mengisi Tanggal Lahir!" });

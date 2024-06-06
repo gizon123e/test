@@ -68,8 +68,66 @@ module.exports = {
                     fields: error.fields
                 })
             };
-            console.log(error)
-            next(error)
+            console.log(error);
+            next(error);
+        }
+    },
+
+    getCartsById: async(req, res, next) => {
+        try {
+            const { cartIds } = req.body
+            const carts = await Carts.find({_id: { $in : cartIds}, userId: req.user.id}).populate({
+                path: 'productId',
+                select: '-description -isPublished -isVerified  -id_main_category -id_sub_category -categoryId',
+                populate: {
+                    path: 'userId',
+                    select: "_id role"
+                }
+            }).lean()
+            const store = {}
+            for (const keranjang of carts){
+                // console.log(keranjang.productId.userId._id)
+                const storeId = keranjang.productId.userId._id.toString();
+                if(!store[storeId]){
+                    store[storeId] = {
+                        id: storeId,
+                        role: keranjang.productId.userId.role,
+                        arrayProduct: []
+                    }
+                }
+
+                store[storeId].arrayProduct.push({
+                    product: keranjang.productId,
+                    quantity: keranjang.quantity
+                })
+            }
+
+            const keys = Object.keys(store)
+            const finalData = []
+            let detailToko
+            for(const key of keys){
+                switch(store[key].role){
+                    case "vendor":
+                        detailToko = await Vendor.findOne({userId: store[key].id}).select('nama namaBadanUsaha -_id');
+                        break;
+                    case "supplier":
+                        detailToko = await Supplier.findOne({userId: store[key].id}).select('nama namaBadanUsaha -_id');
+                        break;
+                    case "produsen":
+                        detailToko = await Produsen.findOne({userId: store[key].id}).select('nama namaBadanUsaha -_id');
+                        break;
+                }
+                finalData.push({
+                    nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
+                    products: store[key].arrayProduct
+                })
+            }
+            console.log(store)
+
+            return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: finalData})
+        } catch (error) {
+            console.log(error);
+            next(error);
         }
     },
 

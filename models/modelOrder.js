@@ -1,28 +1,27 @@
+const mongoose = require("mongoose");
 const mongoose = require('mongoose');
 
 const modelOrder = new mongoose.Schema({
-    items: [{
-        product: [{
-            _id: false,
-            productId: {
-                type: String,
-                required: [true, 'Productid harus di isi'],
-                ref: 'Product',
-            },
-            quantity: {
-                type: Number,
-                required: [true, 'Quantity harus di isi'],
-                min: 1,
-                default: 1
-            }
-        }],
-        deadline:{
+    product: [{
+        _id: false,
+        productId: {
+            type: String,
+            required: [true, 'Productid harus di isi'],
+            ref: 'Product',
+        },
+        quantity: {
+            type: Number,
+            required: [true, 'Quantity harus di isi'],
+            min: 1,
+            default: 1
+        },
+        deadline: {
             type: Date,
             validate: {
                 validator: (date) => {
                     const currentDate = new Date();
                     const minDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
-                    return date >= minDate
+                    return date >= minDate;
                 },
                 message: "Deadline minimal 7 hari ke depan"
             }
@@ -69,7 +68,7 @@ const modelOrder = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    expire:{
+    expire: {
         type: Date
     },
     shipments: [
@@ -78,13 +77,13 @@ const modelOrder = new mongoose.Schema({
                 type: mongoose.Types.ObjectId,
                 ref: "Distributtor"
             },
-            total_ongkir:{
+            total_ongkir: {
                 type: Number
             },
-            potongan_ongkir:{
+            potongan_ongkir: {
                 type: Number
             },
-            ongkir:{
+            ongkir: {
                 type: Number
             },
             products: [{
@@ -99,39 +98,53 @@ const modelOrder = new mongoose.Schema({
             waktu_pengiriman: {
                 type: Date
             },
-            kendaraanId:{
+            kendaraanId: {
                 type: mongoose.Types.ObjectId
             }
         }
     ]
 }, { timestamp: true }
-)
-
-const updateExpiredOrderStatus = async (order) => {
-    if (order.expire && order.expire < new Date() && order.status !== "Dibatalkan") {
-        order.status = "Dibatalkan";
-        order.is_dibatalkan = true;
-        await order.save();
+);
+exports.modelOrder = modelOrder;const modelPengiriman = mongoose.Schema({
+    orderId: {
+        type: mongoose.Types.ObjectId,
+        ref: "Pesanan"
+    },
+    distributorId: {
+        type: mongoose.Types.ObjectId,
+        ref: "Distributtor"
+    },
+    waktu_pengiriman: {
+        type: String
+    },
+    jenis_pengiriman: {
+        type: String,
+        enum: ["express", "hemat"]
+    },
+    ongkir: {
+        type: Number
+    },
+    potongan_ongkir: {
+        type: Number
+    },
+    kendaraanId: {
+        type: mongoose.Types.ObjectId,
+        ref: "KendaraanDistributor"
+    },
+    productToDelivers: [{
+        productId: {
+            type: String,
+            ref: "Product"
+        },
+        quantity: {
+            type: Number
+        }
+    }],
+    status_pengiriman: {
+        type: String,
+        enum: ["diproses", "dikirim", "pesanan selesai"],
+        default: "diproses"
     }
-};
-
-// Middleware to check expiry before executing find queries
-modelOrder.pre('find', async function (next) {
-    const orders = await this.model.find(this.getQuery());
-    for (const order of orders) {
-        await updateExpiredOrderStatus(order);
-    }
-    next();
 });
+exports.modelPengiriman = modelPengiriman;
 
-modelOrder.pre('findOne', async function (next) {
-    const order = await this.model.findOne(this.getQuery());
-    if (order) {
-        await updateExpiredOrderStatus(order);
-    }
-    next();
-});
-
-const Pesanan = mongoose.model('Pesanan', modelOrder)
-
-module.exports = Pesanan

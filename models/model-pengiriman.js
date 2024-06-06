@@ -16,6 +16,25 @@ const modelPengiriman = mongoose.Schema({
         type: String,
         enum: ["express", "hemat"]
     },
+    ongkir: {
+        type: Number
+    },
+    potongan_ongkir: {
+        type: Number
+    },
+    kendaraanId:{
+        type: mongoose.Types.ObjectId,
+        ref: "KendaraanDistributor"
+    },
+    productToDelivers:[{
+        productId: {
+            type: String,
+            ref: "Product"
+        },
+        quantity: {
+            type: Number
+        }
+    }],
     status_pengiriman:{
         type: String,
         enum: ["diproses", "dikirim", "pesanan selesai"],
