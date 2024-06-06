@@ -438,11 +438,8 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
-      if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });
-
-      // if ((req.user.role === "vendor" || req.user.role === "suppl    ier") && (req.body.bahanBaku !== undefined)) return res.status(400).json({ message: "Payload bahan baku hanya untuk user produsen" });
+      if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });      
       
-
       //JANGAN DULU DIHAPUS!!
       // if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
       //   return res.status(400).json({
@@ -462,6 +459,8 @@ module.exports = {
       //     if (!bahanFound) return res.status(404).json({ message: "Bahan baku tidak ditemukan" })
       //   }
       // };
+      
+      if(!req.files || req.files.length === 0) return res.status(400).json({message: "Produk harus memiliki foto. Minimal Satu"});
 
       const category = await SpecificCategory.findById(req.body.categoryId);
       if (!category) return res.status(400).json({ message: `Category dengan id: ${req.body.categoryId} tidak ada` });
@@ -469,30 +468,30 @@ module.exports = {
       const mainCategory = await MainCategory.findOne({contents: {$in: subCategory._id}});
       
       let newProduct
-      const imgPaths = [];
-      
-      if(req.files.ImageProduct && req.files.ImageProduct.length !== 0){
-        if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
-          for (const img of req.files.ImageProduct){
-            const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
-            const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
-            imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
-            img.mv(pathImg, err => {
-              if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
-            })
-          }
-        } else {
-          const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
-          const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
-          req.files.ImageProduct.mv(pathImg, err => {
-            if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
-          })
-          imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
-        };
-      }
 
       if( req.body.bervarian === "false" || !req.body.bervarian){
-
+        const imgPaths = [];
+      
+        if(req.files.ImageProduct && req.files.ImageProduct.length !== 0){
+          if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
+            for (const img of req.files.ImageProduct){
+              const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
+              const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
+              imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
+              img.mv(pathImg, err => {
+                if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
+              })
+            }
+          } else {
+            const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
+            const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
+            req.files.ImageProduct.mv(pathImg, err => {
+              if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
+            })
+            imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
+          };
+        };
+        
         const dataProduct = req.body;
 
         dataProduct.image_product = imgPaths
@@ -503,40 +502,41 @@ module.exports = {
           id_sub_category: subCategory._id,
           id_main_category: mainCategory._id
         });
-        // console.log(newProduct)
+
       }else{       
         if(!req.body.varian) return res.status(400).json({message: "Kurang Body Request *varian*"});
-        const varian = []
-        req.body.varian.forEach(item => varian.push(JSON.parse(item)))
-        const detailVarian = []
-        req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)))
+        const varian = [];
+        req.body.varian.forEach(item => varian.push(JSON.parse(item)));
+        const detailVarian = [];
+        req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)));
+        // if(detailVarian.length != varian[0].length * varian[1].length) return res.status(400).json({message: `Data yang dikirim tidak valid. Detail Varian panjangnya ${detailVarian.length} sedangkan varian panjangnya ${varian[0].nilai_varian.length * varian[1].nilai_varian.length}`})
+        const final = detailVarian.map(item =>{
+          if(Array.isArray(req.files[item.varian])) return res.status(400).json({message: "Image per Varian hanya boleh Satu!"});
+          const namaImg = `${req.body.name_product}_${item.varian}_${path.extname(req.files[item.varian].name)}`;
+          const pathImg = path.join(__dirname, "../public", "img_products", namaImg);
+          req.files[item.varian].mv(pathImg, (err)=>{
+            if(err) return res.status(500).json({message: "Ada Kesalahan Saat Nyimpan Image, segera diperbaiki"})
+          })
+          return {
+            varian: item.varian,
+            price: item.price,
+            stok: item.stok,
+            harga_diskon: item.harga_diskon,
+            image: `${process.env.HOST}public/img_products/${namaImg}`
+          };
+        });
+        delete req.body.varian
+        delete req.body.detailVarian
+        const dataProduct = {
+          ...req.body,
+          varian,
+          detail_varian: final,
+          id_main_category: mainCategory._id,
+          id_sub_category: subCategory._id,
+          userId: req.user.id
+        }
 
-        console.log(varian);
-        console.log(detailVarian)
-        console.log(req.files)
-        // const othersProperties = Object.keys({
-        //   stok: 50,
-        //   image: 'asafsafasf',
-        //   minimalOrder: 2,
-        //   hargaDiskon: 15
-        // })
-        // const detailVarian = []
-        // for (let i = 0; i < varian[0].nilai_varian.length; i++) {
-        //   for (let j = 0; j < varian[1].nilai_varian.length; j++) {
-        //     detailVarian.push(`${varian[0].nilai_varian[i]}-${varian[1].nilai_varian[j]}`);
-        //   }
-        // }
-        // console.log(detailVarian)
-        const final = []
-
-        // for(let i = 0; i < detailVarian.length; i++ ){
-        //   for(let j = 0; j < othersProperties.length; j++){
-        //     final.push({
-        //       varian: detailVarian[i],
-        //       othersProperties[j]
-        //     })
-        //   }
-        // }
+        newProduct = await Product.create(dataProduct)
       }
 
       // await Performance.create({

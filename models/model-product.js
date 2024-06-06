@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const uniqueValidator = require('mongoose-unique-validator');
 
 const varianSchema = new mongoose.Schema({
   _id: false,
@@ -27,7 +28,9 @@ const detailVarianSchema = new mongoose.Schema({
   harga_diskon:{
     type: String
   }
-})
+});
+
+detailVarianSchema.plugin(uniqueValidator);
 
 const productModels = new mongoose.Schema(
   {
@@ -92,6 +95,7 @@ const productModels = new mongoose.Schema(
     },
     detail_varian:{
       type: [detailVarianSchema],
+      validate: [hasNoDuplicates, "Object Detail_Varian Harus Unique"],
       default: () => null
     },
     isPublished:{
@@ -127,6 +131,7 @@ const productModels = new mongoose.Schema(
     total_stok: {
       type: Number,
       required: true,
+      default: 0
     },
     pemasok: {
       type: mongoose.Types.ObjectId,
@@ -138,8 +143,7 @@ const productModels = new mongoose.Schema(
       default: 0
     },
     minimalOrder: {
-      type: Number,
-      default: 1
+      type: Number
     },
     isFlashSale: {
       type: Boolean,
@@ -175,6 +179,18 @@ const productModels = new mongoose.Schema(
   { timestamp: true }
 );
 
+function hasNoDuplicates(detailVarianArray) {
+  const varianSet = new Set();
+  for (const detailVarian of detailVarianArray) {
+    const varianKey = `${detailVarian.varian}-${detailVarian.price}-${detailVarian.stok}-${detailVarian.minimalOrder}-${detailVarian.harga_diskon}`;
+    if (varianSet.has(varianKey)) {
+      return false;
+    }
+    varianSet.add(varianKey);
+  }
+  return true;
+}
+
 //Check if there is discon for the product before save
 productModels.pre("save", function (next) {
   if (this.diskon) {
@@ -184,9 +200,9 @@ productModels.pre("save", function (next) {
   }
 
   if(this.bervarian){
-    this.varian.forEach(item => {
-      this.total_stok += item.stok
-    })
+    this.detail_varian.forEach(element => {
+      this.total_stok += element.stok
+    });
   }
 
   if(this.bervarian && this.minimalOrder){
