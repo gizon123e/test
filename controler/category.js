@@ -19,29 +19,43 @@ module.exports = {
             const requestFrom = req.headers['user-agent'];
             if (requestFrom && requestFrom === "Mobile") {
                 data = dataCategory.filter(item => item.showAt === "mobile" || item.showAt === "mobile dan web");
-                if (data.length > 7) {
-                    data = data.slice(0, 7);
-                }
             } else if (requestFrom && requestFrom === "Web") {
-                data = dataCategory.filter(item => item.showAt === "web" || item.showAt === "mobile dan web");
-                if (data.length > 9) {
-                    data = data.slice(0, 9);
-                }
+                data = dataCategory.filter(item => item.showAt === "web" || item.showAt === "mobile dan web")
             } else {
-                data = dataCategory.filter(item => item.showAt === "all" || item.showAt === "web" || item.showAt === "mobile dan web" || item.showAt === "mobile");
+                data = dataCategory
             };
             switch (req.user.role) {
                 case "konsumen":
                     data = data.filter(item => item.for === "konsumen");
+                    if(requestFrom && requestFrom === "Mobile"){
+                        data.slice(0, 9)
+                    }else if(requestFrom && requestFrom === "Web"){
+                        data.slice(0, 8)
+                    }
                     break;
                 case "vendor":
                     data = data.filter(item => item.for === "vendor");
+                    if(requestFrom && requestFrom === "Mobile"){
+                        data.slice(0, 9)
+                    }else if(requestFrom && requestFrom === "Web"){
+                        data.slice(0, 8)
+                    }
                     break;
                 case "supplier":
                     data = data.filter(item => item.for === "supplier");
+                    if(requestFrom && requestFrom === "Mobile"){
+                        data.slice(0, 9)
+                    }else if(requestFrom && requestFrom === "Web"){
+                        data.slice(0, 8)
+                    }
                     break;
                 case "produsen":
                     data = data.filter(item => item.for === "produsen");
+                    if(requestFrom && requestFrom === "Mobile"){
+                        data.slice(0, 9)
+                    }else if(requestFrom && requestFrom === "Web"){
+                        data.slice(0, 8)
+                    }
                     break;
             }
             return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data });
