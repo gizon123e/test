@@ -303,7 +303,8 @@ module.exports = {
                 no_telp,
                 is_kendaraan,
                 is_active: true,
-                userId, alamat_id,
+                userId,
+                alamat_id,
                 imageDistributtor: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                 jenisUsaha
             })

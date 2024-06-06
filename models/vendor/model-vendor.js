@@ -10,7 +10,7 @@ const vendorModel = new mongoose.Schema({
         type: String,
         default: null
     },
-    file_ktp:{
+    file_ktp: {
         type: String,
         default: null
     },
@@ -19,28 +19,33 @@ const vendorModel = new mongoose.Schema({
         required: false,
         default: null
     },
-    nomorAktaPerusahaan:{
+    nomorAktaPerusahaan: {
         type: String,
         default: null
     },
-    npwpFile:{
+    npwpFile: {
         type: String,
         default: null
     },
-    nomorNpwpPerusahaan:{
+    nomorNpwpPerusahaan: {
         type: String,
         default: null
+    },
+    penanggungJawab: {
+        type: mongoose.Types.ObjectId,
+        required: false,
+        ref: "ModelPenanggungJawabVendor"
     },
     nomorNpwp: {
         type: String,
         default: null
     },
-    address:{
+    address: {
         type: mongoose.Types.ObjectId,
         ref: "Address",
         required: [true, "Harus memiliki alamat"]
     },
-    noTeleponKantor:{
+    noTeleponKantor: {
         type: String,
         required: false,
         default: null
@@ -50,10 +55,10 @@ const vendorModel = new mongoose.Schema({
         required: [true, 'userId harus di isi'],
         ref: 'User'
     },
-    jenis_kelamin:{
+    jenis_kelamin: {
         type: String,
         validate: {
-            validator: function(value) {
+            validator: function (value) {
                 if (this.namaBadanUsaha && value) {
                     return false;
                 }
@@ -64,10 +69,10 @@ const vendorModel = new mongoose.Schema({
         enum: ["laki", "perempuan"],
         default: null
     },
-    jenis_perusahaan:{
+    jenis_perusahaan: {
         type: String,
         validate: {
-            validator: function(value) {
+            validator: function (value) {
                 if (!this.namaBadanUsaha && value) {
                     return false;
                 }
@@ -78,12 +83,12 @@ const vendorModel = new mongoose.Schema({
         enum: ["PT", "CV", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
         default: null
     },
-    legalitasBadanUsaha:{
-        type: String, 
+    legalitasBadanUsaha: {
+        type: String,
         required: false,
         default: null
     },
-    profile_pict:{
+    profile_pict: {
         type: String,
         default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
         default: null

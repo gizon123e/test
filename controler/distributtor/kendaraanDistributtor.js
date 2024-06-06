@@ -67,6 +67,7 @@ module.exports = {
             let distance
             if (addressId) {
                 const addressCustom = await Address.findById(addressId)
+
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
                 const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
                 distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latitudeVebdor, longitudeVendor, 100);
@@ -186,9 +187,9 @@ module.exports = {
 
     createKendaraandistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun } = req.body
+            const { id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId } = req.body
 
-            const data = await KendaraanDistributor.create({ id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun })
+            const data = await KendaraanDistributor.create({ id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId })
 
             res.status(201).json({
                 message: "create data success",
@@ -209,7 +210,7 @@ module.exports = {
 
     updateKendaraanDistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun } = req.body
+            const { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId } = req.body
             const iconKendaraan = req.files ? req.files.iconKendaraan : null;
 
             const dataIconKendaraanDistributor = await KendaraanDistributor.findById(req.params.id)
@@ -245,7 +246,7 @@ module.exports = {
                 })
             }
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun }, { new: true })
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId }, { new: true })
 
             res.status(201).json({
                 message: "update data kendaraan success",

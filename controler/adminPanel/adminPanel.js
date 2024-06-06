@@ -98,28 +98,21 @@ module.exports = {
             if (dataUser.role === "konsumen") {
                 const data = await Konsumen.findOne({ userId: req.params.id }).populate("userId").populate("address")
                 const dataDocument = await ModelPenanggungJawabKonsumen.findOne({ userId: req.params.id }).populate("alamat").populate("detailId")
-                if (!data.nama && data.namaBadanUsaha) {
-                    dataPayload = {
-                        dataKonsument: data,
-                        dataDocument,
-                        role: dataUser.role
-                    }
-                } else {
-                    dataPayload = {
-                        dataKonsument: data,
-                        role: dataUser.role
-                    }
+
+                dataPayload = {
+                    dataKonsument: data,
+                    dataDocument,
+                    role: dataUser.role
                 }
+
             }
 
             if (dataUser.role === "vendor") {
-                const dataVendor = await Vendor.findOne({ userId: req.params.id }).populate("address").populate("userId")
-                const dataDocument = await ModelPenanggungJawabVendor.findOne({ userId: req.params.id })
+                const dataDocument = await ModelPenanggungJawabVendor.findOne({ userId: req.params.id }).populate("detailId").populate("alamat")
 
-                if (!dataVendor || !dataDocument) return res.status(404).json({ message: "data Vendor & Document Not Found" })
+                if (!dataDocument) return res.status(404).json({ message: "data Vendor & Document Not Found" })
 
                 dataPayload = {
-                    dataVendor,
                     dataDocument,
                     role: dataUser.role
                 }
