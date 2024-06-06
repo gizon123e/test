@@ -256,11 +256,13 @@ module.exports = {
             const { block, verify } = req.body;
             if (block) {
                 user = await User.findByIdAndUpdate(req.params.id, {
-                    isBlocked: true
+                    isBlocked: true,
+                    isVerifikasiDocument: false
                 }, { new: true });
             } else if (verify) {
                 user = await User.findByIdAndUpdate(req.params.id, {
-                    isDetailVerified: true
+                    isDetailVerified: true,
+                    isVerifikasiDocument: true
                 }, { new: true });
 
                 if (user.isDetailVerified) {
@@ -274,7 +276,7 @@ module.exports = {
                             case "vendor":
                                 detailUser = await Vendor.findOne({ userId: user._id });
                                 break;
-                            case "supplier":    
+                            case "supplier":
                                 detailUser = await Supplier.findOne({ userId: user._id });
                                 break;
                             case "produsen":

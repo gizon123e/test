@@ -159,5 +159,20 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+
+    tolakVerivikasiDocument: async (req, res, next) => {
+        try {
+            const { pesanPenolakan } = req.body
+
+            const dataUser = await User.findByIdAndUpdate({ _id: req.params.id }, { pesanPenolakan, isVerifikasiDocument: false }, { new: true })
+
+            if (!dataUser) return res.status(404).json({ message: "data Not Found" })
+
+            res.status(201).json({ message: "data update success", datas: dataUser })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }
