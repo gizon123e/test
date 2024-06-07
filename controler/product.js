@@ -196,6 +196,9 @@ module.exports = {
         },
         {
           $project: { alamatToko: 0 }
+        },
+        {
+          $project: { userData: 0 }
         }
       ]);
       const productIds = dataProds.map(item => { return item._id } );
