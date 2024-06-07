@@ -249,7 +249,7 @@ module.exports = {
             // }
 
             if(req.files && req.files.profile_pict){
-                const name = konsumen.profile_pict.split('/')
+                const name = vendor.profile_pict.split('/')
                 if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
                     fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
                         if (err) {
