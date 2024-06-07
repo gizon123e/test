@@ -240,18 +240,19 @@ module.exports = {
             const id = req.params.id
             const vendor = await Vendor.findById(id);
             if(!vendor) return res.status(404).json({message: `Vendor dengan id ${id} tidak ditemukan`});
-            let filePath = vendor.legalitasBadanUsaha
-            if(req.body.noTeleponKantor){
-                const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
-                if (!regexNoTelepon.test(req.body[noTeleponKantor].toString())) {
-                    return res.status(400).json({ error: 'no telepon tidak valid' })
-                }
-            }
+            let filePath = vendor.profile_pict;
+            
+            // if(req.body.noTeleponKantor){
+            //     const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
+            //     if (!regexNoTelepon.test(req.body[noTeleponKantor].toString())) {
+            //         return res.status(400).json({ error: 'no telepon tidak valid' })
+            //     }
+            // }
 
-            if(req.files && req.files.legalitasBadanUsaha){
-                const name = vendor.legalitasBadanUsaha.split('/')
-                if(fs.existsSync(path.join(__dirname, '../../public', 'legalitas-img', name[5]))){
-                    fs.unlink(path.join(__dirname, '../../public', 'legalitas-img', name[5]), (err) => {
+            if(req.files && req.files.profile_pict){
+                const name = konsumen.profile_pict.split('/')
+                if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
+                    fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
                         if (err) {
                             console.error('Error while deleting file:', err);
                         } else {
@@ -259,23 +260,24 @@ module.exports = {
                         }
                     });
                 }
-                const legalitasFile = `${Date.now()}_${req.user.name}_${path.extname(req.files.legalitasBadanUsaha.name)}`;
+                const profile_pict_file = `${Date.now()}_${vendor.namaBadanUsaha || vendor.nama}_${path.extname(req.files.profile_pict.name)}`;
                     
-                const legalitasPath = path.join(__dirname, '../../public', 'legalitas-img', legalitasFile);
-                filePath = `${req.protocol}://${req.get('host')}/public/legalitas-img/${legalitasFile}`
-                await req.files.legalitasBadanUsaha.mv(legalitasPath);
+                const profile_pict = path.join(__dirname, '../../public', 'profile_picts', profile_pict_file);
+                filePath = `${process.env.HOST}/public/profile_picts/${profile_pict_file}`;
+                await req.files.profile_pict.mv(profile_pict);
             }
 
 
-            const updatedVendor = await Vendor.findByIdAndUpdate(
-                id,
-                { ...req.body, legalitasBadanUsaha: filePath },
-                { new: true }
-            );
+            const updatedData = await Vendor.findOneAndUpdate({userId: req.user.id}, { 
+                profile_pict: filePath,
+                jenis_kelamin: req.body.jenis_kelamin,
+                jenis_perusahaan: req.body.jenis_perusahaan,
+                tanggal_lahir: req.body.tanggal_lahir
+            }, {new: true});
 
             res.status(200).json({
                 message: 'Vendor updated successfully',
-                data: updatedVendor
+                data: updatedData
             });
         } catch (error) {
             if (error && error.name === 'ValidationError') {

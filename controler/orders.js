@@ -213,9 +213,7 @@ module.exports = {
     createOrder: async (req, res, next) => {
         try {
             const {
-                product = [],
                 addressId,
-                cartId = [],
                 catatan_produk,
                 poinTerpakai,
                 biaya_proteksi,
@@ -227,66 +225,78 @@ module.exports = {
                 metode_pembayaran,
                 dp,
                 total,
-                deadline
+                deadline,
+                items
             } = req.body
 
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
-
+            if (!req.body["items"]) return res.status(404).json({message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan"})
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const yyyy = today.getFullYear();
             const date_order = `${dd}/${mm}/${yyyy}`;
 
+            const productIds = items.flatMap(item => 
+                item.product.map(prod => prod.productId)
+            );
+                        
+            const products = await Product.find({_id: { $in: productIds }}).select('_id')
+            console.log(products)
+            for( const prod of productIds ){
+                if(!products.includes(prod)) return res.status(404).json({messgae: `Product dengan Id ${prod} tidak ditemukan`})
+            }
+
+
             const dataArrayProduct = []
             let total_price = 0
 
-            if (cartId.length !== 0) {
-                const carts = await Carts.find({ _id: { $in: cartId } }).populate({
-                    path: "productId",
-                    populate: {
-                        path: "userId"
-                    }
-                });
+            // if (cartId.length !== 0) {
+            //     const carts = await Carts.find({ _id: { $in: cartId } }).populate({
+            //         path: "productId",
+            //         populate: {
+            //             path: "userId"
+            //         }
+            //     });
 
-                //cek cartId yang diberikan
-                cartId.forEach((id) => {
-                    const foundCartId = carts.find((element => element._id.toString() === id));
-                    if (!foundCartId) return res.status(404).json({ message: `cart dengan id: ${id} tidak ditemukan` });
-                });
+            //     //cek cartId yang diberikan
+            //     cartId.forEach((id) => {
+            //         const foundCartId = carts.find((element => element._id.toString() === id));
+            //         if (!foundCartId) return res.status(404).json({ message: `cart dengan id: ${id} tidak ditemukan` });
+            //     });
 
-                for (const cart of carts) {
-                    if (cart.userId.toString() !== req.user.id) return res.status(403).json({ message: "Gak bisa pake cart orang lain" });
-                    if (req.user.role === "konsumen" && (cart.productId.userId.role !== "vendor")) return res.status(403).json({ message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor` });
-                    if (req.user.role === "vendor" && (cart.productId.userId.role !== "supplier")) return res.status(403).json({ message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier` });
-                    if (req.user.role === "supplier" && (cart.productId.userId.role !== "produsen")) return res.status(403).json({ message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen` });
+            //     for (const cart of carts) {
+            //         if (cart.userId.toString() !== req.user.id) return res.status(403).json({ message: "Gak bisa pake cart orang lain" });
+            //         if (req.user.role === "konsumen" && (cart.productId.userId.role !== "vendor")) return res.status(403).json({ message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor` });
+            //         if (req.user.role === "vendor" && (cart.productId.userId.role !== "supplier")) return res.status(403).json({ message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier` });
+            //         if (req.user.role === "supplier" && (cart.productId.userId.role !== "produsen")) return res.status(403).json({ message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen` });
 
-                    total_price += cart.total_price;
-                    dataArrayProduct.push({ productId: cart.productId, quantity: cart.quantity });
-                    await Carts.deleteOne({ _id: cart._id });
-                }
-            }
-            else if (product.length > 0) {
-                for (const element of product) {
-                    const dataTotalProduct = await Product.findById(element.productId).populate('userId');
+            //         total_price += cart.total_price;
+            //         dataArrayProduct.push({ productId: cart.productId, quantity: cart.quantity });
+            //         await Carts.deleteOne({ _id: cart._id });
+            //     }
+            // }
+            // else if (product.length > 0) {
+            //     for (const element of product) {
+            //         const dataTotalProduct = await Product.findById(element.productId).populate('userId');
 
-                    // if( req.user.role === "konsumen" && ( dataTotalProduct.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor. Produk ini dari user role ${dataTotalProduct.userId.role}`})
-                    // if( req.user.role === "vendor" && ( dataTotalProduct.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier. Produk ini dari user role ${dataTotalProduct.userId.role}`})
-                    // if( req.user.role === "supplier" && ( dataTotalProduct.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen. Produk ini dari user role ${dataTotalProduct.userId.role}`})
-                    if (!dataTotalProduct) {
-                        return res.status(404).json({ error: true, message: `Product with ID ${element.productId} not found` });
-                    }
+            //         // if( req.user.role === "konsumen" && ( dataTotalProduct.userId.role !== "vendor" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari vendor. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+            //         // if( req.user.role === "vendor" && ( dataTotalProduct.userId.role !== "supplier" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari supplier. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+            //         // if( req.user.role === "supplier" && ( dataTotalProduct.userId.role !== "produsen" ) ) return res.status(403).json({message: `user dengan role ${req.user.role} tidak bisa membeli dari selain dari produsen. Produk ini dari user role ${dataTotalProduct.userId.role}`})
+            //         if (!dataTotalProduct) {
+            //             return res.status(404).json({ error: true, message: `Product with ID ${element.productId} not found` });
+            //         }
 
-                    total_price = dataTotalProduct.total_price * element.quantity;
+            //         total_price = dataTotalProduct.total_price * element.quantity;
 
-                    const data = {
-                        productId: element.productId,
-                        quantity: element.quantity
-                    }
+            //         const data = {
+            //             productId: element.productId,
+            //             quantity: element.quantity
+            //         }
 
-                    dataArrayProduct.push(data)
-                }
-            }
+            //         dataArrayProduct.push(data)
+            //     }
+            // }
 
             if (dataArrayProduct.length > 0) {
 

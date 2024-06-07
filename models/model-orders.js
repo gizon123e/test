@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const modelOrder = new mongoose.Schema({
     items: [{
+        _id: false,
         product: [{
             _id: false,
             productId: {
@@ -29,6 +30,9 @@ const modelOrder = new mongoose.Schema({
         },
         note: {
             type: String
+        },
+        proteksi: {
+            type: Boolean
         }
     }],
     userId: {
@@ -53,10 +57,6 @@ const modelOrder = new mongoose.Schema({
     },
     poinTerpakai: {
         type: Number
-    },
-    biaya_proteksi: {
-        type: Boolean,
-        default: false
     },
     biaya_asuransi: {
         type: Boolean,

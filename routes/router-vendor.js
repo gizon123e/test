@@ -15,7 +15,7 @@ router.get('/detail', authorization, controllerVendor.getDetailVendor);
 router.post("/create", controllerVendor.createVendor);
 router.post("/create/toko", controllerToko.createToko);
 router.post("/pic/create", controllerPic.createPic);
-router.put("/update/:id", authorization, fileType, controllerVendor.updateVendor);
+router.put("/update", authorization, controllerVendor.updateVendor);
 router.delete("/delete/:id", authorization, controllerVendor.deleteVendor);
 
 module.exports = router;
