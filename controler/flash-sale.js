@@ -63,7 +63,7 @@ module.exports = {
 
             if(!flashSales || flashSales.length === 0) return res.status(404).json({message: "no-start"});
 
-            flasSales  = await FlashSale.find({
+            flashSales  = await FlashSale.find({
                 startTime: { $lt: new Date()},
                 endTime: { $gt: new Date()}
             }).lean()
