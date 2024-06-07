@@ -237,8 +237,7 @@ module.exports = {
 
     updateVendor: async (req, res, next) => {
         try {
-            const id = req.params.id
-            const vendor = await Vendor.findById(id);
+            const vendor = await Vendor.findById({userId: req.user.id});
             if(!vendor) return res.status(404).json({message: `Vendor dengan id ${id} tidak ditemukan`});
             let filePath = vendor.profile_pict;
             
