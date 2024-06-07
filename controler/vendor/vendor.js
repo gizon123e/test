@@ -274,6 +274,12 @@ module.exports = {
                 tanggal_lahir: req.body.tanggal_lahir
             }, {new: true});
 
+            if((updatedData.jenis_kelamin || updatedData.jenis_perusahaan) && updatedData.tanggal_lahir){
+                await User.updateOne({_id: req.user.id}, {
+                    isActive: true
+                })
+            }
+
             res.status(200).json({
                 message: 'Vendor updated successfully',
                 data: updatedData

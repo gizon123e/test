@@ -94,6 +94,23 @@ const vendorModel = new mongoose.Schema({
     }
 })
 
+vendorModel.pre('save', function (next) {
+    if (this.namaBadanUsaha && this.jenis_kelamin) {
+        return next(new Error("Jenis Kelamin hanya untuk user individu"));
+    }
+    next();
+});
+
+vendorModel.pre('findOneAndUpdate', async function (next) {
+    const update = this.getUpdate();
+    const docToUpdate = await this.model.findOne(this.getQuery());
+    if (update && docToUpdate.namaBadanUsaha && update.jenis_kelamin) {
+        return next("Jenis Kelamin hanya untuk user individu");
+    } else if (update && !docToUpdate.namaBadanUsaha && update.jenis_perusahaan) {
+        return next("Jenis Perusahaan hanya untuk user Perusahaan");
+    }
+    next();
+});
 const Vendor = mongoose.model("Vendor", vendorModel)
 
 module.exports = Vendor
