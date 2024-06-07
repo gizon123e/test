@@ -137,14 +137,15 @@ module.exports = {
 
             const vaildateProduct = await Product.findById(productId).populate('userId');
             
-            if(vaildateProduct.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
-
             if (!vaildateProduct) {
-                return res.status(400).json({
+                return res.status(404).json({
                     error: true,
                     message: 'product id not found'
                 })
             }
+            
+            if(vaildateProduct.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
+
 
             if (req.user.role === 'konsumen') {
                 const validateCart = await Carts.findOne({ productId, userId: req.user.id }).populate('userId')

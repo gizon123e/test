@@ -40,8 +40,6 @@ module.exports = {
     }
   },
 
-
-  
   getAllProductWithMain: async(req, res, next) => {
     try {
       const datas = await Product.find({id_main_category: req.params.id})
@@ -97,7 +95,7 @@ module.exports = {
       console.log(error)
       next(error)
     }
-    },
+  },
 
   getProductWithMain: async(req, res, next) =>{
     try {
@@ -105,199 +103,202 @@ module.exports = {
       const userRole = req.user.role
       const dataProds = await Product.aggregate([
         {
-            $match:{
-              id_main_category: id
-            }
+          $match:{
+            id_main_category: id
+          }
         },
         {
-            $lookup:{
-                from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                as: "userData"
-            }
+          $lookup:{
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userData"
+          }
         },
         {
-            $unwind: "$userData"
+          $unwind: "$userData"
         }
       ]);
 
-      const productsPromo = await Promo.find().populate({
-        path: 'productId',
-        model: "Product",
-        select: "id_main_category"
-      });
+      // const productsPromo = await Promo.find().populate({
+      //   path: 'productId',
+      //   model: "Product",
+      //   select: "id_main_category"
+      // });
 
-      const banner = productsPromo.filter(item => {
-        return item.productId.id_main_category
-      });
+      // const banner = productsPromo.filter(item => {
+      //   return item.productId.id_main_category
+      // });
 
-      let userVendor = [];
-      let userSupplier = [];
-      let userProdusens = [];
-      let flashSaleProducts = [];
-      let ordinaryProducts = [];
+      // let userVendor = [];
+      // let userSupplier = [];
+      // let userProdusens = [];
+      // let flashSaleProducts = [];
+      // let ordinaryProducts = [];
 
-      dataProds.forEach(item => {
+      // dataProds.forEach(item => {
 
-          if(item.userData.role === "vendor"){
-              userVendor.push(item.userId)
-          }else if(item.userData.role === 'supplier'){
-              userSupplier.push(item.userId)
-          }else if(item.userData.role === "produsen"){
-              userProdusens.push(item.userId)
-          }
+      //     if(item.userData.role === "vendor"){
+      //         userVendor.push(item.userId)
+      //     }else if(item.userData.role === 'supplier'){
+      //         userSupplier.push(item.userId)
+      //     }else if(item.userData.role === "produsen"){
+      //         userProdusens.push(item.userId)
+      //     }
           
-          if(item.isFlashSale){
-              flashSaleProducts.push({...item, produkFrom: item.userData.role});
-          }else{
-              ordinaryProducts.push({...item, produkFrom: item.userData.role});
-          };
-      });
+      //     if(item.isFlashSale){
+      //         flashSaleProducts.push({...item, produkFrom: item.userData.role});
+      //     }else{
+      //         ordinaryProducts.push({...item, produkFrom: item.userData.role});
+      //     };
+      // });
 
-      const dataVendors = await Vendor.aggregate([
-        {
-            $match: {
-              userId: { $in: userVendor }
-            }
-        },
-        {
-            $lookup: {
-                from: 'addresses',
-                localField: 'address',
-                foreignField: '_id',
-                as: 'alamat'
-            }
-        },
-        {
-          $unwind: {
-            path: '$alamat',
-            preserveNullAndEmptyArrays: true
-          }
-        }
-      ])
+      // const dataVendors = await Vendor.aggregate([
+      //   {
+      //       $match: {
+      //         userId: { $in: userVendor }
+      //       }
+      //   },
+      //   {
+      //       $lookup: {
+      //           from: 'addresses',
+      //           localField: 'address',
+      //           foreignField: '_id',
+      //           as: 'alamat'
+      //       }
+      //   },
+      //   {
+      //     $unwind: {
+      //       path: '$alamat',
+      //       preserveNullAndEmptyArrays: true
+      //     }
+      //   }
+      // ])
 
-      const dataSuppliers = await Supplier.aggregate([
-          {
-            $match:{
-              userId: { $in: userSupplier }
-            }
-          },
-          {
-            $lookup: {
-                from: 'addresses',
-                localField: 'address',
-                foreignField: '_id',
-                as: 'alamat'
-            }
-          },
-          {
-            $unwind: {
-              path: '$alamat',
-              preserveNullAndEmptyArrays: true
-            }
-          }
-      ]);
+      // const dataSuppliers = await Supplier.aggregate([
+      //     {
+      //       $match:{
+      //         userId: { $in: userSupplier }
+      //       }
+      //     },
+      //     {
+      //       $lookup: {
+      //           from: 'addresses',
+      //           localField: 'address',
+      //           foreignField: '_id',
+      //           as: 'alamat'
+      //       }
+      //     },
+      //     {
+      //       $unwind: {
+      //         path: '$alamat',
+      //         preserveNullAndEmptyArrays: true
+      //       }
+      //     }
+      // ]);
 
-      const dataProdusens = await Produsen.aggregate([
-          {
-              $match:{
-                userId: { $in: userProdusens }
-              }
-          },
-          {
-            $lookup: {
-                from: 'addresses',
-                localField: 'address',
-                foreignField: '_id',
-                as: 'alamat'
-            }
-          },
-          {
-            $unwind: {
-              path: '$alamat',
-              preserveNullAndEmptyArrays: true
-            }
-          }
-      ]);
+      // const dataProdusens = await Produsen.aggregate([
+      //     {
+      //         $match:{
+      //           userId: { $in: userProdusens }
+      //         }
+      //     },
+      //     {
+      //       $lookup: {
+      //           from: 'addresses',
+      //           localField: 'address',
+      //           foreignField: '_id',
+      //           as: 'alamat'
+      //       }
+      //     },
+      //     {
+      //       $unwind: {
+      //         path: '$alamat',
+      //         preserveNullAndEmptyArrays: true
+      //       }
+      //     }
+      // ]);
 
-      flashSaleProducts.map(produk => {
-          if(produk.produkFrom === "vendor"){
-              const dataVendor = dataVendors.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataVendor
-          }else if(produk.produkFrom === "supplier"){
-              const dataSupplier = dataSuppliers.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataSupplier
-          }else if(produk.produkFrom === "produsen"){
-              const dataProduen = dataProdusens.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataProduen
-          }
-      });
+      // flashSaleProducts.map(produk => {
+      //     if(produk.produkFrom === "vendor"){
+      //         const dataVendor = dataVendors.filter(vnd => {
+      //             return vnd.userId.equals(produk.userId)
+      //         });
+      //         produk.dataToko = dataVendor
+      //     }else if(produk.produkFrom === "supplier"){
+      //         const dataSupplier = dataSuppliers.filter(vnd => {
+      //             return vnd.userId.equals(produk.userId)
+      //         });
+      //         produk.dataToko = dataSupplier
+      //     }else if(produk.produkFrom === "produsen"){
+      //         const dataProduen = dataProdusens.filter(vnd => {
+      //             return vnd.userId.equals(produk.userId)
+      //         });
+      //         produk.dataToko = dataProduen
+      //     }
+      // });
 
-      ordinaryProducts.map(produk => {
-          if(produk.produkFrom === "vendor"){
-              const dataVendor = dataVendors.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataVendor
-          }else if(produk.produkFrom === "supplier"){
-              const dataSupplier = dataSuppliers.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataSupplier
-          }else if(produk.produkFrom === "produsen"){
-              const dataProduen = dataProdusens.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataProduen
-          }
-      })
-      let finalDataFlashSale;
-      let finalDataNotFlashSale;
+      // ordinaryProducts.map(produk => {
+      //     if(produk.produkFrom === "vendor"){
+      //         const dataVendor = dataVendors.filter(vnd => {
+      //             return vnd.userId.equals(produk.userId)
+      //         });
+      //         produk.dataToko = dataVendor
+      //     }else if(produk.produkFrom === "supplier"){
+      //         const dataSupplier = dataSuppliers.filter(vnd => {
+      //             return vnd.userId.equals(produk.userId)
+      //         });
+      //         produk.dataToko = dataSupplier
+      //     }else if(produk.produkFrom === "produsen"){
+      //         const dataProduen = dataProdusens.filter(vnd => {
+      //             return vnd.userId.equals(produk.userId)
+      //         });
+      //         produk.dataToko = dataProduen
+      //     }
+      // })
+      // let finalDataFlashSale;
+      // let finalDataNotFlashSale;
 
-      switch(userRole){
-          case("konsumen"):
-              finalDataFlashSale = flashSaleProducts.filter(item => {
-                  return item.produkFrom === "vendor"
-              });
-              finalDataNotFlashSale = ordinaryProducts.filter(item => {
-                  return item.produkFrom === "vendor"
-              })
-              break;
-          case("vendor"):
-              finalDataFlashSale = flashSaleProducts.filter(item => {
-                  return item.produkFrom === "supplier"
-              });
-              finalDataNotFlashSale = ordinaryProducts.filter(item => {
-                  return item.produkFrom === "supplier"
-              })
-              break;
-          case("supplier"):
-              finalDataFlashSale = flashSaleProducts.filter(item => {
-                  return item.produkFrom === "produsen"
-              });
-              finalDataNotFlashSale = ordinaryProducts.filter(item => {
-                  return item.produkFrom === "produsen"
-              })
-              break;
-      }
+      // switch(userRole){
+      //     case("konsumen"):
+      //         finalDataFlashSale = flashSaleProducts.filter(item => {
+      //             return item.produkFrom === "vendor"
+      //         });
+      //         finalDataNotFlashSale = ordinaryProducts.filter(item => {
+      //             return item.produkFrom === "vendor"
+      //         })
+      //         break;
+      //     case("vendor"):
+      //         finalDataFlashSale = flashSaleProducts.filter(item => {
+      //             return item.produkFrom === "supplier"
+      //         });
+      //         finalDataNotFlashSale = ordinaryProducts.filter(item => {
+      //             return item.produkFrom === "supplier"
+      //         })
+      //         break;
+      //     case("supplier"):
+      //         finalDataFlashSale = flashSaleProducts.filter(item => {
+      //             return item.produkFrom === "produsen"
+      //         });
+      //         finalDataNotFlashSale = ordinaryProducts.filter(item => {
+      //             return item.produkFrom === "produsen"
+      //         })
+      //         break;
+      // }
+
       return res.status(200).json({
         message: "Berhasil Mendapatkan Data",
-        finalDataFlashSale,
-        finalDataNotFlashSale,
-        banner
+        // finalDataFlashSale,
+        // finalDataNotFlashSale,
+        // banner
+        data: dataProds
       })
     } catch (error) {
       console.log(error);
       next(error)
     }
   },
+
   search: async (req, res, next) => {
     try {
 

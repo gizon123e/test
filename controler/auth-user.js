@@ -194,7 +194,6 @@ module.exports = {
         code: kode,
         expire: new Date(new Date().getTime() + 5 * 60 * 1000)
       };
-      console.log(kode_random)
       newUser.codeOtp = codeOtp;
       await newUser.save();
 
