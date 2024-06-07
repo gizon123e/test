@@ -242,11 +242,11 @@ module.exports = {
             );
                         
             const products = await Product.find({_id: { $in: productIds }}).select('_id')
-            console.log(products)
             for( const prod of productIds ){
-                if(!products.includes(prod)) return res.status(404).json({messgae: `Product dengan Id ${prod} tidak ditemukan`})
+                const found = products.some(item => item._id === prod );
+                if(!found) return res.status(404).json({message: `Produk dengan id ${prod} tidak ditemukan`})
             }
-
+            
 
             const dataArrayProduct = []
             let total_price = 0

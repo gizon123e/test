@@ -1,5 +1,6 @@
 const Vendor = require('../../models/vendor/model-vendor');
-const PicVendor = require("../../models/vendor/model-penanggung-jawab")
+const PicVendor = require("../../models/vendor/model-penanggung-jawab");
+const User = require("../../models/model-auth-user")
 const Address = require("../../models/model-address");
 const path = require('path')
 const fs = require('fs')
@@ -269,9 +270,9 @@ module.exports = {
 
             const updatedData = await Vendor.findOneAndUpdate({userId: req.user.id}, { 
                 profile_pict: filePath,
-                jenis_kelamin: req.body.jenis_kelamin,
-                jenis_perusahaan: req.body.jenis_perusahaan,
-                tanggal_lahir: req.body.tanggal_lahir
+                jenis_kelamin: req.body.jenis_kelamin? req.body.jenis_kelamin : undefined,
+                jenis_perusahaan: req.body.jenis_perusahaan? req.body.jenis_perusahaan: undefined,
+                tanggal_lahir: req.body.tanggal_lahir? req.body.tanggal_lahir : undefined
             }, {new: true});
 
             if((updatedData.jenis_kelamin || updatedData.jenis_perusahaan) && updatedData.tanggal_lahir){

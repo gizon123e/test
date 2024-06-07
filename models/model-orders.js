@@ -1,3 +1,4 @@
+const { Decimal128 } = require('mongodb');
 const mongoose = require('mongoose');
 
 const modelOrder = new mongoose.Schema({
@@ -15,6 +16,9 @@ const modelOrder = new mongoose.Schema({
                 required: [true, 'Quantity harus di isi'],
                 min: 1,
                 default: 1
+            },
+            proteksi: {
+                type: Boolean
             }
         }],
         deadline:{
@@ -30,9 +34,6 @@ const modelOrder = new mongoose.Schema({
         },
         note: {
             type: String
-        },
-        proteksi: {
-            type: Boolean
         }
     }],
     userId: {
@@ -63,7 +64,12 @@ const modelOrder = new mongoose.Schema({
         default: false
     },
     dp: {
-        type: Boolean
+        isUsed: {
+            type: Boolean
+        },
+        value: {
+            type: Decimal128
+        }
     },
     is_dibatalkan: {
         type: Boolean,

@@ -91,6 +91,9 @@ const vendorModel = new mongoose.Schema({
     profile_pict: {
         type: String,
         default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
+    },
+    tanggal_lahir: {
+        type: String
     }
 })
 
@@ -103,7 +106,15 @@ vendorModel.pre('save', function (next) {
 
 vendorModel.pre('findOneAndUpdate', async function (next) {
     const update = this.getUpdate();
-    const docToUpdate = await this.model.findOne(this.getQuery());
+    const docToUpdate = await this.model.findOne(this.getQuery()).lean();
+    
+    Object.keys(update).forEach(item => {
+        if(item === 'profile_pict'){
+            return;
+        }
+        if(Object.keys(docToUpdate).includes(item)) return next(`${item} tidak bisa diubah lagi, karena sudah punya`)
+    });
+
     if (update && docToUpdate.namaBadanUsaha && update.jenis_kelamin) {
         return next("Jenis Kelamin hanya untuk user individu");
     } else if (update && !docToUpdate.namaBadanUsaha && update.jenis_perusahaan) {
