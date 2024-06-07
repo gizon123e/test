@@ -45,9 +45,6 @@ const ModelDetailPesanan = new mongoose.Schema({
     biaya_asuransi:{
         type: Number,
     },
-    biaya_proteksi:{
-        type: Number
-    },
     isTerbayarkan:{
         type: Boolean,
         default: false

@@ -16,6 +16,9 @@ const modelPengiriman = mongoose.Schema({
         type: String,
         enum: ["express", "hemat"]
     },
+    total_ongkir: {
+        type: Number
+    },
     ongkir: {
         type: Number
     },
