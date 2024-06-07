@@ -102,13 +102,15 @@ konsumenModel.pre('save', function (next) {
 
 konsumenModel.pre('findOneAndUpdate', async function (next) {
     const update = this.getUpdate();
+    
     const docToUpdate = await this.model.findOne(this.getQuery()).lean();
     
     Object.keys(update).forEach(item => {
         if(item === 'profile_pict'){
             return;
-        }
-        if(Object.keys(docToUpdate).includes(item)) return next(`${item} tidak bisa diubah lagi, karena sudah punya`)
+        };
+
+        if(Object.keys(docToUpdate).includes(item) && update[item] && docToUpdate[item]) return next(`${item} tidak bisa diubah lagi, karena sudah punya`)
     });
 
     if (update && docToUpdate.namaBadanUsaha && update.jenis_kelamin) {

@@ -226,7 +226,8 @@ module.exports = {
                 dp,
                 total,
                 deadline,
-                items
+                items,
+                shipments
             } = req.body
 
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
@@ -247,7 +248,8 @@ module.exports = {
                 if(!found) return res.status(404).json({message: `Produk dengan id ${prod} tidak ditemukan`})
             }
             
-
+            if(items.length !== shipments.length) return res.status(400).json({message: "Data Toko tidak sama dengan dengan data pengiriman"})
+            
             const dataArrayProduct = []
             let total_price = 0
 
