@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const modelPengiriman = mongoose.Schema({
+const modelPengiriman = new mongoose.Schema({
     orderId:{
         type: mongoose.Types.ObjectId,
         ref: "Pesanan"

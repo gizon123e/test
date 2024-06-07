@@ -302,7 +302,7 @@ module.exports = {
                     payment_type: 'bank_transfer',
                     transaction_details: {
                         order_id: detailPesanan._id,
-                        gross_amount: detailPesanan.total_price
+                        gross_amount: dp.isUsed? detailPesanan.total_price * 0.4 : detailPesanan.total_price
                     },
                     bank_transfer:{
                         bank: 'bca',
