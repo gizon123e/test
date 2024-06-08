@@ -108,14 +108,14 @@ module.exports = {
             }
 
             if (dataUser.role === "vendor") {
+                const dataVendor = await Vendor.findOne({ userId: req.params.id }).populate("address")
                 const dataDocument = await ModelPenanggungJawabVendor.findOne({ userId: req.params.id }).populate({
                     path: "detailId",
                     populate: "address"
                 }).populate("alamat")
 
-                if (!dataDocument) return res.status(404).json({ message: "data Vendor & Document Not Found" })
-
                 dataPayload = {
+                    dataVendor,
                     dataDocument,
                     role: dataUser.role
                 }
