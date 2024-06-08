@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const modelPengiriman = mongoose.Schema({
+const modelPengiriman = new mongoose.Schema({
     orderId:{
         type: mongoose.Types.ObjectId,
         ref: "Pesanan"
@@ -16,6 +16,28 @@ const modelPengiriman = mongoose.Schema({
         type: String,
         enum: ["express", "hemat"]
     },
+    total_ongkir: {
+        type: Number
+    },
+    ongkir: {
+        type: Number
+    },
+    potongan_ongkir: {
+        type: Number
+    },
+    kendaraanId:{
+        type: mongoose.Types.ObjectId,
+        ref: "KendaraanDistributor"
+    },
+    productToDelivers:[{
+        productId: {
+            type: String,
+            ref: "Product"
+        },
+        quantity: {
+            type: Number
+        }
+    }],
     status_pengiriman:{
         type: String,
         enum: ["diproses", "dikirim", "pesanan selesai"],

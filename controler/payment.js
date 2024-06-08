@@ -1,6 +1,7 @@
 const dotenv = require('dotenv');
 const fetch = require('node-fetch');
 const DetailPesanan = require('../models/model-detail-pesanan');
+const Pengiriman = require("../models/model-pengiriman")
 const Pesanan = require('../models/model-orders');
 const VA_Used = require('../models/model-va-used')
 dotenv.config();
@@ -29,17 +30,27 @@ module.exports = {
     midtransWebHook: async(req, res, next) => {
         try {
             const { order_id, transaction_status } = req.body;
-            const pesanan = await DetailPesanan.findById(order_id);
+            const detailPesanan = await DetailPesanan.findById(order_id);
             if(transaction_status === "settlement"){
-                await Pesanan.findByIdAndUpdate(pesanan.id_pesanan, {
+                const pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Berlangsung"
-                });
-
+                }, { new: true });
+                
                 await DetailPesanan.findByIdAndUpdate(order_id, {
                     isTerbayarkan: true
                 });
-
+                
                 await VA_Used.findOneAndDelete({orderId: order_id});
+                
+                for ( const ship of pesanan.shipments ){
+                    await Pengiriman.create({
+                        orderId: pesanan._id,
+                        distributorId: ship.id_distributor,
+                        productToDelivers: ship.products,
+                        ...ship
+                    });
+                }
+                
             }else if(transaction_status === "cancel"){
                 await Pesanan.findByIdAndUpdate(pesanan.id_pesanan, {
                     status: "Dibatalkan"

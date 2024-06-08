@@ -40,8 +40,6 @@ module.exports = {
     }
   },
 
-
-  
   getAllProductWithMain: async(req, res, next) => {
     try {
       const datas = await Product.find({id_main_category: req.params.id})
@@ -97,7 +95,7 @@ module.exports = {
       console.log(error)
       next(error)
     }
-    },
+  },
 
   getProductWithMain: async(req, res, next) =>{
     try {
@@ -105,199 +103,124 @@ module.exports = {
       const userRole = req.user.role
       const dataProds = await Product.aggregate([
         {
-            $match:{
-              id_main_category: id
-            }
-        },
-        {
-            $lookup:{
-                from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                as: "userData"
-            }
-        },
-        {
-            $unwind: "$userData"
-        }
-      ]);
-
-      const productsPromo = await Promo.find().populate({
-        path: 'productId',
-        model: "Product",
-        select: "id_main_category"
-      });
-
-      const banner = productsPromo.filter(item => {
-        return item.productId.id_main_category
-      });
-
-      let userVendor = [];
-      let userSupplier = [];
-      let userProdusens = [];
-      let flashSaleProducts = [];
-      let ordinaryProducts = [];
-
-      dataProds.forEach(item => {
-
-          if(item.userData.role === "vendor"){
-              userVendor.push(item.userId)
-          }else if(item.userData.role === 'supplier'){
-              userSupplier.push(item.userId)
-          }else if(item.userData.role === "produsen"){
-              userProdusens.push(item.userId)
+          $match:{
+            id_main_category: id
           }
-          
-          if(item.isFlashSale){
-              flashSaleProducts.push({...item, produkFrom: item.userData.role});
-          }else{
-              ordinaryProducts.push({...item, produkFrom: item.userData.role});
-          };
-      });
-
-      const dataVendors = await Vendor.aggregate([
-        {
-            $match: {
-              userId: { $in: userVendor }
-            }
         },
         {
-            $lookup: {
-                from: 'addresses',
-                localField: 'address',
-                foreignField: '_id',
-                as: 'alamat'
-            }
+          $project: { description: 0, id_main_category: 0, id_sub_category: 0, categoryId: 0, pemasok: 0 }
         },
         {
-          $unwind: {
-            path: '$alamat',
-            preserveNullAndEmptyArrays: true
+          $lookup:{
+            from: "users",
+            let: { userId: "$userId"},
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$userId"]} }},
+              { $project: { _id: 1, role: 1 }}
+            ],
+            as: "userData"
           }
-        }
-      ])
-
-      const dataSuppliers = await Supplier.aggregate([
-          {
-            $match:{
-              userId: { $in: userSupplier }
-            }
-          },
-          {
-            $lookup: {
-                from: 'addresses',
-                localField: 'address',
-                foreignField: '_id',
-                as: 'alamat'
-            }
-          },
-          {
-            $unwind: {
-              path: '$alamat',
-              preserveNullAndEmptyArrays: true
-            }
+        },
+        {
+          $unwind: "$userData"
+        },
+        {
+          $lookup: {
+            from: "vendors",
+            let: { userId: "$userId" },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
+              { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }
+            ],
+            as: "vendorData"
           }
-      ]);
-
-      const dataProdusens = await Produsen.aggregate([
-          {
-              $match:{
-                userId: { $in: userProdusens }
+        },
+        {
+          $lookup: {
+            from: "suppliers",
+            let: { userId: "$userId" },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
+              { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }
+            ],
+            as: "supplierData"
+          }
+        },
+        {
+          $lookup: {
+            from: "produsens",
+            let: { userId: "$userId" },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
+              { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }
+            ],
+            as: "produsenDatas"
+          }
+        },
+        {
+          $addFields: {
+            dataToko: {
+              $cond: {
+                if: { $gt: [{ $size: "$vendorData" }, 0] },
+                then: { $arrayElemAt: ["$vendorData", 0] },
+                else: {
+                  $cond: {
+                    if: { $gt: [{ $size: "$supplierData" }, 0] },
+                    then: { $arrayElemAt: ["$supplierData", 0] },
+                    else: { $arrayElemAt: ["$produsenDatas", 0] }
+                  }
+                }
               }
-          },
-          {
-            $lookup: {
-                from: 'addresses',
-                localField: 'address',
-                foreignField: '_id',
-                as: 'alamat'
-            }
-          },
-          {
-            $unwind: {
-              path: '$alamat',
-              preserveNullAndEmptyArrays: true
             }
           }
+        },
+        {
+          $project: {
+            vendorData: 0,
+            supplierData: 0,
+            produsenDatas: 0
+          }
+        },
+        {
+          $lookup: {
+            from: "addresses",
+            localField: "dataToko.address",
+            foreignField: "_id",
+            as: "alamatToko"
+          }
+        },
+        {
+          $addFields: {
+            "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] }
+          }
+        },
+        {
+          $project: { alamatToko: 0 }
+        },
+        {
+          $project: { userData: 0 }
+        }
       ]);
+      const productIds = dataProds.map(item => { return item._id } );
+      const banners = await Promo.find({productId: { $in: productIds }});
+      let productFlashSale;
+      let productNotFlashSale;
+      productFlashSale = dataProds.filter(item => { return item.isFlashSale });
+      productNotFlashSale = dataProds.filter(item => { return !item.isFlashSale });
+      
 
-      flashSaleProducts.map(produk => {
-          if(produk.produkFrom === "vendor"){
-              const dataVendor = dataVendors.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataVendor
-          }else if(produk.produkFrom === "supplier"){
-              const dataSupplier = dataSuppliers.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataSupplier
-          }else if(produk.produkFrom === "produsen"){
-              const dataProduen = dataProdusens.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataProduen
-          }
-      });
-
-      ordinaryProducts.map(produk => {
-          if(produk.produkFrom === "vendor"){
-              const dataVendor = dataVendors.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataVendor
-          }else if(produk.produkFrom === "supplier"){
-              const dataSupplier = dataSuppliers.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataSupplier
-          }else if(produk.produkFrom === "produsen"){
-              const dataProduen = dataProdusens.filter(vnd => {
-                  return vnd.userId.equals(produk.userId)
-              });
-              produk.dataToko = dataProduen
-          }
-      })
-      let finalDataFlashSale;
-      let finalDataNotFlashSale;
-
-      switch(userRole){
-          case("konsumen"):
-              finalDataFlashSale = flashSaleProducts.filter(item => {
-                  return item.produkFrom === "vendor"
-              });
-              finalDataNotFlashSale = ordinaryProducts.filter(item => {
-                  return item.produkFrom === "vendor"
-              })
-              break;
-          case("vendor"):
-              finalDataFlashSale = flashSaleProducts.filter(item => {
-                  return item.produkFrom === "supplier"
-              });
-              finalDataNotFlashSale = ordinaryProducts.filter(item => {
-                  return item.produkFrom === "supplier"
-              })
-              break;
-          case("supplier"):
-              finalDataFlashSale = flashSaleProducts.filter(item => {
-                  return item.produkFrom === "produsen"
-              });
-              finalDataNotFlashSale = ordinaryProducts.filter(item => {
-                  return item.produkFrom === "produsen"
-              })
-              break;
-      }
       return res.status(200).json({
         message: "Berhasil Mendapatkan Data",
-        finalDataFlashSale,
-        finalDataNotFlashSale,
-        banner
+        productFlashSale,
+        productNotFlashSale,
+        banners
       })
     } catch (error) {
       console.log(error);
       next(error)
     }
   },
+
   search: async (req, res, next) => {
     try {
 

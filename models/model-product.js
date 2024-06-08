@@ -181,12 +181,14 @@ const productModels = new mongoose.Schema(
 
 function hasNoDuplicates(detailVarianArray) {
   const varianSet = new Set();
-  for (const detailVarian of detailVarianArray) {
-    const varianKey = `${detailVarian.varian}-${detailVarian.price}-${detailVarian.stok}-${detailVarian.minimalOrder}-${detailVarian.harga_diskon}`;
-    if (varianSet.has(varianKey)) {
-      return false;
+  if(detailVarianArray !== null){
+    for (const detailVarian of detailVarianArray) {
+      const varianKey = `${detailVarian.varian}-${detailVarian.price}-${detailVarian.stok}-${detailVarian.minimalOrder}-${detailVarian.harga_diskon}`;
+      if (varianSet.has(varianKey)) {
+        return false;
+      }
+      varianSet.add(varianKey);
     }
-    varianSet.add(varianKey);
   }
   return true;
 }
@@ -199,7 +201,7 @@ productModels.pre("save", function (next) {
     this.total_price = this.price
   }
 
-  if(this.bervarian){
+  if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
     this.detail_varian.forEach(element => {
       this.total_stok += element.stok
     });
