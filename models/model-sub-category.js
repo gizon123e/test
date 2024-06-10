@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const SpecificCategory = require('./model-specific-category')
 
 const subModelCategory = new mongoose.Schema({
     name: {
@@ -18,7 +19,15 @@ subModelCategory.pre('findOneAndUpdate', async function(next){
         contents: { $in: this.getUpdate().$push.contents }
     }).lean()
     if(sub){
-        next(`SpecificCategory sudah ada di SubCategory ${sub.name}`);
+        const specific = await SpecificCategory.findOne({_id: this.getUpdate().$push.contents})
+        const update = await SpecificCategory.create({
+            name: specific.name
+        })
+        await SubCategory.updateOne({_id: this.getQuery._id}, {
+            $push: {
+                contents: update._id
+            }
+        })
     }
     next()
 })

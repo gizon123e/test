@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const SubCategory = require('./model-sub-category')
 
 const mainModelCategory = new mongoose.Schema({
     name: {
@@ -28,11 +29,19 @@ const mainModelCategory = new mongoose.Schema({
 }, { timestamp: true })
 
 mainModelCategory.pre('findOneAndUpdate', async function(next){
-    const sub = await this.model.findOne({
+    const main = await this.model.findOne({
         contents: { $in: this.getUpdate().$push.contents }
     }).lean()
-    if(sub){
-        next(`Sub Category sudah ada di Main Category ${sub.name}`);
+    if(main){
+        const specific = await SubCategory.findOne({_id: this.getUpdate().$push.contents})
+        const update = await SubCategory.create({
+            name: specific.name
+        })
+        await MainCategory.updateOne({_id: this.getQuery._id}, {
+            $push: {
+                contents: update._id
+            }
+        })
     }
     next()
 })

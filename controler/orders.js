@@ -184,30 +184,14 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const dataOrder = await Orders.findOne({ _id: req.params.id })
-                .populate({
-                    path: 'product.productId',
-                    populate: [
-                        { path: 'categoryId' },
-                        {
-                            path: 'userId',
-                            select: '-password'
-                        }
-                    ]
-                })
-                .populate('userId', '-password').populate('addressId')
+            const dataOrder = await Orders.findById(req.params.id)
+            
 
             if (!dataOrder) return res.status(404).json({ error: 'data not found' })
 
             return res.status(200).json({ message: 'get detail data order success', datas: dataOrder })
         } catch (error) {
-            if (error && error.name === 'ValidationError') {
-                return res.status(400).json({
-                    error: true,
-                    message: error.message,
-                    fields: error.fields
-                })
-            }
+            console.log(error)
             next(error)
         }
     },
