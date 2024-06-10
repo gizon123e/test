@@ -32,9 +32,6 @@ module.exports = {
         try {
             let data = [];
             const minat = await Minat.findOne({userId: req.user.id}).lean()
-            const categoryIds = minat.categoryMinat.map(item => {
-                return item.categoryId
-            })
             const promo = await Promo.aggregate([
                 {
                     $lookup:{
@@ -51,7 +48,12 @@ module.exports = {
                     $project: { "dataProducts._id": 1, "dataProducts.categoryId": 1, banner: 1 , typePromo: 1 }
                 }
             ])
-            if(minat || minat.length > 0 ){
+            if(!minat){
+                data = promo
+            }else{
+                const categoryIds = minat.categoryMinat.map(item => {
+                    return item.categoryId
+                })
                 promo.forEach(item => {
                     if(categoryIds.includes(item.dataProducts.categoryId)){
                         data.push(item)
@@ -59,8 +61,6 @@ module.exports = {
                         data = promo
                     }
                 })
-            }else{
-                data = promo
             }
             data.slice(0 , 3)
             return res.status(200).json({message:"Berhasil Menampilkan Rekomendasi Promo Untuk User", data })
