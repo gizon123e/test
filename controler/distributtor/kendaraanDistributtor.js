@@ -7,6 +7,7 @@ const Address = require('../../models/model-address')
 const Gratong = require('../../models/model-gratong')
 const Distributtor = require('../../models/distributor/model-distributor')
 const Tarif = require('../../models/model-tarif')
+const BiayaTetap = require('../../models/model-biaya-tetap')
 
 const path = require('path')
 const fs = require('fs')
@@ -53,10 +54,20 @@ module.exports = {
 
     getKendaraanDistributorById: async (req, res, next) => {
         try {
-            const { id, addressId } = req.query
+            const { userId, addressId } = req.query
+            const { product = [] } = req.body
 
-            const product = await Product.findOne({ _id: id }).populate('userId')
-            const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
+            const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
+
+            let hargaBeratBarang = 0
+            for (let productId of product) {
+                const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
+                const valume = dataProduct.panjang * dataProduct.lebar * dataProduct.tinggi
+                const hitungBerat = dataProduct.berat * productId.qty
+                hargaBeratBarang = hitungBerat * dataBiayaTetap.biaya_per_kg
+            }
+
+            const addressVendor = await Vendor.findOne({ userId: userId }).populate('address')
             const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
@@ -97,6 +108,7 @@ module.exports = {
                     populate: "alamat_id"
                 })
                 .lean()
+
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
             for (let kendaraan of dataKendaraan) {
@@ -109,17 +121,20 @@ module.exports = {
                     const dataJara = jarakTempu - 4
                     const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
                     const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
+                    console.log('data per Km', dataPerKM)
+                    console.log('data tarif', kendaraan.tarifId.tarif_dasar)
+                    console.log('data berat', hargaBeratBarang)
 
                     if (gratong) {
                         kendaraan.isGratong = true
                         switch (gratong.jenis) {
                             case "persentase":
-                                console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
+                                // console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                 potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
                                 total_ongkir = hargaOngkir - potongan_harga
                                 break;
                             case "langsung":
-                                console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
+                                // console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
                                 potongan_harga = hargaOngkir - gratong.nilai_gratong;
                                 total_ongkir = hargaOngkir - potongan_harga;
                                 break;
@@ -138,17 +153,20 @@ module.exports = {
                 } else {
                     let potongan_harga;
                     let total_ongkir;
-                    const hargaOngkir = kendaraan.tarifId.tarif_dasar
+                    const hargaOngkir = kendaraan.tarifId.tarif_dasar + hargaBeratBarang
+                    console.log('data berat', hargaBeratBarang)
+                    console.log("data tarif", kendaraan.tarifId.tarif_dasar)
+                    console.log(hargaOngkir)
                     if (gratong) {
                         kendaraan.isGratong = true
                         switch (gratong.jenis) {
                             case "persentase":
-                                console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
+                                // console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                 potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
                                 total_ongkir = hargaOngkir - potongan_harga
                                 break;
                             case "langsung":
-                                console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
+                                // console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
                                 potongan_harga = hargaOngkir - gratong.nilai_gratong;
                                 total_ongkir = hargaOngkir - potongan_harga;
                                 break;

@@ -1,5 +1,6 @@
 const Distributtor = require('../../models/distributor/model-distributor')
 const Vendor = require('../../models/vendor/model-vendor')
+const TokoVendor = require('../../models/vendor/model-toko')
 const Product = require('../../models/model-product')
 const Konsumen = require('../../models/konsumen/model-konsumen')
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
@@ -57,6 +58,7 @@ module.exports = {
 
             let dataAllDistributtor = []
             const dataDistributtor = await Distributtor.find().populate("userId", '-password').populate('alamat_id')
+            console.log(dataDistributtor)
 
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
 
@@ -156,6 +158,7 @@ module.exports = {
             res.status(200).json({
                 message: "success get data Distributtor",
                 datas
+                // dataDistributtor
             })
 
         } catch (error) {
@@ -174,12 +177,25 @@ module.exports = {
     getAllDistributtor: async (req, res, next) => {
         try {
             const { name, addressId } = req.query
+            const { product = [] } = req.body
 
-            const product = await Product.findOne({ _id: req.params.id }).populate('userId')
-            const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
-            console.log(addressVendor)
             const ukuranVolumeMotor = 100 * 30 * 40
-            const ukuranVolumeProduct = product.tinggi * product.lebar * product.panjang
+            let totalUkuranVolumeProduct = 0
+            let totalUkuranBeratProduct = 0
+
+            for (let productId of product) {
+                const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
+                const ukuranVolumeProduct = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang;
+                const ukuranBeratProduct = dataProduct.berat * productId.qty;
+                totalUkuranVolumeProduct += ukuranVolumeProduct;
+                totalUkuranBeratProduct += ukuranBeratProduct;
+                console.log(`Volume Product ID ${productId.id}:`, ukuranVolumeProduct);
+                console.log(`Berat Product ID ${productId.id}:`, ukuranBeratProduct);
+            }
+            console.log("Total Volume:", totalUkuranVolumeProduct);
+            console.log("Total Berat:", totalUkuranBeratProduct);
+
+            const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
@@ -212,9 +228,11 @@ module.exports = {
                 query.nama_distributor = { $regex: name, $options: 'i' }
             }
 
-            const isHeavyOrLarge = product.berat < 20 || ukuranVolumeProduct < ukuranVolumeMotor;
-            if (isHeavyOrLarge) {
-                query.is_kendaraan = { $in: "Motor" };
+
+            if (totalUkuranBeratProduct < ukuranVolumeMotor || totalUkuranVolumeProduct < ukuranVolumeMotor) {
+                query.is_kendaraan = { $in: ["Motor", "Mobil dan Motor"] };
+            } else {
+                query.is_kendaraan = { $in: ["Mobil", "Mobil dan Motor"] };
             }
 
             let datas = []
@@ -229,19 +247,21 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
+                    console.log(distributor)
                     const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id })
-
-                    if (dataKendaraan.length > 0)
+                    if (dataKendaraan.length > 0) {
                         datas.push({
                             distributor,
                             jarakTempu: Math.round(distance)
                         })
+                    }
                 }
             }
 
             res.status(200).json({
                 message: "success get data Distributtor",
                 datas
+                // addressVendor
             })
 
         } catch (error) {

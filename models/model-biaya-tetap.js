@@ -5,17 +5,23 @@ const modelBiayaTetap = mongoose.Schema({
     biaya_proteksi: {
         type: Number
     },
-    biaya_asuransi:{
+    biaya_asuransi: {
         type: Number,
     },
-    biaya_layanan:{
+    biaya_layanan: {
         type: Number
     },
-    biaya_jasa_aplikasi:{
+    biaya_jasa_aplikasi: {
         type: Number
     },
-    nilai_koin:{
+    nilai_koin: {
         type: Decimal128
+    },
+    biaya_per_kg: {
+        type: Number
+    },
+    constanta_volume: {
+        type: Number
     }
 });
 
