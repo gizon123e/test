@@ -1,0 +1,1 @@
+::1 - - [10/Jun/2024:03:36:23 +0000] "POST /api/cart/get_carts HTTP/1.1" 500 344 "-" "PostmanRuntime/7.39.0"

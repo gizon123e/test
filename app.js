@@ -10,8 +10,11 @@ const path = require('path');
 const websocket = require("./websocket/index-ws");
 const session = require("express-session");
 const app = express();
+const fs = require('fs')
 
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 app.use(cors());
+app.use(logger('combined', { stream: accessLogStream }));
 app.use(logger("dev"));
 app.use(cookieParser());
 app.use(express.json());
