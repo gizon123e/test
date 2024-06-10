@@ -151,16 +151,20 @@ const productModels = new mongoose.Schema(
       default: false
     },
     panjang: {
-      type: Number
+      type: Number,
+      required: true
     },
     lebar: {
-      type: Number
+      type: Number,
+      required: true
     },
     tinggi: {
-      type: Number
+      type: Number,
+      required: true
     },
     berat: {
-      type: Number
+      type: Number,
+      required: true
     },
     // bahanBaku: [
     //   {
