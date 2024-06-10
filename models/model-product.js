@@ -40,6 +40,7 @@ const productModels = new mongoose.Schema(
     },
     bervarian:{
       type: Boolean,
+      default: false
     },
     name_product: {
       type: String,

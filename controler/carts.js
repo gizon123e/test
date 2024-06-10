@@ -78,7 +78,7 @@ module.exports = {
             const { cartIds } = req.body
             const carts = await Carts.find({_id: { $in : cartIds}, userId: req.user.id}).populate({
                 path: 'productId',
-                select: '-description -isPublished -isVerified  -id_main_category -id_sub_category -categoryId',
+                select: '_id name_product price  total_price diskon image_product userId total_stok pemasok rating minimalOrder isFlashSale varian',
                 populate: {
                     path: 'userId',
                     select: "_id role"
@@ -122,8 +122,7 @@ module.exports = {
                     products: store[key].arrayProduct
                 })
             }
-            console.log(store)
-
+            
             return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: finalData})
         } catch (error) {
             console.log(error);
