@@ -27,6 +27,16 @@ const mainModelCategory = new mongoose.Schema({
     }
 }, { timestamp: true })
 
+mainModelCategory.pre('findOneAndUpdate', async function(next){
+    const sub = await this.model.findOne({
+        contents: { $in: this.getUpdate().$push.contents }
+    }).lean()
+    if(sub){
+        next(`Sub Category sudah ada di Main Category ${sub.name}`);
+    }
+    next()
+})
+
 const MainCategory = mongoose.model('MainCategory', mainModelCategory)
 
 module.exports = MainCategory

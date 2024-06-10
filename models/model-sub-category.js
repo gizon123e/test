@@ -14,22 +14,16 @@ const subModelCategory = new mongoose.Schema({
 }, { timestamp: true })
 
 subModelCategory.pre('findOneAndUpdate', async function(next){
-    const subCategory = this;
-    for(const content of subCategory.contents){
-        const duplicate = await mongoose.models.subCategory.findOne({
-            _id: { $ne: subCategory._id },
-            contents: content   
-        });
-
-        if (duplicate) {
-            const err = new Error(`SpecificCategory ${content} sudah ada di SubCategory ${duplicate.name}`);
-            next(err);
-            return;
-        }
+    const sub = await this.model.findOne({
+        contents: { $in: this.getUpdate().$push.contents }
+    }).lean()
+    if(sub){
+        next(`SpecificCategory sudah ada di SubCategory ${sub.name}`);
     }
     next()
 })
 
 const SubCategory = mongoose.model('SubCategory', subModelCategory)
+
 
 module.exports = SubCategory

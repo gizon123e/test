@@ -198,14 +198,10 @@ module.exports = {
 
     updateCart: async (req, res, next) => {
         try {
-            const dataCharts = await Carts.findById( req.params.id ).populate('productId')
-            const productId = dataCharts.productId._id
-            dataCharts.total_price = parseInt(dataCharts.productId.total_price) * req.body.quantity
-            dataCharts.quantity = req.body.quantity
-            const object = dataCharts.toObject()
-            object.productId = productId
-            await dataCharts.save()
-            return res.status(201).json({ message: 'update data cart success', data: object })
+            const dataCharts = await Carts.findByIdAndUpdate( req.params.id, {
+                $inc: { quantity: parseInt(req.body.quantity) }
+            }, {new: true})
+            return res.status(201).json({ message: 'update data cart success', data: dataCharts })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
