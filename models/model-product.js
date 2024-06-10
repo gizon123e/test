@@ -48,10 +48,6 @@ const productModels = new mongoose.Schema(
       minlength: [5, "panjang nama harus antara 5 - 250 karakter"],
       required: [true, "name_product harus di isi"],
     },
-    jenis_produk:{
-      type: String,
-      enum: ["makanan", "not_makanan"]
-    },
     price: {
       type: Number,
       required: [true, "price harus di isi"],
