@@ -154,7 +154,7 @@ module.exports = {
             let main_category;
             let sub_category
             let specific_category;
-            main_category = await MainCategory.findOne({ name: { $regex: new RegExp(main, 'i') } }).populate("contents");
+            main_category = await MainCategory.findOne({ name: { $regex: new RegExp(`^${main}$`, 'i') } }).populate("contents");
             if (req.files === undefined && !main_category && main) return res.status(400).json({ message: "Tidak ada file icon yang dikirimkan" })
             if (main && req.files) {
                 const { icon } = req.files;
@@ -167,7 +167,7 @@ module.exports = {
             }
 
             if (sub) {
-                sub_category = await SubCategory.findOne({ name: { $regex: new RegExp('^' + sub + '$', 'i') } });
+                sub_category = await SubCategory.findOne({ name: { $regex: new RegExp(`^${sub}$`, 'i') } });
                 if (!sub_category) {
                     sub_category = await SubCategory.create({ name: sub });
                 }
@@ -181,7 +181,7 @@ module.exports = {
             };
 
             if (specific) {
-                specific_category = await SpecificCategory.findOne({ name: { $regex: new RegExp(specific, 'i') } });
+                specific_category = await SpecificCategory.findOne({ name: { $regex: new RegExp(`^${specific}$`, 'i') } });
                 if (!specific_category) {
                     specific_category = await SpecificCategory.create({ name: specific });
                 }
