@@ -334,7 +334,7 @@ module.exports = {
       const dataProduct = await Product.findById(req.params.id).populate('categoryId').populate({
         path: 'userId',
         select: '-password -codeOtp -pin -saldo -poin'
-      })
+      }).lean()
       let toko;
       if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){
@@ -348,9 +348,7 @@ module.exports = {
           toko = await Produsen.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
           break;
       }
-      
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
-
       return res.status(200).json({ datas: dataProduct, toko });
 
     } catch (error) {

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const modelPromo = mongoose.Schema({
+const modelPromo = new mongoose.Schema({
     productId: {
         type: String,
         ref: "Product"

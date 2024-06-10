@@ -78,7 +78,7 @@ module.exports = {
             const { cartIds } = req.body
             const carts = await Carts.find({_id: { $in : cartIds}, userId: req.user.id}).populate({
                 path: 'productId',
-                select: '-description -isPublished -isVerified  -id_main_category -id_sub_category -categoryId',
+                select: '_id name_product price  total_price diskon image_product userId total_stok pemasok rating minimalOrder isFlashSale varian',
                 populate: {
                     path: 'userId',
                     select: "_id role"
@@ -97,6 +97,7 @@ module.exports = {
                 }
 
                 store[storeId].arrayProduct.push({
+                    cartId: keranjang._id,
                     product: keranjang.productId,
                     quantity: keranjang.quantity
                 })
@@ -122,8 +123,7 @@ module.exports = {
                     products: store[key].arrayProduct
                 })
             }
-            console.log(store)
-
+            
             return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: finalData})
         } catch (error) {
             console.log(error);
@@ -198,14 +198,10 @@ module.exports = {
 
     updateCart: async (req, res, next) => {
         try {
-            const dataCharts = await Carts.findById( req.params.id ).populate('productId')
-            const productId = dataCharts.productId._id
-            dataCharts.total_price = parseInt(dataCharts.productId.total_price) * req.body.quantity
-            dataCharts.quantity = req.body.quantity
-            const object = dataCharts.toObject()
-            object.productId = productId
-            await dataCharts.save()
-            return res.status(201).json({ message: 'update data cart success', data: object })
+            const dataCharts = await Carts.findByIdAndUpdate( req.params.id, {
+                $inc: { quantity: parseInt(req.body.quantity) }
+            }, {new: true})
+            return res.status(201).json({ message: 'update data cart success', data: dataCharts })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({

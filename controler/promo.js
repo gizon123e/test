@@ -31,24 +31,39 @@ module.exports = {
     getPromo: async (req, res, next) =>{
         try {
             let data = [];
-            const promo = await Promo.find().populate({
-                path: 'productId',
-                select: 'categoryId _id'
-            });
-            const minat = await Minat.findOne({userId: req.user.id});
-            if(!minat) {
-                data = promo;
-                data.slice(0, 4);
-                return res.status(200).json({message:"Berhasil Menampilkan Rekomendasi Promo Untuk User", data})
+            const minat = await Minat.findOne({userId: req.user.id}).lean()
+            const promo = await Promo.aggregate([
+                {
+                    $lookup:{
+                        from: "products",                            
+                        localField: "productId",
+                        foreignField: "_id",
+                        as: "dataProducts"
+                    }
+                },
+                {
+                    $unwind: "$dataProducts"
+                },
+                {
+                    $project: { "dataProducts._id": 1, "dataProducts.categoryId": 1, banner: 1 , typePromo: 1 }
+                }
+            ])
+            if(!minat){
+                data = promo
+            }else{
+                const categoryIds = minat.categoryMinat.map(item => {
+                    return item.categoryId
+                })
+                promo.forEach(item => {
+                    if(categoryIds.includes(item.dataProducts.categoryId)){
+                        data.push(item)
+                    }else{
+                        data = promo
+                    }
+                })
             }
-            const categoryInterested = minat.categoryMinat.map(item => item.categoryId.toString())
-            promo.forEach((e,i)=>{
-                if(categoryInterested.includes(e.productId.categoryId.toString())){
-                    data.push(e)
-                };
-            });
-            data.slice(0, 4);
-            return res.status(200).json({message:"Berhasil Menampilkan Rekomendasi Promo Untuk User", data})
+            data.slice(0 , 3)
+            return res.status(200).json({message:"Berhasil Menampilkan Rekomendasi Promo Untuk User", data })
         } catch (error) {
             console.log(error);
             next(error);

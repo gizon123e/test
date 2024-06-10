@@ -1,0 +1,7 @@
+::1 - - [10/Jun/2024:03:36:23 +0000] "POST /api/cart/get_carts HTTP/1.1" 500 344 "-" "PostmanRuntime/7.39.0"
+::1 - - [10/Jun/2024:03:43:48 +0000] "DELETE /api/user-system/delete/66419f1e1133fc8440df88b6 HTTP/1.1" 401 84 "-" "PostmanRuntime/7.39.0"
+::1 - - [10/Jun/2024:03:44:31 +0000] "DELETE /api/user-system/delete/66419f1e1133fc8440df88b6 HTTP/1.1" 500 121 "-" "PostmanRuntime/7.39.0"
+::1 - - [10/Jun/2024:03:45:57 +0000] "DELETE /api/user-system/delete/66419f1e1133fc8440df88b6 HTTP/1.1" 401 84 "-" "PostmanRuntime/7.39.0"
+::1 - - [10/Jun/2024:03:48:31 +0000] "POST /api/user-system/login HTTP/1.1" 404 28 "-" "PostmanRuntime/7.39.0"
+::1 - - [10/Jun/2024:03:49:09 +0000] "POST /api/user-system/login HTTP/1.1" 401 28 "-" "PostmanRuntime/7.39.0"
+::1 - - [10/Jun/2024:03:49:13 +0000] "POST /api/user-system/login HTTP/1.1" 200 263 "-" "PostmanRuntime/7.39.0"

@@ -48,12 +48,12 @@ module.exports = {
 
     getOrders: async (req, res, next) => {
         try {
-            console.log('meluncur')
             let dataOrders;
             if (req.user.role === 'konsumen') {
+                console.log(req.user)
                 const dataOrders = await Orders.aggregate([
                     { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
-                    { $project: { product: 1}},
+                    { $project: { items: 1 }},
                     {
                         $lookup: {
                             from: "detailpesanans",
@@ -68,12 +68,14 @@ module.exports = {
                         }
                     },
                     { $project: { detail_pesanan: 0 }},
+                    { $unwind: "$items" },
+                    { $unwind: "$items.product" },
                     {
                         $lookup: {
                             from: 'products',
-                            let: { productIds: '$product.productId' },
+                            let: { productIds: '$items.product.productId' },
                             pipeline: [
-                                { $match: { $expr: { $in: ['$_id', '$$productIds'] } } },
+                                { $match: { $expr: { $eq: ['$_id', '$$productIds'] } } },
                                 { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, varian: 1, detail_varian: 1, userId: 1 } }
                             ],
                             as: 'productInfo'
@@ -118,8 +120,8 @@ module.exports = {
                         }
                     },
                     {
-                        $project: { user_details: 0 }
-                    }
+                        $project: { user_details: 0, items: 0 }
+                    },
                 ]);
                 let data = []
                 const promises = dataOrders.map(async (order) => {

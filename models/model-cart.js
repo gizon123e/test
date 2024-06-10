@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const modelCarts = mongoose.Schema({
+const modelCarts = new mongoose.Schema({
     productId: {
         type: String,
         required: [true, "productId harus di isi"],
