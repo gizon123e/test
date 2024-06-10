@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const modelSpecificCategory = mongoose.Schema({
+const modelSpecificCategory = new mongoose.Schema({
     name: {
         required: [true, 'name Category harus di isi'],
         type: String,
@@ -18,6 +18,23 @@ const modelSpecificCategory = mongoose.Schema({
         default: "https://staging-backend.superdigitalapps.my.id/public/icon/kursi.jpg"
     }
 }, { timestamp: true })
+
+// modelSpecificCategory.pre('save', async function(next){
+//     const specific_category = this;
+//     const duplicate = await mongoose.models.subCategory.findOne({
+//         contents: { $in: specific_category._id }
+//     })
+
+//     if(duplicate){
+//         if (duplicate) {
+//             const err = new Error(`SpecificCategory ${content} sudah ada di SubCategory ${duplicate.name}`);
+//             next(err);
+//             return;
+//         }
+//     }
+
+//     next()
+// })
 
 const SpecificCategory = mongoose.model('SpecificCategory', modelSpecificCategory)
 

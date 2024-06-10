@@ -97,6 +97,7 @@ module.exports = {
                 }
 
                 store[storeId].arrayProduct.push({
+                    cartId: keranjang._id,
                     product: keranjang.productId,
                     quantity: keranjang.quantity
                 })
