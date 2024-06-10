@@ -16,6 +16,12 @@ const modelBiayaTetap = mongoose.Schema({
     },
     nilai_koin:{
         type: Decimal128
+    },
+    biaya_per_kg: {
+        type: Number
+    },
+    constanta_volume: {
+        type: Number
     }
 });
 
