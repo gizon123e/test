@@ -11,6 +11,9 @@ const modelOrder = new mongoose.Schema({
                 required: [true, 'Productid harus di isi'],
                 ref: 'Product',
             },
+            note: {
+                type: String
+            },
             quantity: {
                 type: Number,
                 required: [true, 'Quantity harus di isi'],
@@ -31,9 +34,6 @@ const modelOrder = new mongoose.Schema({
                 },
                 message: "Deadline minimal 7 hari ke depan"
             }
-        },
-        note: {
-            type: String
         }
     }],
     userId: {
