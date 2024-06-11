@@ -4,7 +4,8 @@ const SpecificCategory = require('./model-specific-category')
 const subModelCategory = new mongoose.Schema({
     name: {
         required: [true, 'name Category harus di isi'],
-        type: String
+        type: String,
+        unique: true
     },
     contents: [
         {
