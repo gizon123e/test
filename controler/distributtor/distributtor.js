@@ -58,7 +58,6 @@ module.exports = {
 
             let dataAllDistributtor = []
             const dataDistributtor = await Distributtor.find().populate("userId", '-password').populate('alamat_id')
-            console.log(dataDistributtor)
 
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
 
@@ -74,6 +73,7 @@ module.exports = {
                     if (dataKendaraan.length > 0)
                         for (let data of dataKendaraan) {
                             const gratong = await Gratong.findOne({ tarif: data.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
+                            console.log(gratong)
                             const jarakOngkir = Math.round(ongkir)
                             if (jarakOngkir > 4) {
                                 let potongan_harga;
@@ -189,11 +189,7 @@ module.exports = {
                 const ukuranBeratProduct = dataProduct.berat * productId.qty;
                 totalUkuranVolumeProduct += ukuranVolumeProduct;
                 totalUkuranBeratProduct += ukuranBeratProduct;
-                console.log(`Volume Product ID ${productId.id}:`, ukuranVolumeProduct);
-                console.log(`Berat Product ID ${productId.id}:`, ukuranBeratProduct);
             }
-            console.log("Total Volume:", totalUkuranVolumeProduct);
-            console.log("Total Berat:", totalUkuranBeratProduct);
 
             const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
 
@@ -256,6 +252,10 @@ module.exports = {
                         })
                     }
                 }
+            }
+
+            if (datas.length === 0) {
+                return res.status(400).json({ message: "distributor belom tersedia" })
             }
 
             res.status(200).json({
