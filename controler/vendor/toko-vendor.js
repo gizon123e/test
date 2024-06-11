@@ -30,7 +30,17 @@ module.exports = {
             return res.status(201).json({message: "Berhasil mengubah data Toko", data: newDataToko})
         } catch (error) {
             console.log(error);
-            next(error)
+            next(error);
+        }
+    },
+    getDetailToko: async(req, res, next) => {
+        try {
+            const dataToko = await Toko.findOne({userId: req.params.id});
+            if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
+            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: dataToko})
+        } catch (error) {
+            console.log(error);
+            next(error);
         }
     }
 }
