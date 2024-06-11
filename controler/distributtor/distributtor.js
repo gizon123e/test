@@ -264,8 +264,8 @@ module.exports = {
 
             res.status(200).json({
                 message: "success get data Distributtor",
-                // datas
-                dataDistributtor
+                datas
+                // dataDistributtor
             })
 
         } catch (error) {
