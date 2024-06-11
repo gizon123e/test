@@ -1,5 +1,6 @@
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
 const Vendor = require('../../models/vendor/model-vendor')
+const TokoVendor = require('../../models/vendor/model-toko')
 const Product = require('../../models/model-product')
 const Konsumen = require('../../models/konsumen/model-konsumen')
 const { calculateDistance } = require('../../utils/menghitungJarak')
@@ -59,15 +60,29 @@ module.exports = {
 
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
 
-            let hargaBeratBarang = 0
+            const ukuranVolumeMotor = 100 * 30 * 40
+            let beratProduct = 0
+            let volumeProduct = 0
+            let hargaTotalVolume = 0
             for (let productId of product) {
                 const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
-                const valume = dataProduct.panjang * dataProduct.lebar * dataProduct.tinggi
+                const volumeBarang = dataProduct.panjang * dataProduct.lebar * dataProduct.tinggi
                 const hitungBerat = dataProduct.berat * productId.qty
-                hargaBeratBarang = hitungBerat * dataBiayaTetap.biaya_per_kg
+
+                beratProduct += hitungBerat
+                volumeProduct += volumeBarang
+
+                if (volumeBarang > hitungBerat) {
+                    const hargabarang = volumeBarang * dataBiayaTetap.biaya_per_kg
+                    console.log(hargabarang)
+                    hargaTotalVolume += hargabarang
+                } else {
+                    const hargabarang = hitungBerat * dataBiayaTetap.biaya_per_kg
+                    hargaTotalVolume += hargabarang
+                }
             }
 
-            const addressVendor = await Vendor.findOne({ userId: userId }).populate('address')
+            const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
             const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
@@ -111,19 +126,25 @@ module.exports = {
 
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
-            for (let kendaraan of dataKendaraan) {
-                const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
+            let filteredDataKendaraan = dataKendaraan;
+            if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
+                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'mobil');
+            } else {
+                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'motor');
+            }
 
+            for (let kendaraan of filteredDataKendaraan) {
+                const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
 
                 if (jarakTempu > 4) {
                     let potongan_harga;
                     let total_ongkir;
                     const dataJara = jarakTempu - 4
                     const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
-                    const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
-                    console.log('data per Km', dataPerKM)
-                    console.log('data tarif', kendaraan.tarifId.tarif_dasar)
-                    console.log('data berat', hargaBeratBarang)
+                    const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar + hargaTotalVolume
+                    // console.log('data per Km', dataPerKM)
+                    // console.log('data tarif', kendaraan.tarifId.tarif_dasar)
+                    // console.log('data berat', hargaBeratBarang)
 
                     if (gratong) {
                         kendaraan.isGratong = true
@@ -146,6 +167,8 @@ module.exports = {
 
                     data.push({
                         kendaraan,
+                        totalBeratProduct: beratProduct,
+                        totalVolumeProduct: volumeProduct,
                         hargaOngkir,
                         potongan_harga,
                         total_ongkir
@@ -154,8 +177,8 @@ module.exports = {
                     let potongan_harga;
                     let total_ongkir;
                     const hargaOngkir = kendaraan.tarifId.tarif_dasar + hargaBeratBarang
-                    console.log('data berat', hargaBeratBarang)
-                    console.log("data tarif", kendaraan.tarifId.tarif_dasar)
+                    // console.log('data berat', hargaBeratBarang)
+                    // console.log("data tarif", kendaraan.tarifId.tarif_dasar)
                     console.log(hargaOngkir)
                     if (gratong) {
                         kendaraan.isGratong = true
@@ -178,6 +201,8 @@ module.exports = {
 
                     data.push({
                         kendaraan,
+                        totalBeratProduct: beratProduct,
+                        totalVolumeProduct: volumeProduct,
                         hargaOngkir,
                         potongan_harga,
                         total_ongkir
