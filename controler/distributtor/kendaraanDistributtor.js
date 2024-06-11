@@ -71,15 +71,16 @@ module.exports = {
 
                 beratProduct += hitungBerat
                 volumeProduct += volumeBarang
+            }
 
-                if (volumeBarang > hitungBerat) {
-                    const hargabarang = volumeBarang * dataBiayaTetap.biaya_per_kg
-                    console.log(hargabarang)
-                    hargaTotalVolume += hargabarang
-                } else {
-                    const hargabarang = hitungBerat * dataBiayaTetap.biaya_per_kg
-                    hargaTotalVolume += hargabarang
-                }
+            if (volumeProduct > beratProduct) {
+                const hargabarang = volumeProduct / dataBiayaTetap.biaya_per_kg
+
+                hargaTotalVolume += hargabarang
+            } else {
+                const hargabarang = beratProduct / dataBiayaTetap.biaya_per_kg
+
+                hargaTotalVolume += hargabarang
             }
 
             const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
@@ -132,8 +133,9 @@ module.exports = {
             } else {
                 filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'motor');
             }
+            console.log(dataKendaraan)
 
-            for (let kendaraan of dataKendaraan) {
+            for (let kendaraan of filteredDataKendaraan) {
                 const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
 
                 if (jarakTempu > 4) {
@@ -141,21 +143,16 @@ module.exports = {
                     let total_ongkir;
                     const dataJara = jarakTempu - 4
                     const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
-                    const hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar + hargaTotalVolume
-                    // console.log('data per Km', dataPerKM)
-                    // console.log('data tarif', kendaraan.tarifId.tarif_dasar)
-                    // console.log('data berat', hargaBeratBarang)
+                    const hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
 
                     if (gratong) {
                         kendaraan.isGratong = true
                         switch (gratong.jenis) {
                             case "persentase":
-                                // console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                 potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
                                 total_ongkir = hargaOngkir - potongan_harga
                                 break;
                             case "langsung":
-                                // console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
                                 potongan_harga = hargaOngkir - gratong.nilai_gratong;
                                 total_ongkir = hargaOngkir - potongan_harga;
                                 break;
@@ -176,20 +173,16 @@ module.exports = {
                 } else {
                     let potongan_harga;
                     let total_ongkir;
-                    const hargaOngkir = kendaraan.tarifId.tarif_dasar + hargaBeratBarang
-                    // console.log('data berat', hargaBeratBarang)
-                    // console.log("data tarif", kendaraan.tarifId.tarif_dasar)
-                    console.log(hargaOngkir)
+                    const hargaOngkir = kendaraan.tarifId.tarif_dasar * hargaTotalVolume
+
                     if (gratong) {
                         kendaraan.isGratong = true
                         switch (gratong.jenis) {
                             case "persentase":
-                                // console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                 potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
                                 total_ongkir = hargaOngkir - potongan_harga
                                 break;
                             case "langsung":
-                                // console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
                                 potongan_harga = hargaOngkir - gratong.nilai_gratong;
                                 total_ongkir = hargaOngkir - potongan_harga;
                                 break;
