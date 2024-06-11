@@ -190,6 +190,8 @@ module.exports = {
                 totalUkuranVolumeProduct += ukuranVolumeProduct;
                 totalUkuranBeratProduct += ukuranBeratProduct;
             }
+            console.log(totalUkuranVolumeProduct)
+            console.log(totalUkuranBeratProduct)
 
             const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
 
@@ -225,10 +227,12 @@ module.exports = {
             }
 
 
-            if (totalUkuranBeratProduct < ukuranVolumeMotor || totalUkuranVolumeProduct < ukuranVolumeMotor) {
-                query.is_kendaraan = { $in: ["Motor", "Mobil dan Motor"] };
-            } else {
+            if (totalUkuranBeratProduct > ukuranVolumeMotor || totalUkuranVolumeProduct > ukuranVolumeMotor) {
                 query.is_kendaraan = { $in: ["Mobil", "Mobil dan Motor"] };
+                console.log(query)
+            } else {
+                query.is_kendaraan = { $in: ["Motor", "Mobil dan Motor"] };
+                console.log(query)
             }
 
             let datas = []
@@ -243,7 +247,7 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    console.log(distributor)
+                    // console.log(distributor)
                     const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id })
                     if (dataKendaraan.length > 0) {
                         datas.push({
@@ -260,8 +264,8 @@ module.exports = {
 
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas
-                // addressVendor
+                // datas
+                dataDistributtor
             })
 
         } catch (error) {
