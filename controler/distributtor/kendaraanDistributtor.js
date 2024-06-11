@@ -133,7 +133,7 @@ module.exports = {
                 filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'motor');
             }
 
-            for (let kendaraan of filteredDataKendaraan) {
+            for (let kendaraan of dataKendaraan) {
                 const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
 
                 if (jarakTempu > 4) {
