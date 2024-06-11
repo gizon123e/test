@@ -37,11 +37,7 @@ mainModelCategory.pre('findOneAndUpdate', async function(next){
         const update = await SubCategory.create({
             name: specific.name
         })
-        await MainCategory.updateOne({_id: this.getQuery._id}, {
-            $push: {
-                contents: update._id
-            }
-        })
+        this.getUpdate().$push.contents = update._id
     }
     next()
 })

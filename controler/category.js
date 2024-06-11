@@ -171,13 +171,11 @@ module.exports = {
                 if (!sub_category) {
                     sub_category = await SubCategory.create({ name: sub });
                 }
-                const check = main_category.contents.find(item => {
-                    return item._id.equals(sub_category._id);
-                });
-                if (!check) {
-                    const id = main_category._id
-                    main_category = await MainCategory.findByIdAndUpdate(id, { $push: { contents: sub_category._id } }, { new: true });
-                }
+                // const check = main_category.contents.find(item => {
+                //     return item._id.equals(sub_category._id);
+                // });
+                const id = main_category._id
+                main_category = await MainCategory.findByIdAndUpdate(id, { $push: { contents: sub_category._id } }, { new: true });
             };
 
             if (specific) {
@@ -185,13 +183,11 @@ module.exports = {
                 if (!specific_category) {
                     specific_category = await SpecificCategory.create({ name: specific });
                 }
-                const check = sub_category.contents.find(item => {
-                    return item._id.equals(specific_category._id);
-                });
-                if (!check) {
-                    const id = sub_category._id
-                    sub_category = await SubCategory.findByIdAndUpdate(id, { $push: { contents: specific_category._id } }, { new: true });
-                }
+                // const check = sub_category.contents.find(item => {
+                //     return item._id.equals(specific_category._id);
+                // });
+                const id = sub_category._id
+                sub_category = await SubCategory.findByIdAndUpdate(id, { $push: { contents: specific_category._id } }, { new: true });
             };
 
             return res.status(201).json({ message: "Berhasil Menambahkan Category", main_category, sub_category, specific_category });

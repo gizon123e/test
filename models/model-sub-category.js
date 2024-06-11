@@ -15,6 +15,7 @@ const subModelCategory = new mongoose.Schema({
 }, { timestamp: true })
 
 subModelCategory.pre('findOneAndUpdate', async function(next){
+    
     const sub = await this.model.findOne({
         contents: { $in: this.getUpdate().$push.contents }
     }).lean()
@@ -23,11 +24,7 @@ subModelCategory.pre('findOneAndUpdate', async function(next){
         const update = await SpecificCategory.create({
             name: specific.name
         })
-        await SubCategory.updateOne({_id: this.getQuery._id}, {
-            $push: {
-                contents: update._id
-            }
-        })
+        this.getUpdate().$push.contents = update._id;
     }
     next()
 })
