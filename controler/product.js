@@ -99,6 +99,7 @@ module.exports = {
 
   getProductWithMain: async(req, res, next) =>{
     try {
+      if(!new mongoose.Types.ObjectId(req.params.id)) return res.status(404).json({message: `Invalid category id: ${req.params.id}`})
       const id = new mongoose.Types.ObjectId(req.params.id);
       const userRole = req.user.role
       const dataProds = await Product.aggregate([
