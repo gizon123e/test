@@ -109,18 +109,18 @@ module.exports = {
             for(const key of keys){
                 switch(store[key].role){
                     case "vendor":
-                        detailToko = await Vendor.findOne({userId: store[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await Vendor.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
                         break;
                     case "supplier":
-                        detailToko = await Supplier.findOne({userId: store[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await Supplier.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
                         break;
                     case "produsen":
-                        detailToko = await Produsen.findOne({userId: store[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await Produsen.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
                         break;
                 }
                 finalData.push({
                     nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
-                    id_vendor: detailToko._id,
+                    id_user_vendor: detailToko.userId,
                     products: store[key].arrayProduct
                 })
             }
