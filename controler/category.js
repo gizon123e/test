@@ -168,6 +168,7 @@ module.exports = {
 
             if (sub) {
                 sub_category = await SubCategory.findOne({ name: { $regex: new RegExp(`^${sub}$`, 'i') } });
+                console.log('sub category ',sub_category)
                 if (!sub_category) {
                     sub_category = await SubCategory.create({ name: sub });
                 }

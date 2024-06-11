@@ -5,7 +5,7 @@ const mainModelCategory = new mongoose.Schema({
     name: {
         required: [true, 'name Category harus di isi'],
         type: String,
-        unique: true
+        index: true
     },
     contents: [
         {

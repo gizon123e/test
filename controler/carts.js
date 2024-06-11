@@ -120,6 +120,7 @@ module.exports = {
                 }
                 finalData.push({
                     nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
+                    id_vendor: detailToko._id,
                     products: store[key].arrayProduct
                 })
             }
