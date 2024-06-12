@@ -4,6 +4,7 @@ const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
 const Vendor = require("../models/vendor/model-vendor");
 const { default: mongoose } = require('mongoose');
+const TokoVendor = require('../models/vendor/model-toko');
 
 module.exports = {
 
@@ -85,6 +86,7 @@ module.exports = {
                     select: "_id role"
                 }
             })
+
             // const carts = await Carts.aggregate([
             //     {
             //         $match:{
@@ -183,22 +185,22 @@ module.exports = {
             for(const key of keys){
                 switch(store[key].role){
                     case "vendor":
-                        detailToko = await Vendor.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
+                        detailToko = await TokoVendor.findOne({userId: store[key].id});
                         break;
                     case "supplier":
-                        detailToko = await Supplier.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
+                        detailToko = await Supplier.findOne({userId: store[key].id});
                         break;
                     case "produsen":
-                        detailToko = await Produsen.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
+                        detailToko = await Produsen.findOne({userId: store[key].id});
                         break;
                 }
                 finalData.push({
-                    nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
+                    nama_toko: detailToko.namaToko,
                     id_user_vendor: detailToko.userId,
                     products: store[key].arrayProduct
                 })
             }
-            return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: carts})
+            return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: finalData})
         } catch (error) {
             console.log(error);
             next(error);
