@@ -84,8 +84,7 @@ module.exports = {
                     path: 'userId',
                     select: "_id role"
                 }
-            }).explain("executionStats")
-            console.log(carts)
+            })
             // const carts = await Carts.aggregate([
             //     {
             //         $match:{
@@ -160,23 +159,23 @@ module.exports = {
             //     }
             // ])
             const store = {}
-            // for (const keranjang of carts){
-            //     // console.log(keranjang.productId.userId._id)
-            //     const storeId = keranjang.productId.userId._id.toString();
-            //     if(!store[storeId]){
-            //         store[storeId] = {
-            //             id: storeId,
-            //             role: keranjang.productId.userId.role,
-            //             arrayProduct: []
-            //         }
-            //     }
+            for (const keranjang of carts){
+                // console.log(keranjang.productId.userId._id)
+                const storeId = keranjang.productId.userId._id.toString();
+                if(!store[storeId]){
+                    store[storeId] = {
+                        id: storeId,
+                        role: keranjang.productId.userId.role,
+                        arrayProduct: []
+                    }
+                }
 
-            //     store[storeId].arrayProduct.push({
-            //         cartId: keranjang._id,
-            //         product: keranjang.productId,
-            //         quantity: keranjang.quantity
-            //     })
-            // }
+                store[storeId].arrayProduct.push({
+                    cartId: keranjang._id,
+                    product: keranjang.productId,
+                    quantity: keranjang.quantity
+                })
+            }
 
             const keys = Object.keys(store)
             const finalData = []
