@@ -480,6 +480,9 @@ module.exports = {
         datas: newProduct,
       });
     } catch (err) {
+      if(err.name == "ValidationError"){
+        return res.status(400).json({error: true, err: err.message})
+      }
       console.log(err);
       next(err);
     }
