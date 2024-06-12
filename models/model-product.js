@@ -59,8 +59,13 @@ const productModels = new mongoose.Schema(
     },
     diskon: {
       type: Number,
-      max: [100, "Diskon maksimal 100%"],
       required: false,
+      validate:{
+        validator: (value) => { 
+          if(value > 100) return false
+        },
+        message: (props) => `Diskon tidak bisa melebihi 100%. Diskon yang dimasukan ${props.value}%`
+      }
     },
     description: {
       type: String,
