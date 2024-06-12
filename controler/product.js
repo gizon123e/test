@@ -1,7 +1,9 @@
 const Product = require("../models/model-product");
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
-const Vendor = require("../models/vendor/model-vendor")
+const Vendor = require("../models/vendor/model-vendor");
+const TokoVendor = require("../models/vendor/model-toko")
+
 const mongoose = require('mongoose')
 const SpecificCategory = require("../models/model-specific-category");
 const SubCategory = require("../models/model-sub-category");
@@ -127,11 +129,11 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "vendors",
+            from: "tokovendors",
             let: { userId: "$userId" },
             pipeline: [
               { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
-              { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }
+              { $project: { namaToko: 1, profile_pict: 1, address: 1 } }
             ],
             as: "vendorData"
           }
@@ -340,7 +342,7 @@ module.exports = {
       if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){
         case "vendor":
-          toko = await Vendor.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          toko = await TokoVendor.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
           break;  
         case "supplier":
           toko = await Supplier.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');

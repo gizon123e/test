@@ -1,5 +1,6 @@
 const Toko = require('../../models/vendor/model-toko');
-const Address = require('../../models/model-address')
+const Address = require('../../models/model-address');
+const path = require('path')
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -33,7 +34,7 @@ module.exports = {
             next(error);
         }
     },
-    
+
     getDetailToko: async(req, res, next) => {
         try {
             const dataToko = await Toko.findOne({userId: req.params.id});
@@ -47,6 +48,14 @@ module.exports = {
 
     updateDetailToko: async(req, res, next) => {
         try {
+            if(req.files && req.files.profilePict){
+                const nameImg = `${new Date().getTime()}_${req.user.id}${path.extname(req.files.profilePict.name)}`
+                const imgPath = path.join(__dirname, "../../public", "profile-picts-store", nameImg)
+                req.files.profilePict.mv(imgPath, err =>{
+                    if(err) return res.status(500).json({message: "Ada kesalaahn saat nyimpan foto", err})
+                })
+                req.body.profile_pict = `${process.env.HOST}public/profile-picts-store/${nameImg}`
+            }
             const updatedToko = await Toko.findOneAndUpdate({userId: req.user.id}, req.body, { new: true });
             if(!updatedToko) return res.status(404).json({message: "Kamu tidak mempunyai Toko"});
             return res.status(201).json({message: "Berhasil Memperbarui Data Toko", data: updatedToko})

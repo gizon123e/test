@@ -51,7 +51,7 @@ const productModels = new mongoose.Schema(
     price: {
       type: Number,
       required: [true, "price harus di isi"],
-      min: [3, "price yang harus diisi setidaknya 100"],
+      min: [100, "price yang harus diisi setidaknya 100"],
     },
     total_price: {
       type: Number,
@@ -59,6 +59,7 @@ const productModels = new mongoose.Schema(
     },
     diskon: {
       type: Number,
+      max: [100, "Diskon maksimal 100%"],
       required: false,
     },
     description: {

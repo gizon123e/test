@@ -29,6 +29,10 @@ const modelTokoVendor = new mongoose.Schema({
     },
     store_description:{
         type: String
+    },
+    profile_pict:{
+        type: String,
+        default: () => `${process.env.HOST}public/profile-picts-store/default.jpg`
     }
 });
 
