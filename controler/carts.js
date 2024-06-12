@@ -2,7 +2,8 @@ const Carts = require('../models/model-cart')
 const Product = require('../models/model-product');
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
-const Vendor = require("../models/vendor/model-vendor")
+const Vendor = require("../models/vendor/model-vendor");
+const { default: mongoose } = require('mongoose');
 
 module.exports = {
 
@@ -83,25 +84,99 @@ module.exports = {
                     path: 'userId',
                     select: "_id role"
                 }
-            }).lean()
+            }).explain("executionStats")
+            console.log(carts)
+            // const carts = await Carts.aggregate([
+            //     {
+            //         $match:{
+            //             _id: { $in: cartIds.map(item => { return new mongoose.Types.ObjectId(item) }) }
+            //         }
+            //     },
+            //     {
+            //         $lookup:{
+            //             from: "products",
+            //             let: {prodId: "$productId"},
+            //             pipeline: [
+            //                 { 
+            //                     $match:{
+            //                         $expr:{
+            //                             $eq: ['$_id', "$$prodId"]
+            //                         }
+            //                     }
+            //                 },
+            //                 {
+            //                     $project:{
+            //                         _id: 1, name_product: 1, price: 1,  total_price: 1, diskon: 1, image_product: 1, userId: 1, total_stok: 1, pemasok: 1, rating: 1, minimalOrder:1, isFlashSale: 1, varian: 1
+            //                     }
+            //                 }
+            //             ],
+            //             as: "productDatas"
+            //         }
+            //     },
+            //     {
+            //         $unwind: "$productDatas"
+            //     },
+            //     {
+            //         $addFields: {
+            //             productId: "$productDatas"
+            //         }
+            //     },
+            //     {
+            //         $project:{
+            //             productDatas: 0
+            //         }
+            //     },
+            //     {
+            //         $lookup: {
+            //             from: 'users',
+            //             let: { userId: "$productId.userId"},
+            //             pipeline: [
+            //                 {
+            //                     $match: {
+            //                         $expr: {
+            //                             $eq: ["$_id", "$$userId"]
+            //                         }
+            //                     }
+            //                 },
+            //                 {
+            //                     $project: {
+            //                         _id: 1, role: 1
+            //                     }
+            //                 }
+            //             ],
+            //             as: "user"
+            //         }
+            //     },
+            //     {
+            //         $unwind: "$user"
+            //     },
+            //     {
+            //         $addFields: {
+            //             'productId.userId': "$user"
+            //         }
+            //     },
+            //     {
+            //         $project:{ user: 0 }
+            //     }
+            // ])
             const store = {}
-            for (const keranjang of carts){
-                // console.log(keranjang.productId.userId._id)
-                const storeId = keranjang.productId.userId._id.toString();
-                if(!store[storeId]){
-                    store[storeId] = {
-                        id: storeId,
-                        role: keranjang.productId.userId.role,
-                        arrayProduct: []
-                    }
-                }
+            // for (const keranjang of carts){
+            //     // console.log(keranjang.productId.userId._id)
+            //     const storeId = keranjang.productId.userId._id.toString();
+            //     if(!store[storeId]){
+            //         store[storeId] = {
+            //             id: storeId,
+            //             role: keranjang.productId.userId.role,
+            //             arrayProduct: []
+            //         }
+            //     }
 
-                store[storeId].arrayProduct.push({
-                    cartId: keranjang._id,
-                    product: keranjang.productId,
-                    quantity: keranjang.quantity
-                })
-            }
+            //     store[storeId].arrayProduct.push({
+            //         cartId: keranjang._id,
+            //         product: keranjang.productId,
+            //         quantity: keranjang.quantity
+            //     })
+            // }
 
             const keys = Object.keys(store)
             const finalData = []
@@ -124,8 +199,7 @@ module.exports = {
                     products: store[key].arrayProduct
                 })
             }
-            
-            return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: finalData})
+            return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: carts})
         } catch (error) {
             console.log(error);
             next(error);
@@ -144,6 +218,8 @@ module.exports = {
                     message: 'product id not found'
                 })
             }
+
+            if(vaildateProduct.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"})
             
             if(vaildateProduct.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
 

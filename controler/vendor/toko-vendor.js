@@ -33,11 +33,23 @@ module.exports = {
             next(error);
         }
     },
+    
     getDetailToko: async(req, res, next) => {
         try {
             const dataToko = await Toko.findOne({userId: req.params.id});
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
             return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: dataToko})
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
+    updateDetailToko: async(req, res, next) => {
+        try {
+            const updatedToko = await Toko.findOneAndUpdate({userId: req.user.id}, req.body, { new: true });
+            if(!updatedToko) return res.status(404).json({message: "Kamu tidak mempunyai Toko"});
+            return res.status(201).json({message: "Berhasil Memperbarui Data Toko", data: updatedToko})
         } catch (error) {
             console.log(error);
             next(error);

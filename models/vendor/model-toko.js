@@ -17,6 +17,18 @@ const modelTokoVendor = new mongoose.Schema({
     detailId:{
         type: ObjectId,
         ref: "Vendor"
+    },
+    pengikut: {
+        type: Number
+    },
+    penilaian_produk:{
+        type: Number
+    },
+    waktu_operasional:{
+        type: String
+    },
+    store_description:{
+        type: String
     }
 });
 

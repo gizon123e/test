@@ -209,10 +209,10 @@ productModels.pre("save", function (next) {
   }
 
   if(this.bervarian && this.minimalOrder){
-    return next("Atur minimal order per varian di properti objek varian")
+    next("Atur minimal order per varian di properti objek varian")
   }
 
-  return next();
+  next();
 });
 
 productModels.post("findOneAndUpdate", async function (doc, next) {
@@ -220,17 +220,26 @@ productModels.post("findOneAndUpdate", async function (doc, next) {
     const document = await this.model.findOne(this.getQuery());
 
     if (!document) {
-      return next();
+      next();
     }
 
     const updatedDoc = this._update;
     updatedDoc.total_price = updatedDoc.price - (updatedDoc.price * updatedDoc.diskon) / 100;
     await doc.save();
-    return next();
+    next();
   } catch (error) {
-    return next(error);
+    next(error);
   }
 });
+
+productModels.post("findOneAndDelete", async function(next){
+  try {
+    
+  } catch (error) {
+    console.log(error);
+    next(error)
+  }
+})
 
 const Product = mongoose.model("Product", productModels);
 
