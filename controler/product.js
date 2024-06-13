@@ -364,7 +364,6 @@ module.exports = {
   upload: async (req, res, next) => {
     try {
       if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });      
-      
       //JANGAN DULU DIHAPUS!!
       // if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
       //   return res.status(400).json({
@@ -430,6 +429,7 @@ module.exports = {
 
       }else{       
         if(!req.body.varian) return res.status(400).json({message: "Kurang Body Request *varian*"});
+        if(!Array.isArray(req.body.varian)) return res.status(400).json({message: "Varian yang dikirimkan bukan array"})
         const varian = [];
         req.body.varian.forEach(item => varian.push(JSON.parse(item)));
         // const detailVarian = [];
