@@ -37,7 +37,11 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         required: [true, 'jenis Usaha harus di isi'],
         enum: ["Company", "Individu"]
-    }
+    },
+    rejectedOrders:[{
+        type: mongoose.Types.ObjectId,
+        ref: "Pesanan"
+    }]
 }, { timestamp: true });
 
 const Distributtor = mongoose.model('Distributtor', modelDistributtor);

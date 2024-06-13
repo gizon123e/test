@@ -56,6 +56,13 @@ const modelOrder = new mongoose.Schema({
         enum: ["Belum Bayar", "Berlangsung", "Berhasil", "Dibatalkan"],
         default: "Belum Bayar"
     },
+    isApproved:{
+        type: Boolean
+    },
+    isDistributtorApproved:{
+        type: Boolean,
+        default: false
+    },
     poinTerpakai: {
         type: Number
     },

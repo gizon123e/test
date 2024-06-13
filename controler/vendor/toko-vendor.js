@@ -1,6 +1,7 @@
 const Toko = require('../../models/vendor/model-toko');
 const Address = require('../../models/model-address');
-const path = require('path')
+const path = require('path');
+const Product = require('../../models/model-product');
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -38,8 +39,9 @@ module.exports = {
     getDetailToko: async(req, res, next) => {
         try {
             const dataToko = await Toko.findOne({userId: req.params.id});
+            const products = await Product.find({userId: req.params.id}).sort({total_stok: -1})
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
-            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: dataToko})
+            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: dataToko, dataProduct: products})
         } catch (error) {
             console.log(error);
             next(error);
