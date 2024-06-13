@@ -21,6 +21,7 @@ module.exports = {
   getProductWithSpecific: async(req, res, next) => {
     try {
       const id = req.params.id
+      if(!new mongoose.Types.ObjectId(id)) return res.status(400).json({message: `Id yang dikirimkan tidak valid ${id}`})
       if(!id) return res.status(400).json({message: "Tolong kirimkan id specific category"})
       const products = await Product.find({categoryId: id}).populate('categoryId').populate('id_main_category').populate("id_sub_category")
       return res.status(200).json({message: "Berhasil mendapatkan Products", data: products})
@@ -33,6 +34,7 @@ module.exports = {
   getProductWithSub: async(req, res, next) => {
     try {
       const id = req.params.id
+      if(!new mongoose.Types.ObjectId(id)) return res.status(400).json({message: `Id yang dikirimkan tidak valid ${id}`})
       if(!id) return res.status(400).json({message: "Tolong kirimkan id sub category"});
       const products = await Product.find({id_sub_category: id}).populate('categoryId').populate('id_main_category').populate("id_sub_category");
       return res.status(200).json({message: "Berhasil mendapatkan Products", data: products});
