@@ -6,31 +6,38 @@ const varianSchema = new mongoose.Schema({
   nama_varian: {
     type: String
   },
-  nilai_varian:[String]
+  nilai_varian:[{
+    nama: {
+      type: String
+    },
+    harga:{
+      type: Number
+    }
+  }]
 });
 
-const detailVarianSchema = new mongoose.Schema({
-  varian:{
-    type: String
-  },
-  price: {
-    type: Number
-  },
-  stok: {
-    type: Number
-  },
-  image:{
-    type: String
-  },
-  minimalOrder: {
-    type: String
-  },
-  harga_diskon:{
-    type: String
-  }
-});
+// const detailVarianSchema = new mongoose.Schema({
+//   varian:{
+//     type: String
+//   },
+//   price: {
+//     type: Number
+//   },
+//   stok: {
+//     type: Number
+//   },
+//   image:{
+//     type: String
+//   },
+//   minimalOrder: {
+//     type: String
+//   },
+//   harga_diskon:{
+//     type: String
+//   }
+// });
 
-detailVarianSchema.plugin(uniqueValidator);
+// detailVarianSchema.plugin(uniqueValidator);
 
 const productModels = new mongoose.Schema(
   {
@@ -94,12 +101,8 @@ const productModels = new mongoose.Schema(
     },
     varian:{
       type: [varianSchema],
-      default: () => null
-    },
-    detail_varian:{
-      type: [detailVarianSchema],
-      validate: [hasNoDuplicates, "Object Detail_Varian Harus Unique"],
-      default: () => null
+      default: () => null,
+      maxlength: [2, "hanya bisa 2 jenis varian"]
     },
     isPublished:{
       type: Boolean,
@@ -186,19 +189,19 @@ const productModels = new mongoose.Schema(
   { timestamp: true }
 );
 
-function hasNoDuplicates(detailVarianArray) {
-  const varianSet = new Set();
-  if(detailVarianArray !== null){
-    for (const detailVarian of detailVarianArray) {
-      const varianKey = `${detailVarian.varian}-${detailVarian.price}-${detailVarian.stok}-${detailVarian.minimalOrder}-${detailVarian.harga_diskon}`;
-      if (varianSet.has(varianKey)) {
-        return false;
-      }
-      varianSet.add(varianKey);
-    }
-  }
-  return true;
-}
+// function hasNoDuplicates(detailVarianArray) {
+//   const varianSet = new Set();
+//   if(detailVarianArray !== null){
+//     for (const detailVarian of detailVarianArray) {
+//       const varianKey = `${detailVarian.varian}-${detailVarian.price}-${detailVarian.stok}-${detailVarian.minimalOrder}-${detailVarian.harga_diskon}`;
+//       if (varianSet.has(varianKey)) {
+//         return false;
+//       }
+//       varianSet.add(varianKey);
+//     }
+//   }
+//   return true;
+// }
 
 //Check if there is discon for the product before save
 productModels.pre("save", function (next) {
@@ -208,15 +211,15 @@ productModels.pre("save", function (next) {
     this.total_price = this.price
   }
 
-  if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
-    this.detail_varian.forEach(element => {
-      this.total_stok += element.stok
-    });
-  }
+  // if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
+  //   this.detail_varian.forEach(element => {
+  //     this.total_stok += element.stok
+  //   });
+  // }
 
-  if(this.bervarian && this.minimalOrder){
-    next("Atur minimal order per varian di properti objek varian")
-  }
+  // if(this.bervarian && this.minimalOrder){
+  //   next("Atur minimal order per varian di properti objek varian")
+  // }
 
   next();
 });
