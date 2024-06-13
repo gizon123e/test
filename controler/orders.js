@@ -11,6 +11,7 @@ const fetch = require('node-fetch');
 // const Address = require('../models/model-address');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const TokoVendor = require('../models/vendor/model-toko');
 dotenv.config();
 
 module.exports = {
@@ -50,7 +51,6 @@ module.exports = {
         try {
             let dataOrders;
             if (req.user.role === 'konsumen') {
-                console.log(req.user)
                 const dataOrders = await Orders.aggregate([
                     { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
                     { $project: { items: 1 }},
@@ -128,8 +128,8 @@ module.exports = {
                     let namaToko;
                     switch (order.productInfo.userId.role) {
                         case "vendor":
-                            const vendor = await Vendor.findOne({ userId: order.productInfo.userId._id }).populate('address');
-                            namaToko = vendor.nama || vendor.namaBadanUsaha;
+                            const vendor = await TokoVendor.findOne({ userId: order.productInfo.userId._id }).populate('address');
+                            namaToko = vendor.namaToko;
                             break;
                         default:
                             namaToko = "Role other than vendor";
