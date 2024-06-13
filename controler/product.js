@@ -343,13 +343,13 @@ module.exports = {
       if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){
         case "vendor":
-          toko = await TokoVendor.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          toko = await TokoVendor.findOne({userId: dataProduct.userId._id}).populate('address');
           break;  
         case "supplier":
-          toko = await Supplier.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          toko = await Supplier.findOne({userId: dataProduct.userId._id}).populate('address');
           break;  
         case "produsen":
-          toko = await Produsen.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          toko = await Produsen.findOne({userId: dataProduct.userId._id}).populate('address');
           break;
       }
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
