@@ -18,7 +18,7 @@ module.exports = {
         try {
             const { idAddress } = req.query
             if(!idAddress) return res.status(400).json({message: `Tidak ada query idAddress yang dikirimkan: ${idAddress}`})
-            let query;
+            let query = {};
             const product = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await Vendor.findOne({ userId: product.userId._id }).populate('address')
             const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
