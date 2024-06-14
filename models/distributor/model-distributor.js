@@ -23,18 +23,30 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         require: [true, 'file  harus di isi']
     },
-    is_active: {
-        type: Boolean,
-        required: [true, "is active harus di isi"]
+    individu: {
+        nik: {
+            type: Number,
+            required: false
+        },
+        file_ktp: {
+            type: String,
+            required: false
+        }
     },
-    imageDistributtor: {
-        type: String,
-        required: [true, 'imageDistributor harus di isi'],
-    },
-    jenisUsaha: {
-        type: String,
-        required: [true, 'jenis Usaha harus di isi'],
-        enum: ["Company", "Individu"]
+    perusahaan: {
+        nomorAkta: {
+            type: Number,
+            required: false
+        },
+        noTelepon: {
+            type: Number,
+            required: false
+        },
+        alamatGudang: {
+            type: mongoose.Types.ObjectId,
+            ref: 'Address',
+            required: false
+        }
     }
 }, { timestamp: true });
 
