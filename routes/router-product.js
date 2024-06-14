@@ -22,7 +22,7 @@ router.get('/list_all', authorization, controlerProduct.list_all)
 router.get('/list_panel', authorization, controlerProduct.list_product_adminPanel);
 router.post("/upload", authorization, notEmptyDetailData, controlerProduct.upload);
 router.put('/performance', authorization, controlerProduct.updateProductPerformance);
-router.put('/verify/:id', authorization, controlerProduct.updateProductPerformance);
+router.put('/verify/:id', authorization, controlerProduct.verifyProduct);
 router.put("/editPemasok", authorization, emptyData, roleClasification.vendor, controlerProduct.pemasok);
 router.put("/edit", controlerProduct.edit);
 router.delete("/delete", authorization, controlerProduct.delete);
