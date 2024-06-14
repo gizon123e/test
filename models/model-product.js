@@ -82,16 +82,6 @@ const productModels = new mongoose.Schema(
       type: String,
       required: [true, "deskripsi harus diisi"],
     },
-    isPublished: {
-      type: Boolean,
-      required: true,
-      default: false
-    },
-    isVerified: {
-      type: Boolean,
-      required: true,
-      default: false
-    },
     minimalDp: {
       type: Number,
       min: 40
@@ -105,15 +95,14 @@ const productModels = new mongoose.Schema(
       default: () => null,
       maxlength: [2, "hanya bisa 2 jenis varian"]
     },
-    isPublished:{
-      type: Boolean,
-      required: true,
-      default: false
-    },
-    isVerified: {
-      type: Boolean,
-      required: true,
-      default: false
+    status:{
+      value:{
+        type: String,
+        enum: ["ditinjau", "disetujui", "ditolak"]
+      },
+      message: {
+        type: String
+      }
     },
     userId: {
       type: mongoose.Types.ObjectId,
