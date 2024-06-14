@@ -109,6 +109,7 @@ module.exports = {
         {
           $match:{
             id_main_category: id,
+            "status.value": "disetujui",
             total_stok: { $gt: 0 },
             $expr: { $gt: ["$total_stok", "$minimalOrder"] }
           }
@@ -313,27 +314,27 @@ module.exports = {
     }
   },
 
-  // list_all: async (req, res, next) => {
-  //   try {
-  //     const data = await Product.find().populate({path:"userId", select: "_id role"}).populate("id_main_category").populate("id_sub_category").populate("categoryId")
-  //     const dataProds = [];
-  //     for(const produk of data){
-  //       const namaVendor = await Vendor.findOne({userId: produk.userId});
-  //       dataProds.push({
-  //         ...produk.toObject(),
-  //         nama: namaVendor?.nama || namaVendor?.namaBadanUsaha
-  //       });
-  //     };
-  //     if (data && data.length > 0) {
-  //       return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds })
-  //     } else {
-  //       return res.status(404).json({ message: "User tidak memiliki produk", data })
-  //     }
-  //   } catch (error) {
-  //     console.log(error)
-  //     next(error)
-  //   }
-  // },
+  list_all: async (req, res, next) => {
+    try {
+      const data = await Product.find({userId: req.user.id}).populate({path:"userId", select: "_id role"}).populate("id_main_category").populate("id_sub_category").populate("categoryId")
+      const dataProds = [];
+      for(const produk of data){
+        const namaVendor = await TokoVendor.findOne({userId: produk.userId});
+        dataProds.push({
+          ...produk.toObject(),
+          nama: namaVendor?.namaToko
+        });
+      };
+      if (data && data.length > 0) {
+        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds })
+      } else {
+        return res.status(404).json({ message: "User tidak memiliki produk", data })
+      }
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  },
 
   productDetail: async (req, res, next) => {
     try {
