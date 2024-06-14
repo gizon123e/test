@@ -44,11 +44,19 @@ module.exports = {
     }
   },
 
-  verifyProduct: async(req, res, next) => {
+  verifyOrBlockProduct: async(req, res, next) => {
     try {
-      const update = await Product.findByIdAndUpdate(req.params.id, {
-        "status.value": "disetujui"
-      })
+      let update
+      console.log(req.body)
+      if(req.body.verify){
+        update = await Product.findByIdAndUpdate(req.params.id, {
+          "status.value": "disetujui"
+        })
+      }else if(req.body.block){
+        update = await Product.findByIdAndUpdate(req.params.id, {
+          "status.value": "diblokir"
+        })
+      }
       return res.status(200).json({message: "Berhasil memperbarui product", data: update})
     } catch (error) {
       console.log(error);
