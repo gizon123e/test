@@ -51,12 +51,12 @@ module.exports = {
 
     createDocumentPenanggungJawab: async (req, res, next) => {
         try {
-            const { id_distributor, address, nama_penanggungjawab, jabatan, nik, } = req.body
+            const { id_distributor, address, nama, jabatan, nik, npwp } = req.body
             const files = req.files;
             const ktp = files ? files.ktp : null;
-            const npwp = files ? files.npwp : null;
+            const file_npwp = files ? files.file_npwp : null;
 
-            if (!ktp || !npwp) {
+            if (!ktp || !file_npwp) {
                 return res.status(400).json({ message: "kamu gagal masukan file nib & npwp" });
             }
 
@@ -69,10 +69,10 @@ module.exports = {
                 }
             });
 
-            const legalitasNpwp = `${Date.now()}${path.extname(npwp.name)}`;
+            const legalitasNpwp = `${Date.now()}${path.extname(file_npwp.name)}`;
             const fileNpwp = path.join(__dirname, '../../public/image-npwp', legalitasNpwp);
 
-            await npwp.mv(fileNpwp, (err) => {
+            await file_npwp.mv(fileNpwp, (err) => {
                 if (err) {
                     return res.status(500).json({ message: "Failed to upload NPWP file", error: err });
                 }
@@ -81,11 +81,12 @@ module.exports = {
             const data = await DokumenPenanggungJawab.create({
                 id_distributor,
                 address,
-                nama_penanggungjawab,
+                nama_penanggungjawab: nama,
                 jabatan,
                 nik,
+                npwp,
                 ktp: `${process.env.HOST}/public/image-ktp/${legalitasKtp}`,
-                npwp: `${process.env.HOST}/public/image-npwp/${legalitasNpwp}`
+                file_npwp: `${process.env.HOST}/public/image-npwp/${legalitasNpwp}`
             });
 
             res.status(201).json({
@@ -109,7 +110,7 @@ module.exports = {
 
     updateDocumentPenanggungJawab: async (req, res, next) => {
         try {
-            const { id_distributor, address, nama_penanggungjawab, jabatan, nik, } = req.body
+            const { id_distributor, address, nama, jabatan, nik, } = req.body
             const files = req.files;
             const ktp = files ? files.ktp : null;
             const npwp = files ? files.npwp : null;
@@ -156,7 +157,7 @@ module.exports = {
             const data = await DokumenPenanggungJawab.findByIdAndUpdate({ _id: req.params.id }, {
                 id_distributor,
                 address,
-                nama_penanggungjawab,
+                nama_penanggungjawab: nama,
                 jabatan,
                 nik,
                 ktp: `${process.env.HOST}/public/image-ktp/${legalitasKtp}`,

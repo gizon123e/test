@@ -46,6 +46,10 @@ const modelDistributtor = mongoose.Schema({
             type: mongoose.Types.ObjectId,
             ref: 'Address',
             required: false
+        },
+        fileNib: {
+            type: String,
+            require: false
         }
     }
 }, { timestamp: true });
