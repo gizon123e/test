@@ -44,6 +44,18 @@ module.exports = {
     }
   },
 
+  verifyProduct: async(req, res, next) => {
+    try {
+      const update = await Product.findByIdAndUpdate(req.params.id, {
+        "status.value": "disetujui"
+      })
+      return res.status(200).json({message: "Berhasil memperbarui product", data: update})
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
   getAllProductWithMain: async(req, res, next) => {
     try {
       const datas = await Product.find({id_main_category: req.params.id})
