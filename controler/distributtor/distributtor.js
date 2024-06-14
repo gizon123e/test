@@ -320,7 +320,26 @@ module.exports = {
 
     createDistributtor: async (req, res, next) => {
         try {
-            const { nama_distributor, alamat_id, userId, npwp, nik, nomorAkta, noTelepon, alamatGudang } = req.body
+            const { nama_distributor, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat, userId, npwp, nik, nomorAkta, noTelepon, alamatGudang } = req.body
+
+            const validateDistributor = await Distributtor.findOne({ userId })
+            if (validateDistributor) return res.status(400).json({ message: "User ini sudah memiliki data detail Distributor", data: validateDistributor });
+            const address = {
+                province,
+                regency,
+                district,
+                village,
+                code_pos,
+                address_description,
+                pinAlamat: {
+                    long: long_pin_alamat,
+                    lat: lat_pin_alamat
+                },
+                isMain: true
+            };
+
+            const newAddress = await Address.create({ ...address, userId });
+
             const files = req.files;
             const npwp_file = files ? files.file_npwp : null;
             const file_ktp = files ? files.file_ktp : null;
@@ -349,7 +368,7 @@ module.exports = {
                     nama_distributor,
                     npwp,
                     userId,
-                    alamat_id,
+                    alamat_id: newAddress._id,
                     file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                     individu: {
                         nik: nik,
@@ -380,7 +399,7 @@ module.exports = {
             const data = await Distributtor.create({
                 nama_distributor,
                 userId,
-                alamat_id,
+                alamat_id: newAddress._id,
                 file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                 npwp,
                 perusahaan: {
