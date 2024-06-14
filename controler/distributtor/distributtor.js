@@ -320,7 +320,7 @@ module.exports = {
 
     createDistributtor: async (req, res, next) => {
         try {
-            const { nama_distributor, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat, userId, npwp, nik, nomorAkta, noTelepon, alamatGudang } = req.body
+            const { nama_distributor, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat, userId, npwp, nik, nomorAkta, noTelepon } = req.body
 
             const validateDistributor = await Distributtor.findOne({ userId })
             if (validateDistributor) return res.status(400).json({ message: "User ini sudah memiliki data detail Distributor", data: validateDistributor });
@@ -405,7 +405,6 @@ module.exports = {
                 perusahaan: {
                     nomorAkta: nomorAkta,
                     noTelepon: parseInt(noTelepon),
-                    alamatGudang: alamatGudang,
                     fileNib: `${process.env.HOST}public/image-profile-distributtor/${imageNameNib}`
                 }
             })
