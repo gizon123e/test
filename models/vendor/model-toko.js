@@ -17,6 +17,22 @@ const modelTokoVendor = new mongoose.Schema({
     detailId:{
         type: ObjectId,
         ref: "Vendor"
+    },
+    pengikut: {
+        type: Number
+    },
+    penilaian_produk:{
+        type: Number
+    },
+    waktu_operasional:{
+        type: String
+    },
+    store_description:{
+        type: String
+    },
+    profile_pict:{
+        type: String,
+        default: () => `${process.env.HOST}public/profile-picts-store/default.jpg`
     }
 });
 

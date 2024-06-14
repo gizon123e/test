@@ -2,7 +2,9 @@ const Carts = require('../models/model-cart')
 const Product = require('../models/model-product');
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
-const Vendor = require("../models/vendor/model-vendor")
+const Vendor = require("../models/vendor/model-vendor");
+const { default: mongoose } = require('mongoose');
+const TokoVendor = require('../models/vendor/model-toko');
 
 module.exports = {
 
@@ -16,7 +18,7 @@ module.exports = {
             });
             // const sellerId = [];
 
-            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id userId total_price name_product minimalOrder').populate({
+            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id userId total_price price diskon name_product minimalOrder berat panjang lebar tinggi').populate({
                 path: "userId",
                 select: "_id role"
             })
@@ -42,7 +44,7 @@ module.exports = {
                 let detailToko;
                 switch(storeMap[key].role){
                     case "vendor":
-                        detailToko = await Vendor.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await TokoVendor.findOne({userId: storeMap[key].id}).select('namaToko');
                         break;
                     case "supplier":
                         detailToko = await Supplier.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
@@ -52,7 +54,7 @@ module.exports = {
                         break;
                 }
                 finalData.push({
-                    nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
+                    nama_toko: detailToko.namaToko,
                     products: storeMap[key].arrayProduct
                 })
             }
@@ -83,7 +85,81 @@ module.exports = {
                     path: 'userId',
                     select: "_id role"
                 }
-            }).lean()
+            })
+
+            // const carts = await Carts.aggregate([
+            //     {
+            //         $match:{
+            //             _id: { $in: cartIds.map(item => { return new mongoose.Types.ObjectId(item) }) }
+            //         }
+            //     },
+            //     {
+            //         $lookup:{
+            //             from: "products",
+            //             let: {prodId: "$productId"},
+            //             pipeline: [
+            //                 { 
+            //                     $match:{
+            //                         $expr:{
+            //                             $eq: ['$_id', "$$prodId"]
+            //                         }
+            //                     }
+            //                 },
+            //                 {
+            //                     $project:{
+            //                         _id: 1, name_product: 1, price: 1,  total_price: 1, diskon: 1, image_product: 1, userId: 1, total_stok: 1, pemasok: 1, rating: 1, minimalOrder:1, isFlashSale: 1, varian: 1
+            //                     }
+            //                 }
+            //             ],
+            //             as: "productDatas"
+            //         }
+            //     },
+            //     {
+            //         $unwind: "$productDatas"
+            //     },
+            //     {
+            //         $addFields: {
+            //             productId: "$productDatas"
+            //         }
+            //     },
+            //     {
+            //         $project:{
+            //             productDatas: 0
+            //         }
+            //     },
+            //     {
+            //         $lookup: {
+            //             from: 'users',
+            //             let: { userId: "$productId.userId"},
+            //             pipeline: [
+            //                 {
+            //                     $match: {
+            //                         $expr: {
+            //                             $eq: ["$_id", "$$userId"]
+            //                         }
+            //                     }
+            //                 },
+            //                 {
+            //                     $project: {
+            //                         _id: 1, role: 1
+            //                     }
+            //                 }
+            //             ],
+            //             as: "user"
+            //         }
+            //     },
+            //     {
+            //         $unwind: "$user"
+            //     },
+            //     {
+            //         $addFields: {
+            //             'productId.userId': "$user"
+            //         }
+            //     },
+            //     {
+            //         $project:{ user: 0 }
+            //     }
+            // ])
             const store = {}
             for (const keranjang of carts){
                 // console.log(keranjang.productId.userId._id)
@@ -109,22 +185,21 @@ module.exports = {
             for(const key of keys){
                 switch(store[key].role){
                     case "vendor":
-                        detailToko = await Vendor.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
+                        detailToko = await TokoVendor.findOne({userId: store[key].id});
                         break;
                     case "supplier":
-                        detailToko = await Supplier.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
+                        detailToko = await Supplier.findOne({userId: store[key].id});
                         break;
                     case "produsen":
-                        detailToko = await Produsen.findOne({userId: store[key].id}).select('nama namaBadanUsaha userId -_id');
+                        detailToko = await Produsen.findOne({userId: store[key].id});
                         break;
                 }
                 finalData.push({
-                    nama_toko: detailToko.nama || detailToko.namaBadanUsaha,
+                    nama_toko: detailToko.namaToko,
                     id_user_vendor: detailToko.userId,
                     products: store[key].arrayProduct
                 })
             }
-            
             return res.status(200).json({message: "Berhasil Mendapatkan Cart by Ids", data: finalData})
         } catch (error) {
             console.log(error);
@@ -144,6 +219,8 @@ module.exports = {
                     message: 'product id not found'
                 })
             }
+
+            if(vaildateProduct.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"})
             
             if(vaildateProduct.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
 

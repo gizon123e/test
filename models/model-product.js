@@ -6,31 +6,38 @@ const varianSchema = new mongoose.Schema({
   nama_varian: {
     type: String
   },
-  nilai_varian:[String]
+  nilai_varian:[{
+    nama: {
+      type: String
+    },
+    harga:{
+      type: Number
+    }
+  }]
 });
 
-const detailVarianSchema = new mongoose.Schema({
-  varian:{
-    type: String
-  },
-  price: {
-    type: Number
-  },
-  stok: {
-    type: Number
-  },
-  image:{
-    type: String
-  },
-  minimalOrder: {
-    type: String
-  },
-  harga_diskon:{
-    type: String
-  }
-});
+// const detailVarianSchema = new mongoose.Schema({
+//   varian:{
+//     type: String
+//   },
+//   price: {
+//     type: Number
+//   },
+//   stok: {
+//     type: Number
+//   },
+//   image:{
+//     type: String
+//   },
+//   minimalOrder: {
+//     type: String
+//   },
+//   harga_diskon:{
+//     type: String
+//   }
+// });
 
-detailVarianSchema.plugin(uniqueValidator);
+// detailVarianSchema.plugin(uniqueValidator);
 
 const productModels = new mongoose.Schema(
   {
@@ -51,7 +58,7 @@ const productModels = new mongoose.Schema(
     price: {
       type: Number,
       required: [true, "price harus di isi"],
-      min: [3, "price yang harus diisi setidaknya 100"],
+      min: [100, "price yang harus diisi setidaknya 100"],
     },
     total_price: {
       type: Number,
@@ -60,6 +67,12 @@ const productModels = new mongoose.Schema(
     diskon: {
       type: Number,
       required: false,
+      validate:{
+        validator: (value) => { 
+          if(value > 100) return false
+        },
+        message: (props) => `Diskon tidak bisa melebihi 100%. Diskon yang dimasukan ${props.value}%`
+      }
     },
     description: {
       type: String,
@@ -88,12 +101,8 @@ const productModels = new mongoose.Schema(
     },
     varian:{
       type: [varianSchema],
-      default: () => null
-    },
-    detail_varian:{
-      type: [detailVarianSchema],
-      validate: [hasNoDuplicates, "Object Detail_Varian Harus Unique"],
-      default: () => null
+      default: () => null,
+      maxlength: [2, "hanya bisa 2 jenis varian"]
     },
     isPublished:{
       type: Boolean,
@@ -180,19 +189,19 @@ const productModels = new mongoose.Schema(
   { timestamp: true }
 );
 
-function hasNoDuplicates(detailVarianArray) {
-  const varianSet = new Set();
-  if(detailVarianArray !== null){
-    for (const detailVarian of detailVarianArray) {
-      const varianKey = `${detailVarian.varian}-${detailVarian.price}-${detailVarian.stok}-${detailVarian.minimalOrder}-${detailVarian.harga_diskon}`;
-      if (varianSet.has(varianKey)) {
-        return false;
-      }
-      varianSet.add(varianKey);
-    }
-  }
-  return true;
-}
+// function hasNoDuplicates(detailVarianArray) {
+//   const varianSet = new Set();
+//   if(detailVarianArray !== null){
+//     for (const detailVarian of detailVarianArray) {
+//       const varianKey = `${detailVarian.varian}-${detailVarian.price}-${detailVarian.stok}-${detailVarian.minimalOrder}-${detailVarian.harga_diskon}`;
+//       if (varianSet.has(varianKey)) {
+//         return false;
+//       }
+//       varianSet.add(varianKey);
+//     }
+//   }
+//   return true;
+// }
 
 //Check if there is discon for the product before save
 productModels.pre("save", function (next) {
@@ -202,17 +211,17 @@ productModels.pre("save", function (next) {
     this.total_price = this.price
   }
 
-  if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
-    this.detail_varian.forEach(element => {
-      this.total_stok += element.stok
-    });
-  }
+  // if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
+  //   this.detail_varian.forEach(element => {
+  //     this.total_stok += element.stok
+  //   });
+  // }
 
-  if(this.bervarian && this.minimalOrder){
-    return next("Atur minimal order per varian di properti objek varian")
-  }
+  // if(this.bervarian && this.minimalOrder){
+  //   next("Atur minimal order per varian di properti objek varian")
+  // }
 
-  return next();
+  next();
 });
 
 productModels.post("findOneAndUpdate", async function (doc, next) {
@@ -220,17 +229,26 @@ productModels.post("findOneAndUpdate", async function (doc, next) {
     const document = await this.model.findOne(this.getQuery());
 
     if (!document) {
-      return next();
+      next();
     }
 
     const updatedDoc = this._update;
     updatedDoc.total_price = updatedDoc.price - (updatedDoc.price * updatedDoc.diskon) / 100;
     await doc.save();
-    return next();
+    next();
   } catch (error) {
-    return next(error);
+    next(error);
   }
 });
+
+productModels.post("findOneAndDelete", async function(next){
+  try {
+    
+  } catch (error) {
+    console.log(error);
+    next(error)
+  }
+})
 
 const Product = mongoose.model("Product", productModels);
 

@@ -1,7 +1,9 @@
 const Product = require("../models/model-product");
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
-const Vendor = require("../models/vendor/model-vendor")
+const Vendor = require("../models/vendor/model-vendor");
+const TokoVendor = require("../models/vendor/model-toko")
+
 const mongoose = require('mongoose')
 const SpecificCategory = require("../models/model-specific-category");
 const SubCategory = require("../models/model-sub-category");
@@ -19,6 +21,7 @@ module.exports = {
   getProductWithSpecific: async(req, res, next) => {
     try {
       const id = req.params.id
+      if(!new mongoose.Types.ObjectId(id)) return res.status(400).json({message: `Id yang dikirimkan tidak valid ${id}`})
       if(!id) return res.status(400).json({message: "Tolong kirimkan id specific category"})
       const products = await Product.find({categoryId: id}).populate('categoryId').populate('id_main_category').populate("id_sub_category")
       return res.status(200).json({message: "Berhasil mendapatkan Products", data: products})
@@ -31,6 +34,7 @@ module.exports = {
   getProductWithSub: async(req, res, next) => {
     try {
       const id = req.params.id
+      if(!new mongoose.Types.ObjectId(id)) return res.status(400).json({message: `Id yang dikirimkan tidak valid ${id}`})
       if(!id) return res.status(400).json({message: "Tolong kirimkan id sub category"});
       const products = await Product.find({id_sub_category: id}).populate('categoryId').populate('id_main_category').populate("id_sub_category");
       return res.status(200).json({message: "Berhasil mendapatkan Products", data: products});
@@ -101,11 +105,12 @@ module.exports = {
     try {
       if(!new mongoose.Types.ObjectId(req.params.id)) return res.status(404).json({message: `Invalid category id: ${req.params.id}`})
       const id = new mongoose.Types.ObjectId(req.params.id);
-      const userRole = req.user.role
       const dataProds = await Product.aggregate([
         {
           $match:{
-            id_main_category: id
+            id_main_category: id,
+            total_stok: { $gt: 0 },
+            $expr: { $gt: ["$total_stok", "$minimalOrder"] }
           }
         },
         {
@@ -127,11 +132,11 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "vendors",
+            from: "tokovendors",
             let: { userId: "$userId" },
             pipeline: [
               { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
-              { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }
+              { $project: { namaToko: 1, profile_pict: 1, address: 1 } }
             ],
             as: "vendorData"
           }
@@ -340,13 +345,13 @@ module.exports = {
       if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){
         case "vendor":
-          toko = await Vendor.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          toko = await TokoVendor.findOne({userId: dataProduct.userId._id}).populate('address');
           break;  
         case "supplier":
-          toko = await Supplier.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          toko = await Supplier.findOne({userId: dataProduct.userId._id}).populate('address');
           break;  
         case "produsen":
-          toko = await Produsen.findOne({userId: dataProduct.userId._id}).select('-nomorAktaPerusahaan -npwpFile -legalitasBadanUsaha -nomorNpwpPerusahaan').populate('address');
+          toko = await Produsen.findOne({userId: dataProduct.userId._id}).populate('address');
           break;
       }
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
@@ -361,7 +366,6 @@ module.exports = {
   upload: async (req, res, next) => {
     try {
       if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });      
-      
       //JANGAN DULU DIHAPUS!!
       // if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
       //   return res.status(400).json({
@@ -391,31 +395,31 @@ module.exports = {
       
       let newProduct
 
-      if( req.body.bervarian === "false" || !req.body.bervarian){
-        const imgPaths = [];
+
+      const imgPaths = [];
       
-        if(req.files.ImageProduct && req.files.ImageProduct.length !== 0){
-          if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
-            for (const img of req.files.ImageProduct){
-              const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
-              const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
-              imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
-              img.mv(pathImg, err => {
-                if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
-              })
-            }
-          } else {
-            const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
+      if(req.files.ImageProduct && req.files.ImageProduct.length !== 0){
+        if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
+          for (const img of req.files.ImageProduct){
+            const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`
             const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
-            req.files.ImageProduct.mv(pathImg, err => {
+            imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
+            img.mv(pathImg, err => {
               if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
             })
-            imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
-          };
+          }
+        } else {
+          const nameImg = `${req.body.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`
+          const pathImg = path.join(__dirname, "../public", "img_products", nameImg );
+          req.files.ImageProduct.mv(pathImg, err => {
+            if(err) return res.status(500).json({message: "Ada kesalahan saat nyimpan file, segera diperbaiki!"})
+          })
+          imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
         };
-        
-        const dataProduct = req.body;
+      };
 
+      if( req.body.bervarian === "false" || !req.body.bervarian){
+        const dataProduct = req.body;
         dataProduct.image_product = imgPaths
         dataProduct.userId = req.user.id;
         newProduct = await Product.create({
@@ -427,35 +431,36 @@ module.exports = {
 
       }else{       
         if(!req.body.varian) return res.status(400).json({message: "Kurang Body Request *varian*"});
+        if(!Array.isArray(req.body.varian)) return res.status(400).json({message: "Varian yang dikirimkan bukan array"})
         const varian = [];
         req.body.varian.forEach(item => varian.push(JSON.parse(item)));
-        const detailVarian = [];
-        req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)));
+        // const detailVarian = [];
+        // req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)));
         // if(detailVarian.length != varian[0].length * varian[1].length) return res.status(400).json({message: `Data yang dikirim tidak valid. Detail Varian panjangnya ${detailVarian.length} sedangkan varian panjangnya ${varian[0].nilai_varian.length * varian[1].nilai_varian.length}`})
-        const final = detailVarian.map(item =>{
-          if(Array.isArray(req.files[item.varian])) return res.status(400).json({message: "Image per Varian hanya boleh Satu!"});
-          const namaImg = `${req.body.name_product}_${item.varian}_${path.extname(req.files[item.varian].name)}`;
-          const pathImg = path.join(__dirname, "../public", "img_products", namaImg);
-          req.files[item.varian].mv(pathImg, (err)=>{
-            if(err) return res.status(500).json({message: "Ada Kesalahan Saat Nyimpan Image, segera diperbaiki"})
-          })
-          return {
-            varian: item.varian,
-            price: item.price,
-            stok: item.stok,
-            harga_diskon: item.harga_diskon,
-            image: `${process.env.HOST}public/img_products/${namaImg}`
-          };
-        });
+        // const final = detailVarian.map(item =>{
+        //   if(Array.isArray(req.files[item.varian])) return res.status(400).json({message: "Image per Varian hanya boleh Satu!"});
+        //   const namaImg = `${req.body.name_product}_${item.varian}_${path.extname(req.files[item.varian].name)}`;
+        //   const pathImg = path.join(__dirname, "../public", "img_products", namaImg);
+        //   req.files[item.varian].mv(pathImg, (err)=>{
+        //     if(err) return res.status(500).json({message: "Ada Kesalahan Saat Nyimpan Image, segera diperbaiki"})
+        //   })
+        //   return {
+        //     varian: item.varian,
+        //     price: item.price,
+        //     stok: item.stok,
+        //     harga_diskon: item.harga_diskon,
+        //     image: `${process.env.HOST}public/img_products/${namaImg}`
+        //   };
+        // });
         delete req.body.varian
-        delete req.body.detailVarian
+        // delete req.body.detailVarian
         const dataProduct = {
           ...req.body,
           varian,
-          detail_varian: final,
           id_main_category: mainCategory._id,
           id_sub_category: subCategory._id,
-          userId: req.user.id
+          userId: req.user.id,
+          image_product: imgPaths
         }
 
         newProduct = await Product.create(dataProduct)
@@ -478,6 +483,9 @@ module.exports = {
         datas: newProduct,
       });
     } catch (err) {
+      if(err.name == "ValidationError"){
+        return res.status(400).json({error: true, err: err.message})
+      }
       console.log(err);
       next(err);
     }
