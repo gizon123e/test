@@ -359,7 +359,7 @@ module.exports = {
             }
 
             if (!fileNib) {
-                return res.status(400).json({ message: "kamu gagal masukan file ktp" });
+                return res.status(400).json({ message: "kamu gagal masukan file nib" });
             }
 
             const imageNameNib = `${Date.now()}${path.extname(fileNib.name)}`;
@@ -407,55 +407,56 @@ module.exports = {
 
     updateDistributtor: async (req, res, next) => {
         try {
-            const { nama_distributor, alamat_id, userId, npwp, individu = { nik }, perusahaan = { nomorAkta, noTelepon, alamatGudang } } = req.body
+            const { nama_distributor, alamat_id, userId, npwp, nik, nomorAkta, noTelepon, alamatGudang } = req.body
             const files = req.files;
             const npwp_file = files ? files.file_npwp : null;
             const file_ktp = files ? files.file_ktp : null;
             const fileNib = files ? files.fleNib : null;
 
-            const imageName = `${Date.now()}${path.extname(npwp_file.name)}`;
-            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+            // const imageName = `${Date.now()}${path.extname(npwp_file.name)}`;
+            // const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
             const dataDistributtor = await Distributtor.findById(req.params.id)
             if (!dataDistributtor) return res.status(404).json({ message: "data Distributtor Not Found" })
 
-            if (!individu) {
-                if (dataDistributtor.imageDistributtor) {
-                    const nibFilename = path.basename(dataDistributtor.imageDistributtor);
+            if (nik) {
+                console.log(dataDistributtor)
+                // if (dataDistributtor.imageDistributtor) {
+                //     const nibFilename = path.basename(dataDistributtor.imageDistributtor);
 
-                    const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
-                    if (fs.existsSync(currentNibPath)) {
-                        fs.unlinkSync(currentNibPath);
-                    }
-                }
+                //     const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
+                //     if (fs.existsSync(currentNibPath)) {
+                //         fs.unlinkSync(currentNibPath);
+                //     }
+                // }
             }
 
-            const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
-            if (!regexNoTelepon.test(perusahaan.noTelepon.toString())) {
-                return res.status(400).json({ error: 'no telepon tidak valid' })
-            }
+            // const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
+            // if (!regexNoTelepon.test(noTelepon.toString())) {
+            //     return res.status(400).json({ error: 'no telepon tidak valid' })
+            // }
 
-            if (!imageDistributtor) {
-                return res.status(400).json({ message: "kamu gagal masukan file imageDistributtor" });
-            }
+            // if (!imageDistributtor) {
+            //     return res.status(400).json({ message: "kamu gagal masukan file imageDistributtor" });
+            // }
 
-            await imageDistributtor.mv(imagePath, (err) => {
-                if (err) {
-                    return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
-                }
-            });
+            // await imageDistributtor.mv(imagePath, (err) => {
+            //     if (err) {
+            //         return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
+            //     }
+            // });
 
-            const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
-                nama_distributor,
-                no_telp,
-                is_kendaraan,
-                imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`,
-                jenisUsaha
-            }, { new: true })
+            // const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+            //     nama_distributor,
+            //     no_telp,
+            //     is_kendaraan,
+            //     imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`,
+            //     jenisUsaha
+            // }, { new: true })
 
             res.status(201).json({
                 message: "update data success",
-                data
+                dataDistributtor
             })
         } catch (error) {
             console.log(error)

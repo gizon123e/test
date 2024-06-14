@@ -52,6 +52,8 @@ app.use("/api/distributor", require('./routes/router-distributtor/router-distrib
 app.use('/api/document-penanggungan-jawab', require('./routes/router-distributtor/router-document-penanggungJawab'))
 app.use('/api/kendaraan-distributtor', require('./routes/router-distributtor/router-kendaraaanDistributtor'))
 app.use('/api/pesanan-distributor', require('./routes/router-distributtor/router-pesananDistributor'))
+app.use('/api/jenis-kendaraan', require('./routes/router-distributtor/router-jenis-kendaraan'))
+app.use('/api/merk-kendaraan', require('./routes/router-distributtor/router-merk-kendaraan'))
 
 app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));
@@ -65,7 +67,7 @@ app.use('/api/alamat', require('./routes/router-alamat'));
 
 // Admin Panel
 app.use('/api/user-system', require('./routes/router-system-user'));
-// app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
+app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
 

@@ -10,7 +10,6 @@ const Distributtor = require('../../models/distributor/model-distributor')
 const Supplier = require("../../models/supplier/model-supplier")
 const Produsen = require('../../models/produsen/model-produsen')
 const DokumenPenanggungJawab = require("../../models/distributor/model-documenPenanggungJawab")
-const DokumenDistributor = require("../../models/distributor/model-Dokumen-Distributor")
 const ModelPenanggungJawabKonsumen = require('../../models/konsumen/model-penanggung-jawab')
 
 
@@ -125,16 +124,11 @@ module.exports = {
                 const data = await Distributtor.findOne({ userId: req.params.id }).populate("userId").populate("alamat_id")
                 if (!data) return res.status(404).json({ message: "data Distributor Not Found" })
 
-                const dataDocument = await DokumenDistributor.findOne({ id_distributor: data._id }).populate({
-                    path: "id_distributor",
-                    populate: "alamat_id"
-                })
                 const dataDocumentPenanggungJawab = await DokumenPenanggungJawab.findOne({ id_distributor: data._id }).populate("address")
 
                 if (!dataDocument || !dataDocumentPenanggungJawab) return res.status(404).json({ message: "data Not Found" })
 
                 dataPayload = {
-                    dataDistribuor: dataDocument,
                     dataDocument: dataDocumentPenanggungJawab,
                     role: dataUser.role
                 }
