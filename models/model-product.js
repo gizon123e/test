@@ -7,6 +7,7 @@ const varianSchema = new mongoose.Schema({
     type: String
   },
   nilai_varian:[{
+    _id: false,
     nama: {
       type: String
     },
