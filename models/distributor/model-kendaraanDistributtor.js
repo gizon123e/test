@@ -7,32 +7,44 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         required: [true, 'ID distributor harus diisi']
     },
 
-    merk: {
+    nama: {
         type: String,
         required: [true, 'Merk kendaraan harus diisi']
     },
-    tipe: {
+    jenisKelamin: {
         type: String,
-        required: [true, 'Tipe kendaraan harus diisi']
+        required: [true, 'jenis kelamin harus diisi'],
+        enum: ["laki-laki", "perempuan"],
+        message: "{VALUE} is not supported",
     },
-    tnkb: {
+    tanggalLahir: {
         type: String,
-        required: [true, 'TNKB kendaraan harus diisi']
+        required: [true, 'tanggal lahir harus diisi']
     },
-    no_mesin: {
+    file_sim: {
         type: String,
-        required: [true, 'Nomor mesin kendaraan harus diisi']
+        required: [true, 'file Sim kendaraan harus diisi']
     },
-    no_rangka: {
+    jenisKendaraan: {
+        type: mongoose.Types.ObjectId,
+        ref: "JenisKendaraan",
+        required: [true, "jenis Kendaraan harus di isi"]
+    },
+    merekKendaraan: {
+        type: mongoose.Types.ObjectId,
+        ref: "MerkKendaraan",
+        required: [true, 'merek Kendaraan harus diisi']
+    },
+    typeKendaraan: {
         type: String,
-        required: [true, 'Nomor rangka kendaraan harus diisi']
-    },
-    tahun: {
-        type: Number,
-        required: [true, 'Tahun kendaraan harus diisi']
+        required: [true, 'type Kendaraan harus diisi']
     },
     warna: {
         type: String,
+        required: [true, 'Warna kendaraan harus diisi']
+    },
+    nomorPolisi: {
+        type: Number,
         required: [true, 'Warna kendaraan harus diisi']
     },
     tarifId: {

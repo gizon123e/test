@@ -1,5 +1,4 @@
 const KendaraanDistributor = require('../../models/distributor/model-kendaraanDistributtor')
-const Vendor = require('../../models/vendor/model-vendor')
 const TokoVendor = require('../../models/vendor/model-toko')
 const Product = require('../../models/model-product')
 const Konsumen = require('../../models/konsumen/model-konsumen')
@@ -223,9 +222,29 @@ module.exports = {
 
     createKendaraandistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId } = req.body
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const files = req.files;
+            const file_sim = files ? files.file_sim : null;
 
-            const data = await KendaraanDistributor.create({ id_distributor, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId })
+            if (!file_sim) return res.status(400).json({ message: "file Sim gagal di unggah" })
+            const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+
+            await file_sim.mv(imagePath);
+
+            const data = await KendaraanDistributor.create({
+                id_distributor,
+                nama,
+                jenisKelamin,
+                tanggalLahir,
+                jenisKendaraan,
+                merekKendaraan,
+                nomorPolisi,
+                warna,
+                typeKendaraan,
+                tarifId,
+                file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`
+            })
 
             res.status(201).json({
                 message: "create data success",
@@ -246,46 +265,62 @@ module.exports = {
 
     updateKendaraanDistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId } = req.body
-            const iconKendaraan = req.files ? req.files.iconKendaraan : null;
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const files = req.files;
+            const file_sim = files ? files.file_sim : null;
 
-            const dataIconKendaraanDistributor = await KendaraanDistributor.findById(req.params.id)
-            if (!dataIconKendaraanDistributor) return res.status(404).json({ message: "data Not Found" })
-            if (dataIconKendaraanDistributor.iconKendaraan) {
-                const iconDistributor = path.basename(dataIconKendaraanDistributor.iconKendaraan);
+            const kendaraan = await KendaraanDistributor.findOne({ _id: req.params.id })
+            if (file_sim) {
+                console.log(kendaraan.file_sim)
+                const fileSim = path.basename(kendaraan.file_sim);
 
-                const deleteIcons = path.join(__dirname, '../../public/icon-kendaraan', iconDistributor);
-                if (fs.existsSync(deleteIcons)) {
-                    fs.unlinkSync(deleteIcons);
-                }
-            }
+                const currentFileSimPath = path.join(__dirname, '../../public/image-ktp', fileSim);
 
-            if (req.user.role === "administrator") {
-                if (!iconKendaraan) {
-                    return res.status(400).json({ message: "kamu gagal masukan file icon Kendaraan" });
+                if (fs.existsSync(currentFileSimPath)) {
+                    fs.unlinkSync(currentFileSimPath);
                 }
 
-                const imageName = `${Date.now()}${path.extname(iconKendaraan.name)}`;
-                const imagePath = path.join(__dirname, '../../public/icon-kendaraan', imageName);
+                const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
+                const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
-                await iconKendaraan.mv(imagePath, (err) => {
-                    if (err) {
-                        return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
-                    }
-                })
+                await file_sim.mv(imagePath);
 
-                const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { iconKendaraan: `${process.env.HOST}/public/icon-kendaraan/${imageName}` }, { new: true })
+                const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, {
+                    id_distributor,
+                    nama,
+                    jenisKelamin,
+                    tanggalLahir,
+                    jenisKendaraan,
+                    merekKendaraan,
+                    nomorPolisi,
+                    warna,
+                    typeKendaraan,
+                    tarifId,
+                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`
+                }, { new: true })
 
                 return res.status(201).json({
-                    message: "update icon data success",
+                    message: "create data success",
                     data
                 })
             }
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { id_distributor, id_jenis_kendaraan, merk, tipe, tnkb, no_mesin, no_rangka, warna, tahun, tarifId }, { new: true })
+
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, {
+                id_distributor,
+                nama,
+                jenisKelamin,
+                tanggalLahir,
+                jenisKendaraan,
+                merekKendaraan,
+                nomorPolisi,
+                warna,
+                typeKendaraan,
+                tarifId
+            }, { new: true })
 
             res.status(201).json({
-                message: "update data kendaraan success",
+                message: "create data success",
                 data
             })
         } catch (error) {
