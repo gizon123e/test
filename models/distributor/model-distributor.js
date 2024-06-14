@@ -15,33 +15,39 @@ const modelDistributtor = mongoose.Schema({
         ref: 'Address',
         required: [true, 'alamat_id harus di isi']
     },
-    no_telp: {
+    npwp: {
+        type: Number,
+        require: [true, 'NPWP harus di isi']
+    },
+    file_npwp: {
         type: String,
-        require: [true, 'no_telepon harus di isi']
+        require: [true, 'file  harus di isi']
     },
-    is_kendaraan: {
-        type: String,
-        enum: ['Motor', 'Mobil', 'Mobil dan Motor'],
-        message: '{VALUE} is not supported',
-        required: [true, 'is_kendaraan harus di isi']
+    individu: {
+        nik: {
+            type: Number,
+            required: false
+        },
+        file_ktp: {
+            type: String,
+            required: false
+        }
     },
-    is_active: {
-        type: Boolean,
-        required: [true, "is active harus di isi"]
-    },
-    imageDistributtor: {
-        type: String,
-        required: [true, 'imageDistributor harus di isi'],
-    },
-    jenisUsaha: {
-        type: String,
-        required: [true, 'jenis Usaha harus di isi'],
-        enum: ["Company", "Individu"]
-    },
-    rejectedOrders:[{
-        type: mongoose.Types.ObjectId,
-        ref: "Pesanan"
-    }]
+    perusahaan: {
+        nomorAkta: {
+            type: Number,
+            required: false
+        },
+        noTelepon: {
+            type: Number,
+            required: false
+        },
+        alamatGudang: {
+            type: mongoose.Types.ObjectId,
+            ref: 'Address',
+            required: false
+        }
+    }
 }, { timestamp: true });
 
 const Distributtor = mongoose.model('Distributtor', modelDistributtor);
