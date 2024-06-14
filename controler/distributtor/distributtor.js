@@ -236,18 +236,8 @@ module.exports = {
                 query.nama_distributor = { $regex: name, $options: 'i' }
             }
 
-
-            if (totalUkuranBeratProduct > ukuranVolumeMotor || totalUkuranVolumeProduct > ukuranVolumeMotor) {
-                query.is_kendaraan = { $in: ["Mobil", "Mobil dan Motor"] };
-                console.log(query)
-            } else {
-                query.is_kendaraan = { $in: ["Motor", "Mobil dan Motor"] };
-                console.log(query)
-            }
-
             let datas = []
             const dataDistributtor = await Distributtor.find(query).populate("userId", '-password').populate('alamat_id')
-
             if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
 
             for (let distributor of dataDistributtor) {
@@ -258,8 +248,23 @@ module.exports = {
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
                     // console.log(distributor)
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id })
-                    if (dataKendaraan.length > 0) {
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate('tarifId')
+                        .populate({
+                            path: "id_distributor",
+                            populate: "alamat_id"
+                        })
+                        .populate('merekKendaraan')
+                        .populate("jenisKendaraan")
+                        .lean()
+                    let filteredDataKendaraan = dataKendaraan
+                    if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'mobil');
+                    } else {
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'motor');
+                    }
+
+                    console.log(filteredDataKendaraan)
+                    if (filteredDataKendaraan.length > 0) {
                         datas.push({
                             distributor,
                             jarakTempu: Math.round(distance)
@@ -319,7 +324,7 @@ module.exports = {
             const files = req.files;
             const npwp_file = files ? files.file_npwp : null;
             const file_ktp = files ? files.file_ktp : null;
-            const fileNib = files ? files.fleNib : null;
+            const fileNib = files ? files.fileNib : null;
 
             if (!npwp_file) {
                 return res.status(400).json({ message: "kamu gagal masukan file npwp" });
@@ -359,7 +364,7 @@ module.exports = {
             }
 
             if (!fileNib) {
-                return res.status(400).json({ message: "kamu gagal masukan file nib" });
+                return res.status(400).json({ message: "kamu gagal masukan file Nib" });
             }
 
             const imageNameNib = `${Date.now()}${path.extname(fileNib.name)}`;
@@ -382,7 +387,7 @@ module.exports = {
                     nomorAkta: nomorAkta,
                     noTelepon: parseInt(noTelepon),
                     alamatGudang: alamatGudang,
-                    fleNib: `${process.env.HOST}public/image-profile-distributtor/${imageNameNib}`
+                    fileNib: `${process.env.HOST}public/image-profile-distributtor/${imageNameNib}`
                 }
             })
 
@@ -411,52 +416,76 @@ module.exports = {
             const files = req.files;
             const npwp_file = files ? files.file_npwp : null;
             const file_ktp = files ? files.file_ktp : null;
-            const fileNib = files ? files.fleNib : null;
+            const fileNib = files ? files.fileNib : null;
 
-            // const imageName = `${Date.now()}${path.extname(npwp_file.name)}`;
-            // const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
-
-            const dataDistributtor = await Distributtor.findById(req.params.id)
-            if (!dataDistributtor) return res.status(404).json({ message: "data Distributtor Not Found" })
-
-            if (nik) {
-                console.log(dataDistributtor)
-                // if (dataDistributtor.imageDistributtor) {
-                //     const nibFilename = path.basename(dataDistributtor.imageDistributtor);
-
-                //     const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
-                //     if (fs.existsSync(currentNibPath)) {
-                //         fs.unlinkSync(currentNibPath);
-                //     }
-                // }
+            if (!npwp_file) {
+                return res.status(400).json({ message: "kamu gagal masukan file npwp" });
             }
 
-            // const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
-            // if (!regexNoTelepon.test(noTelepon.toString())) {
-            //     return res.status(400).json({ error: 'no telepon tidak valid' })
-            // }
+            const imageName = `${Date.now()}${path.extname(npwp_file.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
-            // if (!imageDistributtor) {
-            //     return res.status(400).json({ message: "kamu gagal masukan file imageDistributtor" });
-            // }
+            await npwp_file.mv(imagePath);
 
-            // await imageDistributtor.mv(imagePath, (err) => {
-            //     if (err) {
-            //         return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
-            //     }
-            // });
+            if (nik) {
+                if (!file_ktp) {
+                    return res.status(400).json({ message: "kamu gagal masukan file ktp" });
+                }
 
-            // const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
-            //     nama_distributor,
-            //     no_telp,
-            //     is_kendaraan,
-            //     imageDistributtor: `${process.env.HOST}/public/image-profile-distributtor/${imageName}`,
-            //     jenisUsaha
-            // }, { new: true })
+                const imageNameKtp = `${Date.now()}${path.extname(file_ktp.name)}`;
+                const imagePathKtp = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKtp);
 
-            res.status(201).json({
-                message: "update data success",
-                dataDistributtor
+                await file_ktp.mv(imagePathKtp);
+
+                const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+                    nama_distributor,
+                    npwp,
+                    userId,
+                    alamat_id,
+                    file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                    individu: {
+                        nik: nik,
+                        file_ktp: `${process.env.HOST}public/image-profile-distributtor/${imageNameKtp}`,
+                    }
+                }, { new: true })
+
+                return res.status(201).json({
+                    message: "create data individue success",
+                    data
+                })
+            }
+
+            if (!fileNib) {
+                return res.status(400).json({ message: "kamu gagal masukan file Nib" });
+            }
+
+            const imageNameNib = `${Date.now()}${path.extname(fileNib.name)}`;
+            const imagePathNib = path.join(__dirname, '../../public/image-profile-distributtor', imageNameNib);
+
+            await fileNib.mv(imagePathNib);
+
+            const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
+            if (!regexNoTelepon.test(noTelepon.toString())) return res.status(400).json({ message: "no telepon tidak valid" })
+
+            if (!nomorAkta || !noTelepon) return res.status(400).json({ message: "data Perusahaan belom lengkap" })
+
+            const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+                nama_distributor,
+                userId,
+                alamat_id,
+                file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                npwp,
+                perusahaan: {
+                    nomorAkta: nomorAkta,
+                    noTelepon: parseInt(noTelepon),
+                    alamatGudang: alamatGudang,
+                    fileNib: `${process.env.HOST}public/image-profile-distributtor/${imageNameNib}`
+                }
+            }, { new: true })
+
+            return res.status(201).json({
+                message: "create data perusahaan success",
+                data
             })
         } catch (error) {
             console.log(error)

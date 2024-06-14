@@ -122,6 +122,8 @@ module.exports = {
                     path: "id_distributor",
                     populate: "alamat_id"
                 })
+                .populate('merekKendaraan')
+                .populate("jenisKendaraan")
                 .lean()
 
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
@@ -132,7 +134,6 @@ module.exports = {
             } else {
                 filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'motor');
             }
-            console.log(dataKendaraan)
 
             for (let kendaraan of filteredDataKendaraan) {
                 const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
