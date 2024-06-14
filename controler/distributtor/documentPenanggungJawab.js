@@ -1,4 +1,5 @@
 const DokumenPenanggungJawab = require('../../models/distributor/model-documenPenanggungJawab')
+const Address = require('../../models/model-address')
 const path = require('path')
 const fs = require('fs')
 const dotenv = require('dotenv')
@@ -51,10 +52,26 @@ module.exports = {
 
     createDocumentPenanggungJawab: async (req, res, next) => {
         try {
-            const { id_distributor, address, nama, jabatan, nik, npwp } = req.body
+            const { id_distributor, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat, userId, nama, jabatan, nik, npwp } = req.body
             const files = req.files;
             const ktp = files ? files.ktp : null;
             const file_npwp = files ? files.file_npwp : null;
+
+            const address = {
+                province,
+                regency,
+                district,
+                village,
+                code_pos,
+                address_description,
+                pinAlamat: {
+                    long: long_pin_alamat,
+                    lat: lat_pin_alamat
+                },
+                isMain: true
+            };
+
+            const newAddress = await Address.create({ ...address, userId });
 
             if (!ktp || !file_npwp) {
                 return res.status(400).json({ message: "kamu gagal masukan file nib & npwp" });
@@ -80,7 +97,7 @@ module.exports = {
 
             const data = await DokumenPenanggungJawab.create({
                 id_distributor,
-                address,
+                address: newAddress._id,
                 nama_penanggungjawab: nama,
                 jabatan,
                 nik,
