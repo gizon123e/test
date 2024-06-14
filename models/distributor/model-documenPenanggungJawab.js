@@ -28,8 +28,12 @@ const dokumenPenanggungJawabSchema = mongoose.Schema({
         required: [true, 'Link ke file KTP harus diisi']
     },
     npwp: {
-        type: String,
+        type: Number,
         required: [true, 'Link ke file NPWP harus diisi']
+    },
+    file_npwp: {
+        type: String,
+        required: [true, "file npwp harus di isi"]
     }
 }, { timestamps: true });
 
