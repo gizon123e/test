@@ -98,7 +98,8 @@ const productModels = new mongoose.Schema(
     status:{
       value:{
         type: String,
-        enum: ["ditinjau", "disetujui", "ditolak"]
+        enum: ["ditinjau", "disetujui", "ditolak"],
+        default: "ditinjau"
       },
       message: {
         type: String
