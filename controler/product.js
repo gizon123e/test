@@ -341,7 +341,7 @@ module.exports = {
       const dataProduct = await Product.findById(req.params.id).populate('categoryId').populate({
         path: 'userId',
         select: '-password -codeOtp -pin -saldo -poin'
-      }).lean()
+      }).populate('id_main_category').populate('id_sub_category').lean()
       let toko;
       if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){

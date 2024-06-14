@@ -102,7 +102,8 @@ const productModels = new mongoose.Schema(
         default: "ditinjau"
       },
       message: {
-        type: String
+        type: String,
+        default: null
       }
     },
     userId: {
