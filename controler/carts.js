@@ -80,7 +80,7 @@ module.exports = {
             const { cartIds } = req.body
             const carts = await Carts.find({_id: { $in : cartIds}, userId: req.user.id}).populate({
                 path: 'productId',
-                select: '_id name_product price  total_price diskon image_product userId total_stok pemasok rating minimalOrder isFlashSale varian panjang lebar tinggi berat',
+                select: '_id name_product price  total_price diskon minimalOrder image_product userId total_stok pemasok rating minimalOrder isFlashSale varian panjang lebar tinggi berat',
                 populate: {
                     path: 'userId',
                     select: "_id role"
