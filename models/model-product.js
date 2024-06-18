@@ -164,6 +164,10 @@ const productModels = new mongoose.Schema(
       type: Number,
       required: true
     },
+    isArchived: {
+      type: Boolean,
+      default: false
+    }
     // bahanBaku: [
     //   {
     //     _id: false,
