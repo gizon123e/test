@@ -49,7 +49,7 @@ module.exports = {
       let update
       if(req.body.verify){
         update = await Product.findByIdAndUpdate(req.params.id, {
-          "status.value": "disetujui"
+          "status.value": "terpublish"
         })
       }else if(req.body.block){
         update = await Product.findByIdAndUpdate(req.params.id, {
