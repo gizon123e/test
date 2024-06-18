@@ -54,7 +54,7 @@ module.exports = {
 
             for (let productId of product) {
                 const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
-                const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang
+                const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang * productId.qty
                 ukuranVolumeProduct += volume
 
                 const berat = dataProduct.berat * productId.qty
@@ -70,7 +70,7 @@ module.exports = {
 
 
             if (ukuranVolumeProduct > ukuranBeratProduct) {
-                hargaVolumeBeratProduct = ukuranVolumeProduct / dataBiayaTetap.biaya_per_kg
+                hargaVolumeBeratProduct = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
             } else {
                 hargaVolumeBeratProduct = ukuranBeratProduct / dataBiayaTetap.biaya_per_kg
             }
