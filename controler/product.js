@@ -57,7 +57,7 @@ module.exports = {
         update = await Product.findByIdAndUpdate(req.params.id, {
           $set: {
             status: {
-              value: "diblock",
+              value: "diblokir",
               message: req.body.message
             }
           }
