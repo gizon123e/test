@@ -482,7 +482,7 @@ module.exports = {
 
             await imageProfile.mv(imagePathProfile);
 
-            if (tanggalLahir && jenisKelamin) {
+            if (tanggalLahir && jenisKelamin || tanggalLahir && jenisPerusahaan) {
                 const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
                     tanggalLahir,
                     jenisKelamin,
