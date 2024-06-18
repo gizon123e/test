@@ -144,7 +144,7 @@ module.exports = {
         {
           $match:{
             id_main_category: id,
-            'status.value': 'disetujui',
+            'status.value': 'terpublish',
             total_stok: { $gt: 0 },
             $expr: { $gte: ["$total_stok", "$minimalOrder"] }
           }
@@ -456,7 +456,6 @@ module.exports = {
           imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
         };
       };
-
       if( req.body.bervarian === "false" || !req.body.bervarian){
         const dataProduct = req.body;
         dataProduct.image_product = imgPaths
