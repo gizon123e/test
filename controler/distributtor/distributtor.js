@@ -473,16 +473,16 @@ module.exports = {
             const fileNib = files ? files.fileNib : null;
             const imageProfile = files ? files.imageProfile : null
 
-            if (!imageProfile) {
-                return res.status(400).json({ message: "kamu gagal masukan file imageProfile" });
-            }
-
-            const imageNameProfile = `${Date.now()}${path.extname(imageProfile.name)}`;
-            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
-
-            await imageProfile.mv(imagePathProfile);
-
             if (tanggalLahir && jenisKelamin || tanggalLahir && jenisPerusahaan) {
+                if (!imageProfile) {
+                    return res.status(400).json({ message: "kamu gagal masukan file imageProfile" });
+                }
+
+                const imageNameProfile = `${Date.now()}${path.extname(imageProfile.name)}`;
+                const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
+
+                await imageProfile.mv(imagePathProfile);
+
                 const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
                     tanggalLahir,
                     jenisKelamin,
