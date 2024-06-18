@@ -52,14 +52,23 @@ module.exports = {
           "status.value": "terpublish"
         })
       }else if(req.body.block){
+        console.log('ditolak ni', req.body)
         update = await Product.findByIdAndUpdate(req.params.id, {
-          "status.value": "diblokir",
-          message: req.body.message
+          $set: {
+            status: {
+              value: "diblock",
+              message: req.body.message
+            }
+          }
         })
       }else if(req.body.tolak){
         update = await Product.findByIdAndUpdate(req.params.id, {
-          "status.value": "ditolak",
-          message: req.body.message
+          $set: {
+            status: {
+              value: "ditolak",
+              message: req.body.message
+            }
+          }
         })
       }
       return res.status(200).json({message: "Berhasil memperbarui product", data: update})
