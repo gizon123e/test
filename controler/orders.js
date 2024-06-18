@@ -71,6 +71,11 @@ module.exports = {
                     { $unwind: "$items" },
                     { $unwind: "$items.product" },
                     {
+                        $addFields:{
+                            quantity: "$items.product.quantity"
+                        }
+                    },
+                    {
                         $lookup: {
                             from: 'products',
                             let: { productIds: '$items.product.productId' },
@@ -138,7 +143,7 @@ module.exports = {
                     data.push({ order, namaToko });
                 });
                 await Promise.all(promises);
-                return res.status(200).json({ message: 'get data all Order success', data })
+                return res.status(200).json({ message: 'get data all Order success', dataOrders })
 
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
