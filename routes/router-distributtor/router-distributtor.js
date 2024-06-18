@@ -7,6 +7,7 @@ const controlerDistributtor = require('../../controler/distributtor/distributtor
 
 const router = require('express').Router()
 
+router.get('/detail', authorization, controlerDistributtor.getProfileDistributor)
 router.post('/list/:id', authorization, controlerDistributtor.getAllDistributtor)
 router.get('/detail/:id', controlerDistributtor.getDetailDistributtor)
 router.post('/harga-terendah/:id', authorization, controlerDistributtor.getDistributtorCariHargaTerenda)

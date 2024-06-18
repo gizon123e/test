@@ -15,6 +15,28 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 module.exports = {
+    getProfileDistributor: async (req, res, next) => {
+        try {
+            const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
+            if (!dataDistributor) return res.status(404).json({ message: "data not found" })
+
+            res.status(200).json({
+                message: "data profile success",
+                data: dataDistributor
+            })
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
+    },
+
     getDistributtorCariHargaTerenda: async (req, res, next) => {
         try {
             const { idAddress } = req.query
