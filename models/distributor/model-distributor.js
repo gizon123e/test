@@ -23,6 +23,27 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         require: [true, 'file  harus di isi']
     },
+    tanggalLahir: {
+        type: String,
+        require: false
+    },
+    jenisKelamin: {
+        type: String,
+        require: false
+    },
+    jenisPerusahaan: {
+        type: String,
+        require: false
+    },
+    imageProfile: {
+        type: String,
+        require: false
+    },
+    isActive: {
+        type: Boolean,
+        require: false,
+        default: false
+    },
     individu: {
         nik: {
             type: Number,

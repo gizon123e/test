@@ -462,13 +462,40 @@ module.exports = {
         }
     },
 
+
+
     updateDistributtor: async (req, res, next) => {
         try {
-            const { nama_distributor, alamat_id, userId, npwp, nik, nomorAkta, noTelepon, alamatGudang } = req.body
+            const { nama_distributor, alamat_id, userId, npwp, nik, nomorAkta, noTelepon, alamatGudang, tanggalLahir, jenisKelamin, jenisPerusahaan } = req.body
             const files = req.files;
             const npwp_file = files ? files.file_npwp : null;
             const file_ktp = files ? files.file_ktp : null;
             const fileNib = files ? files.fileNib : null;
+            const imageProfile = files ? files.imageProfile : null
+
+            if (!imageProfile) {
+                return res.status(400).json({ message: "kamu gagal masukan file imageProfile" });
+            }
+
+            const imageNameProfile = `${Date.now()}${path.extname(imageProfile.name)}`;
+            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
+
+            await imageProfile.mv(imagePathProfile);
+
+            if (tanggalLahir && jenisKelamin) {
+                const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+                    tanggalLahir,
+                    jenisKelamin,
+                    jenisPerusahaan,
+                    isActive: true,
+                    imageProfile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`
+                }, { new: true })
+
+                return res.status(201).json({
+                    message: "update data success",
+                    data
+                })
+            }
 
             if (!npwp_file) {
                 return res.status(400).json({ message: "kamu gagal masukan file npwp" });
@@ -479,7 +506,7 @@ module.exports = {
 
             await npwp_file.mv(imagePath);
 
-            if (nik) {
+            if (nik && file_ktp) {
                 if (!file_ktp) {
                     return res.status(400).json({ message: "kamu gagal masukan file ktp" });
                 }
@@ -502,7 +529,7 @@ module.exports = {
                 }, { new: true })
 
                 return res.status(201).json({
-                    message: "create data individue success",
+                    message: "update data individue success",
                     data
                 })
             }
@@ -536,7 +563,7 @@ module.exports = {
             }, { new: true })
 
             return res.status(201).json({
-                message: "create data perusahaan success",
+                message: "update data perusahaan success",
                 data
             })
         } catch (error) {
