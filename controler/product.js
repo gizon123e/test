@@ -47,7 +47,6 @@ module.exports = {
   verifyOrBlockProduct: async(req, res, next) => {
     try {
       let update
-      console.log(req.body)
       if(req.body.verify){
         update = await Product.findByIdAndUpdate(req.params.id, {
           "status.value": "disetujui"
@@ -55,6 +54,10 @@ module.exports = {
       }else if(req.body.block){
         update = await Product.findByIdAndUpdate(req.params.id, {
           "status.value": "diblokir"
+        })
+      }else if(req.body.tolak){
+        update = await Product.findByIdAndUpdate(req.params.id, {
+          "status.value": "ditolak"
         })
       }
       return res.status(200).json({message: "Berhasil memperbarui product", data: update})

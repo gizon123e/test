@@ -53,7 +53,7 @@ module.exports = {
                 }
                 
             }else if(transaction_status === "cancel"){
-                await Pesanan.findByIdAndUpdate(pesanan.id_pesanan, {
+                await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Dibatalkan"
                 });
             }

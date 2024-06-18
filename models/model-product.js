@@ -99,6 +99,7 @@ const productModels = new mongoose.Schema(
       value:{
         type: String,
         enum: ["ditinjau", "disetujui", "ditolak"],
+        message: "{VALUE} is not supported",
         default: "ditinjau"
       },
       message: {
