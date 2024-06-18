@@ -42,11 +42,6 @@ const modelDistributtor = mongoose.Schema({
             type: Number,
             required: false
         },
-        alamatGudang: {
-            type: mongoose.Types.ObjectId,
-            ref: 'Address',
-            required: false
-        },
         fileNib: {
             type: String,
             require: false

@@ -17,23 +17,35 @@ dotenv.config()
 module.exports = {
     getDistributtorCariHargaTerenda: async (req, res, next) => {
         try {
-            const { idAddress, qty } = req.query
+            const { idAddress } = req.query
+            const { product = [] } = req.body
 
-            const product = await Product.findOne({ _id: req.params.id }).populate('userId')
-            const addressVendor = await TokoVendor.findOne({ userId: product.userId._id }).populate('address')
+            // const dataProduct = await Product.findOne({ _id: req.params.id }).populate('userId')
+            const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
             const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
 
-            const ukuranVolumeMotor = 100 * 30 * 40
-            const ukuranVolumeProduct = product.tinggi * product.lebar * product.panjang
-            let ukuranBeratProduct
+            let ukuranVolumeProduct = 0
+            let ukuranBeratProduct = 0
             let hargaVolumeBeratProduct
 
-            if (qty) {
-                ukuranBeratProduct = product.berat * qty
-            } else {
-                ukuranBeratProduct = product.berat * product.minimalOrder
+
+            for (let productId of product) {
+                const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
+                const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang
+                ukuranVolumeProduct += volume
+
+                const berat = dataProduct.berat * productId.qty
+                const beratProduct = dataProduct.berat * dataProduct.minimalOrder
+                if (berat) {
+                    ukuranBeratProduct += berat
+                } else {
+                    ukuranBeratProduct += beratProduct
+                }
             }
+
+            const ukuranVolumeMotor = 100 * 30 * 40
+
 
             if (ukuranVolumeProduct > ukuranBeratProduct) {
                 hargaVolumeBeratProduct = ukuranVolumeProduct / dataBiayaTetap.biaya_per_kg
