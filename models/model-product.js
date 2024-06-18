@@ -1,20 +1,22 @@
 const mongoose = require("mongoose");
-const uniqueValidator = require('mongoose-unique-validator');
+const uniqueValidator = require("mongoose-unique-validator");
 
 const varianSchema = new mongoose.Schema({
   _id: false,
   nama_varian: {
-    type: String
+    type: String,
   },
-  nilai_varian:[{
-    _id: false,
-    nama: {
-      type: String
+  nilai_varian: [
+    {
+      _id: false,
+      nama: {
+        type: String,
+      },
+      harga: {
+        type: Number,
+      },
     },
-    harga:{
-      type: Number
-    }
-  }]
+  ],
 });
 
 // const detailVarianSchema = new mongoose.Schema({
@@ -42,13 +44,13 @@ const varianSchema = new mongoose.Schema({
 
 const productModels = new mongoose.Schema(
   {
-    _id:{
+    _id: {
       type: String,
-      default: () => `Prod-${new mongoose.Types.ObjectId().toString()}`
+      default: () => `Prod-${new mongoose.Types.ObjectId().toString()}`,
     },
-    bervarian:{
+    bervarian: {
       type: Boolean,
-      default: false
+      default: false,
     },
     name_product: {
       type: String,
@@ -63,17 +65,18 @@ const productModels = new mongoose.Schema(
     },
     total_price: {
       type: Number,
-      required: false
+      required: false,
     },
     diskon: {
       type: Number,
       required: false,
-      validate:{
-        validator: (value) => { 
-          if(value > 100) return false
+      validate: {
+        validator: (value) => {
+          if (value > 100) return false;
         },
-        message: (props) => `Diskon tidak bisa melebihi 100%. Diskon yang dimasukan ${props.value}%`
-      }
+        message: (props) =>
+          `Diskon tidak bisa melebihi 100%. Diskon yang dimasukan ${props.value}%`,
+      },
     },
     description: {
       type: String,
@@ -84,28 +87,28 @@ const productModels = new mongoose.Schema(
     },
     minimalDp: {
       type: Number,
-      min: 40
+      min: 40,
     },
     image_product: {
       type: [String],
       required: [true, "product harus memiliki setidaknya 1 gambar"],
     },
-    varian:{
+    varian: {
       type: [varianSchema],
       default: () => null,
-      maxlength: [2, "hanya bisa 2 jenis varian"]
+      maxlength: [2, "hanya bisa 2 jenis varian"],
     },
-    status:{
-      value:{
+    status: {
+      value: {
         type: String,
         enum: ["ditinjau", "terpublish", "ditolak", "diblokir"],
         message: "{VALUE} is not supported",
-        default: "ditinjau"
+        default: "ditinjau",
       },
       message: {
         type: String,
-        default: null
-      }
+        default: null,
+      },
     },
     userId: {
       type: mongoose.Types.ObjectId,
@@ -130,44 +133,44 @@ const productModels = new mongoose.Schema(
     total_stok: {
       type: Number,
       required: true,
-      default: 0
+      default: 0,
     },
     pemasok: {
       type: mongoose.Types.ObjectId,
       ref: "Supplier",
-      default: null
+      default: null,
     },
     rating: {
       type: Number,
-      default: 0
+      default: 0,
     },
     minimalOrder: {
-      type: Number
+      type: Number,
     },
     isFlashSale: {
       type: Boolean,
-      default: false
+      default: false,
     },
     panjang: {
       type: Number,
-      required: true
+      required: true,
     },
     lebar: {
       type: Number,
-      required: true
+      required: true,
     },
     tinggi: {
       type: Number,
-      required: true
+      required: true,
     },
     berat: {
       type: Number,
-      required: true
+      required: true,
     },
     isArchived: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
     // bahanBaku: [
     //   {
     //     _id: false,
@@ -183,7 +186,7 @@ const productModels = new mongoose.Schema(
     //   }
     // ],
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 
 // function hasNoDuplicates(detailVarianArray) {
@@ -205,7 +208,7 @@ productModels.pre("save", function (next) {
   if (this.diskon) {
     this.total_price = this.price - (this.price * this.diskon) / 100;
   } else {
-    this.total_price = this.price
+    this.total_price = this.price;
   }
 
   // if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
@@ -230,7 +233,8 @@ productModels.post("findOneAndUpdate", async function (doc, next) {
     }
 
     const updatedDoc = this._update;
-    updatedDoc.total_price = updatedDoc.price - (updatedDoc.price * updatedDoc.diskon) / 100;
+    updatedDoc.total_price =
+      updatedDoc.price - (updatedDoc.price * updatedDoc.diskon) / 100;
     await doc.save();
     next();
   } catch (error) {
@@ -238,14 +242,13 @@ productModels.post("findOneAndUpdate", async function (doc, next) {
   }
 });
 
-productModels.post("findOneAndDelete", async function(next){
+productModels.post("findOneAndDelete", async function (next) {
   try {
-    
   } catch (error) {
     console.log(error);
-    next(error)
+    next(error);
   }
-})
+});
 
 const Product = mongoose.model("Product", productModels);
 
