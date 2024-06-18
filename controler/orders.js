@@ -53,7 +53,7 @@ module.exports = {
             if (req.user.role === 'konsumen') {
                 const dataOrders = await Orders.aggregate([
                     { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
-                    { $project: { items: 1 }},
+                    { $project: { items: 1, status: 1 }},
                     {
                         $lookup: {
                             from: "detailpesanans",
