@@ -129,9 +129,9 @@ module.exports = {
         {
           $match:{
             id_main_category: id,
-            "status.value": "disetujui",
+            'status.value': 'disetujui',
             total_stok: { $gt: 0 },
-            $expr: { $gt: ["$total_stok", "$minimalOrder"] }
+            $expr: { $gte: ["$total_stok", "$minimalOrder"] }
           }
         },
         {
