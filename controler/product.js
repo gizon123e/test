@@ -13,6 +13,7 @@ const Performance = require('../models/model-laporan-kinerja-product');
 const path = require('path');
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
+const SalesReport = require("../models/model-laporan-penjualan");
 // const BahanBaku = require("../models/model-bahan-baku");
 // const SalesReport = require("../models/model-laporan-penjualan");
 
@@ -354,9 +355,12 @@ module.exports = {
       const dataProds = [];
       for(const produk of data){
         const namaVendor = await TokoVendor.findOne({userId: produk.userId});
+        const terjual = await SalesReport.findOne({productId: produk._id})
+        const totalTerjual = terjual? terjual.track.reduce((accumulator, current)=> accumulator + current.soldAtMoment) : 0
         dataProds.push({
           ...produk.toObject(),
-          nama: namaVendor?.namaToko
+          nama: namaVendor?.namaToko,
+          totalTerjual
         });
       };
       if (data && data.length > 0) {
