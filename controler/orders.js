@@ -1,4 +1,4 @@
-const Orders = require('../models/model-orders')
+const Orders = require("../models/model-orders")
 const Product = require('../models/model-product')
 const Carts = require('../models/model-cart')
 // const Report = require("../models/model-laporan-penjualan");
@@ -183,19 +183,14 @@ module.exports = {
     },
 
     getOrderDetail: async (req, res, next) => {
-        const kacau = await mongoose.model("Pesanan").findById(req.params.id).lean()
-        return res.status(200).json({kacau})
-        // try {
-        //     const dataOrder = await Orders.findById(req.params.id).lean()
-            
-
-        //     if (!dataOrder) return res.status(404).json({ error: 'data not found' })
-
-        //     return res.status(200).json({ message: 'get detail data order success', datas: dataOrder })
-        // } catch (error) {
-        //     console.log(error)
-        //     next(error)
-        // }
+        try {
+            const dataOrder = await Orders.findById(req.params.id)
+            if(!dataOrder) return res.status(404).json({message: `Tidak ada pesanan dengan id: ${req.params.id}`})
+            return res.status(200).json({ message: 'get detail data order success', datas: dataOrder });
+        } catch (error) {
+            console.error('Error fetching order:', error);
+            next(error);
+        }
     },
 
     createOrder: async (req, res, next) => {
