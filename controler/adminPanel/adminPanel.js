@@ -111,7 +111,7 @@ module.exports = {
                 const dataDocument = await ModelPenanggungJawabVendor.findOne({ userId: req.params.id }).populate({
                     path: "detailId",
                     populate: "address"
-                }).populate("alamat")
+                })
 
                 dataPayload = {
                     dataVendor,
