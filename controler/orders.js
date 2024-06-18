@@ -183,17 +183,19 @@ module.exports = {
     },
 
     getOrderDetail: async (req, res, next) => {
-        try {
-            const dataOrder = await Orders.findById(req.params.id)
+        const kacau = await mongoose.model("Pesanan").findById(req.params.id).lean()
+        return res.status(200).json({kacau})
+        // try {
+        //     const dataOrder = await Orders.findById(req.params.id).lean()
             
 
-            if (!dataOrder) return res.status(404).json({ error: 'data not found' })
+        //     if (!dataOrder) return res.status(404).json({ error: 'data not found' })
 
-            return res.status(200).json({ message: 'get detail data order success', datas: dataOrder })
-        } catch (error) {
-            console.log(error)
-            next(error)
-        }
+        //     return res.status(200).json({ message: 'get detail data order success', datas: dataOrder })
+        // } catch (error) {
+        //     console.log(error)
+        //     next(error)
+        // }
     },
 
     createOrder: async (req, res, next) => {

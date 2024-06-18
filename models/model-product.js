@@ -107,7 +107,7 @@ const productModels = new mongoose.Schema(
       },
       message: {
         type: String,
-        default: null,
+        default: "Produk kamu sedang dalam proses tinjauan superapp. Produk kamu akan segera terunggah setelah tinjauan selesai.",
       },
     },
     userId: {
