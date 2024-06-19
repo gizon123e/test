@@ -54,19 +54,6 @@ module.exports = {
                 const dataOrders = await Orders.aggregate([
                     { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
                     { $project: { items: 1, status: 1 }},
-                    {
-                        $lookup: {
-                            from: "detailpesanans",
-                            foreignField: "id_pesanan",
-                            localField: "_id",
-                            as: 'detail_pesanan'
-                        }
-                    },
-                    {
-                        $addFields: {
-                            "total_price": { $arrayElemAt: ["$detail_pesanan.total_price", 0] }
-                        }
-                    },
                     { $project: { detail_pesanan: 0 }},
                     { $unwind: "$items" },
                     { $unwind: "$items.product" },
@@ -81,7 +68,7 @@ module.exports = {
                             let: { productIds: '$items.product.productId' },
                             pipeline: [
                                 { $match: { $expr: { $eq: ['$_id', '$$productIds'] } } },
-                                { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, varian: 1, detail_varian: 1, userId: 1 } }
+                                { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, varian: 1, detail_varian: 1, userId: 1, total_price: 1 } }
                             ],
                             as: 'productInfo'
                         }
@@ -143,7 +130,7 @@ module.exports = {
                     data.push({ order, namaToko });
                 });
                 await Promise.all(promises);
-                return res.status(200).json({ message: 'get data all Order success', dataOrders })
+                return res.status(200).json({ message: 'get data all Order success', data })
 
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
