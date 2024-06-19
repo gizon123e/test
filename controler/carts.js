@@ -44,7 +44,7 @@ module.exports = {
                 let detailToko;
                 switch(storeMap[key].role){
                     case "vendor":
-                        detailToko = await TokoVendor.findOne({userId: storeMap[key].id}).select('namaToko');
+                        detailToko = await TokoVendor.findOne({userId: storeMap[key].id}).select('namaToko userId');
                         break;
                     case "supplier":
                         detailToko = await Supplier.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');

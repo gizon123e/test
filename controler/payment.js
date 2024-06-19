@@ -43,7 +43,6 @@ module.exports = {
                 await VA_Used.findOneAndDelete({orderId: order_id});
                 
                 for ( const ship of pesanan.shipments ){
-                    console.log(ship);
                     await Pengiriman.create({
                         orderId: pesanan._id,
                         distributorId: ship.id_distributor,
