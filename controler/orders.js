@@ -243,14 +243,15 @@ module.exports = {
             })
 
             if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used})
-            const currentDate = new Date(new Date().getTime() + 24*60*60*1000)
+            const now = new Date()
+            const a_day_later = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
             const dataOrder = await Orders.create({
                 ...req.body,
                 userId: req.user.id,
                 date_order,
                 biaya_asuransi: biaya_asuransi ? true : false,
-                expire: currentDate.setDate(currentDate.getDate()+1)
+                expire: a_day_later
             });
 
             const detailPesanan = await DetailPesanan.create({
