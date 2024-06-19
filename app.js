@@ -1,5 +1,6 @@
 require("./database/database");
 const flash_sale_checker = require('./utils/flash-sale-checker');
+const checker_order = require("./utils/cancel-order")
 const express = require("express");
 const cors = require("cors");
 const logger = require("morgan");
@@ -80,6 +81,7 @@ app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
   // flash_sale_checker.start()
+  checker_order()
   console.log("connection express success");
   websocket.listen(5000, () => {
     console.log("Connection websocket success");

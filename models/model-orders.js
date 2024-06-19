@@ -54,6 +54,7 @@ const modelOrder = new mongoose.Schema({
         type: String,
         required: [true, 'status harus di isi'],
         enum: ["Belum Bayar", "Berlangsung", "Berhasil", "Dibatalkan"],
+        message: `{VALUE} is not supported`,
         default: "Belum Bayar"
     },
     isApproved:{
@@ -118,7 +119,7 @@ const modelOrder = new mongoose.Schema({
             }
         }
     ]
-}, { timestamp: true }
+}, { timestamps: true }
 )
 
 // const updateExpiredOrderStatus = async (order) => {
