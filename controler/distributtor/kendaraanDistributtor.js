@@ -54,6 +54,33 @@ module.exports = {
         }
     },
 
+    getKendaraanDistributorDetailPanel: async (req, res, next) => {
+        try {
+            const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: req.params.id })
+            if (!dataKendaraan) return res.status(404).json({ message: 'data Not Found' })
+
+            const dataPengemudi = await Pengemudi.findOne({ id_distributor: req.params.id })
+            if (!dataPengemudi) return res.status(404).json({ message: 'data Not Found' })
+
+            res.status(200).json({
+                message: 'get data success',
+                dataKendaraan,
+                dataPengemudi
+            })
+
+        } catch (error) {
+            console.error("Error creating document:", error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
     getKendaraanDistributorById: async (req, res, next) => {
         try {
             const { userId, addressId } = req.query
