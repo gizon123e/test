@@ -114,7 +114,7 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate('id_distributor').populate("tarifId")
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan").populate('tarifId')
 
                     if (dataKendaraan.length > 0)
                         for (let data of dataKendaraan) {

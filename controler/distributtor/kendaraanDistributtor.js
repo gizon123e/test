@@ -8,6 +8,7 @@ const Gratong = require('../../models/model-gratong')
 const Distributtor = require('../../models/distributor/model-distributor')
 const Tarif = require('../../models/model-tarif')
 const BiayaTetap = require('../../models/model-biaya-tetap')
+const Pengemudi = require('../../models/distributor/model-pengemudi')
 
 const path = require('path')
 const fs = require('fs')
@@ -227,30 +228,82 @@ module.exports = {
             const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
+            const fotoKendaraan = files ? files.fotoKendaraan : null;
+            const fileSTNK = files ? files.STNK : null;
+            const fileKTP = files ? files.fileKTP : null;
+            const profile = files ? files.profile : null;
 
-            if (!file_sim) return res.status(400).json({ message: "file Sim gagal di unggah" })
+            if (!file_sim || !fotoKendaraan || !fileSTNK) return res.status(400).json({ message: "file Sim & fotoKendaraan & fileSTNK file gagal di unggah" })
             const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
             await file_sim.mv(imagePath);
 
+            const imageNameKendaraan = `${Date.now()}${path.extname(fotoKendaraan.name)}`;
+            const imagePathKendaraan = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKendaraan);
+
+            await fotoKendaraan.mv(imagePathKendaraan);
+
+            const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
+            const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
+
+            await fileSTNK.mv(imagePathSTNK);
+
+            const imageNameProfile = `${Date.now()}${path.extname(profile.name)}`;
+            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
+
+            await profile.mv(imagePathProfile);
+
+
+            let dataPengemudi
+            if (fileKTP) {
+                const imageNameKTP = `${Date.now()}${path.extname(fileKTP.name)}`;
+                const imagePathKTP = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKTP);
+
+                await fileKTP.mv(imagePathKTP);
+
+                dataPengemudi = await Pengemudi.create({
+                    id_distributor,
+                    nama,
+                    jenisKelamin,
+                    tanggalLahir,
+                    profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                    fileKTP: `${process.env.HOST}public/image-profile-distributtor/${imageNameKTP}`,
+                })
+            } else {
+                dataPengemudi = await Pengemudi.create({
+                    id_distributor,
+                    nama,
+                    jenisKelamin,
+                    tanggalLahir,
+                    profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                })
+            }
+
             const data = await KendaraanDistributor.create({
                 id_distributor,
-                nama,
-                jenisKelamin,
-                tanggalLahir,
+                // nama,
+                // jenisKelamin,
+                // tanggalLahir,
                 jenisKendaraan,
                 merekKendaraan,
                 nomorPolisi,
                 warna,
                 typeKendaraan,
                 tarifId,
-                file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`
+                // file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                // profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+
             })
 
             res.status(201).json({
                 message: "create data success",
-                data
+                data,
+                dataPengemudi
             })
         } catch (error) {
             console.error("Error creating document:", error);
