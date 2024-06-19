@@ -39,11 +39,6 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         require: false
     },
-    isActive: {
-        type: Boolean,
-        require: false,
-        default: false
-    },
     individu: {
         nik: {
             type: Number,

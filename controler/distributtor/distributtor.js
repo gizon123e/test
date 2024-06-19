@@ -7,6 +7,7 @@ const KendaraanDistributor = require('../../models/distributor/model-kendaraanDi
 const Gratong = require('../../models/model-gratong')
 const Address = require('../../models/model-address')
 const BiayaTetap = require('../../models/model-biaya-tetap')
+const User = require('../../models/model-auth-user')
 
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
@@ -478,18 +479,21 @@ module.exports = {
                     return res.status(400).json({ message: "kamu gagal masukan file imageProfile" });
                 }
 
+                await User.updateOne({ _id: req.user.id }, { isActive: true })
+
+                console.log(req.user.id)
+
                 const imageNameProfile = `${Date.now()}${path.extname(imageProfile.name)}`;
                 const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
 
                 await imageProfile.mv(imagePathProfile);
 
-                const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+                const data = await Distributtor.findOneAndUpdate({ userId: req.user.id }, {
                     tanggalLahir,
                     jenisKelamin,
                     jenisPerusahaan,
-                    isActive: true,
                     imageProfile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`
-                }, { new: true })
+                }, { new: true });
 
                 return res.status(201).json({
                     message: "update data success",
@@ -516,7 +520,7 @@ module.exports = {
 
                 await file_ktp.mv(imagePathKtp);
 
-                const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+                const data = await Distributtor.findByIdAndUpdate({ userId: req.user.id }, {
                     nama_distributor,
                     npwp,
                     userId,
@@ -548,7 +552,7 @@ module.exports = {
 
             if (!nomorAkta || !noTelepon) return res.status(400).json({ message: "data Perusahaan belom lengkap" })
 
-            const data = await Distributtor.findByIdAndUpdate({ _id: req.params.id }, {
+            const data = await Distributtor.findByIdAndUpdate({ userId: req.user.id }, {
                 nama_distributor,
                 userId,
                 alamat_id,

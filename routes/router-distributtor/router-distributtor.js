@@ -12,7 +12,7 @@ router.post('/list/:id', authorization, controlerDistributtor.getAllDistributtor
 router.get('/detail/:id', controlerDistributtor.getDetailDistributtor)
 router.post('/harga-terendah/:id', authorization, controlerDistributtor.getDistributtorCariHargaTerenda)
 router.post('/create', controlerDistributtor.createDistributtor)
-router.put('/update/:id', controlerDistributtor.updateDistributtor)
+router.put('/update', authorization, controlerDistributtor.updateDistributtor)
 router.delete('/delete/:id', controlerDistributtor.deleteDistributtor)
 
 module.exports = router
