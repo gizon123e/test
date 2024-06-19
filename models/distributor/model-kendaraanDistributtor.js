@@ -6,7 +6,6 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         ref: 'Distributtor',
         required: [true, 'ID distributor harus diisi']
     },
-
     nama: {
         type: String,
         required: [true, 'Merk kendaraan harus diisi']
@@ -16,6 +15,23 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         required: [true, 'jenis kelamin harus diisi'],
         enum: ["laki-laki", "perempuan"],
         message: "{VALUE} is not supported",
+    },
+    fotoKendaraan: {
+        type: String,
+        required: [true, 'fotoKendaraan harus diisi']
+    },
+    STNK: {
+        type: String,
+        required: [true, 'STNK harus diisi']
+    },
+    profile: {
+        type: String,
+        required: [true, 'profile harus diisi']
+    },
+    fileKTP: {
+        type: String,
+        required: false,
+        default: null
     },
     tanggalLahir: {
         type: String,
