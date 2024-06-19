@@ -679,7 +679,7 @@ module.exports = {
       const productId = req.body.product_id;
       const deleted = await Product.findById(productId);
       if(req.user.id.toString() !== deleted.userId.toString() && req.user.role !== 'administrator') return res.status(403).json({message: "Anda Tidak Bisa Menghapus Produk Ini"})
-      await Product.deteleOne({_id: deleted._id})
+      await Product.deleteOne({_id: deleted._id})
       return res.status(201).json({
         error: false,
         message: "Berhasil Menghapus Data Produk",
