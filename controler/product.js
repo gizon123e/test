@@ -677,14 +677,14 @@ module.exports = {
   delete: async (req, res, next) => {
     try {
       const productId = req.body.product_id;
-      const deleted = await Product.findByIdAndDelete(productId);
-      if (deleted) {
-        return res.status(201).json({
-          error: false,
-          message: "Berhasil Menghapus Data Produk",
-          datas: deleted,
-        });
-      }
+      const deleted = await Product.findById(productId);
+      if(req.user.id.toString() !== deleted.userId.toString() && req.user.role !== 'administrator') return res.status(403).json({message: "Anda Tidak Bisa Menghapus Produk Ini"})
+      await Product.deteleOne({_id: deleted._id})
+      return res.status(201).json({
+        error: false,
+        message: "Berhasil Menghapus Data Produk",
+        data: deleted,
+      });
     } catch (err) {
       console.log(err);
       next(err);
