@@ -55,6 +55,7 @@ module.exports = {
                 }
                 finalData.push({
                     nama_toko: detailToko.namaToko,
+                    userId: detailToko.userId,
                     products: storeMap[key].arrayProduct
                 })
             }
