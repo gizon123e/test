@@ -6,16 +6,6 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         ref: 'Distributtor',
         required: [true, 'ID distributor harus diisi']
     },
-    nama: {
-        type: String,
-        required: [true, 'Merk kendaraan harus diisi']
-    },
-    jenisKelamin: {
-        type: String,
-        required: [true, 'jenis kelamin harus diisi'],
-        enum: ["laki-laki", "perempuan"],
-        message: "{VALUE} is not supported",
-    },
     fotoKendaraan: {
         type: String,
         required: [true, 'fotoKendaraan harus diisi']
@@ -23,23 +13,6 @@ const kendaraanDistributorSchema = new mongoose.Schema({
     STNK: {
         type: String,
         required: [true, 'STNK harus diisi']
-    },
-    profile: {
-        type: String,
-        required: [true, 'profile harus diisi']
-    },
-    fileKTP: {
-        type: String,
-        required: false,
-        default: null
-    },
-    tanggalLahir: {
-        type: String,
-        required: [true, 'tanggal lahir harus diisi']
-    },
-    file_sim: {
-        type: String,
-        required: [true, 'file Sim kendaraan harus diisi']
     },
     jenisKendaraan: {
         type: mongoose.Types.ObjectId,
@@ -71,6 +44,11 @@ const kendaraanDistributorSchema = new mongoose.Schema({
     iconKendaraan: {
         type: String,
         required: false
+    },
+    is_Active: {
+        type: Boolean,
+        required: [true, 'is_Active pengemudi harus diisi'],
+        default: false
     }
 }, { timestamps: true });
 

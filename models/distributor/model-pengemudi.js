@@ -26,8 +26,18 @@ const ModelPengemudi = new mongoose.Schema({
     },
     profile: {
         type: String,
-        required: [true, 'file Sim kendaraan harus diisi']
+        required: [true, 'profile kendaraan harus diisi']
     },
+    fileKTP: {
+        type: String,
+        required: false,
+        default: null
+    },
+    is_Active: {
+        type: Boolean,
+        required: [true, 'is_Active kendaraan harus diisi'],
+        default: false
+    }
 })
 
 const Pengemudi = mongoose.model('Pengemudi', ModelPengemudi)

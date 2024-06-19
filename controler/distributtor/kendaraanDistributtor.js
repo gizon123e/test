@@ -242,42 +242,68 @@ module.exports = {
             const imageNameKendaraan = `${Date.now()}${path.extname(fotoKendaraan.name)}`;
             const imagePathKendaraan = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKendaraan);
 
-            await file_sim.mv(imagePathKendaraan);
+            await fotoKendaraan.mv(imagePathKendaraan);
 
             const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
             const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
 
-            await file_sim.mv(imagePathSTNK);
-
-            const imageNameKTP = `${Date.now()}${path.extname(fileKTP.name)}`;
-            const imagePathKTP = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKTP);
-
-            await file_sim.mv(imagePathKTP);
+            await fileSTNK.mv(imagePathSTNK);
 
             const imageNameProfile = `${Date.now()}${path.extname(profile.name)}`;
             const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
 
-            await file_sim.mv(imagePathProfile);
+            await profile.mv(imagePathProfile);
+
+
+            let dataPengemudi
+            if (fileKTP) {
+                const imageNameKTP = `${Date.now()}${path.extname(fileKTP.name)}`;
+                const imagePathKTP = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKTP);
+
+                await fileKTP.mv(imagePathKTP);
+
+                dataPengemudi = await Pengemudi.create({
+                    id_distributor,
+                    nama,
+                    jenisKelamin,
+                    tanggalLahir,
+                    profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                    fileKTP: `${process.env.HOST}public/image-profile-distributtor/${imageNameKTP}`,
+                })
+            } else {
+                dataPengemudi = await Pengemudi.create({
+                    id_distributor,
+                    nama,
+                    jenisKelamin,
+                    tanggalLahir,
+                    profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                })
+            }
 
             const data = await KendaraanDistributor.create({
                 id_distributor,
-                nama,
-                jenisKelamin,
-                tanggalLahir,
+                // nama,
+                // jenisKelamin,
+                // tanggalLahir,
                 jenisKendaraan,
                 merekKendaraan,
                 nomorPolisi,
                 warna,
                 typeKendaraan,
                 tarifId,
-                file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                // file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                // profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+
             })
 
             res.status(201).json({
                 message: "create data success",
-                data
+                data,
+                dataPengemudi
             })
         } catch (error) {
             console.error("Error creating document:", error);
