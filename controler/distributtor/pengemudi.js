@@ -29,5 +29,39 @@ module.exports = {
             console.log(error)
             next(error)
         }
+    },
+
+    updateVerifikasi: async (req, res, next) => {
+        try {
+            const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
+            if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
+
+            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { is_Active: true }, { new: true })
+
+            res.status(200).json({
+                message: "update data success",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
+
+    tolakPengemudi: async (req, res, next) => {
+        try {
+            const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
+            if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
+
+            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak }, { new: true })
+
+            res.status(200).json({
+                message: "update data success",
+                data
+            })
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
     }
 }

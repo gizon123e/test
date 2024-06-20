@@ -9,6 +9,7 @@ const UserSystem = require("../models/model-user-system");
 const jwt = require("../utils/jwt")
 const bcrypt = require('bcrypt');
 const Distributtor = require("../models/distributor/model-distributor");
+
 module.exports = {
     login: async (req, res, next) => {
         try {
@@ -282,8 +283,12 @@ module.exports = {
                             case "produsen":
                                 detailUser = await Produsen.findOne({ userId: user._id }).lean();
                                 break;
+                            case "distributor":
+                                detailUser = await Distributtor.findOne({ userId: user._id }).lean();
+                                break;
                         };
-                        if (!detailUser.tanggal_lahir) return res.status(403).json({ message: "User Belum Mengisi Tanggal Lahir!" });
+                        if (!detailUser.tanggal_lahir || !detailUser.tanggalLahir) return res.status(403).json({ message: "User Belum Mengisi Tanggal Lahir!" });
+
                         const tanggalLahir = detailUser.tanggal_lahir.replace(/[\/?]/g, '');
                         const jumlahUserPerBank = await Va_User.find({
                             nama_bank: va._id

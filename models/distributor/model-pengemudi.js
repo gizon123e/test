@@ -37,7 +37,12 @@ const ModelPengemudi = new mongoose.Schema({
         type: Boolean,
         required: [true, 'is_Active pengemudi harus diisi'],
         default: false
-    }
+    },
+    descriptionTolak: {
+        type: String,
+        required: false,
+        default: null
+    },
 })
 
 const Pengemudi = mongoose.model('Pengemudi', ModelPengemudi)
