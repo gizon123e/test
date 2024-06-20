@@ -187,7 +187,6 @@ module.exports = {
 
     createOrder: async (req, res, next) => {
         try {
-            console.log(req.body)
             const {
                 metode_pembayaran,
                 total,
@@ -198,7 +197,7 @@ module.exports = {
                 biaya_jasa_aplikasi,
                 biaya_layanan,
             } = req.body
-
+            console.log(req.body)
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if (!req.body["items"]) return res.status(404).json({message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan"})
             const today = new Date();

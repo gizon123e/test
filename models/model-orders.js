@@ -11,9 +11,6 @@ const modelOrder = new mongoose.Schema({
                 required: [true, 'Productid harus di isi'],
                 ref: 'Product',
             },
-            note: {
-                type: String
-            },
             quantity: {
                 type: Number,
                 required: [true, 'Quantity harus di isi'],
@@ -24,6 +21,9 @@ const modelOrder = new mongoose.Schema({
                 type: Boolean
             }
         }],
+        note: {
+            type: String
+        },
         deadline:{
             type: Date,
             validate: {

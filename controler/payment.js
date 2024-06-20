@@ -3,6 +3,7 @@ const fetch = require('node-fetch');
 const DetailPesanan = require('../models/model-detail-pesanan');
 const Pengiriman = require("../models/model-pengiriman")
 const Pesanan = require('../models/model-orders');
+const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used')
 dotenv.config();
 
@@ -35,7 +36,12 @@ module.exports = {
                 const pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Berlangsung"
                 }, { new: true });
-                
+                if(pesanan.poinTerpakai){
+                    const user = await User.findByIdAndUpdate(pesanan.userId, {
+                        $inc: { poin: -pesanan.poinTerpakai }
+                    });
+                    console.log(user)
+                }
                 await DetailPesanan.findByIdAndUpdate(order_id, {
                     isTerbayarkan: true
                 });
