@@ -8,7 +8,7 @@ const ModelPengemudi = new mongoose.Schema({
     },
     nama: {
         type: String,
-        required: [true, 'Merk kendaraan harus diisi']
+        required: [true, 'Nama pengemudi harus diisi']
     },
     jenisKelamin: {
         type: String,
@@ -22,11 +22,11 @@ const ModelPengemudi = new mongoose.Schema({
     },
     file_sim: {
         type: String,
-        required: [true, 'file Sim kendaraan harus diisi']
+        required: [true, 'file Sim pengemudi harus diisi']
     },
     profile: {
         type: String,
-        required: [true, 'profile kendaraan harus diisi']
+        required: [true, 'profile pengemudi harus diisi']
     },
     fileKTP: {
         type: String,
@@ -35,7 +35,7 @@ const ModelPengemudi = new mongoose.Schema({
     },
     is_Active: {
         type: Boolean,
-        required: [true, 'is_Active kendaraan harus diisi'],
+        required: [true, 'is_Active pengemudi harus diisi'],
         default: false
     }
 })

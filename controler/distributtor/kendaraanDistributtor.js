@@ -56,7 +56,7 @@ module.exports = {
 
     getKendaraanDistributorDetailPanel: async (req, res, next) => {
         try {
-            const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: req.params.id })
+            const dataKendaraan = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataKendaraan) return res.status(404).json({ message: 'data Not Found' })
 
             const dataPengemudi = await Pengemudi.findOne({ id_distributor: req.params.id })
