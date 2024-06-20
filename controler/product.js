@@ -364,9 +364,9 @@ module.exports = {
         });
       };
       if (data && data.length > 0) {
-        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds })
+        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data: dataProds })
       } else {
-        return res.status(404).json({ message: "User tidak memiliki produk", data })
+        return res.status(404).json({ message: "User tidak memiliki produk", data: dataProds })
       }
     } catch (error) {
       console.log(error)
