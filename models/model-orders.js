@@ -18,10 +18,12 @@ const modelOrder = new mongoose.Schema({
                 default: 1
             },
             note: {
-                type: String
+                type: String,
+                default: null
             },
             proteksi: {
-                type: Boolean
+                type: Boolean,
+                default: false
             }
         }],
         deadline:{
