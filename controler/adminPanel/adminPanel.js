@@ -124,11 +124,13 @@ module.exports = {
                 const data = await Distributtor.findOne({ userId: req.params.id }).populate("userId").populate("alamat_id")
                 if (!data) return res.status(404).json({ message: "data Distributor Not Found" })
 
-                const dataDocumentPenanggungJawab = await DokumenPenanggungJawab.findOne({ id_distributor: data._id }).populate("address")
-
-                if (!dataDocument || !dataDocumentPenanggungJawab) return res.status(404).json({ message: "data Not Found" })
+                let dataDocumentPenanggungJawab = null
+                if (!data.individu) {
+                    dataDocumentPenanggungJawab = await DokumenPenanggungJawab.findOne({ id_distributor: data._id }).populate("address")
+                }
 
                 dataPayload = {
+                    dataDistributor: data,
                     dataDocument: dataDocumentPenanggungJawab,
                     role: dataUser.role
                 }
