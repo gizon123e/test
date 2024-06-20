@@ -200,7 +200,7 @@ module.exports = {
                         totalVolumeProduct: volumeProduct,
                         hargaOngkir,
                         potongan_harga,
-                        total_ongkir
+                        total_ongkir: Math.round(total_ongkir)
                     })
                 } else {
                     let potongan_harga;
@@ -230,7 +230,7 @@ module.exports = {
                         totalVolumeProduct: volumeProduct,
                         hargaOngkir,
                         potongan_harga,
-                        total_ongkir
+                        total_ongkir: Math.round(total_ongkir)
                     })
 
                 }

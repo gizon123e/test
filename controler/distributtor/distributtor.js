@@ -153,7 +153,7 @@ module.exports = {
                                     hargaOngkir,
                                     jarakTempu: Math.round(distance),
                                     potongan_harga,
-                                    total_ongkir
+                                    total_ongkir: Math.round(total_ongkir)
                                 })
                             } else {
                                 let potongan_harga;
@@ -183,7 +183,7 @@ module.exports = {
                                     distributor: data,
                                     jarakTempu: Math.round(distance),
                                     hargaOngkir,
-                                    total_ongkir,
+                                    total_ongkir: Math.round(total_ongkir),
                                     potongan_harga
                                 })
                             }
