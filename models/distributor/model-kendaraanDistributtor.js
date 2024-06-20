@@ -49,7 +49,13 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         type: Boolean,
         required: [true, 'is_Active pengemudi harus diisi'],
         default: false
-    }
+    },
+    descriptionTolak: {
+        type: String,
+        required: false,
+        default: null
+    },
+
 }, { timestamps: true });
 
 const KendaraanDistributor = mongoose.model('KendaraanDistributor', kendaraanDistributorSchema);

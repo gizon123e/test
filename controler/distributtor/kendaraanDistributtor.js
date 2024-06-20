@@ -314,19 +314,14 @@ module.exports = {
 
             const data = await KendaraanDistributor.create({
                 id_distributor,
-                // nama,
-                // jenisKelamin,
-                // tanggalLahir,
                 jenisKendaraan,
                 merekKendaraan,
                 nomorPolisi,
                 warna,
                 typeKendaraan,
                 tarifId,
-                // file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
                 STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                // profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
 
             })
 
@@ -350,58 +345,32 @@ module.exports = {
 
     updateKendaraanDistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
             const files = req.files;
-            const file_sim = files ? files.file_sim : null;
+            const fotoKendaraan = files ? files.fotoKendaraan : null;
+            const fileSTNK = files ? files.STNK : null;
 
-            const kendaraan = await KendaraanDistributor.findOne({ _id: req.params.id })
-            if (file_sim) {
-                console.log(kendaraan.file_sim)
-                const fileSim = path.basename(kendaraan.file_sim);
+            const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
+            const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
 
-                const currentFileSimPath = path.join(__dirname, '../../public/image-ktp', fileSim);
+            await fileSTNK.mv(imagePathSTNK);
 
-                if (fs.existsSync(currentFileSimPath)) {
-                    fs.unlinkSync(currentFileSimPath);
-                }
+            const imageNameProfile = `${Date.now()}${path.extname(fotoKendaraan.name)}`;
+            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
 
-                const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
-                const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
-
-                await file_sim.mv(imagePath);
-
-                const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, {
-                    id_distributor,
-                    nama,
-                    jenisKelamin,
-                    tanggalLahir,
-                    jenisKendaraan,
-                    merekKendaraan,
-                    nomorPolisi,
-                    warna,
-                    typeKendaraan,
-                    tarifId,
-                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`
-                }, { new: true })
-
-                return res.status(201).json({
-                    message: "create data success",
-                    data
-                })
-            }
-
+            await fotoKendaraan.mv(imagePathProfile);
 
             const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, {
                 id_distributor,
-                nama,
-                jenisKelamin,
-                tanggalLahir,
                 jenisKendaraan,
                 merekKendaraan,
                 nomorPolisi,
                 warna,
                 typeKendaraan,
-                tarifId
+                tarifId,
+                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
+
             }, { new: true })
 
             res.status(201).json({
@@ -476,6 +445,54 @@ module.exports = {
                 message: 'iconKendaraan updated successfully',
                 modifiedCount: result.nModified
             });
+        } catch (error) {
+            console.error(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+    veriifikasiKendaraan: async (req, res, next) => {
+        try {
+            const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
+            if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
+
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { is_Active: true }, { new: true })
+
+            res.status(200).json({
+                message: "update data success",
+                data
+            })
+        } catch (error) {
+            console.error(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+    tolakKenendaraan: async (req, res, next) => {
+        try {
+            const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
+            if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
+
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak }, { new: true })
+
+            res.status(200).json({
+                message: "update data success",
+                data
+            })
         } catch (error) {
             console.error(error);
             if (error && error.name === 'ValidationError') {
