@@ -489,7 +489,7 @@ module.exports = {
                 await imageProfile.mv(imagePathProfile);
 
                 const data = await Distributtor.findOneAndUpdate({ userId: req.user.id }, {
-                    tanggalLahir,
+                    tanggal_lahir: tanggalLahir,
                     jenisKelamin,
                     jenisPerusahaan,
                     imageProfile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`
