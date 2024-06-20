@@ -470,14 +470,9 @@ module.exports = {
       }else{       
         if(!req.body.varian) return res.status(400).json({message: "Kurang Body Request *varian*"});
         const varian = [];
-        if(req.headers["user-agent"] === "Mobile"){
-          JSON.parse(req.body.varian).forEach(element => {
-            varian.push(element)
-          });
-        }else{
-          if(!Array.isArray(req.body.varian)) return res.status(400).json({message: "Varian yang dikirimkan bukan array"})
-          req.body.varian.forEach(item => varian.push(JSON.parse(item)));
-        }
+        JSON.parse(req.body.varian).forEach(element => {
+          varian.push(element)
+        });
         // const detailVarian = [];
         // req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)));
         // if(detailVarian.length != varian[0].length * varian[1].length) return res.status(400).json({message: `Data yang dikirim tidak valid. Detail Varian panjangnya ${detailVarian.length} sedangkan varian panjangnya ${varian[0].nilai_varian.length * varian[1].nilai_varian.length}`})

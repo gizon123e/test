@@ -17,13 +17,13 @@ const modelOrder = new mongoose.Schema({
                 min: 1,
                 default: 1
             },
+            note: {
+                type: String
+            },
             proteksi: {
                 type: Boolean
             }
         }],
-        note: {
-            type: String
-        },
         deadline:{
             type: Date,
             validate: {
