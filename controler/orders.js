@@ -187,6 +187,7 @@ module.exports = {
 
     createOrder: async (req, res, next) => {
         try {
+            console.log(req.body)
             const {
                 metode_pembayaran,
                 total,
@@ -242,7 +243,32 @@ module.exports = {
                 userId: req.user.id
             })
 
-            if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used})
+            if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used});
+            const decimalPattern = /^\d+\.\d+$/;
+            if(decimalPattern.test(total)) return res.status(400).json({message: `Total yang dikirimkan tidak boleh decimal. ${total}`})
+            const options = {
+                method: 'POST',
+                headers: {
+                    accept: 'application/json',
+                    'content-type': 'application/json',
+                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}` // Tambahkan ':' di akhir server key untuk otentikasi dasar
+                },
+                body: JSON.stringify({
+                    payment_type: 'bank_transfer',
+                    transaction_details: {
+                        order_id: detailPesanan._id,
+                        gross_amount: dp.isUsed? total * dp.value : total
+                    },
+                    bank_transfer:{
+                        bank: 'bca',
+                        va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                    },
+                })
+            };
+                      
+            const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
+            const transaksi = await respon.json();
+            
             const now = new Date()
             const a_day_later = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
@@ -267,28 +293,6 @@ module.exports = {
                 biaya_asuransi
             });
 
-            const options = {
-                method: 'POST',
-                headers: {
-                    accept: 'application/json',
-                    'content-type': 'application/json',
-                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}` // Tambahkan ':' di akhir server key untuk otentikasi dasar
-                },
-                body: JSON.stringify({
-                    payment_type: 'bank_transfer',
-                    transaction_details: {
-                        order_id: detailPesanan._id,
-                        gross_amount: dp.isUsed? detailPesanan.total_price * 0.4 : detailPesanan.total_price
-                    },
-                    bank_transfer:{
-                        bank: 'bca',
-                        va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
-                    },
-                })
-            };
-                      
-            const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
-            const transaksi = await respon.json();
             await VA_Used.create({
                 userId: req.user.id,
                 orderId: detailPesanan._id,
