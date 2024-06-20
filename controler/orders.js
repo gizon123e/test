@@ -246,17 +246,18 @@ module.exports = {
             if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used});
             const decimalPattern = /^\d+\.\d+$/;
             if(decimalPattern.test(total)) return res.status(400).json({message: `Total yang dikirimkan tidak boleh decimal. ${total}`})
+            const idPesanan = new mongoose.Types.ObjectId()
             const options = {
                 method: 'POST',
                 headers: {
                     accept: 'application/json',
                     'content-type': 'application/json',
-                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}` // Tambahkan ':' di akhir server key untuk otentikasi dasar
+                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
                 },
                 body: JSON.stringify({
                     payment_type: 'bank_transfer',
                     transaction_details: {
-                        order_id: detailPesanan._id,
+                        order_id: idPesanan,
                         gross_amount: dp.isUsed? total * dp.value : total
                     },
                     bank_transfer:{
@@ -281,6 +282,7 @@ module.exports = {
             });
 
             const detailPesanan = await DetailPesanan.create({
+                _id: idPesanan,
                 id_pesanan: dataOrder._id,
                 total_price: total,
                 jumlah_dp: total * dp.value,
