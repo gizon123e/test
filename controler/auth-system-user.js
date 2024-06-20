@@ -287,7 +287,7 @@ module.exports = {
                                 detailUser = await Distributtor.findOne({ userId: user._id }).lean();
                                 break;
                         };
-                        if (!detailUser.tanggal_lahir || detailUser.tanggalLahir) return res.status(403).json({ message: "User Belum Mengisi Tanggal Lahir!" });
+                        if (!detailUser.tanggal_lahir || !detailUser.tanggalLahir) return res.status(403).json({ message: "User Belum Mengisi Tanggal Lahir!" });
 
                         const tanggalLahir = detailUser.tanggal_lahir.replace(/[\/?]/g, '');
                         const jumlahUserPerBank = await Va_User.find({
