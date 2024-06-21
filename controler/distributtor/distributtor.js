@@ -127,7 +127,13 @@ module.exports = {
 
                                 const angkaJarak = jarakOngkir - 4
                                 const hargaKiloMeter = angkaJarak * data.tarifId.tarif_per_km
-                                const hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
+                                let hargaOngkir = 0
+
+                                if (hargaVolumeBeratProduct > 1) {
+                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
+                                } else {
+                                    hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar
+                                }
 
                                 if (gratong) {
                                     data.isGratong = true
@@ -158,7 +164,13 @@ module.exports = {
                             } else {
                                 let potongan_harga;
                                 let total_ongkir;
-                                const hargaOngkir = data.tarifId.tarif_dasar * hargaVolumeBeratProduct
+                                let hargaOngkir = 0
+
+                                if (hargaVolumeBeratProduct > 1) {
+                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
+                                } else {
+                                    hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar
+                                }
 
                                 if (gratong) {
                                     data.isGratong = true
