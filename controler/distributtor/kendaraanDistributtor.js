@@ -107,11 +107,11 @@ module.exports = {
             if (volumeProduct > beratProduct) {
                 const hargabarang = volumeProduct / dataBiayaTetap.constanta_volume
 
-                hargaTotalVolume += hargabarang
+                hargaTotalVolume += Math.round(hargabarang)
             } else {
                 const hargabarang = beratProduct / dataBiayaTetap.biaya_per_kg
 
-                hargaTotalVolume += hargabarang
+                hargaTotalVolume += Math.round(hargabarang)
             }
 
             const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
@@ -198,7 +198,7 @@ module.exports = {
                         kendaraan,
                         totalBeratProduct: beratProduct,
                         totalVolumeProduct: volumeProduct,
-                        hargaOngkir,
+                        hargaOngkir: Math.round(hargaOngkir),
                         potongan_harga,
                         total_ongkir: Math.round(total_ongkir)
                     })
@@ -228,7 +228,7 @@ module.exports = {
                         kendaraan,
                         totalBeratProduct: beratProduct,
                         totalVolumeProduct: volumeProduct,
-                        hargaOngkir,
+                        hargaOngkir: Math.round(hargaOngkir),
                         potongan_harga,
                         total_ongkir: Math.round(total_ongkir)
                     })
