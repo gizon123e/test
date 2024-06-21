@@ -298,7 +298,7 @@ module.exports = {
                             userId: user._id,
                             nomor_va: `${va.kode_perusahaan}${tanggalLahir.slice(0, 4)}${counter.toString().padStart(7, '0')}`,
                             nama_bank: va._id,
-                            nama_virtual_account: `SuperApp ${detailUser.nama || detailUser.namaBadanUsaha}`
+                            nama_virtual_account: `SuperApp ${detailUser.nama || detailUser.namaBadanUsaha || detailUser.nama_distributor}`
                         });
                     }
 
