@@ -118,31 +118,23 @@ module.exports = {
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
             const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
-            const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
-            const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
+            // const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
+            // const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
 
             let distance
-            if (addressId) {
-                const addressCustom = await Address.findById(addressId)
 
-                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
-                const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
-                distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latitudeVebdor, longitudeVendor, 100);
+            const addressCustom = await Address.findOne({ _id: addressId })
 
-                if (isNaN(distance)) {
-                    return res.status(400).json({
-                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
-                    });
-                }
-            } else {
-                distance = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVebdor, longitudeVendor, 100);
-
-                if (isNaN(distance)) {
-                    return res.status(400).json({
-                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
-                    });
-                }
+            const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
+            const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
+            distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latitudeVebdor, longitudeVendor, 100);
+            console.log(distance)
+            if (isNaN(distance)) {
+                return res.status(400).json({
+                    message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                });
             }
+
             // const distance = calculateDistance(-6.167350, 106.820926, -6.187499, 106.959382, 100);
 
             const jarakTempu = Math.round(distance)
@@ -173,7 +165,7 @@ module.exports = {
                     let potongan_harga;
                     let total_ongkir;
                     const dataJara = jarakTempu - 4
-                    const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
+                    const dataPerKM = dataJara * kendaraan.tarifId.tarif_per_km
                     let hargaOngkir = 0
                     if (hargaTotalVolume > 1) {
                         hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
@@ -200,6 +192,7 @@ module.exports = {
 
                     data.push({
                         kendaraan,
+                        jarakTempu: Math.round(jarakTempu),
                         totalBeratProduct: beratProduct,
                         totalVolumeProduct: volumeProduct,
                         hargaOngkir: Math.round(hargaOngkir),
@@ -211,9 +204,9 @@ module.exports = {
                     let total_ongkir;
                     let hargaOngkir = 0
                     if (hargaTotalVolume > 1) {
-                        hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
+                        hargaOngkir = (jarakTempu * kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
                     } else {
-                        hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
+                        hargaOngkir = jarakTempu * kendaraan.tarifId.tarif_dasar
                     }
 
                     if (gratong) {
@@ -235,6 +228,7 @@ module.exports = {
 
                     data.push({
                         kendaraan,
+                        jarakTempu: Math.round(jarakTempu),
                         totalBeratProduct: beratProduct,
                         totalVolumeProduct: volumeProduct,
                         hargaOngkir: Math.round(hargaOngkir),
