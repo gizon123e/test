@@ -97,20 +97,19 @@ module.exports = {
             let hargaTotalVolume = 0
             for (let productId of product) {
                 const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
-                const volumeBarang = dataProduct.panjang * dataProduct.lebar * dataProduct.tinggi * productId.qty
+                const volumeBarang = dataProduct.panjang * dataProduct.lebar * dataProduct.tinggi
+                const hitunganTotal = volumeBarang * productId.qty
                 const hitungBerat = dataProduct.berat * productId.qty
 
                 beratProduct += hitungBerat
-                volumeProduct += volumeBarang
+                volumeProduct += hitunganTotal
             }
 
             if (volumeProduct > beratProduct) {
                 const hargabarang = volumeProduct / dataBiayaTetap.constanta_volume
-
                 hargaTotalVolume += Math.round(hargabarang)
             } else {
                 const hargabarang = beratProduct / dataBiayaTetap.biaya_per_kg
-
                 hargaTotalVolume += Math.round(hargabarang)
             }
 
@@ -175,7 +174,12 @@ module.exports = {
                     let total_ongkir;
                     const dataJara = jarakTempu - 4
                     const dataPerKM = kendaraan.tarifId.tarif_per_km * dataJara
-                    const hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
+                    let hargaOngkir = 0
+                    if (hargaTotalVolume > 1) {
+                        hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
+                    } else {
+                        hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
+                    }
 
                     if (gratong) {
                         kendaraan.isGratong = true
@@ -205,7 +209,12 @@ module.exports = {
                 } else {
                     let potongan_harga;
                     let total_ongkir;
-                    const hargaOngkir = kendaraan.tarifId.tarif_dasar * hargaTotalVolume
+                    let hargaOngkir = 0
+                    if (hargaTotalVolume > 1) {
+                        hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
+                    } else {
+                        hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
+                    }
 
                     if (gratong) {
                         kendaraan.isGratong = true
