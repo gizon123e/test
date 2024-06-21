@@ -3,14 +3,17 @@ const mongoose = require("mongoose");
 const modelGratong = new mongoose.Schema({
     jenis:{
         type: String,
-        enum: ["persentase", "langsung"]
+        enum: ["persentase", "langsung"],
+        required: true
     },
     tarif:{
         type: mongoose.Types.ObjectId,
-        ref: "Tarif"
+        ref: "Tarif",
+        required: true
     },
     nilai_gratong:{
-        type: Number
+        type: Number,
+        required: true
     },
     startTime:{
         type: Date,
@@ -21,7 +24,8 @@ const modelGratong = new mongoose.Schema({
         required: true
     },
     nama: {
-        type: String
+        type: String,
+        required: true
     }
 });
 
