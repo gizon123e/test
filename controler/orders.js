@@ -223,7 +223,8 @@ module.exports = {
             let nama;
 
             const splitted = metode_pembayaran.split(" / ");
-            if(splitted[1] === "Virtual Account"){
+            if(splitted[1].replace(/\u00A0/g, ' ') == "Virtual Account"){
+                console.log('virtual')
                 va_user = await VaUser.findOne({
                     nama_bank: splitted[0],
                     userId: req.user.id
