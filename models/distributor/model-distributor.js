@@ -23,7 +23,7 @@ const modelDistributtor = mongoose.Schema({
         type: String,
         require: [true, 'file  harus di isi']
     },
-    tanggalLahir: {
+    tanggal_lahir: {
         type: String,
         require: false
     },
