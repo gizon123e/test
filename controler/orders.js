@@ -313,6 +313,13 @@ module.exports = {
 
         } catch (error) {
             console.log(error)
+            if (error && error.name == "ValidationError") {
+                return res.status(400).json({
+                  error: true,
+                  message: error.message,
+                  fields: error.fields,
+                });
+            }
             next(error)
         }
     },

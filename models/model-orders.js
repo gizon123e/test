@@ -35,7 +35,8 @@ const modelOrder = new mongoose.Schema({
                     return date >= minDate
                 },
                 message: "Deadline minimal 7 hari ke depan"
-            }
+            },
+            required: true
         }
     }],
     userId: {
