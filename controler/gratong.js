@@ -19,11 +19,11 @@ module.exports = {
             return res.status(201).json({message: "Berhasil Menambahkan Event Gratis Ongkir", data: newGratong})
         } catch (error) {
             console.log(error);
-            if (err && err.name == "ValidationError") {
+            if (error && error.name == "ValidationError") {
                 return res.status(400).json({
                   error: true,
-                  message: err.message,
-                  fields: err.fields,
+                  message: error.message,
+                  fields: error.fields,
                 });
             }
             next(error);
