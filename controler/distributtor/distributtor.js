@@ -52,13 +52,13 @@ module.exports = {
             let ukuranBeratProduct = 0
             let hargaVolumeBeratProduct
 
-
             for (let productId of product) {
                 const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
-                const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang * productId.qty
-                ukuranVolumeProduct += volume
+                const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang
+                const volumeTotal = volume * productId.qty
+                ukuranVolumeProduct += volumeTotal
 
-                const berat = dataProduct.berat * productId.qty
+                const berat = dataProduct.berat * productId.qty //gram
                 const beratProduct = dataProduct.berat * dataProduct.minimalOrder
                 if (berat) {
                     ukuranBeratProduct += berat
@@ -71,31 +71,21 @@ module.exports = {
 
 
             if (ukuranVolumeProduct > ukuranBeratProduct) {
-                hargaVolumeBeratProduct = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
+                const total = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
+                hargaVolumeBeratProduct = Math.round(total)
             } else {
-                hargaVolumeBeratProduct = ukuranBeratProduct / dataBiayaTetap.biaya_per_kg
+                const total = ukuranBeratProduct / dataBiayaTetap.biaya_per_kg
+                hargaVolumeBeratProduct = Math.round(total)
             }
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
-            const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
-            const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
-
-            let ongkir = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
-
-            if (idAddress) {
-                const addressCustom = await Address.findById(idAddress)
-                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
-                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-                ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
-                if (isNaN(ongkir)) {
-                    return res.status(400).json({
-                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
-                    });
-                }
-            }
-
+            const addressCustom = await Address.findById(idAddress)
+            const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
+            const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
+            const ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+            console.log(ongkir)
             if (isNaN(ongkir)) {
                 return res.status(400).json({
                     message: "Jarak antara konsumen dan vendor melebihi 100 km"
@@ -131,6 +121,9 @@ module.exports = {
 
                                 if (hargaVolumeBeratProduct > 1) {
                                     hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
+                                    console.log("hargaKiloMeter", hargaKiloMeter)
+                                    console.log("tarifId", data.tarifId.tarif_dasar)
+                                    console.log("hargaVolumeBeratProduct", hargaVolumeBeratProduct)
                                 } else {
                                     hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar
                                 }
@@ -156,6 +149,8 @@ module.exports = {
 
                                 dataAllDistributtor.push({
                                     distributor: data,
+                                    ukuranBeratProduct,
+                                    ukuranVolumeProduct,
                                     hargaOngkir,
                                     jarakTempu: Math.round(distance),
                                     potongan_harga,
@@ -167,9 +162,14 @@ module.exports = {
                                 let hargaOngkir = 0
 
                                 if (hargaVolumeBeratProduct > 1) {
-                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
+                                    hargaOngkir = (jarakOngkir * data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
+                                    console.log("hargaKiloMeter", hargaKiloMeter)
+                                    console.log("tarifId", data.tarifId.tarif_dasar)
+                                    console.log("hargaVolumeBeratProduct", hargaVolumeBeratProduct)
                                 } else {
-                                    hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar
+                                    hargaOngkir = jarakOngkir * data.tarifId.tarif_dasar
+                                    console.log("hargaKiloMeter", hargaKiloMeter)
+                                    console.log("tarifId", data.tarifId.tarif_dasar)
                                 }
 
                                 if (gratong) {
@@ -194,7 +194,9 @@ module.exports = {
                                 dataAllDistributtor.push({
                                     distributor: data,
                                     jarakTempu: Math.round(distance),
-                                    hargaOngkir,
+                                    ukuranBeratProduct,
+                                    ukuranVolumeProduct,
+                                    hargaOngkir: Math.round(hargaOngkir),
                                     total_ongkir: Math.round(total_ongkir),
                                     potongan_harga
                                 })
@@ -213,7 +215,7 @@ module.exports = {
             }
             dataKendaraanHargaTermurah.sort((a, b) => a.hargaOngkir - b.hargaOngkir);
 
-            const datas = dataKendaraanHargaTermurah[0]
+            const datas = dataKendaraanHargaTermurah
             res.status(200).json({
                 message: "success get data Distributtor",
                 datas
