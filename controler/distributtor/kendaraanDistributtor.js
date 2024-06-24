@@ -105,13 +105,32 @@ module.exports = {
                 volumeProduct += hitunganTotal
             }
 
-            if (volumeProduct > beratProduct) {
-                const hargabarang = volumeProduct / dataBiayaTetap.constanta_volume
-                hargaTotalVolume += hargabarang
+            if (volumeProduct <= ukuranVolumeMotor && beratProduct > 30000) {
+                const total = beratProduct / 1000
+                hargaTotalVolume = total
+            } else if (volumeProduct <= ukuranVolumeMotor && beratProduct <= 30000) {
+                const total = beratProduct / 1000
+                hargaTotalVolume = total
+            } else if (volumeProduct > ukuranVolumeMotor && beratProduct > 30000) {
+                const beratVolume = volumeProduct / dataBiayaTetap.constanta_volume
+                const beratAktual = beratProduct / 1000
+                if (beratVolume > beratAktual) {
+                    hargaTotalVolume = beratVolume
+                } else {
+                    hargaTotalVolume = beratAktual
+                }
             } else {
-                const hargabarang = beratProduct / dataBiayaTetap.biaya_per_kg
-                hargaTotalVolume += hargabarang
+                const total = volumeProduct / dataBiayaTetap.constanta_volume
+                hargaTotalVolume = total
             }
+
+            // if (volumeProduct > beratProduct) {
+            //     const hargabarang = volumeProduct / dataBiayaTetap.constanta_volume
+            //     hargaTotalVolume += hargabarang
+            // } else {
+            //     const hargabarang = beratProduct / dataBiayaTetap.biaya_per_kg
+            //     hargaTotalVolume += hargabarang
+            // }
 
             const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
             const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
@@ -207,9 +226,6 @@ module.exports = {
                     if (hargaTotalVolume > 1) {
                         const hargaVolume = hargaTotalVolume * dataBiayaTetap.biaya_per_kg
                         hargaOngkir = kendaraan.tarifId.tarif_dasar + hargaVolume
-                        console.log("jarakTempu", jarakTempu)
-                        console.log("tarif dasar", kendaraan.tarifId.tarif_dasar)
-                        console.log("hargaVolume", hargaVolume)
                     } else {
                         hargaOngkir = kendaraan.tarifId.tarif_dasar + dataBiayaTetap.biaya_per_kg
                     }

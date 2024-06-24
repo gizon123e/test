@@ -60,6 +60,7 @@ module.exports = {
 
                 const berat = dataProduct.berat * productId.qty //gram
                 const beratProduct = dataProduct.berat * dataProduct.minimalOrder
+                // ukuranBeratProduct += berat
                 if (berat) {
                     ukuranBeratProduct += berat
                 } else {
@@ -69,12 +70,22 @@ module.exports = {
 
             const ukuranVolumeMotor = 100 * 30 * 40
 
-
-            if (ukuranVolumeProduct > ukuranBeratProduct) {
-                const total = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
+            if (ukuranVolumeProduct <= ukuranVolumeMotor && ukuranBeratProduct > 30000) {
+                const total = ukuranBeratProduct / 1000
                 hargaVolumeBeratProduct = total
+            } else if (ukuranVolumeProduct <= ukuranVolumeMotor && ukuranBeratProduct <= 30000) {
+                const total = ukuranBeratProduct / 1000
+                hargaVolumeBeratProduct = total
+            } else if (ukuranVolumeProduct > ukuranVolumeMotor && ukuranBeratProduct > 30000) {
+                const beratVolume = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
+                const beratAktual = ukuranBeratProduct / 1000
+                if (beratVolume > beratAktual) {
+                    hargaVolumeBeratProduct = beratVolume
+                } else {
+                    hargaVolumeBeratProduct = beratAktual
+                }
             } else {
-                const total = ukuranBeratProduct / dataBiayaTetap.biaya_per_kg
+                const total = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
                 hargaVolumeBeratProduct = total
             }
 
@@ -85,7 +96,8 @@ module.exports = {
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
             const ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
-            console.log(ongkir)
+            console.log(Math.round(ongkir))
+
             if (isNaN(ongkir)) {
                 return res.status(400).json({
                     message: "Jarak antara konsumen dan vendor melebihi 100 km"
@@ -196,8 +208,11 @@ module.exports = {
             }
             let dataKendaraanHargaTermurah
 
+            console.log("ukuranVolumeProduct", ukuranVolumeProduct)
+            console.log("ukuranBeratProduct", ukuranBeratProduct)
+            console.log("ukuranVolumeMotor", ukuranVolumeMotor)
             if (dataAllDistributtor.length > 0) {
-                if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > ukuranVolumeMotor) {
+                if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
                     dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan === 'mobil')
                 } else {
                     dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan === 'motor')

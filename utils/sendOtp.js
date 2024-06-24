@@ -10,22 +10,22 @@ module.exports = {
             port: 465,
             secure: true,
             auth: {
-              type: "OAuth2",
-              clientId: process.env.CLIENT_ID,
-              clientSecret: process.env.CLIENT_SECRET,
+                type: "OAuth2",
+                clientId: process.env.CLIENT_ID,
+                clientSecret: process.env.CLIENT_SECRET,
             },
         });
-        
+
         return transporter.sendMail({
             from: process.env.EMAIL_SENDER,
             to: email,
             subject: subject,
             text: `KODE OTP :  ${kode} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`,
             auth: {
-              user: process.env.EMAIL_SENDER,
-              refreshToken: process.env.REFRESH_TOKEN,
-              accessToken: process.env.ACCESS_TOKEN,
-              expires: 1484314697598,
+                user: process.env.EMAIL_SENDER,
+                refreshToken: process.env.REFRESH_TOKEN,
+                accessToken: process.env.ACCESS_TOKEN,
+                expires: 1484314697598,
             },
         })
     },
