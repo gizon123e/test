@@ -18,7 +18,8 @@ module.exports = {
 
     createKendaraan: async (req, res, next) => {
         try {
-            const kendaraan = await MerkKendaraan.create({ merk: req.body.merk })
+            const { jenis, merk } = req.body
+            const kendaraan = await MerkKendaraan.create({ jenis, merk })
 
             res.status(200).json({
                 message: "get data jenis kendaraan success",

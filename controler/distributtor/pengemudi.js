@@ -31,6 +31,15 @@ module.exports = {
         }
     },
 
+    createPengemudi: async (req, res, next) => {
+        try {
+
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
+
     updateVerifikasi: async (req, res, next) => {
         try {
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")

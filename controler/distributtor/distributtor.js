@@ -72,10 +72,10 @@ module.exports = {
 
             if (ukuranVolumeProduct > ukuranBeratProduct) {
                 const total = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
-                hargaVolumeBeratProduct = Math.round(total)
+                hargaVolumeBeratProduct = total
             } else {
                 const total = ukuranBeratProduct / dataBiayaTetap.biaya_per_kg
-                hargaVolumeBeratProduct = Math.round(total)
+                hargaVolumeBeratProduct = total
             }
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
@@ -120,24 +120,20 @@ module.exports = {
                                 let hargaOngkir = 0
 
                                 if (hargaVolumeBeratProduct > 1) {
-                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
-                                    console.log("hargaKiloMeter", hargaKiloMeter)
-                                    console.log("tarifId", data.tarifId.tarif_dasar)
-                                    console.log("hargaVolumeBeratProduct", hargaVolumeBeratProduct)
+                                    const hargaVolume = hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg
+                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) + hargaVolume
                                 } else {
-                                    hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar
+                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) + dataBiayaTetap.biaya_per_kg
                                 }
 
                                 if (gratong) {
                                     data.isGratong = true
                                     switch (gratong.jenis) {
                                         case "persentase":
-                                            console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                             potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
                                             total_ongkir = hargaOngkir - potongan_harga
                                             break;
                                         case "langsung":
-                                            console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
                                             potongan_harga = hargaOngkir - gratong.nilai_gratong;
                                             total_ongkir = hargaOngkir - potongan_harga;
                                             break;
@@ -162,26 +158,20 @@ module.exports = {
                                 let hargaOngkir = 0
 
                                 if (hargaVolumeBeratProduct > 1) {
-                                    hargaOngkir = (jarakOngkir * data.tarifId.tarif_dasar) * hargaVolumeBeratProduct
-                                    console.log("hargaKiloMeter", hargaKiloMeter)
-                                    console.log("tarifId", data.tarifId.tarif_dasar)
-                                    console.log("hargaVolumeBeratProduct", hargaVolumeBeratProduct)
+                                    const hargaVolume = hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg
+                                    hargaOngkir = data.tarifId.tarif_dasar + hargaVolume
                                 } else {
-                                    hargaOngkir = jarakOngkir * data.tarifId.tarif_dasar
-                                    console.log("hargaKiloMeter", hargaKiloMeter)
-                                    console.log("tarifId", data.tarifId.tarif_dasar)
+                                    hargaOngkir = data.tarifId.tarif_dasar + dataBiayaTetap.biaya_per_kg
                                 }
 
                                 if (gratong) {
                                     data.isGratong = true
                                     switch (gratong.jenis) {
                                         case "persentase":
-                                            console.log('harga sudah dikurangi diskon :', hargaOngkir * gratong.nilai_gratong / 100)
                                             potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
                                             total_ongkir = hargaOngkir - potongan_harga
                                             break;
                                         case "langsung":
-                                            console.log('harga sudah dikurangi diskon :', hargaOngkir - gratong.nilai_gratong)
                                             potongan_harga = hargaOngkir - gratong.nilai_gratong;
                                             total_ongkir = hargaOngkir - potongan_harga;
                                             break;

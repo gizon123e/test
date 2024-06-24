@@ -107,10 +107,10 @@ module.exports = {
 
             if (volumeProduct > beratProduct) {
                 const hargabarang = volumeProduct / dataBiayaTetap.constanta_volume
-                hargaTotalVolume += Math.round(hargabarang)
+                hargaTotalVolume += hargabarang
             } else {
                 const hargabarang = beratProduct / dataBiayaTetap.biaya_per_kg
-                hargaTotalVolume += Math.round(hargabarang)
+                hargaTotalVolume += hargabarang
             }
 
             const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
@@ -168,9 +168,10 @@ module.exports = {
                     const dataPerKM = dataJara * kendaraan.tarifId.tarif_per_km
                     let hargaOngkir = 0
                     if (hargaTotalVolume > 1) {
-                        hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
+                        const hargaVolume = hargaTotalVolume * dataBiayaTetap.biaya_per_kg
+                        hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) + hargaVolume
                     } else {
-                        hargaOngkir = dataPerKM + kendaraan.tarifId.tarif_dasar
+                        hargaOngkir = (dataPerKM + kendaraan.tarifId.tarif_dasar) + dataBiayaTetap.biaya_per_kg
                     }
 
                     if (gratong) {
@@ -204,9 +205,13 @@ module.exports = {
                     let total_ongkir;
                     let hargaOngkir = 0
                     if (hargaTotalVolume > 1) {
-                        hargaOngkir = (jarakTempu * kendaraan.tarifId.tarif_dasar) * hargaTotalVolume
+                        const hargaVolume = hargaTotalVolume * dataBiayaTetap.biaya_per_kg
+                        hargaOngkir = kendaraan.tarifId.tarif_dasar + hargaVolume
+                        console.log("jarakTempu", jarakTempu)
+                        console.log("tarif dasar", kendaraan.tarifId.tarif_dasar)
+                        console.log("hargaVolume", hargaVolume)
                     } else {
-                        hargaOngkir = jarakTempu * kendaraan.tarifId.tarif_dasar
+                        hargaOngkir = kendaraan.tarifId.tarif_dasar + dataBiayaTetap.biaya_per_kg
                     }
 
                     if (gratong) {
@@ -266,7 +271,7 @@ module.exports = {
             const fileKTP = files ? files.fileKTP : null;
             const profile = files ? files.profile : null;
 
-            if (!file_sim || !fotoKendaraan || !fileSTNK) return res.status(400).json({ message: "file Sim & fotoKendaraan & fileSTNK file gagal di unggah" })
+            if (!file_sim || !fotoKendaraan || !fileSTNK || !fileKTP) return res.status(400).json({ message: "file Sim & fotoKendaraan & fileSTNK & fileKTP file gagal di unggah" })
             const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
@@ -332,6 +337,53 @@ module.exports = {
                 message: "create data success",
                 data,
                 dataPengemudi
+            })
+        } catch (error) {
+            console.error("Error creating document:", error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+    createKendaraanPerusahaan: async (req, res, next) => {
+        try {
+            const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const files = req.files;
+            const fotoKendaraan = files ? files.fotoKendaraan : null;
+            const fileSTNK = files ? files.STNK : null;
+
+            const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
+            const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
+
+            await fileSTNK.mv(imagePathSTNK);
+
+            const imageNameProfile = `${Date.now()}${path.extname(fotoKendaraan.name)}`;
+            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
+
+            await fotoKendaraan.mv(imagePathProfile);
+
+            const data = await KendaraanDistributor.create({
+                id_distributor,
+                jenisKendaraan,
+                merekKendaraan,
+                nomorPolisi,
+                warna,
+                typeKendaraan,
+                tarifId,
+                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
+
+            })
+
+            res.status(201).json({
+                message: "create data success",
+                data
             })
         } catch (error) {
             console.error("Error creating document:", error);

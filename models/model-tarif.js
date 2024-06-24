@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const modelTarif = mongoose.Schema({
     jenis_kendaraan: {
         type: String,
-        enum: ["mobil", "motor"],
+        enum: ["mobil", "motor", "mobil box"],
         required: [true, 'jenis kendaraan harus di isi']
     },
     jenis_jasa: {
