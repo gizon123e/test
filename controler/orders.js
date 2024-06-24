@@ -196,6 +196,7 @@ module.exports = {
                 biaya_asuransi,
                 biaya_jasa_aplikasi,
                 biaya_layanan,
+                poin_terpakai
             } = req.body
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if (!req.body["items"]) return res.status(404).json({message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan"})
@@ -246,6 +247,18 @@ module.exports = {
             const decimalPattern = /^\d+\.\d+$/;
             if(decimalPattern.test(total)) return res.status(400).json({message: `Total yang dikirimkan tidak boleh decimal. ${total}`})
             const idPesanan = new mongoose.Types.ObjectId()
+
+            const grossAmount = () => {
+                if (dp.isUsed && poin_terpakai) {
+                    return (dp.value * total) - poin_terpakai;
+                } else if (dp.isUsed) {
+                    return dp.value * total;
+                } else {
+                    return total;
+                }
+            };
+
+
             const options = {
                 method: 'POST',
                 headers: {
@@ -257,7 +270,7 @@ module.exports = {
                     payment_type: 'bank_transfer',
                     transaction_details: {
                         order_id: idPesanan,
-                        gross_amount: dp.isUsed? total * dp.value : total
+                        gross_amount: grossAmount()
                     },
                     bank_transfer:{
                         bank: 'bca',
