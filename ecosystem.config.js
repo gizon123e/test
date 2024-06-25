@@ -10,7 +10,7 @@ module.exports = {
         error_file: "./errorbe.log",
         log_date_format: "DD-MM HH:mm:ss Z",
         log_type: "json",
-        autorestart: false,
+        exp_backoff_restart_delay: 100,
         watch: true,
         watch_delay: 3000,
         ignore_watch: [
