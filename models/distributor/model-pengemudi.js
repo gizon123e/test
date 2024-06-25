@@ -13,7 +13,7 @@ const ModelPengemudi = new mongoose.Schema({
     jenisKelamin: {
         type: String,
         required: [true, 'jenis kelamin harus diisi'],
-        enum: ["laki-laki", "perempuan"],
+        enum: ["Laki-Laki", "Perempuan"],
         message: "{VALUE} is not supported",
     },
     tanggalLahir: {
