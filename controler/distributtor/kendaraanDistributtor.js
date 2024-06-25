@@ -276,12 +276,12 @@ module.exports = {
             const file_sim = files ? files.file_sim : null;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
             const fileSTNK = files ? files.fileSTNK : null;
-            const fileKTP = files ? files.fileKTP : null;
             const profile = files ? files.profile : null;
 
             if (!file_sim) return res.status(400).json({ message: "file Sim gagal di unggah" })
             if (!fotoKendaraan) return res.status(400).json({ message: "file Foto Kendaraan gagal di unggah" })
             if (!fileSTNK) return res.status(400).json({ message: "file STNK gagal di unggah" })
+
             const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
@@ -302,33 +302,14 @@ module.exports = {
 
             await profile.mv(imagePathProfile);
 
-
-            let dataPengemudi
-            if (fileKTP) {
-                const imageNameKTP = `${Date.now()}${path.extname(fileKTP.name)}`;
-                const imagePathKTP = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKTP);
-
-                await fileKTP.mv(imagePathKTP);
-
-                dataPengemudi = await Pengemudi.create({
-                    id_distributor,
-                    nama,
-                    jenisKelamin,
-                    tanggalLahir,
-                    profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
-                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
-                    fileKTP: `${process.env.HOST}public/image-profile-distributtor/${imageNameKTP}`,
-                })
-            } else {
-                dataPengemudi = await Pengemudi.create({
-                    id_distributor,
-                    nama,
-                    jenisKelamin,
-                    tanggalLahir,
-                    profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
-                    file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
-                })
-            }
+            const dataPengemudi = await Pengemudi.create({
+                id_distributor,
+                nama,
+                jenisKelamin,
+                tanggalLahir,
+                profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+            })
 
             const data = await KendaraanDistributor.create({
                 id_distributor,
