@@ -145,7 +145,11 @@ module.exports = {
             const jarakTempu = Math.round(distance)
 
             let data = []
-            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id }).populate('tarifId')
+            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id })
+                .populate({
+                    path: "tarifId",
+                    populate: "jenis_kendaraan"
+                })
                 .populate({
                     path: "id_distributor",
                     populate: "alamat_id"
@@ -154,13 +158,15 @@ module.exports = {
                 .populate("jenisKendaraan")
                 .lean()
 
+            console.log(dataKendaraan)
+
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
             let filteredDataKendaraan = dataKendaraan;
             if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'mobil');
+                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Mobil');
             } else {
-                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'motor');
+                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Motor');
             }
 
             for (let kendaraan of filteredDataKendaraan) {
@@ -273,7 +279,7 @@ module.exports = {
             const fileKTP = files ? files.fileKTP : null;
             const profile = files ? files.profile : null;
 
-            if (!file_sim || !fotoKendaraan || !fileSTNK || !fileKTP) return res.status(400).json({ message: "file Sim & fotoKendaraan & fileSTNK & fileKTP file gagal di unggah" })
+            if (!file_sim || !fotoKendaraan || !fileSTNK) return res.status(400).json({ message: "file Sim & fotoKendaraan & fileSTNK & fileKTP file gagal di unggah" })
             const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 

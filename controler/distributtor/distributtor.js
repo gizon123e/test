@@ -116,7 +116,11 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan").populate('tarifId')
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+                        .populate({
+                            path: "tarifId",
+                            populate: "jenis_kendaraan"
+                        })
 
                     if (dataKendaraan.length > 0)
                         for (let data of dataKendaraan) {
@@ -210,9 +214,9 @@ module.exports = {
 
             if (dataAllDistributtor.length > 0) {
                 if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan === 'mobil')
+                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan.jenis === 'Mobil')
                 } else {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan === 'motor')
+                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan.jenis === 'Motor')
                 }
             }
             dataKendaraanHargaTermurah.sort((a, b) => a.hargaOngkir - b.hargaOngkir);
