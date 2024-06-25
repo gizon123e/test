@@ -208,9 +208,6 @@ module.exports = {
             }
             let dataKendaraanHargaTermurah
 
-            console.log("ukuranVolumeProduct", ukuranVolumeProduct)
-            console.log("ukuranBeratProduct", ukuranBeratProduct)
-            console.log("ukuranVolumeMotor", ukuranVolumeMotor)
             if (dataAllDistributtor.length > 0) {
                 if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
                     dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan === 'mobil')
@@ -481,8 +478,6 @@ module.exports = {
             next(error);
         }
     },
-
-
 
     updateDistributtor: async (req, res, next) => {
         try {

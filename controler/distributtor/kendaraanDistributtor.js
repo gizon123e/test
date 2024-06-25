@@ -124,21 +124,9 @@ module.exports = {
                 hargaTotalVolume = total
             }
 
-            // if (volumeProduct > beratProduct) {
-            //     const hargabarang = volumeProduct / dataBiayaTetap.constanta_volume
-            //     hargaTotalVolume += hargabarang
-            // } else {
-            //     const hargabarang = beratProduct / dataBiayaTetap.biaya_per_kg
-            //     hargaTotalVolume += hargabarang
-            // }
-
             const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
             const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
-
-            const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
-            // const latitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.lat)
-            // const longitudeKonsumen = parseFloat(dataKonsumen.address.pinAlamat.long)
 
             let distance
 
@@ -153,8 +141,6 @@ module.exports = {
                     message: "Jarak antara konsumen dan vendor melebihi 100 km"
                 });
             }
-
-            // const distance = calculateDistance(-6.167350, 106.820926, -6.187499, 106.959382, 100);
 
             const jarakTempu = Math.round(distance)
 
@@ -172,9 +158,9 @@ module.exports = {
 
             let filteredDataKendaraan = dataKendaraan;
             if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'mobil');
+                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'mobil');
             } else {
-                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'motor');
+                filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'motor');
             }
 
             for (let kendaraan of filteredDataKendaraan) {

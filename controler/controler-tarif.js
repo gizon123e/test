@@ -3,7 +3,7 @@ const Tarif = require('../models/model-tarif')
 module.exports = {
     getListTarif: async (req, res, next) => {
         try {
-            const data = await Tarif.find()
+            const data = await Tarif.find().populate("jenis_kendaraan")
 
             res.status(200).json({
                 message: "get Tarif success",

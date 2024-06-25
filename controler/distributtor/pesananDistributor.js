@@ -4,23 +4,6 @@ const Pesanan = require('../../models/model-orders')
 module.exports = {
     getAllPesananDistributor: async (req, res, next) => {
         try {
-            // const datas = await PesananDistributor.find()
-            //     .populate("id_kendaraanDistributor")
-            //     // .populate("id_pesanan")
-            //     .populate("alamatKonsument")
-            //     .populate("alamatTokoVendor")
-            //     .populate({
-            //         path: "konsumen",
-            //         populate: {
-            //             path: 'userId'
-            //         }
-            //     })
-            //     .populate({
-            //         path: "vendor",
-            //         populate: {
-            //             path: 'userId'
-            //         }
-            //     })
             const datas = await Pesanan.find()
             if (!datas) return res.status(404).json({ message: "saat ini data pesana distributor" })
 
@@ -47,7 +30,9 @@ module.exports = {
         try {
             const { id_kendaraanDistributor, id_pesanan, alamatKonsument, alamatTokoVendor, konsumen, vendor, jasaOngkir } = req.body
 
-            const datas = await PesananDistributor.create({ id_kendaraanDistributor, id_pesanan, alamatKonsument, alamatTokoVendor, konsumen, vendor, jasaOngkir })
+            const datas = await Pesanan.findOne({ _id: id_pesanan })
+
+            // const datas = await PesananDistributor.create({ id_kendaraanDistributor, id_pesanan, alamatKonsument, alamatTokoVendor, konsumen, vendor, jasaOngkir })
 
             res.status(201).json({ message: "create data success", datas })
         } catch (error) {

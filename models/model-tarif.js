@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 const modelTarif = mongoose.Schema({
     jenis_kendaraan: {
-        type: String,
-        enum: ["mobil", "motor", "mobil box"],
+        type: mongoose.Types.ObjectId,
+        ref: "JenisKendaraan",
         required: [true, 'jenis kendaraan harus di isi']
     },
     jenis_jasa: {
