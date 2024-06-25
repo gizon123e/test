@@ -33,7 +33,7 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         required: [true, 'Warna kendaraan harus diisi']
     },
     nomorPolisi: {
-        type: Number,
+        type: String,
         required: [true, 'Warna kendaraan harus diisi']
     },
     tarifId: {
