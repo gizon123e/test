@@ -303,7 +303,11 @@ module.exports = {
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
                     // console.log(distributor)
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate('tarifId')
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id })
+                        .populate({
+                            path: "tarifId",
+                            populate: "jenis_kendaraan"
+                        })
                         .populate({
                             path: "id_distributor",
                             populate: "alamat_id"
@@ -313,9 +317,9 @@ module.exports = {
                         .lean()
                     let filteredDataKendaraan = dataKendaraan
                     if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
-                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'mobil');
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Mobil');
                     } else {
-                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan === 'motor');
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Motor');
                     }
 
                     console.log(filteredDataKendaraan)
