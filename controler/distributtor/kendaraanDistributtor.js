@@ -302,6 +302,12 @@ module.exports = {
 
             await profile.mv(imagePathProfile);
 
+            const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
+            if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
+
+            const validatePengemudi = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
+            if (validatePengemudi) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: validatePengemudi })
+
             const dataPengemudi = await Pengemudi.create({
                 id_distributor,
                 nama,
