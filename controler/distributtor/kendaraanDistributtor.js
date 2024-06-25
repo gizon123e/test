@@ -275,11 +275,13 @@ module.exports = {
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
-            const fileSTNK = files ? files.STNK : null;
+            const fileSTNK = files ? files.fileSTNK : null;
             const fileKTP = files ? files.fileKTP : null;
             const profile = files ? files.profile : null;
 
-            if (!file_sim || !fotoKendaraan || !fileSTNK) return res.status(400).json({ message: "file Sim & fotoKendaraan & fileSTNK & fileKTP file gagal di unggah" })
+            if (!file_sim) return res.status(400).json({ message: "file Sim gagal di unggah" })
+            if (!fotoKendaraan) return res.status(400).json({ message: "file Foto Kendaraan gagal di unggah" })
+            if (!fileSTNK) return res.status(400).json({ message: "file STNK gagal di unggah" })
             const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
@@ -364,7 +366,7 @@ module.exports = {
             const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
             const files = req.files;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
-            const fileSTNK = files ? files.STNK : null;
+            const fileSTNK = files ? files.fileSTNK : null;
 
             const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
             const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
@@ -411,7 +413,7 @@ module.exports = {
             const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
             const files = req.files;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
-            const fileSTNK = files ? files.STNK : null;
+            const fileSTNK = files ? files.fileSTNK : null;
 
             const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
             const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
