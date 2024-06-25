@@ -9,17 +9,17 @@ const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const websocket = require("./websocket/index-ws");
-const session = require("express-session");
+// const session = require("express-session");
 const app = express();
 
 app.use(cors());
 app.use(logger("dev"));
 app.use(cookieParser());
 app.use(express.json());
-app.use(session({
-  secret: process.env.SECRETKEY,
-  cookie: { secure: true }
-}));
+// app.use(session({
+//   secret: process.env.SECRETKEY,
+//   cookie: { secure: true }
+// }));
 app.use(bodyParser.json({ limit: '250mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
