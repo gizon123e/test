@@ -322,7 +322,6 @@ module.exports = {
                         filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Motor');
                     }
 
-                    console.log(filteredDataKendaraan)
                     if (filteredDataKendaraan.length > 0) {
                         datas.push({
                             distributor,

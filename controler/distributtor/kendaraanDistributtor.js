@@ -158,28 +158,17 @@ module.exports = {
                 .populate("jenisKendaraan")
                 .lean()
 
-            console.log(dataKendaraan)
-
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
-
-            // let filteredDataKendaraan = dataKendaraan;
+            let filteredDataKendaraan = dataKendaraan;
             // if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
             //     filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Mobil');
             // } else {
             //     filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Motor');
             // }
 
-            for (let kendaraan of dataKendaraan) {
-                let is_available
+            for (let kendaraan of filteredDataKendaraan) {
                 const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
-
-                // if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                //     is_available = true
-                // } else {
-                //     is_available = false
-                // }
-
 
                 if (jarakTempu > 4) {
                     let potongan_harga;
@@ -210,16 +199,60 @@ module.exports = {
                         kendaraan.isGratong = false
                         total_ongkir = hargaOngkir
                     }
-                    data.push({
-                        kendaraan,
-                        jarakTempu: Math.round(jarakTempu),
-                        totalBeratProduct: beratProduct,
-                        totalVolumeProduct: volumeProduct,
-                        hargaOngkir: Math.round(hargaOngkir),
-                        potongan_harga,
-                        total_ongkir: Math.round(total_ongkir),
-                        // is_available
-                    })
+
+                    if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
+                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil") {
+                            console.log("Mobil 1")
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: true
+                            })
+                        } else {
+                            console.log("Mobil 2")
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: false
+                            })
+                        }
+                    } else {
+                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Motor") {
+                            console.log("Motor 1")
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: true
+                            })
+                        } else {
+                            console.log("Motor 2")
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: false
+                            })
+                        }
+                    }
                 } else {
                     let potongan_harga;
                     let total_ongkir;
@@ -248,17 +281,55 @@ module.exports = {
                         total_ongkir = hargaOngkir
                     }
 
-                    data.push({
-                        kendaraan,
-                        jarakTempu: Math.round(jarakTempu),
-                        totalBeratProduct: beratProduct,
-                        totalVolumeProduct: volumeProduct,
-                        hargaOngkir: Math.round(hargaOngkir),
-                        potongan_harga,
-                        total_ongkir: Math.round(total_ongkir),
-                        // is_available
-                    })
-
+                    if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
+                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil") {
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: true
+                            })
+                        } else {
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: false
+                            })
+                        }
+                    } else {
+                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Motor") {
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: true
+                            })
+                        } else {
+                            data.push({
+                                kendaraan,
+                                jarakTempu: Math.round(jarakTempu),
+                                totalBeratProduct: beratProduct,
+                                totalVolumeProduct: volumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                potongan_harga,
+                                total_ongkir: Math.round(total_ongkir),
+                                is_available: false
+                            })
+                        }
+                    }
                 }
             }
 
