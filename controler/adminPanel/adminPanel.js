@@ -11,6 +11,7 @@ const Supplier = require("../../models/supplier/model-supplier")
 const Produsen = require('../../models/produsen/model-produsen')
 const DokumenPenanggungJawab = require("../../models/distributor/model-documenPenanggungJawab")
 const ModelPenanggungJawabKonsumen = require('../../models/konsumen/model-penanggung-jawab')
+const BiayaTetap = require("../../models/model-biaya-tetap")
 
 
 module.exports = {
@@ -166,6 +167,17 @@ module.exports = {
             if (!dataUser) return res.status(404).json({ message: "data Not Found" })
 
             res.status(201).json({ message: "data update success", datas: dataUser })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getBiayaTetap: async (req, res, next) => {
+        try {
+            const data = await BiayaTetap.find()
+
+            res.status(200).json({ message: "data update success", data })
         } catch (error) {
             console.log(error);
             next(error)

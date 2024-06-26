@@ -402,6 +402,9 @@ module.exports = {
             const dataCreateKendaraan = []
 
             for (let idTarif of dataTarifidArray) {
+                const validateTarifId = await Tarif.findOne({ _id: idTarif })
+                if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+
                 const data = await KendaraanDistributor.create({
                     id_distributor,
                     jenisKendaraan,
