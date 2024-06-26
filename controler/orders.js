@@ -12,6 +12,7 @@ const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const TokoVendor = require('../models/vendor/model-toko');
+const User = require("../models/model-auth-user")
 dotenv.config();
 
 module.exports = {
@@ -200,11 +201,33 @@ module.exports = {
             } = req.body
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if (!req.body["items"]) return res.status(404).json({message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan"})
+            if (!Array.isArray(req.body['items'])) return res.status(400).json({message: "Body items bukan array, kirimkan array"})
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+            const total_pesanan = await Orders.estimatedDocumentCount({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
+            });
+
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const yyyy = today.getFullYear();
-            const date_order = `${dd}/${mm}/${yyyy}`;
+
+            const hh = String(today.getHours()).padStart(2, '0');
+            const mn = String(today.getMinutes()).padStart(2, '0');
+            const ss = String(today.getSeconds()).padStart(2, '0');
+            const date = `${yyyy}${mm}${dd}`;
+            const minutes = `${hh}${mn}${ss}`
+            const user = await User.findById(req.user.id)
+            
+            items.forEach((item, index) => {
+                item.kode_pesanan = `PSN_${user.get('kode_role')}_${date}_${minutes}_${total_pesanan + index + 1}`;
+            });
 
             const productIds = items.flatMap(item => 
                 item.product.map(prod => prod.productId)
@@ -225,7 +248,6 @@ module.exports = {
 
             const splitted = metode_pembayaran.split(" / ");
             if(splitted[1].replace(/\u00A0/g, ' ') == "Virtual Account"){
-                console.log('virtual')
                 va_user = await VaUser.findOne({
                     nama_bank: splitted[0],
                     userId: req.user.id
@@ -282,13 +304,12 @@ module.exports = {
             const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
             const transaksi = await respon.json();
             
-            const now = new Date()
-            const a_day_later = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+            const a_day_later = new Date(today.getTime() + 24 * 60 * 60 * 1000)
 
             const dataOrder = await Orders.create({
                 ...req.body,
                 userId: req.user.id,
-                date_order,
+                date_order: date,
                 biaya_asuransi: biaya_asuransi ? true : false,
                 expire: a_day_later
             });

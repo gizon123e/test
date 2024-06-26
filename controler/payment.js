@@ -47,14 +47,36 @@ module.exports = {
                 });
                 
                 await VA_Used.findOneAndDelete({orderId: order_id});
-                const total_pengiriman = await Pengiriman.estimatedDocumentCount({})
+                
+                const now = new Date();
+                now.setHours(0, 0, 0, 0); // Mengatur waktu ke awal hari
+                const tomorrow = new Date(now);
+                tomorrow.setDate(now.getDate() + 1);
+                const total_pengiriman = await Pengiriman.estimatedDocumentCount({
+                    createdAt: {
+                        $gte: now,
+                        $lt: tomorrow
+                    }
+                });
+
+                const today = new Date();
+                const dd = String(today.getDate()).padStart(2, '0');
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const yyyy = today.getFullYear();
+
+                const hh = String(today.getHours()).padStart(2, '0');
+                const mn = String(today.getMinutes()).padStart(2, '0');
+                const ss = String(today.getSeconds()).padStart(2, '0');
+                const date = `${yyyy}${mm}${dd}`;
+                const minutes = `${hh}${mn}${ss}`
+
                 for ( const ship of pesanan.shipments ){
                     //buat kode pengiriman
                     await Pengiriman.create({
                         orderId: pesanan._id,
                         distributorId: ship.id_distributor,
                         productToDelivers: ship.products,
-                        kode_pengiriman: `${user.get('kode_role')}`,
+                        kode_pengiriman: `PNR_${user.get('kode_role')}_${date}_${minutes}_${total_pengiriman + 1}`,
                         ...ship
                     });
                 }

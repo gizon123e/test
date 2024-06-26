@@ -46,7 +46,7 @@ const modelPengiriman = new mongoose.Schema({
     kode_pengiriman:{
         type: String
     },
-})
+}, {timestamps: true})
 
 const Pengiriman = mongoose.model("Pengiriman", modelPengiriman);
 module.exports = Pengiriman
