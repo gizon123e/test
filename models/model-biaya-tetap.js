@@ -22,6 +22,15 @@ const modelBiayaTetap = mongoose.Schema({
     },
     constanta_volume: {
         type: Number
+    },
+    batas_umur_mobil: {
+        type: Number
+    },
+    batas_umur_motor: {
+        type: Number
+    },
+    batas_umur_truk: {
+        type: Number
     }
 });
 

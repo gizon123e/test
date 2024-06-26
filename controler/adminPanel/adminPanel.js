@@ -182,5 +182,34 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+
+    updateBiayaTetap: async (req, res, next) => {
+        try {
+            const { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, batas_umur_mobil, batas_umur_motor, batas_umur_truk } = req.body
+
+            const dataBiayatetap = await BiayaTetap.findOne({ _id: req.params.id })
+            if (!dataBiayatetap) return res.status(404).json({ message: "data Not Found" })
+
+            const data = await BiayaTetap.updateOne({ _id: req.params.id }, { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, batas_umur_mobil, batas_umur_motor, batas_umur_truk })
+
+            res.status(201).json({ message: "update success", data })
+
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    findByIdBiayaTetap: async (req, res, next) => {
+        try {
+            const data = await BiayaTetap.findOne({ _id: req.params.id })
+            if (!data) return res.status(404).json({ message: "data Not Found" })
+
+            res.status(201).json({ message: "get by id success", data })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }
