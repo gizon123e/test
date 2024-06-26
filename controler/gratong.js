@@ -33,6 +33,9 @@ module.exports = {
         try {
             const gratongs = await Gratong.find().populate({
                 path: "tarif",
+                populate: {
+                    path: "jenis_kendaraan"
+                }
             });
             if(!gratongs || gratongs.length === 0) return res.status(404).json({message: "No-Event"});
             return res.status(200).json({message: "Berhasil mendapatkan gratong", data: gratongs})
