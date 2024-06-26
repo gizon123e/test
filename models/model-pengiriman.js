@@ -42,7 +42,10 @@ const modelPengiriman = new mongoose.Schema({
         type: String,
         enum: ["diproses", "dikirim", "pesanan selesai"],
         default: "diproses"
-    }
+    },
+    kode_pengiriman:{
+        type: String
+    },
 })
 
 const Pengiriman = mongoose.model("Pengiriman", modelPengiriman);
