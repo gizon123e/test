@@ -398,22 +398,29 @@ module.exports = {
                 file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
             })
 
-            const data = await KendaraanDistributor.create({
-                id_distributor,
-                jenisKendaraan,
-                merekKendaraan,
-                nomorPolisi,
-                warna,
-                typeKendaraan,
-                tarifId,
-                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                tahun
-            })
+            const dataTarifidArray = tarifId.split('/');
+            const dataCreateKendaraan = []
+
+            for (let idTarif of dataTarifidArray) {
+                const data = await KendaraanDistributor.create({
+                    id_distributor,
+                    jenisKendaraan,
+                    merekKendaraan,
+                    nomorPolisi,
+                    warna,
+                    typeKendaraan,
+                    tarifId: idTarif,
+                    fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                    STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                    tahun
+                })
+
+                dataCreateKendaraan.push(data)
+            }
 
             res.status(201).json({
                 message: "create data success",
-                data,
+                data: dataCreateKendaraan,
                 dataPengemudi
             })
         } catch (error) {
