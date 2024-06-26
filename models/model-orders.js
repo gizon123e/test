@@ -37,6 +37,9 @@ const modelOrder = new mongoose.Schema({
                 message: "Deadline minimal 7 hari ke depan"
             },
             required: true
+        },
+        kode_pesanan:{
+            type: String
         }
     }],
     userId: {

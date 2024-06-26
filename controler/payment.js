@@ -32,27 +32,29 @@ module.exports = {
         try {
             const { order_id, transaction_status } = req.body;
             const detailPesanan = await DetailPesanan.findById(order_id);
+            let user;
             if(transaction_status === "settlement"){
                 const pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Berlangsung"
                 }, { new: true });
                 if(pesanan.poinTerpakai){
-                    const user = await User.findByIdAndUpdate(pesanan.userId, {
+                    user = await User.findByIdAndUpdate(pesanan.userId, {
                         $inc: { poin: -pesanan.poinTerpakai }
                     });
-                    console.log(user)
                 }
                 await DetailPesanan.findByIdAndUpdate(order_id, {
                     isTerbayarkan: true
                 });
                 
                 await VA_Used.findOneAndDelete({orderId: order_id});
-                
+                const total_pengiriman = await Pengiriman.estimatedDocumentCount({})
                 for ( const ship of pesanan.shipments ){
+                    //buat kode pengiriman
                     await Pengiriman.create({
                         orderId: pesanan._id,
                         distributorId: ship.id_distributor,
                         productToDelivers: ship.products,
+                        kode_pengiriman: `${user.get('kode_role')}`,
                         ...ship
                     });
                 }
