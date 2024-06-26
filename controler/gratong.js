@@ -31,12 +31,52 @@ module.exports = {
     },
     getGratong: async (req, res, next) => {
         try {
-            const gratongs = await Gratong.find().populate({
-                path: "tarif",
-                populate: {
-                    path: "jenis_kendaraan"
-                }
-            });
+            const gratongs = await Gratong.aggregate([
+                {
+                    $match: {}
+                },
+                {
+                    $lookup:{
+                        from: "tarifs",
+                        foreignField: "_id",
+                        localField: 'tarif',
+                        as: "detail_tarif"
+                    }
+                },
+                {
+                    $unwind: "$detail_tarif"
+                },
+                {
+                    $addFields:{
+                        'tarif': '$detail_tarif'
+                    }
+                },
+                {
+                    $lookup:{
+                        from: "jeniskendaraans",
+                        foreignField: "_id",
+                        localField: 'tarif.jenis_kendaraan',
+                        as: 'kendaraan'
+                    }
+                },
+                {
+                    $unwind: "$kendaraan"
+                },
+                {
+                    $addFields:{
+                        'tarif.jenis_kendaraan': '$kendaraan'
+                    }
+                },
+                {
+                    $project: { detail_tarif: 0, kendaraan: 0 }
+                },
+            ])
+            // const gratongs = await Gratong.find().populate({
+            //     path: "tarif",
+            //     populate: {
+            //         path: "jenis_kendaraan"
+            //     }
+            // });
             if(!gratongs || gratongs.length === 0) return res.status(404).json({message: "No-Event"});
             return res.status(200).json({message: "Berhasil mendapatkan gratong", data: gratongs})
         } catch (error) {
