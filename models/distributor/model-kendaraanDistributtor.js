@@ -50,6 +50,11 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         required: [true, 'is_Active pengemudi harus diisi'],
         default: false
     },
+    tahun: {
+        type: Number,
+        required: [true, 'tahun pengemudi harus diisi'],
+        default: false
+    },
     descriptionTolak: {
         type: String,
         required: false,

@@ -352,7 +352,7 @@ module.exports = {
 
     createKendaraandistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId, tahun } = req.body
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
@@ -408,7 +408,7 @@ module.exports = {
                 tarifId,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
                 STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-
+                tahun
             })
 
             res.status(201).json({
@@ -431,7 +431,7 @@ module.exports = {
 
     createKendaraanPerusahaan: async (req, res, next) => {
         try {
-            const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId, tahun } = req.body
             const files = req.files;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
             const fileSTNK = files ? files.fileSTNK : null;
@@ -456,7 +456,7 @@ module.exports = {
                 tarifId,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
-
+                tahun
             })
 
             res.status(201).json({
