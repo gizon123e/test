@@ -1,5 +1,4 @@
 const Distributtor = require('../../models/distributor/model-distributor')
-const Vendor = require('../../models/vendor/model-vendor')
 const TokoVendor = require('../../models/vendor/model-toko')
 const Product = require('../../models/model-product')
 const Konsumen = require('../../models/konsumen/model-konsumen')
@@ -219,9 +218,9 @@ module.exports = {
                     dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan.jenis === 'Motor')
                 }
             }
-            dataKendaraanHargaTermurah.sort((a, b) => a.hargaOngkir - b.hargaOngkir);
+            dataKendaraanHargaTermurah.sort((a, b) => a.total_ongkir - b.total_ongkir);
 
-            const datas = dataKendaraanHargaTermurah[0]
+            const datas = dataKendaraanHargaTermurah
             res.status(200).json({
                 message: "success get data Distributtor",
                 datas

@@ -4,6 +4,10 @@ const ModelJenisKendaraan = new mongoose.Schema({
     jenis: {
         type: String,
         required: [true, "jenis kendaraan harus di isi"]
+    },
+    icon: {
+        type: String,
+        required: [true, "icon kendaraan harus di isi"]
     }
 })
 

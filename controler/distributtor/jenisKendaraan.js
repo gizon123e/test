@@ -1,4 +1,8 @@
 const JenisKendaraan = require("../../models/distributor/jenisKendaraan")
+const path = require('path')
+const fs = require('fs')
+const dotenv = require('dotenv')
+dotenv.config()
 
 module.exports = {
     getAllKendaraan: async (req, res, next) => {
@@ -18,7 +22,15 @@ module.exports = {
 
     createKendaraan: async (req, res, next) => {
         try {
-            const kendaraan = await JenisKendaraan.create({ jenis: req.body.jenis })
+            const files = req.files
+            const icon = files ? files.icon : null
+
+            const imageIcon = `${Date.now()}${path.extname(icon.name)}`;
+            const imagePathIcon = path.join(__dirname, '../../public/icon-kendaraan', imageIcon);
+
+            await icon.mv(imagePathIcon);
+
+            const kendaraan = await JenisKendaraan.create({ jenis: req.body.jenis, icon: `${process.env.HOST}public/icon-kendaraan/${imageIcon}` })
 
             res.status(200).json({
                 message: "get data jenis kendaraan success",
@@ -32,6 +44,12 @@ module.exports = {
 
     updateKendaraan: async (req, res, next) => {
         try {
+            const files = req.files
+            const icon = files ? files.icon : null
+
+            const imageIcon = `${Date.now()}${path.extname(icon.name)}`;
+            const imagePathIcon = path.join(__dirname, '../../public/icon-kendaraan', imageIcon);
+
             const kendaraan = await JenisKendaraan.findByIdAndUpdate({ _id: req.params.id }, { jenis: req.body.jenis }, { new: true })
             if (!kendaraan) return res.status(404).json({ message: "data Not Found" })
 
