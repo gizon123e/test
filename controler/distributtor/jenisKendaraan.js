@@ -1,4 +1,8 @@
 const JenisKendaraan = require("../../models/distributor/jenisKendaraan")
+const path = require('path')
+const fs = require('fs')
+const dotenv = require('dotenv')
+dotenv.config()
 
 module.exports = {
     getAllKendaraan: async (req, res, next) => {
@@ -18,7 +22,25 @@ module.exports = {
 
     createKendaraan: async (req, res, next) => {
         try {
-            const kendaraan = await JenisKendaraan.create({ jenis: req.body.jenis })
+            const files = req.files
+            const iconAktif = files ? files.icon_aktif : null
+            const iconDisable = files ? files.icon_disable : null
+
+            const imageIconAktif = `${Date.now()}${path.extname(iconAktif.name)}`;
+            const imagePathIconAktif = path.join(__dirname, '../../public/icon-kendaraan', imageIconAktif);
+
+            const imageIconDisable = `${Date.now()}${path.extname(iconDisable.name)}`;
+            const imagePathIconDisable = path.join(__dirname, '../../public/icon-kendaraan', imageIconDisable);
+
+            await iconAktif.mv(imagePathIconAktif);
+            await iconDisable.mv(imagePathIconDisable)
+
+
+            const kendaraan = await JenisKendaraan.create({
+                jenis: req.body.jenis,
+                icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
+                icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`
+            })
 
             res.status(200).json({
                 message: "get data jenis kendaraan success",
@@ -32,7 +54,55 @@ module.exports = {
 
     updateKendaraan: async (req, res, next) => {
         try {
-            const kendaraan = await JenisKendaraan.findByIdAndUpdate({ _id: req.params.id }, { jenis: req.body.jenis }, { new: true })
+            const files = req.files
+            const iconAktif = files ? files.icon_aktif : null
+            const iconDisable = files ? files.icon_disable : null
+
+            const validateJenisKendaraan = await JenisKendaraan.findOne({ _id: req.params.id })
+            if (!validateJenisKendaraan) return res.status(404).json({ message: "data Not Found" })
+
+            let iconAktifName
+            let iconDisableName
+            if (validateJenisKendaraan.icon_aktif && validateJenisKendaraan.icon_disable) {
+                iconAktifName = path.basename(validateJenisKendaraan.icon_aktif);
+                iconDisableName = path.basename(validateJenisKendaraan.icon_disable);
+            }
+
+            if (iconAktifName) {
+                const currentIconAktifPath = path.join(__dirname, '../../public/icon-kendaraan', iconAktifName);
+
+                if (fs.existsSync(currentIconAktifPath)) {
+                    fs.unlinkSync(currentIconAktifPath);
+                }
+            }
+
+            if (iconDisableName) {
+                const currentIconDisablePath = path.join(__dirname, '../../public/icon-kendaraan', iconDisableName);
+
+                if (fs.existsSync(currentIconDisablePath)) {
+                    fs.unlinkSync(currentIconDisablePath);
+                }
+            }
+
+            const imageIconAktif = `${Date.now()}${path.extname(iconAktif.name)}`;
+            const imagePathIconAktif = path.join(__dirname, '../../public/icon-kendaraan', imageIconAktif);
+
+            await iconAktif.mv(imagePathIconAktif);
+
+            const imageIconDisable = `${Date.now()}${path.extname(iconDisable.name)}`;
+            const imagePathIconDisable = path.join(__dirname, '../../public/icon-kendaraan', imageIconDisable);
+
+            await iconDisable.mv(imagePathIconDisable);
+
+            const kendaraan = await JenisKendaraan.findByIdAndUpdate(
+                { _id: req.params.id },
+                {
+                    jenis: req.body.jenis,
+                    icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
+                    icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`,
+                },
+                { new: true }
+            )
             if (!kendaraan) return res.status(404).json({ message: "data Not Found" })
 
             res.status(200).json({
@@ -49,6 +119,13 @@ module.exports = {
         try {
             const kendaraan = await JenisKendaraan.findOne({ _id: req.params.id })
             if (!kendaraan) return res.status(404).json({ message: "data Not Found" })
+
+            const iconFilename = path.basename(kendaraan.icon);
+            const currentIconPath = path.join(__dirname, '../../public/icon-kendaraan', iconFilename);
+
+            if (fs.existsSync(currentIconPath)) {
+                fs.unlinkSync(currentIconPath);
+            }
 
             await JenisKendaraan.deleteOne({ _id: req.params.id })
 

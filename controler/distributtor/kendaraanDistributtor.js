@@ -383,11 +383,11 @@ module.exports = {
 
             await profile.mv(imagePathProfile);
 
-            const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
-            if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
+            // const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
+            // if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
 
-            const validatePengemudi = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
-            if (validatePengemudi) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: validatePengemudi })
+            // const validatePengemudi = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
+            // if (validatePengemudi) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: validatePengemudi })
 
             const dataPengemudi = await Pengemudi.create({
                 id_distributor,
@@ -545,51 +545,6 @@ module.exports = {
             })
         } catch (error) {
             console.error("Error creating document:", error);
-            if (error && error.name === 'ValidationError') {
-                return res.status(400).json({
-                    error: true,
-                    message: error.message,
-                    fields: error.fields
-                });
-            }
-            next(error);
-        }
-    },
-
-    updateIconKendaraan: async (req, res, next) => {
-        try {
-            const { jenis_kendaraan } = req.body
-            const iconKendaraan = req.files ? req.files.iconKendaraan : null;
-            console.log(jenis_kendaraan)
-
-            if (!jenis_kendaraan || !iconKendaraan) {
-                return res.status(400).json({ error: 'jenis_kendaraan and iconKendaraan are required' });
-            }
-
-            const imageName = `${Date.now()}${path.extname(iconKendaraan.name)}`;
-            const imagePath = path.join(__dirname, '../../public/icon-kendaraan', imageName);
-
-            await iconKendaraan.mv(imagePath, (err) => {
-                if (err) {
-                    return res.status(500).json({ message: "Failed to upload imageDistributtor file", error: err });
-                }
-            })
-
-            const tarifIds = await Tarif.find({ jenis_kendaraan }).select('_id jenis_kendaraan');
-            const tarifIdList = tarifIds.map(tarif => tarif._id);
-            console.log(tarifIdList)
-
-            const result = await KendaraanDistributor.updateMany(
-                { tarifId: { $in: tarifIdList } },
-                { iconKendaraan: `${process.env.HOST}/public/icon-kendaraan/${imageName}` }
-            );
-
-            res.status(200).json({
-                message: 'iconKendaraan updated successfully',
-                modifiedCount: result.nModified
-            });
-        } catch (error) {
-            console.error(error);
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
                     error: true,
