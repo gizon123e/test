@@ -5,10 +5,14 @@ const ModelJenisKendaraan = new mongoose.Schema({
         type: String,
         required: [true, "jenis kendaraan harus di isi"]
     },
-    icon: {
+    icon_aktif: {
+        type: String,
+        required: [true, "icon aktif kendaraan harus di isi"]
+    },
+    icon_disable: {
         type: String,
         required: [true, "icon kendaraan harus di isi"]
-    }
+    },
 })
 
 const JenisKendaraan = mongoose.model("JenisKendaraan", ModelJenisKendaraan)

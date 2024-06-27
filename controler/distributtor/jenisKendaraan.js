@@ -23,14 +23,24 @@ module.exports = {
     createKendaraan: async (req, res, next) => {
         try {
             const files = req.files
-            const icon = files ? files.icon : null
+            const iconAktif = files ? files.icon_aktif : null
+            const iconDisable = files ? files.icon_disable : null
 
-            const imageIcon = `${Date.now()}${path.extname(icon.name)}`;
-            const imagePathIcon = path.join(__dirname, '../../public/icon-kendaraan', imageIcon);
+            const imageIconAktif = `${Date.now()}${path.extname(iconAktif.name)}`;
+            const imagePathIconAktif = path.join(__dirname, '../../public/icon-kendaraan', imageIconAktif);
 
-            await icon.mv(imagePathIcon);
+            const imageIconDisable = `${Date.now()}${path.extname(iconDisable.name)}`;
+            const imagePathIconDisable = path.join(__dirname, '../../public/icon-kendaraan', imageIconDisable);
 
-            const kendaraan = await JenisKendaraan.create({ jenis: req.body.jenis, icon: `${process.env.HOST}public/icon-kendaraan/${imageIcon}` })
+            await iconAktif.mv(imagePathIconAktif);
+            await iconDisable.mv(imagePathIconDisable)
+
+
+            const kendaraan = await JenisKendaraan.create({
+                jenis: req.body.jenis,
+                icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
+                icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`
+            })
 
             res.status(200).json({
                 message: "get data jenis kendaraan success",
@@ -45,27 +55,54 @@ module.exports = {
     updateKendaraan: async (req, res, next) => {
         try {
             const files = req.files
-            const icon = files ? files.icon : null
+            const iconAktif = files ? files.icon_aktif : null
+            const iconDisable = files ? files.icon_disable : null
 
             const validateJenisKendaraan = await JenisKendaraan.findOne({ _id: req.params.id })
             if (!validateJenisKendaraan) return res.status(404).json({ message: "data Not Found" })
 
-            const iconFilename = path.basename(validateJenisKendaraan.icon);
+            let iconAktifName
+            let iconDisableName
+            if (validateJenisKendaraan.icon_aktif && validateJenisKendaraan.icon_disable) {
+                iconAktifName = path.basename(validateJenisKendaraan.icon_aktif);
+                iconDisableName = path.basename(validateJenisKendaraan.icon_disable);
+            }
 
-            if (iconFilename) {
-                const currentIconPath = path.join(__dirname, '../../public/icon-kendaraan', iconFilename);
+            if (iconAktifName) {
+                const currentIconAktifPath = path.join(__dirname, '../../public/icon-kendaraan', iconAktifName);
 
-                if (fs.existsSync(currentIconPath)) {
-                    fs.unlinkSync(currentIconPath);
+                if (fs.existsSync(currentIconAktifPath)) {
+                    fs.unlinkSync(currentIconAktifPath);
                 }
             }
 
-            const imageIcon = `${Date.now()}${path.extname(icon.name)}`;
-            const imagePathIcon = path.join(__dirname, '../../public/icon-kendaraan', imageIcon);
+            if (iconDisableName) {
+                const currentIconDisablePath = path.join(__dirname, '../../public/icon-kendaraan', iconDisableName);
 
-            await icon.mv(imagePathIcon);
+                if (fs.existsSync(currentIconDisablePath)) {
+                    fs.unlinkSync(currentIconDisablePath);
+                }
+            }
 
-            const kendaraan = await JenisKendaraan.findByIdAndUpdate({ _id: req.params.id }, { jenis: req.body.jenis, icon: `${process.env.HOST}public/icon-kendaraan/${imageIcon}` }, { new: true })
+            const imageIconAktif = `${Date.now()}${path.extname(iconAktif.name)}`;
+            const imagePathIconAktif = path.join(__dirname, '../../public/icon-kendaraan', imageIconAktif);
+
+            await iconAktif.mv(imagePathIconAktif);
+
+            const imageIconDisable = `${Date.now()}${path.extname(iconDisable.name)}`;
+            const imagePathIconDisable = path.join(__dirname, '../../public/icon-kendaraan', imageIconDisable);
+
+            await iconDisable.mv(imagePathIconDisable);
+
+            const kendaraan = await JenisKendaraan.findByIdAndUpdate(
+                { _id: req.params.id },
+                {
+                    jenis: req.body.jenis,
+                    icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
+                    icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`,
+                },
+                { new: true }
+            )
             if (!kendaraan) return res.status(404).json({ message: "data Not Found" })
 
             res.status(200).json({
