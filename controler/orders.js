@@ -29,13 +29,6 @@ const ss = String(today.getSeconds()).padStart(2, '0');
 const date = `${yyyy}${mm}${dd}`;
 const minutes = `${hh}${mn}${ss}`
 
-const total_transaksi = await Transaksi.estimatedDocumentCount({
-    createdAt: {
-        $gte: now,
-        $lt: tomorrow
-    }
-});
-
 module.exports = {
     getOrderPanel: async (req, res, next) => {
         try {
@@ -391,19 +384,28 @@ module.exports = {
             if (pesanan.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah data orang lain!" })
             const user_vendor = await User.findById(pesanan.userId)
             const user_distributor = await User.findById(pengiriman.distributorId)
-            await Orders.updateOne({_id: pesanan._id}, { status: req.body.status })
-            await Transaksi.create({
-                id_pesanan: pesanan._id,
-                jenis_transaksi: "masuk",
-                status_transaksi: "Pembayaran Berhasil",
-                kode_transaksi: `TRX_${user_vendor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
+
+            const total_transaksi = await Transaksi.estimatedDocumentCount({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
             });
-            await Transaksi.create({
-                id_pesanan: pesanan._id,
-                jenis_transaksi: "masuk",
-                status_transaksi: "Pembayaran Berhasil",
-                kode_transaksi: `TRX_${user_distributor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
-            })
+            Promise.all([
+                Orders.updateOne({_id: pesanan._id}, { status: req.body.status }),
+                Transaksi.create({
+                    id_pesanan: pesanan._id,
+                    jenis_transaksi: "masuk",
+                    status_transaksi: "Pembayaran Berhasil",
+                    kode_transaksi: `TRX_${user_vendor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
+                }),
+                Transaksi.create({
+                    id_pesanan: pesanan._id,
+                    jenis_transaksi: "masuk",
+                    status_transaksi: "Pembayaran Berhasil",
+                    kode_transaksi: `TRX_${user_distributor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
+                })
+            ])
             return res.status(200).json({ message: "Berhasil Merubah Status" })
         } catch (err) {
             console.log(err)
