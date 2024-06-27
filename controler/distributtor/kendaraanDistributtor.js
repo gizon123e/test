@@ -202,7 +202,6 @@ module.exports = {
 
                     if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
                         if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil") {
-                            console.log("Mobil 1")
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
@@ -214,7 +213,6 @@ module.exports = {
                                 is_available: true
                             })
                         } else {
-                            console.log("Mobil 2")
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
@@ -228,7 +226,6 @@ module.exports = {
                         }
                     } else {
                         if (kendaraan.tarifId.jenis_kendaraan.jenis === "Motor") {
-                            console.log("Motor 1")
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
@@ -240,7 +237,6 @@ module.exports = {
                                 is_available: true
                             })
                         } else {
-                            console.log("Motor 2")
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
@@ -249,7 +245,7 @@ module.exports = {
                                 hargaOngkir: Math.round(hargaOngkir),
                                 potongan_harga,
                                 total_ongkir: Math.round(total_ongkir),
-                                is_available: false
+                                is_available: true
                             })
                         }
                     }
@@ -282,7 +278,7 @@ module.exports = {
                     }
 
                     if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil") {
+                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil" || kendaraan.tarifId.jenis_kendaraan.jenis === "Truk Box") {
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
@@ -326,7 +322,7 @@ module.exports = {
                                 hargaOngkir: Math.round(hargaOngkir),
                                 potongan_harga,
                                 total_ongkir: Math.round(total_ongkir),
-                                is_available: false
+                                is_available: true
                             })
                         }
                     }
@@ -384,11 +380,10 @@ module.exports = {
             await profile.mv(imagePathProfile);
 
             const regexNotelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
-            if (!regexNotelepon.test(noTelepon)) return res.status(400).json({ message: "Nomor telepon tidak valid" });
+            if (!regexNotelepon.test(no_telepon.toString())) return res.status(400).json({ message: "Nomor telepon tidak valid" });
 
-
-            // const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
-            // if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
+            const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
+            if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
 
             // const validatePengemudi = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
             // if (validatePengemudi) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: validatePengemudi })
@@ -400,6 +395,7 @@ module.exports = {
                 tanggalLahir,
                 profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                no_telepon: no_telepon.toString()
             })
 
             const dataTarifidArray = tarifId.split('/');
