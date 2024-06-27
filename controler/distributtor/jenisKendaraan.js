@@ -47,10 +47,25 @@ module.exports = {
             const files = req.files
             const icon = files ? files.icon : null
 
+            const validateJenisKendaraan = await JenisKendaraan.findOne({ _id: req.params.id })
+            if (!validateJenisKendaraan) return res.status(404).json({ message: "data Not Found" })
+
+            const iconFilename = path.basename(validateJenisKendaraan.icon);
+
+            if (iconFilename) {
+                const currentIconPath = path.join(__dirname, '../../public/icon-kendaraan', iconFilename);
+
+                if (fs.existsSync(currentIconPath)) {
+                    fs.unlinkSync(currentIconPath);
+                }
+            }
+
             const imageIcon = `${Date.now()}${path.extname(icon.name)}`;
             const imagePathIcon = path.join(__dirname, '../../public/icon-kendaraan', imageIcon);
 
-            const kendaraan = await JenisKendaraan.findByIdAndUpdate({ _id: req.params.id }, { jenis: req.body.jenis }, { new: true })
+            await icon.mv(imagePathIcon);
+
+            const kendaraan = await JenisKendaraan.findByIdAndUpdate({ _id: req.params.id }, { jenis: req.body.jenis, icon: `${process.env.HOST}public/icon-kendaraan/${imageIcon}` }, { new: true })
             if (!kendaraan) return res.status(404).json({ message: "data Not Found" })
 
             res.status(200).json({
@@ -67,6 +82,13 @@ module.exports = {
         try {
             const kendaraan = await JenisKendaraan.findOne({ _id: req.params.id })
             if (!kendaraan) return res.status(404).json({ message: "data Not Found" })
+
+            const iconFilename = path.basename(kendaraan.icon);
+            const currentIconPath = path.join(__dirname, '../../public/icon-kendaraan', iconFilename);
+
+            if (fs.existsSync(currentIconPath)) {
+                fs.unlinkSync(currentIconPath);
+            }
 
             await JenisKendaraan.deleteOne({ _id: req.params.id })
 

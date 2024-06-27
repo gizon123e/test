@@ -14,7 +14,6 @@ router.post('/detail/:id', authorization, controlerKendaraanDistributtor.getKend
 router.post('/create', controlerKendaraanDistributtor.createKendaraandistributtor)
 router.post('/create-perusahaan', controlerKendaraanDistributtor.createKendaraanPerusahaan)
 router.put('/update/:id', authorization, controlerKendaraanDistributtor.updateKendaraanDistributtor)
-router.put('/update-icon', controlerKendaraanDistributtor.updateIconKendaraan)
 router.put('/tolak/:id', controlerKendaraanDistributtor.tolakKenendaraan)
 router.delete('/delete/:id', controlerKendaraanDistributtor.deleteKendaraanDistributtor)
 

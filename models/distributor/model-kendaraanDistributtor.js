@@ -41,10 +41,6 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         required: [true, 'tarifId harus di isi'],
         ref: "Tarif"
     },
-    iconKendaraan: {
-        type: String,
-        required: false
-    },
     is_Active: {
         type: Boolean,
         required: [true, 'is_Active pengemudi harus diisi'],
