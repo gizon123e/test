@@ -118,7 +118,8 @@ module.exports = {
                     const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
                         .populate({
                             path: "tarifId",
-                            populate: "jenis_kendaraan"
+                            populate: "jenis_kendaraan",
+                            populate: "jenis_jasa"
                         })
 
                     if (dataKendaraan.length > 0)

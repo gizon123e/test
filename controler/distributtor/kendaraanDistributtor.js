@@ -148,7 +148,8 @@ module.exports = {
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id })
                 .populate({
                     path: "tarifId",
-                    populate: "jenis_kendaraan"
+                    populate: "jenis_kendaraan",
+                    populate: "jenis_jasa"
                 })
                 .populate({
                     path: "id_distributor",

@@ -7,8 +7,8 @@ const modelTarif = mongoose.Schema({
         required: [true, 'jenis kendaraan harus di isi']
     },
     jenis_jasa: {
-        type: String,
-        enum: ["express", "hemat"],
+        type: mongoose.Types.ObjectId,
+        ref: "JenisJasaDistributor",
         required: [true, 'jenis jasa harus di isi']
     },
     tarif_dasar: {
