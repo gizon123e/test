@@ -19,7 +19,12 @@ module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
             if (req.user.role === "administrator") {
-                const data = await KendaraanDistributor.find().populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan").populate('tarifId')
+                const data = await KendaraanDistributor.find().populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+                    .populate({
+                        path: "tarifId",
+                        populate: "jenis_kendaraan",
+                        populate: "jenis_jasa"
+                    })
                 if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
 
                 return res.status(200).json({
@@ -148,7 +153,8 @@ module.exports = {
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id })
                 .populate({
                     path: "tarifId",
-                    populate: "jenis_kendaraan"
+                    populate: "jenis_kendaraan",
+                    populate: "jenis_jasa"
                 })
                 .populate({
                     path: "id_distributor",
