@@ -66,7 +66,6 @@ const userModels = new mongoose.Schema(
       type: String,
       enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
       message: "{VALUE} is not supported",
-      required: true
     },
     kode_role: {
       type: String,

@@ -361,15 +361,35 @@ module.exports = {
 
     update_status: async (req, res, next) => {
         try {
-            if (!req.body.pesananID || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananID dan status` })
-
-            const pesanan = await Orders.findByIdAndUpdate(req.body.pesananID, { status: req.body.status }, { new: true })
+            if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
+            if( req.body.status !== 'berhasil') return res.status(400).json({message: "Status yang dikirimkan tidak valid"})
+            const pesanan = await Orders.aggregate([
+                {
+                    $match: { _id: new mongoose.Types.ObjectId(req.body.pesananId)}
+                },
+                {
+                    $lookup:{
+                        from: "products",
+                        foreignField: '_id',
+                        localField: 'productId',
+                        as: "detail_product"
+                    }
+                },
+                {
+                    $unwind: "$detail_product"
+                },
+                {
+                    $addFields: {
+                        'productId' : "$detail_product"
+                    }
+                }
+            ])
 
             if (pesanan.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah data orang lain!" })
-
+            await Orders.updateOne({_id: pesanan._id}, { status: req.body.status })
             if (!pesanan) return res.status(404).json({ message: `pesanan dengan id: ${req.body.pesananID} tidak ditemukan` })
 
-            return res.status(200).json({ datas: pesanan })
+            return res.status(200).json({ message: "Berhasil Merubah Status" })
         } catch (err) {
             console.log(err)
             next(err)
