@@ -4,7 +4,8 @@ const DetailPesanan = require('../models/model-detail-pesanan');
 const Pengiriman = require("../models/model-pengiriman")
 const Pesanan = require('../models/model-orders');
 const User = require('../models/model-auth-user')
-const VA_Used = require('../models/model-va-used')
+const VA_Used = require('../models/model-va-used');
+const Transaksi = require('../models/model-transaksi');
 dotenv.config();
 
 module.exports = {
@@ -32,9 +33,10 @@ module.exports = {
         try {
             const { order_id, transaction_status } = req.body;
             const detailPesanan = await DetailPesanan.findById(order_id);
+            let pesanan;
             let user;
             if(transaction_status === "settlement"){
-                const pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
+                pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Berlangsung"
                 }, { new: true });
                 if(pesanan.poinTerpakai){
@@ -86,6 +88,18 @@ module.exports = {
                     status: "Dibatalkan"
                 });
             }
+            const total_transaksi = await Transaksi.estimatedDocumentCount({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
+            });
+            await Transaksi.create({
+                id_pesanan: pesanan._id,
+                jenis_transaksi: "keluar",
+                status: "Pembayaran Berhasil",
+                kode_transaksi: `TRX_KNS_OUT_${pesanan.userId}_${date}_${minutes}_${total_transaksi + 1}`
+            })
             return res.status(200).json({message:"Mantap"})
         } catch (error) {
             
