@@ -71,6 +71,8 @@ module.exports = {
                     }
                 });
 
+                await Transaksi.findOneAndUpdate({id_pesanan: pesanan._id}, { status: "Pembayaran Berhasil"})
+
                 for ( const ship of pesanan.shipments ){
                     //buat kode pengiriman
                     await Pengiriman.create({
@@ -87,19 +89,7 @@ module.exports = {
                     status: "Dibatalkan"
                 });
             }
-            const total_transaksi = await Transaksi.estimatedDocumentCount({
-                createdAt: {
-                    $gte: now,
-                    $lt: tomorrow
-                }
-            });
-            await Transaksi.create({
-                id_pesanan: pesanan._id,
-                jenis_transaksi: "keluar",
-                status: "Pembayaran Berhasil",
-                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_${pesanan.userId}_${date}_${minutes}_${total_transaksi + 1}`
-            })
-            console.log('nice')
+            
             return res.status(200).json({message:"Mantap"})
         } catch (error) {
             console.log(error)

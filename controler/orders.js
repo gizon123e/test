@@ -216,10 +216,7 @@ module.exports = {
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if (!req.body["items"]) return res.status(404).json({message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan"})
             if (!Array.isArray(req.body['items'])) return res.status(400).json({message: "Body items bukan array, kirimkan array"})
-            const now = new Date();
-            now.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(now);
-            tomorrow.setDate(now.getDate() + 1);
+            
             const total_pesanan = await Orders.estimatedDocumentCount({
                 createdAt: {
                     $gte: now,
@@ -227,16 +224,6 @@ module.exports = {
                 }
             });
 
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-
-            const hh = String(today.getHours()).padStart(2, '0');
-            const mn = String(today.getMinutes()).padStart(2, '0');
-            const ss = String(today.getSeconds()).padStart(2, '0');
-            const date = `${yyyy}${mm}${dd}`;
-            const minutes = `${hh}${mn}${ss}`
             const user = await User.findById(req.user.id)
             
             items.forEach((item, index) => {
@@ -347,7 +334,20 @@ module.exports = {
                 orderId: detailPesanan._id,
                 nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
             })
-    
+            
+            const total_transaksi = await Transaksi.estimatedDocumentCount({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
+            });
+            await Transaksi.create({
+                id_pesanan: dataOrder._id,
+                jenis_transaksi: "keluar",
+                status: "Menunggu Pembayaran",
+                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_${dataOrder.userId}_${date}_${minutes}_${total_transaksi + 1}`
+            })
+
             return res.status(201).json({ 
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, 
                 datas: dataOrder, 
@@ -378,15 +378,12 @@ module.exports = {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
             if( req.body.status !== 'berhasil') return res.status(400).json({message: "Status yang dikirimkan tidak valid"})
             const pesanan = await Orders.findById(req.body.pesananId).lean()
-            const pengiriman = await Pengiriman.findOne({orderId: pesanan._id})
             const productIds = []
             const ships = []
             pesanan.items.map(item => productIds.push(item.product));
             pesanan.shipments.map(item => ships.push(item))
             if (!pesanan) return res.status(404).json({ message: `pesanan dengan id: ${req.body.pesananID} tidak ditemukan` })
             if (pesanan.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah data orang lain!" })
-            const user_vendor = await User.findById(pesanan.userId)
-            const user_distributor = await User.findById(pengiriman.distributorId)
             const total_transaksi = await Transaksi.estimatedDocumentCount({
                 createdAt: {
                     $gte: now,
