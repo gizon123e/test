@@ -43,6 +43,10 @@ const ModelPengemudi = new mongoose.Schema({
         required: false,
         default: null
     },
+    no_telepon: {
+        type: String,
+        required: [true, 'no_telepon pengemudi harus diisi'],
+    }
 })
 
 const Pengemudi = mongoose.model('Pengemudi', ModelPengemudi)
