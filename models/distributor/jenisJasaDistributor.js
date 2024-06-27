@@ -16,3 +16,5 @@ const modelJenisJasaDistributor = new mongoose.Schema({
 })
 
 const JenisJasaDistributor = mongoose.model("JenisJasaDistributor", modelJenisJasaDistributor)
+
+module.exports = JenisJasaDistributor

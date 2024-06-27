@@ -41,7 +41,6 @@ module.exports = {
             await iconDisable.mv(imagePathIconDisable)
             await iconDistributor.mv(imagePathIconDistributor)
 
-
             const kendaraan = await JenisKendaraan.create({
                 jenis,
                 description,
