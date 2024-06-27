@@ -35,6 +35,20 @@ module.exports = {
             const detailPesanan = await DetailPesanan.findById(order_id);
             let pesanan;
             let user;
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+
+            const hh = String(today.getHours()).padStart(2, '0');
+            const mn = String(today.getMinutes()).padStart(2, '0');
+            const ss = String(today.getSeconds()).padStart(2, '0');
+            const date = `${yyyy}${mm}${dd}`;
+            const minutes = `${hh}${mn}${ss}`
             if(transaction_status === "settlement"){
                 pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Berlangsung"
@@ -50,27 +64,12 @@ module.exports = {
                 
                 await VA_Used.findOneAndDelete({orderId: order_id});
                 
-                const now = new Date();
-                now.setHours(0, 0, 0, 0); // Mengatur waktu ke awal hari
-                const tomorrow = new Date(now);
-                tomorrow.setDate(now.getDate() + 1);
                 const total_pengiriman = await Pengiriman.estimatedDocumentCount({
                     createdAt: {
                         $gte: now,
                         $lt: tomorrow
                     }
                 });
-
-                const today = new Date();
-                const dd = String(today.getDate()).padStart(2, '0');
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const yyyy = today.getFullYear();
-
-                const hh = String(today.getHours()).padStart(2, '0');
-                const mn = String(today.getMinutes()).padStart(2, '0');
-                const ss = String(today.getSeconds()).padStart(2, '0');
-                const date = `${yyyy}${mm}${dd}`;
-                const minutes = `${hh}${mn}${ss}`
 
                 for ( const ship of pesanan.shipments ){
                     //buat kode pengiriman
@@ -100,9 +99,11 @@ module.exports = {
                 status: "Pembayaran Berhasil",
                 kode_transaksi: `TRX_KNS_OUT_${pesanan.userId}_${date}_${minutes}_${total_transaksi + 1}`
             })
+            console.log('nice')
             return res.status(200).json({message:"Mantap"})
         } catch (error) {
-            
+            console.log(error)
+            next(error)
         }
     }
 }
