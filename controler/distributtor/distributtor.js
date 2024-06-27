@@ -220,7 +220,7 @@ module.exports = {
             }
             dataKendaraanHargaTermurah.sort((a, b) => a.total_ongkir - b.total_ongkir);
 
-            const datas = dataKendaraanHargaTermurah
+            const datas = dataKendaraanHargaTermurah[0]
             res.status(200).json({
                 message: "success get data Distributtor",
                 datas
