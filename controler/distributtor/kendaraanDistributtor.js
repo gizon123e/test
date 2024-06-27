@@ -201,7 +201,7 @@ module.exports = {
                     }
 
                     if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil") {
+                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil" || kendaraan.tarifId.jenis_kendaraan.jenis === "Truk Box") {
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
