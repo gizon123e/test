@@ -377,7 +377,7 @@ module.exports = {
         try {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
             if( req.body.status !== 'berhasil') return res.status(400).json({message: "Status yang dikirimkan tidak valid"})
-            const pesanan = await Orders.findById(req.body.pesananId).populate('productId')
+            const pesanan = await Orders.findById(req.body.pesananId)
             const pengiriman = await Pengiriman.findOne({orderId: pesanan._id})
 
             if (!pesanan) return res.status(404).json({ message: `pesanan dengan id: ${req.body.pesananID} tidak ditemukan` })
