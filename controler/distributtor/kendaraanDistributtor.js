@@ -207,18 +207,7 @@ module.exports = {
                     }
 
                     if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil" || kendaraan.tarifId.jenis_kendaraan.jenis === "Truk Box") {
-                            data.push({
-                                kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
-                                totalBeratProduct: beratProduct,
-                                totalVolumeProduct: volumeProduct,
-                                hargaOngkir: Math.round(hargaOngkir),
-                                potongan_harga,
-                                total_ongkir: Math.round(total_ongkir),
-                                is_available: true
-                            })
-                        } else {
+                        if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
@@ -229,19 +218,6 @@ module.exports = {
                                 total_ongkir: Math.round(total_ongkir),
                                 is_available: false
                             })
-                        }
-                    } else {
-                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Motor") {
-                            data.push({
-                                kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
-                                totalBeratProduct: beratProduct,
-                                totalVolumeProduct: volumeProduct,
-                                hargaOngkir: Math.round(hargaOngkir),
-                                potongan_harga,
-                                total_ongkir: Math.round(total_ongkir),
-                                is_available: true
-                            })
                         } else {
                             data.push({
                                 kendaraan,
@@ -254,6 +230,17 @@ module.exports = {
                                 is_available: true
                             })
                         }
+                    } else {
+                        data.push({
+                            kendaraan,
+                            jarakTempu: Math.round(jarakTempu),
+                            totalBeratProduct: beratProduct,
+                            totalVolumeProduct: volumeProduct,
+                            hargaOngkir: Math.round(hargaOngkir),
+                            potongan_harga,
+                            total_ongkir: Math.round(total_ongkir),
+                            is_available: true
+                        })
                     }
                 } else {
                     let potongan_harga;
@@ -284,18 +271,8 @@ module.exports = {
                     }
 
                     if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Mobil" || kendaraan.tarifId.jenis_kendaraan.jenis === "Truk Box") {
-                            data.push({
-                                kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
-                                totalBeratProduct: beratProduct,
-                                totalVolumeProduct: volumeProduct,
-                                hargaOngkir: Math.round(hargaOngkir),
-                                potongan_harga,
-                                total_ongkir: Math.round(total_ongkir),
-                                is_available: true
-                            })
-                        } else {
+                        console.log("testig 1")
+                        if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
                                 jarakTempu: Math.round(jarakTempu),
@@ -306,19 +283,6 @@ module.exports = {
                                 total_ongkir: Math.round(total_ongkir),
                                 is_available: false
                             })
-                        }
-                    } else {
-                        if (kendaraan.tarifId.jenis_kendaraan.jenis === "Motor") {
-                            data.push({
-                                kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
-                                totalBeratProduct: beratProduct,
-                                totalVolumeProduct: volumeProduct,
-                                hargaOngkir: Math.round(hargaOngkir),
-                                potongan_harga,
-                                total_ongkir: Math.round(total_ongkir),
-                                is_available: true
-                            })
                         } else {
                             data.push({
                                 kendaraan,
@@ -331,6 +295,18 @@ module.exports = {
                                 is_available: true
                             })
                         }
+                    } else {
+                        console.log("testig 1")
+                        data.push({
+                            kendaraan,
+                            jarakTempu: Math.round(jarakTempu),
+                            totalBeratProduct: beratProduct,
+                            totalVolumeProduct: volumeProduct,
+                            hargaOngkir: Math.round(hargaOngkir),
+                            potongan_harga,
+                            total_ongkir: Math.round(total_ongkir),
+                            is_available: true
+                        })
                     }
                 }
             }
