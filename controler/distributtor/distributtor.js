@@ -214,9 +214,9 @@ module.exports = {
 
             if (dataAllDistributtor.length > 0) {
                 if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan.jenis === 'Mobil')
+                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.jenisKendaraan.jenis === 'Mobil')
                 } else {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.tarifId.jenis_kendaraan.jenis === 'Motor')
+                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.jenisKendaraan.jenis === 'Motor')
                 }
             }
             dataKendaraanHargaTermurah.sort((a, b) => a.total_ongkir - b.total_ongkir);
@@ -224,8 +224,7 @@ module.exports = {
             const datas = dataKendaraanHargaTermurah[0]
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas
-                // dataDistributtor
+                datas,
             })
 
         } catch (error) {
