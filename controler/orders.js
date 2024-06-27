@@ -1,19 +1,40 @@
 const Orders = require("../models/model-orders")
 const Product = require('../models/model-product')
 const Carts = require('../models/model-cart')
-// const Report = require("../models/model-laporan-penjualan");
 const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
 const VA = require("../models/model-virtual-account")
 const VA_Used = require("../models/model-va-used");
-const Vendor = require('../models/vendor/model-vendor');
+const Transaksi = require("../models/model-transaksi")
 const fetch = require('node-fetch');
-// const Address = require('../models/model-address');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const TokoVendor = require('../models/vendor/model-toko');
-const User = require("../models/model-auth-user")
+const User = require("../models/model-auth-user");
+const Pengiriman = require("../models/model-pengiriman");
 dotenv.config();
+
+const now = new Date();
+now.setHours(0, 0, 0, 0);
+const tomorrow = new Date(now);
+tomorrow.setDate(now.getDate() + 1);
+const today = new Date();
+const dd = String(today.getDate()).padStart(2, '0');
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const yyyy = today.getFullYear();
+
+const hh = String(today.getHours()).padStart(2, '0');
+const mn = String(today.getMinutes()).padStart(2, '0');
+const ss = String(today.getSeconds()).padStart(2, '0');
+const date = `${yyyy}${mm}${dd}`;
+const minutes = `${hh}${mn}${ss}`
+
+const total_transaksi = await Transaksi.estimatedDocumentCount({
+    createdAt: {
+        $gte: now,
+        $lt: tomorrow
+    }
+});
 
 module.exports = {
     getOrderPanel: async (req, res, next) => {
@@ -363,32 +384,26 @@ module.exports = {
         try {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
             if( req.body.status !== 'berhasil') return res.status(400).json({message: "Status yang dikirimkan tidak valid"})
-            const pesanan = await Orders.aggregate([
-                {
-                    $match: { _id: new mongoose.Types.ObjectId(req.body.pesananId)}
-                },
-                {
-                    $lookup:{
-                        from: "products",
-                        foreignField: '_id',
-                        localField: 'productId',
-                        as: "detail_product"
-                    }
-                },
-                {
-                    $unwind: "$detail_product"
-                },
-                {
-                    $addFields: {
-                        'productId' : "$detail_product"
-                    }
-                }
-            ])
+            const pesanan = await Orders.findById(req.body.pesananId).populate('productId')
+            const pengiriman = await Pengiriman.findOne({orderId: pesanan._id})
 
-            if (pesanan.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah data orang lain!" })
-            await Orders.updateOne({_id: pesanan._id}, { status: req.body.status })
             if (!pesanan) return res.status(404).json({ message: `pesanan dengan id: ${req.body.pesananID} tidak ditemukan` })
-
+            if (pesanan.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah data orang lain!" })
+            const user_vendor = await User.findById(pesanan.userId)
+            const user_distributor = await User.findById(pengiriman.distributorId)
+            await Orders.updateOne({_id: pesanan._id}, { status: req.body.status })
+            await Transaksi.create({
+                id_pesanan: pesanan._id,
+                jenis_transaksi: "masuk",
+                status_transaksi: "Pembayaran Berhasil",
+                kode_transaksi: `TRX_${user_vendor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
+            });
+            await Transaksi.create({
+                id_pesanan: pesanan._id,
+                jenis_transaksi: "masuk",
+                status_transaksi: "Pembayaran Berhasil",
+                kode_transaksi: `TRX_${user_distributor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
+            })
             return res.status(200).json({ message: "Berhasil Merubah Status" })
         } catch (err) {
             console.log(err)

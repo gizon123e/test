@@ -97,7 +97,7 @@ module.exports = {
                 id_pesanan: pesanan._id,
                 jenis_transaksi: "keluar",
                 status: "Pembayaran Berhasil",
-                kode_transaksi: `TRX_KNS_OUT_${pesanan.userId}_${date}_${minutes}_${total_transaksi + 1}`
+                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_${pesanan.userId}_${date}_${minutes}_${total_transaksi + 1}`
             })
             console.log('nice')
             return res.status(200).json({message:"Mantap"})
