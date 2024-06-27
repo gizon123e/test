@@ -22,22 +22,30 @@ module.exports = {
 
     createKendaraan: async (req, res, next) => {
         try {
+            const { jenis, description, ukuran } = req.body
             const files = req.files
             const iconAktif = files ? files.icon_aktif : null
             const iconDisable = files ? files.icon_disable : null
+            const iconDistributor = files ? files.icon_distributor : null
 
             const imageIconAktif = `${Date.now()}${path.extname(iconAktif.name)}`;
             const imagePathIconAktif = path.join(__dirname, '../../public/icon-kendaraan', imageIconAktif);
+
+            const imageIconDistributor = `${Date.now()}${path.extname(iconDistributor.name)}`;
+            const imagePathIconDistributor = path.join(__dirname, '../../public/icon-kendaraan', imageIconDistributor);
 
             const imageIconDisable = `${Date.now()}${path.extname(iconDisable.name)}`;
             const imagePathIconDisable = path.join(__dirname, '../../public/icon-kendaraan', imageIconDisable);
 
             await iconAktif.mv(imagePathIconAktif);
             await iconDisable.mv(imagePathIconDisable)
+            await iconDistributor.mv(imagePathIconDistributor)
 
 
             const kendaraan = await JenisKendaraan.create({
-                jenis: req.body.jenis,
+                jenis,
+                description,
+                ukuran,
                 icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
                 icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`
             })
@@ -54,9 +62,11 @@ module.exports = {
 
     updateKendaraan: async (req, res, next) => {
         try {
+            const { jenis, description, ukuran } = req.body
             const files = req.files
             const iconAktif = files ? files.icon_aktif : null
             const iconDisable = files ? files.icon_disable : null
+            const iconDistributor = files ? files.icon_distributor : null
 
             const validateJenisKendaraan = await JenisKendaraan.findOne({ _id: req.params.id })
             if (!validateJenisKendaraan) return res.status(404).json({ message: "data Not Found" })
@@ -94,12 +104,20 @@ module.exports = {
 
             await iconDisable.mv(imagePathIconDisable);
 
+            const imageIconDistributor = `${Date.now()}${path.extname(iconDistributor.name)}`;
+            const imagePathIconDistributor = path.join(__dirname, '../../public/icon-kendaraan', imageIconDistributor);
+
+            await iconDistributor.mv(imagePathIconDistributor);
+
             const kendaraan = await JenisKendaraan.findByIdAndUpdate(
                 { _id: req.params.id },
                 {
-                    jenis: req.body.jenis,
+                    jenis,
+                    description,
+                    ukuran,
                     icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
                     icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`,
+                    icon_distributor: `${process.env.HOST}public/icon-kendaraan/${imageIconDistributor}`
                 },
                 { new: true }
             )

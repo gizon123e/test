@@ -33,7 +33,38 @@ module.exports = {
 
     createPengemudi: async (req, res, next) => {
         try {
+            const { id_distributor, nama, jenisKelamin, no_telepon } = req.body
+            const files = req.files;
+            const file_sim = files ? files.file_sim : null;
+            const profile = files ? files.profile : null;
 
+            const imageNameProfile = `${Date.now()}${path.extname(profile.name)}`;
+            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
+
+            await profile.mv(imagePathProfile);
+
+            const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+
+            await file_sim.mv(imagePath);
+
+            const regexNotelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
+            if (!regexNotelepon.test(no_telepon.toString())) return res.status(400).json({ message: "Nomor telepon tidak valid" });
+
+            const dataPengemudi = await Pengemudi.create({
+                id_distributor,
+                nama,
+                jenisKelamin,
+                tanggalLahir,
+                profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                no_telepon: no_telepon.toString()
+            })
+
+            res.status(201).json({
+                message: "create pengemudi success",
+                data: dataPengemudi
+            })
         } catch (error) {
             console.log(error)
             next(error)

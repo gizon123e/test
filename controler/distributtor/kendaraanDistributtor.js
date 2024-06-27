@@ -352,7 +352,7 @@ module.exports = {
 
     createKendaraandistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId, tahun } = req.body
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId, tahun, no_telepon } = req.body
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
@@ -382,6 +382,10 @@ module.exports = {
             const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
 
             await profile.mv(imagePathProfile);
+
+            const regexNotelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
+            if (!regexNotelepon.test(noTelepon)) return res.status(400).json({ message: "Nomor telepon tidak valid" });
+
 
             // const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
             // if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
