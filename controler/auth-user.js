@@ -142,14 +142,16 @@ module.exports = {
       if(!temporary.phone.isVerified && !temporary.email.isVerified) return res.status(403).json({message: "User belum terverifikasi"});
       const hashedPassword = await bcrypt.hash(password, 10)
       let user
-
-      if(req.headers["User-Agent"] !== "Web"){
+      console.log(req.headers)
+      if(req.headers["from"] !== "Web"){
+        console.log('bukan web masuk sini')
         user = await User.create({ _id: temporary._id, ...temporary._doc, password: hashedPassword});
       }else{
-        user = await User.create({ _id: id, role, password: hashedPassword});
+        console.log('web masuk sini')
+        user = await User.findByIdAndUpdate(id,{ role, password: hashedPassword});
       }
 
-      const newUserWithoutPassword = { ...user._doc };
+      const newUserWithoutPassword = { ...user };
       delete newUserWithoutPassword.password;
       delete newUserWithoutPassword.codeOtp;
       delete newUserWithoutPassword.pin;

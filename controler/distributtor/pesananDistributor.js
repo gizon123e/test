@@ -22,6 +22,7 @@ module.exports = {
             const statusAllowed = ['dikirim', 'berhasil', 'dibatalkan']
             if(!statusAllowed.includes(status)) return res.status(400).json({message: `Status tidak valid`});
             const pengiriman = await Pengiriman.findById(req.params.id)
+            if(!pengiriman) return res.status(404).json({message: `Tidak ada pengiriman dengan id: ${req.params.id}`})
             if(pengiriman.distributorId.toString() !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Pengiriman Orang Lain!"});
             await Pengiriman.updateOne({_id: req.params.id}, {
                 status_pengiriman: status

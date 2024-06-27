@@ -377,35 +377,58 @@ module.exports = {
         try {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
             if( req.body.status !== 'berhasil') return res.status(400).json({message: "Status yang dikirimkan tidak valid"})
-            const pesanan = await Orders.findById(req.body.pesananId)
+            const pesanan = await Orders.findById(req.body.pesananId).lean()
             const pengiriman = await Pengiriman.findOne({orderId: pesanan._id})
-
+            const productIds = []
+            const ships = []
+            pesanan.items.map(item => productIds.push(item.product));
+            pesanan.shipments.map(item => ships.push(item))
             if (!pesanan) return res.status(404).json({ message: `pesanan dengan id: ${req.body.pesananID} tidak ditemukan` })
             if (pesanan.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah data orang lain!" })
             const user_vendor = await User.findById(pesanan.userId)
             const user_distributor = await User.findById(pengiriman.distributorId)
-
             const total_transaksi = await Transaksi.estimatedDocumentCount({
                 createdAt: {
                     $gte: now,
                     $lt: tomorrow
                 }
             });
-            Promise.all([
+            const writeDb = [
                 Orders.updateOne({_id: pesanan._id}, { status: req.body.status }),
-                Transaksi.create({
-                    id_pesanan: pesanan._id,
-                    jenis_transaksi: "masuk",
-                    status_transaksi: "Pembayaran Berhasil",
-                    kode_transaksi: `TRX_${user_vendor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
-                }),
-                Transaksi.create({
-                    id_pesanan: pesanan._id,
-                    jenis_transaksi: "masuk",
-                    status_transaksi: "Pembayaran Berhasil",
-                    kode_transaksi: `TRX_${user_distributor.get('kode_role')}_IN_${date}_${minutes}_${total_transaksi + 1}`
-                })
-            ])
+            ]
+            const finalProduct = productIds.map(item => {
+                return item[0].productId
+            })
+            for (const item of finalProduct) {
+                const product = await Product.findById(item);
+                const user_seller = await User.findById(product.userId);
+                if (user_seller) {
+                    writeDb.push(
+                        Transaksi.create({
+                            id_pesanan: pesanan._id,
+                            jenis_transaksi: "masuk",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_${user_seller.kode_role}_IN_${date}_${minutes}_${total_transaksi + 1}`
+                        })
+                    );
+                }
+            }
+            
+            for (const item of ships) {
+                const user_distributor = await User.findById(item.id_distributor);
+                if (user_distributor) {
+                    writeDb.push(
+                        Transaksi.create({
+                            id_pesanan: pesanan._id,
+                            jenis_transaksi: "masuk",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_${user_distributor.kode_role}_IN_${date}_${minutes}_${total_transaksi + 1}`
+                        })
+                    );
+                }
+            }
+            
+            await Promise.all(writeDb)
             return res.status(200).json({ message: "Berhasil Merubah Status" })
         } catch (err) {
             console.log(err)
