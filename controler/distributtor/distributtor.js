@@ -407,7 +407,7 @@ module.exports = {
             }
 
             const imageName = `${Date.now()}${path.extname(npwp_file.name)}`;
-            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+            const imagePath = path.join(__dirname, '../../public/image-npwp', imageName);
 
             await npwp_file.mv(imagePath);
 
@@ -417,7 +417,7 @@ module.exports = {
                 }
 
                 const imageNameKtp = `${Date.now()}${path.extname(file_ktp.name)}`;
-                const imagePathKtp = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKtp);
+                const imagePathKtp = path.join(__dirname, '../../public/image-ktp', imageNameKtp);
 
                 await file_ktp.mv(imagePathKtp);
 
@@ -426,10 +426,10 @@ module.exports = {
                     npwp,
                     userId,
                     alamat_id: newAddress._id,
-                    file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                    file_npwp: `${process.env.HOST}public/image-npwp/${imageName}`,
                     individu: {
                         nik: nik,
-                        file_ktp: `${process.env.HOST}public/image-profile-distributtor/${imageNameKtp}`,
+                        file_ktp: `${process.env.HOST}public/image-ktp/${imageNameKtp}`,
                     }
                 })
 
@@ -444,7 +444,7 @@ module.exports = {
             }
 
             const imageNameNib = `${Date.now()}${path.extname(fileNib.name)}`;
-            const imagePathNib = path.join(__dirname, '../../public/image-profile-distributtor', imageNameNib);
+            const imagePathNib = path.join(__dirname, '../../public/image-nib', imageNameNib);
 
             await fileNib.mv(imagePathNib);
 
@@ -457,12 +457,12 @@ module.exports = {
                 nama_distributor,
                 userId,
                 alamat_id: newAddress._id,
-                file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                file_npwp: `${process.env.HOST}public/image-npwp/${imageName}`,
                 npwp,
                 perusahaan: {
                     nomorAkta: nomorAkta,
                     noTelepon: parseInt(noTelepon),
-                    fileNib: `${process.env.HOST}public/image-profile-distributtor/${imageNameNib}`
+                    fileNib: `${process.env.HOST}public/image-nib/${imageNameNib}`
                 }
             })
 
@@ -501,8 +501,6 @@ module.exports = {
 
                 await User.updateOne({ _id: req.user.id }, { isActive: true })
 
-                console.log(req.user.id)
-
                 const imageNameProfile = `${Date.now()}${path.extname(imageProfile.name)}`;
                 const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
 
@@ -526,7 +524,7 @@ module.exports = {
             }
 
             const imageName = `${Date.now()}${path.extname(npwp_file.name)}`;
-            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+            const imagePath = path.join(__dirname, '../../public/image-npwp', imageName);
 
             await npwp_file.mv(imagePath);
 
@@ -536,7 +534,7 @@ module.exports = {
                 }
 
                 const imageNameKtp = `${Date.now()}${path.extname(file_ktp.name)}`;
-                const imagePathKtp = path.join(__dirname, '../../public/image-profile-distributtor', imageNameKtp);
+                const imagePathKtp = path.join(__dirname, '../../public/image-ktp', imageNameKtp);
 
                 await file_ktp.mv(imagePathKtp);
 
@@ -545,10 +543,10 @@ module.exports = {
                     npwp,
                     userId,
                     alamat_id,
-                    file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                    file_npwp: `${process.env.HOST}public/image-npwp/${imageName}`,
                     individu: {
                         nik: nik,
-                        file_ktp: `${process.env.HOST}public/image-profile-distributtor/${imageNameKtp}`,
+                        file_ktp: `${process.env.HOST}public/image-ktp/${imageNameKtp}`,
                     }
                 }, { new: true })
 
@@ -563,7 +561,7 @@ module.exports = {
             }
 
             const imageNameNib = `${Date.now()}${path.extname(fileNib.name)}`;
-            const imagePathNib = path.join(__dirname, '../../public/image-profile-distributtor', imageNameNib);
+            const imagePathNib = path.join(__dirname, '../../public/image-nib', imageNameNib);
 
             await fileNib.mv(imagePathNib);
 
@@ -576,13 +574,13 @@ module.exports = {
                 nama_distributor,
                 userId,
                 alamat_id,
-                file_npwp: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                file_npwp: `${process.env.HOST}public/image-npwp/${imageName}`,
                 npwp,
                 perusahaan: {
                     nomorAkta: nomorAkta,
                     noTelepon: parseInt(noTelepon),
                     alamatGudang: alamatGudang,
-                    fileNib: `${process.env.HOST}public/image-profile-distributtor/${imageNameNib}`
+                    fileNib: `${process.env.HOST}public/image-nib/${imageNameNib}`
                 }
             }, { new: true })
 
@@ -610,12 +608,12 @@ module.exports = {
                 return res.status(404).json({ error: `data id ${req.params.id} not found` })
             }
 
-            const nibFilename = path.basename(dataDistributtor.imageDistributtor);
+            // const nibFilename = path.basename(dataDistributtor.imageDistributtor);
 
-            const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
-            if (fs.existsSync(currentNibPath)) {
-                fs.unlinkSync(currentNibPath);
-            }
+            // const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
+            // if (fs.existsSync(currentNibPath)) {
+            //     fs.unlinkSync(currentNibPath);
+            // }
 
             await Distributtor.deleteOne({ _id: req.params.id })
 
