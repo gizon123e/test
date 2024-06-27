@@ -66,6 +66,7 @@ const userModels = new mongoose.Schema(
       type: String,
       enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
       message: "{VALUE} is not supported",
+      required: true
     },
     kode_role: {
       type: String,
@@ -90,6 +91,7 @@ const userModels = new mongoose.Schema(
     },
     poin: {
       type: Number,
+      min: 0,
       default: 0
     },
     saldo: {
