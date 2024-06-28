@@ -5,13 +5,14 @@ const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
 const VA = require("../models/model-virtual-account")
 const VA_Used = require("../models/model-va-used");
-const Transaksi = require("../models/model-transaksi")
+const {Transaksi, Transaksi2} = require("../models/model-transaksi")
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const TokoVendor = require('../models/vendor/model-toko');
 const User = require("../models/model-auth-user");
 const Pengiriman = require("../models/model-pengiriman");
+const Invoice = require("../models/model-invoice");
 dotenv.config();
 
 const now = new Date();
@@ -341,11 +342,18 @@ module.exports = {
                     $lt: tomorrow
                 }
             });
-            await Transaksi.create({
+
+            const kode_transaksi = await Transaksi.create({
                 id_pesanan: dataOrder._id,
                 jenis_transaksi: "keluar",
                 status: "Menunggu Pembayaran",
-                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_${date}_${minutes}_${total_transaksi + 1}`
+                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+            })
+
+            await Invoice.create({
+                id_transaksi: kode_transaksi,
+                userId: req.user.id,
+                kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
             })
 
             return res.status(201).json({ 
@@ -405,8 +413,14 @@ module.exports = {
                             id_pesanan: pesanan._id,
                             jenis_transaksi: "masuk",
                             status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_${user_seller.kode_role}_IN_${date}_${minutes}_${total_transaksi + 1}`
-                        })
+                            kode_transaksi: `TRX_${user_seller.kode_role}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
+                        Transaksi.create({
+                            id_pesanan: pesanan._id,
+                            jenis_transaksi: "keluar",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_SYS_OUT_${user_seller.kode_role}_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
                     );
                 }
             }
@@ -419,11 +433,32 @@ module.exports = {
                             id_pesanan: pesanan._id,
                             jenis_transaksi: "masuk",
                             status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_${user_distributor.kode_role}_IN_${date}_${minutes}_${total_transaksi + 1}`
-                        })
+                            kode_transaksi: `TRX_${user_distributor.kode_role}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
+                        Transaksi.create({
+                            id_pesanan: pesanan._id,
+                            jenis_transaksi: "keluar",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_SYS_OUT_${user_distributor.kode_role}_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
                     );
                 }
             }
+
+            writeDb.push(
+                Transaksi2.create({
+                    jumlah: 20000,
+                    jenis_transaksi: "bagian perusahaan",
+                    status: "Pembayaran Berhasil",
+                    kode_transaksi: `TRX_SYS_OUT_PRH_${date}_${minutes}_${total_transaksi + 1}`
+                }),
+                Transaksi2.create({
+                    jumlah: 20000,
+                    jenis_transaksi: "bagian perusahaan",
+                    status: "Pembayaran Berhasil",
+                    kode_transaksi: `TRX_PRH_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                }),
+            )
             
             await Promise.all(writeDb)
             return res.status(200).json({ message: "Berhasil Merubah Status" })
