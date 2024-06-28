@@ -5,7 +5,7 @@ const Pengiriman = require("../models/model-pengiriman")
 const Pesanan = require('../models/model-orders');
 const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used');
-const Transaksi = require('../models/model-transaksi');
+const {Transaksi} = require('../models/model-transaksi');
 dotenv.config();
 
 module.exports = {
@@ -58,11 +58,13 @@ module.exports = {
                         $inc: { poin: -pesanan.poinTerpakai }
                     });
                 }
-                await DetailPesanan.findByIdAndUpdate(order_id, {
-                    isTerbayarkan: true
-                });
-                
-                await VA_Used.findOneAndDelete({orderId: order_id});
+                const promisesFunct = [
+                    VA_Used.findOneAndDelete({orderId: order_id}),
+                    DetailPesanan.findByIdAndUpdate(order_id, {
+                        isTerbayarkan: true
+                    }),
+                    Transaksi.findOneAndUpdate({id_pesanan: pesanan._id}, { status: "Pembayaran Berhasil"}),
+                ]
                 
                 const total_pengiriman = await Pengiriman.estimatedDocumentCount({
                     createdAt: {
@@ -71,19 +73,39 @@ module.exports = {
                     }
                 });
 
-                await Transaksi.findOneAndUpdate({id_pesanan: pesanan._id}, { status: "Pembayaran Berhasil"})
-
-                for ( const ship of pesanan.shipments ){
-                    //buat kode pengiriman
-                    await Pengiriman.create({
-                        orderId: pesanan._id,
-                        distributorId: ship.id_distributor,
-                        productToDelivers: ship.products,
-                        kode_pengiriman: `PNR_${user.get('kode_role')}_${date}_${minutes}_${total_pengiriman + 1}`,
-                        ...ship
-                    });
-                }
+                const total_transaksi = await Transaksi.estimatedDocumentCount({
+                    createdAt: {
+                        $gte: now,
+                        $lt: tomorrow
+                    }
+                });
                 
+
+                for(let i = 0; i < pesanan.shipments.length; i++){
+                    promisesFunct.push(
+                        Pengiriman.create({
+                            orderId: pesanan._id,
+                            distributorId: pesanan.shipments[i].id_distributor,
+                            productToDelivers: pesanan.shipments[i].products,
+                            waktu_pengiriman: new Date(pesanan.items[i].deadline),
+                            total_ongkir: pesanan.shipments[i].total_ongkir,
+                            ongkir: pesanan.shipments[i].ongkir,
+                            potongan_ongkir: pesanan.shipments[i].potongan_ongkir,
+                            kode_pengiriman: `PNR_${user.get('kode_role')}_${date}_${minutes}_${total_pengiriman + 1}`,
+                        })
+                    );
+                };
+
+                promisesFunct.push(
+                    Transaksi.create({
+                        id_pesanan: pesanan._id,
+                        jenis_transaksi: "masuk",
+                        status: "Pembayaran Berhasil",
+                        kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                    })
+                )
+
+                await Promise.all(promisesFunct)
             }else if(transaction_status === "cancel"){
                 await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Dibatalkan"

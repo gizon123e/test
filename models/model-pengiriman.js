@@ -7,7 +7,7 @@ const modelPengiriman = new mongoose.Schema({
     },
     distributorId:{
         type: mongoose.Types.ObjectId,
-        ref: "Distributtor"
+        ref: "User "
     },
     waktu_pengiriman:{
         type: String
