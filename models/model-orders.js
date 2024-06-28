@@ -17,6 +17,7 @@ const modelOrder = new mongoose.Schema({
                 min: 1,
                 default: 1
             },
+            varian:[String],
             note: {
                 type: String,
                 default: null
