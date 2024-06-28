@@ -124,7 +124,7 @@ module.exports = {
 
       if(!isVerified) await sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
 
-      return res.status(200).json({message: "Email Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint, isVerified});
+      return res.status(200).json({message: "Phone Verifikasi Sudah dikirim", id: newTemporary._id, checkPoint, isVerified});
 
     } catch (error) {
       console.log(error);
@@ -134,24 +134,25 @@ module.exports = {
 
   register: async (req, res, next) => {
     try {
+      console.log(req.body)
       const { id, password, role } = req.body;
       if(!id) return res.status(400).json({message: "Tidak ada id yang dikirim"});
       if(!password) return res.status(400).json({message: "Tidak ada password yang dikirim"});
-      const temporary = await TemporaryUser.findById(id);
+      const temporary = await TemporaryUser.findById(id).lean();
+      console.log(temporary)
       if(!temporary) return res.status(404).json({message: "Tidak ada user dengan id " + id});
       if(!temporary.phone.isVerified && !temporary.email.isVerified) return res.status(403).json({message: "User belum terverifikasi"});
       const hashedPassword = await bcrypt.hash(password, 10)
       let user
-      console.log(req.headers)
       if(req.headers["from"] !== "Web"){
         console.log('bukan web masuk sini')
         user = await User.create({ _id: temporary._id, ...temporary._doc, password: hashedPassword});
       }else{
         console.log('web masuk sini')
-        user = await User.findByIdAndUpdate(id,{ role, password: hashedPassword});
+        user = await User.create({ _id: temporary._id, role, password: hashedPassword, ...temporary});
       }
 
-      const newUserWithoutPassword = { ...user };
+      const newUserWithoutPassword = { ...user._doc };
       delete newUserWithoutPassword.password;
       delete newUserWithoutPassword.codeOtp;
       delete newUserWithoutPassword.pin;

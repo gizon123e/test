@@ -345,7 +345,7 @@ module.exports = {
                 id_pesanan: dataOrder._id,
                 jenis_transaksi: "keluar",
                 status: "Menunggu Pembayaran",
-                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_${dataOrder.userId}_${date}_${minutes}_${total_transaksi + 1}`
+                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_${date}_${minutes}_${total_transaksi + 1}`
             })
 
             return res.status(201).json({ 
