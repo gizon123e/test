@@ -1,4 +1,5 @@
 const Pengemudi = require('../../models/distributor/model-pengemudi')
+const path = require('path')
 
 module.exports = {
     getPengemudiList: async (req, res, next) => {
@@ -33,7 +34,7 @@ module.exports = {
 
     createPengemudi: async (req, res, next) => {
         try {
-            const { id_distributor, nama, jenisKelamin, no_telepon } = req.body
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, no_telepon } = req.body
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
             const profile = files ? files.profile : null;
@@ -67,7 +68,8 @@ module.exports = {
                 profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                 no_telepon: no_telepon.toString(),
-                fileKTP: `${process.env.HOST}public/image-ktp/${imageNameProfile}`
+                fileKTP: `${process.env.HOST}public/image-ktp/${imageNameProfile}`,
+                tanggalLahir
             })
 
             res.status(201).json({
