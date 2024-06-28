@@ -454,7 +454,7 @@ module.exports = {
                     nomorPolisi,
                     warna,
                     typeKendaraan,
-                    tarifId,
+                    tarifId: idTarif,
                     fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                     STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
                     tahun
