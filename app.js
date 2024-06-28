@@ -58,6 +58,7 @@ app.use('/api/merk-kendaraan', require('./routes/router-distributtor/router-merk
 app.use('/api/gudang-distributor', require('./routes/router-distributtor/router-gudang-distributor'))
 app.use('/api/pengemudi', require('./routes/router-distributtor/router-pengemudi'))
 app.use('/api/jasa-distributor', require('./routes/router-distributtor/router-jenisJasaDistributor'))
+app.use('/api/type-kendaraan', require('./routes/router-distributtor/router-typeKendaraan'))
 
 app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));

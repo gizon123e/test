@@ -1,4 +1,5 @@
 const Pengemudi = require('../../models/distributor/model-pengemudi')
+const path = require('path')
 
 module.exports = {
     getPengemudiList: async (req, res, next) => {
@@ -33,10 +34,18 @@ module.exports = {
 
     createPengemudi: async (req, res, next) => {
         try {
-            const { id_distributor, nama, jenisKelamin, no_telepon } = req.body
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, no_telepon } = req.body
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
             const profile = files ? files.profile : null;
+            const fileKTP = files ? files.fileKTP : null;
+
+            if (!fileKTP || !profile || !file_sim) return res.status(400).json({ message: "file KTP / file Profile / file SIM gagal di masukan filenya" })
+
+            const imageNameKTP = `${Date.now()}${path.extname(fileKTP.name)}`;
+            const imagePathKTP = path.join(__dirname, '../../public/image-ktp', imageNameKTP);
+
+            await fileKTP.mv(imagePathKTP);
 
             const imageNameProfile = `${Date.now()}${path.extname(profile.name)}`;
             const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
@@ -58,7 +67,9 @@ module.exports = {
                 tanggalLahir,
                 profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
-                no_telepon: no_telepon.toString()
+                no_telepon: no_telepon.toString(),
+                fileKTP: `${process.env.HOST}public/image-ktp/${imageNameProfile}`,
+                tanggalLahir
             })
 
             res.status(201).json({

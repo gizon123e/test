@@ -3,7 +3,14 @@ const MerkKendaraan = require('../../models/distributor/model-merkKendaraan')
 module.exports = {
     allKendaraan: async (req, res, next) => {
         try {
-            const kendaraan = await MerkKendaraan.find()
+            const { jenisId } = req.query;
+            let query = {};
+
+            if (jenisId) {
+                query = { jenis: jenisId };
+            }
+
+            const kendaraan = await MerkKendaraan.find(query).populate('jenis')
             if (!kendaraan) return res.status.json({ message: "data jenis kendaraan masi kosong" })
 
             res.status(200).json({
@@ -18,7 +25,11 @@ module.exports = {
 
     createKendaraan: async (req, res, next) => {
         try {
-            const { jenis, merk } = req.body
+            const { jenis, merk } = req.body;
+
+            if (!Array.isArray(jenis) || !jenis.length) {
+                return res.status(400).json({ message: "jenis must be a non-empty array" });
+            }
             const kendaraan = await MerkKendaraan.create({ jenis, merk })
 
             res.status(200).json({
@@ -33,7 +44,14 @@ module.exports = {
 
     updateKendaraan: async (req, res, next) => {
         try {
-            const kendaraan = await MerkKendaraan.findByIdAndUpdate({ _id: req.params.id }, { merk: req.body.merk }, { new: true })
+            const { jenis, merk } = req.body;
+
+            let updateData = { merk };
+            if (Array.isArray(jenis) && jenis.length) {
+                updateData.jenis = jenis;
+            }
+
+            const kendaraan = await MerkKendaraan.findByIdAndUpdate({ _id: req.params.id }, updateData, { new: true })
             if (!kendaraan) return res.status(404).json({ message: "data Not Found" })
 
             res.status(200).json({

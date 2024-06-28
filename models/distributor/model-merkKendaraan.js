@@ -5,11 +5,11 @@ const modelMerkKendaraan = mongoose.Schema({
         type: String,
         required: [true, 'merk harus di isi']
     },
-    jenis: {
+    jenis: [{
         type: mongoose.Types.ObjectId,
         required: [true, 'jenis harus di isi'],
         ref: "JenisKendaraan"
-    }
+    }]
 })
 
 const MerkKendaraan = mongoose.model("MerkKendaraan", modelMerkKendaraan)
