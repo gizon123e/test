@@ -13,11 +13,7 @@ module.exports = {
                 }
             }
 
-            const data = await TypeKendaraan.find(query).populate("jenisKendaraan")
-                .populate({
-                    path: "merk_kendaraan",
-                    populate: "jenis"
-                })
+            const data = await TypeKendaraan.find(query).populate("jenisKendaraan").populate("merk_kendaraan")
 
             res.status(200).json({
                 message: "get All data success",
