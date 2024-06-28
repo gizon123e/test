@@ -13,7 +13,7 @@ module.exports = {
                 }
             }
 
-            const data = await TypeKendaraan.find(query).populate("jenisKendaraan").populate("merk")
+            const data = await TypeKendaraan.find(query).populate("jenisKendaraan").populate("merkKendaraan")
 
             res.status(200).json({
                 message: "get All data success",
@@ -29,7 +29,7 @@ module.exports = {
         try {
             const { nama, jenisKendaraan, merk } = req.body
 
-            const data = await TypeKendaraan.create({ nama, jenisKendaraan, merk })
+            const data = await TypeKendaraan.create({ nama, jenisKendaraan, merkKendaraan: merk })
 
             res.status(201).json({
                 message: "create data success",
@@ -48,7 +48,7 @@ module.exports = {
             const validate = await TypeKendaraan.findOne({ _id: req.params.id })
             if (!validate) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await TypeKendaraan.findByIdAndUpdate({ _id: req.params.id }, { nama, jenisKendaraan, merk }, { new: true })
+            const data = await TypeKendaraan.findByIdAndUpdate({ _id: req.params.id }, { nama, jenisKendaraan, merkKendaraan: merk }, { new: true })
 
             res.status(201).json({
                 message: "update data success",
