@@ -10,7 +10,7 @@ const modelTypeKendaraan = new mongoose.Schema({
         required: [true, "jenis kendaraan harus di isi"],
         ref: "JenisKendaraan"
     },
-    merk: {
+    merk_kendaraan: {
         type: mongoose.Types.ObjectId,
         required: [true, "merk harus di isi"],
         ref: "MerkKendaraan"
