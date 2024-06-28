@@ -428,6 +428,8 @@ module.exports = {
             const fotoKendaraan = files ? files.fotoKendaraan : null;
             const fileSTNK = files ? files.fileSTNK : null;
 
+            if (!fileSTNK || !fotoKendaraan) return res.status(400).json({ message: "unggah file gagal" })
+
             const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
             const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
 
@@ -438,22 +440,32 @@ module.exports = {
 
             await fotoKendaraan.mv(imagePathProfile);
 
-            const data = await KendaraanDistributor.create({
-                id_distributor,
-                jenisKendaraan,
-                merekKendaraan,
-                nomorPolisi,
-                warna,
-                typeKendaraan,
-                tarifId,
-                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
-                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
-                tahun
-            })
+            const dataTarifidArray = tarifId.split('/');
+            const dataCreateKendaraan = []
+
+            for (let idTarif of dataTarifidArray) {
+                const validateTarifId = await Tarif.findOne({ _id: idTarif })
+                if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+
+                const data = await KendaraanDistributor.create({
+                    id_distributor,
+                    jenisKendaraan,
+                    merekKendaraan,
+                    nomorPolisi,
+                    warna,
+                    typeKendaraan,
+                    tarifId,
+                    fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                    STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
+                    tahun
+                })
+
+                dataCreateKendaraan.push(data)
+            }
 
             res.status(201).json({
                 message: "create data success",
-                data
+                data: dataCreateKendaraan
             })
         } catch (error) {
             console.error("Error creating document:", error);
