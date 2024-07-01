@@ -247,36 +247,36 @@ module.exports = {
             }
 
             if (req.user.role === 'konsumen') {
-                const validateCart = await Carts.findOne({ productId, userId: req.user.id }).populate('userId')
+                // const validateCart = await Carts.findOne({ productId, userId: req.user.id }).populate('userId')
 
-                if (validateCart) {
+                // if (validateCart) {
                     
-                    const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
+                //     const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
 
-                    const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
-                        {
-                            quantity: plusQuantity,
-                            total_price: parseInt(product.total_price) * plusQuantity
-                        }, { new: true })
+                //     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
+                //         {
+                //             quantity: plusQuantity,
+                //             total_price: parseInt(product.total_price) * plusQuantity
+                //         }, { new: true })
 
-                    return res.status(201).json({
-                        message: 'create data suceess',
-                        datas: updateCart
-                    })
-                } else {
-                    const dataCarts = await Carts.create({ 
-                        productId, 
-                        quantity, 
-                        total_price: parseInt(product.total_price) * quantity, 
-                        userId: req.user.id,
-                        varian: req.body.varian
-                    })
+                //     return res.status(201).json({
+                //         message: 'create data suceess',
+                //         datas: updateCart
+                //     })
+                // } else {
+                // }
+                const dataCarts = await Carts.create({ 
+                    productId, 
+                    quantity, 
+                    total_price: parseInt(product.total_price) * quantity, 
+                    userId: req.user.id,
+                    varian: req.body.varian
+                })
 
-                    return res.status(201).json({
-                        message: 'create data cart success',
-                        datas: dataCarts
-                    })
-                }
+                return res.status(201).json({
+                    message: 'create data cart success',
+                    datas: dataCarts
+                })
             } else {
                 return res.status(400).json({
                     message: "kamu tidak boleh create yang hanya boleh role nya konsumen"
