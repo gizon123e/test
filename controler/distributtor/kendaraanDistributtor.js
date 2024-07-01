@@ -154,6 +154,15 @@ module.exports = {
             let data = []
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id })
                 .populate({
+                    path: "id_distributor",
+                    populate: "alamat_id"
+                })
+                .populate('merekKendaraan')
+                .populate("jenisKendaraan")
+                .lean()
+
+            const dataLayanan = await LayananKendaraanDistributor.find({ id_distributor: req.params.id })
+                .populate({
                     path: "tarifId",
                     populate: "jenis_kendaraan",
                     populate: "jenis_jasa"
@@ -162,13 +171,12 @@ module.exports = {
                     path: "id_distributor",
                     populate: "alamat_id"
                 })
-                .populate('merekKendaraan')
                 .populate("jenisKendaraan")
                 .lean()
 
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
-            let filteredDataKendaraan = dataKendaraan;
+            let filteredDataKendaraan = dataLayanan;
             // if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
             //     filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Mobil');
             // } else {
@@ -316,6 +324,7 @@ module.exports = {
             res.status(200).json({
                 message: "get data success",
                 data
+                // dataLayanan
             })
         } catch (error) {
             console.error("Error creating document:", error);
