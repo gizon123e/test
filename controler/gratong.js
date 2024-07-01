@@ -68,7 +68,23 @@ module.exports = {
                     }
                 },
                 {
-                    $project: { detail_tarif: 0, kendaraan: 0 }
+                    $lookup: {
+                        from: 'jenisjasadistributors',
+                        localField: 'tarif.jenis_jasa',
+                        foreignField: "_id",
+                        as: "detail_jenis_jasa"
+                    }
+                },
+                {
+                    $unwind: "$detail_jenis_jasa"
+                },
+                {
+                    $addFields:{
+                        'tarif.jenis_jasa': '$detail_jenis_jasa'
+                    }
+                },
+                {
+                    $project: { detail_tarif: 0, kendaraan: 0, detail_jenis_jasa: 0 }
                 },
             ])
             // const gratongs = await Gratong.find().populate({
