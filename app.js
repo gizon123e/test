@@ -86,7 +86,7 @@ app.listen(4000, () => {
   // flash_sale_checker.start()
   checker_order()
   console.log("connection express success");
-  websocket.listen(5000, () => {
-    console.log("Connection websocket success");
-  });
+  // websocket.listen(5000, () => {
+  //   console.log("Connection websocket success");
+  // });
 });

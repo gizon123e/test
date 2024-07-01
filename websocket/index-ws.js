@@ -21,7 +21,8 @@ io.use((socket, next) => {
 const userConnected = [];
 
 io.on("connection", (socket) => {
-  socket.emit("hello", `Halo Selamat Datang, ${socket.user.name}`);
+  socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
+  console.log(socket.user.email.content)
 
   userConnected.push(socket.user);
 
