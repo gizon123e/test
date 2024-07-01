@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload');
 const path = require('path');
+const websocket = require("./websocket/index-ws");
 // const session = require("express-session");
 const app = express();
 
@@ -85,5 +86,7 @@ app.listen(4000, () => {
   // flash_sale_checker.start()
   checker_order()
   console.log("connection express success");
-  require("./websocket/index-ws");
+  websocket.listen(5000, () => {
+    console.log("Connection websocket success");
+  });
 });

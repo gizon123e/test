@@ -2,7 +2,7 @@ const { Server } = require("socket.io");
 const Conversation = require("../models/model-conversation");
 const jwt = require("../utils/jwt");
 
-const io = new Server( 5000, {
+const io = new Server({
   path: "/websocket/",
   cors: {
     origin: "*",
