@@ -6,14 +6,16 @@ const modelCarts = new mongoose.Schema({
         required: [true, "productId harus di isi"],
         ref: 'Product'
     },
-    varian:{
-        nama_varian: {
-            type: String
-        },
-        nilai_varian:{
-            type: String
+    varian:[
+        {
+            nama_varian: {
+                type: String
+            },
+            nilai_varian:{
+                type: String
+            }
         }
-    },
+    ],
     quantity: {
         type: Number,
         min: [1, 'minimal quantity adalah 1'],

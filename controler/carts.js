@@ -221,22 +221,29 @@ module.exports = {
                 })
             }
 
-            if(varian && product.varian === null) return res.status(400).json({message: `Product ${product.name_product} tidak memiliki varian`})
+            if(varian && product.varian === null) return res.status(400).json({message: `Product ${product.name_product} tidak memiliki varian`});
 
-            if(product.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"})
+            if(product.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"});
             
             if(product.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
 
+            if(!Array.isArray(varian))return res.status(400).json({message: "Varian yang dikirimkan bukan array"});
+            
             if (varian) {
                 const nama_varians = product.varian.map(item => item.nama_varian.toLowerCase());
-                const nilai_varians = product.varian.flatMap(item => item.nilai_varian.map(nilai => nilai.toLowerCase()));
-        
-                if (!nama_varians.includes(varian.nama_varian.toLowerCase()) || !nilai_varians.includes(varian.nilai_varian.toLowerCase())) {
-                    return res.status(400).json({
-                        error: true,
-                        message: `Invalid variant for product ${product.name_product}`
-                    });
-                }
+                const nilai_varians = product.varian.flatMap(item => item.nilai_varian.map(nilai => nilai.nama.toLowerCase()));
+
+
+                varian.forEach( item => {
+
+                    if (!nama_varians.includes(item.nama_varian.toLowerCase()) || !nilai_varians.includes(item.nilai_varian.toLowerCase())) {
+                        return res.status(400).json({
+                            error: true,
+                            message: `Invalid variant for product ${product.name_product}`
+                        });
+                    };
+                })
+                
             }
 
             if (req.user.role === 'konsumen') {
@@ -249,7 +256,7 @@ module.exports = {
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
                         {
                             quantity: plusQuantity,
-                            total_price: parseInt(vaildateProduct.total_price) * plusQuantity
+                            total_price: parseInt(product.total_price) * plusQuantity
                         }, { new: true })
 
                     return res.status(201).json({
@@ -260,8 +267,9 @@ module.exports = {
                     const dataCarts = await Carts.create({ 
                         productId, 
                         quantity, 
-                        total_price: parseInt(vaildateProduct.total_price) * quantity, 
-                        userId: req.user.id 
+                        total_price: parseInt(product.total_price) * quantity, 
+                        userId: req.user.id,
+                        varian: req.body.varian
                     })
 
                     return res.status(201).json({
