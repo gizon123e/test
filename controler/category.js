@@ -58,7 +58,15 @@ module.exports = {
                     }
                     break;
             }
-            return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data });
+            function firstIndex(array){
+                const index = array.findIndex( item => item.name === 'makanan & minuman')
+                if(index > -1){
+                    const [item] = array.splice(index, 1)
+                    array.unshift(item)
+                }
+                return array;
+            }
+            return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data: firstIndex(data) });
         } catch (error) {
             console.log(error);
             next(error);
