@@ -36,11 +36,6 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Warna kendaraan harus diisi']
     },
-    tarifId: {
-        type: mongoose.Types.ObjectId,
-        required: [true, 'tarifId harus di isi'],
-        ref: "Tarif"
-    },
     is_Active: {
         type: Boolean,
         required: [true, 'is_Active pengemudi harus diisi'],
@@ -55,7 +50,7 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         type: String,
         required: false,
         default: null
-    },
+    }
 
 }, { timestamps: true });
 

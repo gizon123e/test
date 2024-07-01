@@ -28,6 +28,8 @@ module.exports = {
             const iconDisable = files ? files.icon_disable : null
             const iconDistributor = files ? files.icon_distributor : null
 
+            if (!iconAktif || !iconDisable || !iconDistributor) return res.status(400).json({ message: "isi file data error" })
+
             const imageIconAktif = `${Date.now()}${path.extname(iconAktif.name)}`;
             const imagePathIconAktif = path.join(__dirname, '../../public/icon-kendaraan', imageIconAktif);
 
@@ -46,7 +48,8 @@ module.exports = {
                 description,
                 ukuran,
                 icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
-                icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`
+                icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`,
+                icon_distributor: `${process.env.HOST}public/icon-kendaraan/${imageIconDistributor}`
             })
 
             res.status(200).json({
