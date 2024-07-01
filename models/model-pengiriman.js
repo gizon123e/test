@@ -27,7 +27,7 @@ const modelPengiriman = new mongoose.Schema({
     },
     kendaraanId:{
         type: mongoose.Types.ObjectId,
-        ref: "KendaraanDistributor"
+        ref: "JenisKendaraan"
     },
     productToDelivers:[{
         productId: {

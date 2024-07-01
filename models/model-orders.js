@@ -121,7 +121,7 @@ const modelOrder = new mongoose.Schema({
             waktu_pengiriman: {
                 type: Date
             },
-            kendaraanId:{
+            id_jenis_kendaraan:{
                 type: mongoose.Types.ObjectId
             }
         }
