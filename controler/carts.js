@@ -210,21 +210,34 @@ module.exports = {
 
     createCarts: async (req, res, next) => {
         try {
-            const { productId, quantity } = req.body
+            const { productId, quantity, varian } = req.body
 
-            const vaildateProduct = await Product.findById(productId).populate('userId');
+            const product = await Product.findById(productId).populate('userId');
             
-            if (!vaildateProduct) {
+            if (!product) {
                 return res.status(404).json({
                     error: true,
                     message: 'product id not found'
                 })
             }
 
-            if(vaildateProduct.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"})
-            
-            if(vaildateProduct.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
+            if(varian && product.varian === null) return res.status(400).json({message: `Product ${product.name_product} tidak memiliki varian`})
 
+            if(product.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"})
+            
+            if(product.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
+
+            if (varian) {
+                const nama_varians = product.varian.map(item => item.nama_varian.toLowerCase());
+                const nilai_varians = product.varian.flatMap(item => item.nilai_varian.map(nilai => nilai.toLowerCase()));
+        
+                if (!nama_varians.includes(varian.nama_varian.toLowerCase()) || !nilai_varians.includes(varian.nilai_varian.toLowerCase())) {
+                    return res.status(400).json({
+                        error: true,
+                        message: `Invalid variant for product ${product.name_product}`
+                    });
+                }
+            }
 
             if (req.user.role === 'konsumen') {
                 const validateCart = await Carts.findOne({ productId, userId: req.user.id }).populate('userId')
