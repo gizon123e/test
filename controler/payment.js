@@ -6,6 +6,7 @@ const Pesanan = require('../models/model-orders');
 const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used');
 const {Transaksi} = require('../models/model-transaksi');
+const Invoice = require('../models/model-invoice');
 dotenv.config();
 
 module.exports = {
@@ -58,12 +59,13 @@ module.exports = {
                         $inc: { poin: -pesanan.poinTerpakai }
                     });
                 }
+                const transaksi =  await Transaksi.findOneAndUpdate({id_pesanan: pesanan._id}, { status: "Pembayaran Berhasil"})
                 const promisesFunct = [
                     VA_Used.findOneAndDelete({orderId: order_id}),
                     DetailPesanan.findByIdAndUpdate(order_id, {
                         isTerbayarkan: true
                     }),
-                    Transaksi.findOneAndUpdate({id_pesanan: pesanan._id}, { status: "Pembayaran Berhasil"}),
+                    Invoice.updateOne({id_transaksi: transaksi._id}, { status: "Lunas"})
                 ]
                 
                 const total_pengiriman = await Pengiriman.estimatedDocumentCount({

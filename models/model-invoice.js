@@ -11,6 +11,11 @@ const modelInvoice = mongoose.Schema({
     },
     kode_invoice:{
         type: String
+    },
+    status:{
+        type: String,
+        enum: ["Belum Lunas", "Lunas"],
+        message: `{VALUE} is not supported`
     }
 });
 

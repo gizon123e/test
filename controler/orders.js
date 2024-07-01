@@ -353,6 +353,7 @@ module.exports = {
             await Invoice.create({
                 id_transaksi: kode_transaksi,
                 userId: req.user.id,
+                status: "Belum Lunas",
                 kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
             })
 

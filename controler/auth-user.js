@@ -139,14 +139,13 @@ module.exports = {
       if(!id) return res.status(400).json({message: "Tidak ada id yang dikirim"});
       if(!password) return res.status(400).json({message: "Tidak ada password yang dikirim"});
       const temporary = await TemporaryUser.findById(id).lean();
-      console.log(temporary)
       if(!temporary) return res.status(404).json({message: "Tidak ada user dengan id " + id});
       if(!temporary.phone.isVerified && !temporary.email.isVerified) return res.status(403).json({message: "User belum terverifikasi"});
       const hashedPassword = await bcrypt.hash(password, 10)
       let user
       if(req.headers["from"] !== "Web"){
         console.log('bukan web masuk sini')
-        user = await User.create({ _id: temporary._id, ...temporary._doc, password: hashedPassword});
+        user = await User.create({ _id: temporary._id, ...temporary, password: hashedPassword});
       }else{
         console.log('web masuk sini')
         user = await User.create({ _id: temporary._id, role, password: hashedPassword, ...temporary});
