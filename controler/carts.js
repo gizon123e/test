@@ -36,7 +36,7 @@ module.exports = {
                     arrayProduct: []
                   };
                 }
-                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity, cartId: getCart._id});
+                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity, cartId: getCart._id, varian: getCart.varian.length > 0? getCart.varian : null});
             };
             const finalData = []
             const keys = Object.keys(storeMap)
