@@ -67,7 +67,7 @@ module.exports = {
         try {
             let dataOrders;
             if (req.user.role === 'konsumen') {
-                const dataOrders = await Orders.aggregate([
+                dataOrders = await Orders.aggregate([
                     { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
                     { $project: { items: 1, status: 1 }},
                     { $project: { detail_pesanan: 0 }},
@@ -146,7 +146,6 @@ module.exports = {
                     data.push({ order, namaToko });
                 });
                 await Promise.all(promises);
-                return res.status(200).json({ message: 'get data all Order success', data })
 
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
@@ -172,7 +171,6 @@ module.exports = {
                     return order.product.some(item => item.productId.userId._id.toString() === req.user.id);
                 });
             }
-
             if (!dataOrders || dataOrders.length < 1) {
                 return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
             }
