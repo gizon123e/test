@@ -115,15 +115,8 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    // const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan")
-                    // .populate("merekKendaraan")
-                    // .populate({
-                    //     path: "tarifId",
-                    //     populate: "jenis_kendaraan",
-                    //     populate: "jenis_jasa"
-                    // })
+
                     const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan")
-                        // .populate("merekKendaraan")
                         .populate({
                             path: "tarifId",
                             populate: "jenis_kendaraan",
@@ -227,12 +220,12 @@ module.exports = {
                     dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.jenisKendaraan.jenis === 'Motor')
                 }
             }
-            dataKendaraanHargaTermurah.sort((a, b) => a.total_ongkir - b.total_ongkir);
 
             const datas = dataKendaraanHargaTermurah[0]
+
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas,
+                datas
             })
 
         } catch (error) {
@@ -309,8 +302,7 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    // console.log(distributor)
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id })
+                    const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id })
                         .populate({
                             path: "tarifId",
                             populate: "jenis_kendaraan"
@@ -319,14 +311,16 @@ module.exports = {
                             path: "id_distributor",
                             populate: "alamat_id"
                         })
-                        .populate('merekKendaraan')
                         .populate("jenisKendaraan")
                         .lean()
+
+                    console.log(dataKendaraan)
+
                     let filteredDataKendaraan = dataKendaraan
                     if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
-                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Mobil');
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis === 'Mobil');
                     } else {
-                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Motor');
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis === 'Motor');
                     }
 
                     if (filteredDataKendaraan.length > 0) {
