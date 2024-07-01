@@ -9,6 +9,8 @@ const Distributtor = require('../../models/distributor/model-distributor')
 const Tarif = require('../../models/model-tarif')
 const BiayaTetap = require('../../models/model-biaya-tetap')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
+const JenisKendaraan = require("../../models/distributor/jenisKendaraan")
+const LayananKendaraanDistributor = require('../../models/distributor/layananKendaraanDistributor')
 
 const path = require('path')
 const fs = require('fs')
@@ -32,7 +34,7 @@ module.exports = {
                     data
                 })
             }
-            console.log(req.user.role)
+
             const userId = req.user.id;
 
             const distributors = await Distributtor.find({ userId: userId });
@@ -152,6 +154,15 @@ module.exports = {
             let data = []
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id })
                 .populate({
+                    path: "id_distributor",
+                    populate: "alamat_id"
+                })
+                .populate('merekKendaraan')
+                .populate("jenisKendaraan")
+                .lean()
+
+            const dataLayanan = await LayananKendaraanDistributor.find({ id_distributor: req.params.id })
+                .populate({
                     path: "tarifId",
                     populate: "jenis_kendaraan",
                     populate: "jenis_jasa"
@@ -160,13 +171,12 @@ module.exports = {
                     path: "id_distributor",
                     populate: "alamat_id"
                 })
-                .populate('merekKendaraan')
                 .populate("jenisKendaraan")
                 .lean()
 
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
-            let filteredDataKendaraan = dataKendaraan;
+            let filteredDataKendaraan = dataLayanan;
             // if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
             //     filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Mobil');
             // } else {
@@ -314,6 +324,7 @@ module.exports = {
             res.status(200).json({
                 message: "get data success",
                 data
+                // dataLayanan
             })
         } catch (error) {
             console.error("Error creating document:", error);
@@ -341,6 +352,11 @@ module.exports = {
             if (!fotoKendaraan) return res.status(400).json({ message: "file Foto Kendaraan gagal di unggah" })
             if (!fileSTNK) return res.status(400).json({ message: "file STNK gagal di unggah" })
 
+            const validateJenisKendaraan = await JenisKendaraan.findOne({ _id: jenisKendaraan })
+
+            const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor, jenisKendaraan: jenisKendaraan }).populate("jenisKendaraan")
+            if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
+
             const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
@@ -364,11 +380,35 @@ module.exports = {
             const regexNotelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
             if (!regexNotelepon.test(no_telepon.toString())) return res.status(400).json({ message: "Nomor telepon tidak valid" });
 
-            // const dataKendaraan = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
-            // if (dataKendaraan) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: dataKendaraan })
+            const dataCreateKendaraan = []
+            const validateLayananKendaraan = await LayananKendaraanDistributor.findOne({ jenisKendaraan: jenisKendaraan }).populate("jenisKendaraan")
 
-            // const validatePengemudi = await KendaraanDistributor.findOne({ id_distributor: id_distributor })
-            // if (validatePengemudi) return res.status(400).json({ message: "kamu sudah memiliki kendaraaan", data: validatePengemudi })
+            const dataTarifidArray = tarifId.split('/');
+            if (!validateLayananKendaraan) {
+                for (let idTarif of dataTarifidArray) {
+                    const validateTarifId = await Tarif.findOne({ _id: idTarif })
+                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+                    const createLayanaKendaraan = await LayananKendaraanDistributor.create({
+                        id_distributor,
+                        jenisKendaraan,
+                        tarifId: idTarif,
+                    })
+
+                    dataCreateKendaraan.push(createLayanaKendaraan)
+                }
+            } else if (validateJenisKendaraan.jenis !== validateLayananKendaraan.jenisKendaraan.jenis) {
+                for (let idTarif of dataTarifidArray) {
+                    const validateTarifId = await Tarif.findOne({ _id: idTarif })
+                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+                    const createLayanaKendaraan = await LayananKendaraanDistributor.create({
+                        id_distributor,
+                        jenisKendaraan,
+                        tarifId: idTarif,
+                    })
+
+                    dataCreateKendaraan.push(createLayanaKendaraan)
+                }
+            }
 
             const dataPengemudi = await Pengemudi.create({
                 id_distributor,
@@ -380,32 +420,22 @@ module.exports = {
                 no_telepon: no_telepon.toString()
             })
 
-            const dataTarifidArray = tarifId.split('/');
-            const dataCreateKendaraan = []
-
-            for (let idTarif of dataTarifidArray) {
-                const validateTarifId = await Tarif.findOne({ _id: idTarif })
-                if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
-
-                const data = await KendaraanDistributor.create({
-                    id_distributor,
-                    jenisKendaraan,
-                    merekKendaraan,
-                    nomorPolisi,
-                    warna,
-                    typeKendaraan,
-                    tarifId: idTarif,
-                    fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                    STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                    tahun
-                })
-
-                dataCreateKendaraan.push(data)
-            }
+            const data = await KendaraanDistributor.create({
+                id_distributor,
+                jenisKendaraan,
+                merekKendaraan,
+                nomorPolisi,
+                warna,
+                typeKendaraan,
+                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                tahun
+            })
 
             res.status(201).json({
                 message: "create data success",
-                data: dataCreateKendaraan,
+                dataKendaraan: data,
+                dataLayanan: dataCreateKendaraan,
                 dataPengemudi
             })
         } catch (error) {
@@ -428,6 +458,9 @@ module.exports = {
             const fotoKendaraan = files ? files.fotoKendaraan : null;
             const fileSTNK = files ? files.fileSTNK : null;
 
+            const validateLayananKendaraan = await LayananKendaraanDistributor.findOne({ id_distributor: id_distributor, jenisKendaraan: jenisKendaraan }).populate("jenisKendaraan")
+            const validateJenisKendaraan = await JenisKendaraan.findOne({ _id: jenisKendaraan })
+
             if (!fileSTNK || !fotoKendaraan) return res.status(400).json({ message: "unggah file gagal" })
 
             const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
@@ -440,32 +473,53 @@ module.exports = {
 
             await fotoKendaraan.mv(imagePathProfile);
 
-            const dataTarifidArray = tarifId.split('/');
+            const dataTarifidArray = tarifId.split('/')
             const dataCreateKendaraan = []
 
-            for (let idTarif of dataTarifidArray) {
-                const validateTarifId = await Tarif.findOne({ _id: idTarif })
-                if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+            console.log("layanan", validateLayananKendaraan)
+            console.log("jenis", validateJenisKendaraan)
+            if (!validateLayananKendaraan) {
+                for (let idTarif of dataTarifidArray) {
+                    const validateTarifId = await Tarif.findOne({ _id: idTarif })
+                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+                    const createLayanaKendaraan = await LayananKendaraanDistributor.create({
+                        id_distributor,
+                        jenisKendaraan,
+                        tarifId: idTarif,
+                    })
 
-                const data = await KendaraanDistributor.create({
-                    id_distributor,
-                    jenisKendaraan,
-                    merekKendaraan,
-                    nomorPolisi,
-                    warna,
-                    typeKendaraan,
-                    tarifId: idTarif,
-                    fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
-                    STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
-                    tahun
-                })
+                    dataCreateKendaraan.push(createLayanaKendaraan)
+                }
+            } else if (validateJenisKendaraan.jenis !== validateLayananKendaraan.jenisKendaraan.jenis) {
+                for (let idTarif of dataTarifidArray) {
+                    const validateTarifId = await Tarif.findOne({ _id: idTarif })
+                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+                    const createLayanaKendaraan = await LayananKendaraanDistributor.create({
+                        id_distributor,
+                        jenisKendaraan,
+                        tarifId: idTarif,
+                    })
 
-                dataCreateKendaraan.push(data)
+                    dataCreateKendaraan.push(createLayanaKendaraan)
+                }
             }
+
+            const data = await KendaraanDistributor.create({
+                id_distributor,
+                jenisKendaraan,
+                merekKendaraan,
+                nomorPolisi,
+                warna,
+                typeKendaraan,
+                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
+                tahun
+            })
 
             res.status(201).json({
                 message: "create data success",
-                data: dataCreateKendaraan
+                dataKendaraan: data,
+                dataLayanan: dataCreateKendaraan
             })
         } catch (error) {
             console.error("Error creating document:", error);

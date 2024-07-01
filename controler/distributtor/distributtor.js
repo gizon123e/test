@@ -7,6 +7,7 @@ const Gratong = require('../../models/model-gratong')
 const Address = require('../../models/model-address')
 const BiayaTetap = require('../../models/model-biaya-tetap')
 const User = require('../../models/model-auth-user')
+const LayananKendaraanDistributor = require('../../models/distributor/layananKendaraanDistributor')
 
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
@@ -95,7 +96,6 @@ module.exports = {
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
             const ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
-            console.log(Math.round(ongkir))
 
             if (isNaN(ongkir)) {
                 return res.status(400).json({
@@ -115,7 +115,15 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+                    // const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan")
+                    // .populate("merekKendaraan")
+                    // .populate({
+                    //     path: "tarifId",
+                    //     populate: "jenis_kendaraan",
+                    //     populate: "jenis_jasa"
+                    // })
+                    const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan")
+                        // .populate("merekKendaraan")
                         .populate({
                             path: "tarifId",
                             populate: "jenis_kendaraan",
