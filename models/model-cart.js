@@ -7,7 +7,12 @@ const modelCarts = new mongoose.Schema({
         ref: 'Product'
     },
     varian:[
-        {
+        {   
+            _id: false,
+            harga: {
+                type: Number,
+                default: null
+            },
             nama_varian: {
                 type: String
             },

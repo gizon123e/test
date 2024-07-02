@@ -81,7 +81,7 @@ module.exports = {
             const { cartIds } = req.body
             const carts = await Carts.find({_id: { $in : cartIds}, userId: req.user.id}).populate({
                 path: 'productId',
-                select: '_id name_product price  total_price diskon minimalOrder image_product userId total_stok pemasok rating minimalOrder isFlashSale varian panjang lebar tinggi berat',
+                select: '_id name_product price  total_price diskon minimalOrder image_product userId total_stok pemasok rating minimalOrder isFlashSale panjang lebar tinggi berat',
                 populate: {
                     path: 'userId',
                     select: "_id role"
@@ -175,6 +175,7 @@ module.exports = {
 
                 store[storeId].arrayProduct.push({
                     cartId: keranjang._id,
+                    varian: keranjang.varian,
                     product: keranjang.productId,
                     quantity: keranjang.quantity
                 })
@@ -197,7 +198,7 @@ module.exports = {
                 }
                 finalData.push({
                     nama_toko: detailToko.namaToko,
-                    id_user_vendor: detailToko.userId,
+                    id_user_seller: detailToko.userId,
                     products: store[key].arrayProduct
                 })
             }
@@ -211,7 +212,7 @@ module.exports = {
     createCarts: async (req, res, next) => {
         try {
             const { productId, quantity, varian } = req.body
-
+            console.log(req.body.varian)
             const product = await Product.findById(productId).populate('userId');
             
             if (!product) {
