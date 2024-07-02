@@ -211,11 +211,15 @@ module.exports = {
                         }
                 }
             }
+
             let dataKendaraanHargaTermurah
 
             if (dataAllDistributtor.length > 0) {
                 if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.jenisKendaraan.jenis !== 'Motor')
+                    dataKendaraanHargaTermurah = dataAllDistributtor
+                        .sort((a, b) => a.total_ongkir - b.total_ongkir);
+                } else {
+                    dataKendaraanHargaTermurah = dataAllDistributtor.sort((a, b) => a.total_ongkir - b.total_ongkir);
                 }
             }
 
