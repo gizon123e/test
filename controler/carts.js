@@ -227,7 +227,7 @@ module.exports = {
             
             if(product.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
 
-            if(!Array.isArray(varian))return res.status(400).json({message: "Varian yang dikirimkan bukan array"});
+            if(!Array.isArray(varian) && product.bervarian)return res.status(400).json({message: "Varian yang dikirimkan bukan array"});
             
             if (varian) {
                 const nama_varians = product.varian.map(item => item.nama_varian.toLowerCase());
