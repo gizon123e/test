@@ -65,7 +65,6 @@ module.exports = {
 
     getOrders: async (req, res, next) => {
         try {
-            console.log(req.user)
             const { status } = req.query
             let dataOrders;
             if (req.user.role === 'konsumen') {

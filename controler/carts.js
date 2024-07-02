@@ -212,7 +212,6 @@ module.exports = {
     createCarts: async (req, res, next) => {
         try {
             const { productId, quantity, varian } = req.body
-            console.log(req.body.varian)
             const product = await Product.findById(productId).populate('userId');
             
             if (!product) {
@@ -248,36 +247,41 @@ module.exports = {
             }
 
             if (req.user.role === 'konsumen') {
-                // const validateCart = await Carts.findOne({ productId, userId: req.user.id }).populate('userId')
-
-                // if (validateCart) {
-                    
-                //     const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
-
-                //     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
-                //         {
-                //             quantity: plusQuantity,
-                //             total_price: parseInt(product.total_price) * plusQuantity
-                //         }, { new: true })
-
-                //     return res.status(201).json({
-                //         message: 'create data suceess',
-                //         datas: updateCart
-                //     })
-                // } else {
-                // }
-                const dataCarts = await Carts.create({ 
+                const filter = { 
                     productId, 
-                    quantity, 
-                    total_price: parseInt(product.total_price) * quantity, 
-                    userId: req.user.id,
-                    varian: req.body.varian
-                })
+                    userId: req.user.id, 
+                    ...(varian.length > 0 && { varian: { $all: varian.map(v => ({ $elemMatch: v })) } })
+                }
+                const validateCart = await Carts.findOne(filter).populate('userId')
+                if (validateCart) {
+                    
+                    const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
 
-                return res.status(201).json({
-                    message: 'create data cart success',
-                    datas: dataCarts
-                })
+                    const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
+                        {
+                            quantity: plusQuantity,
+                            total_price: parseInt(product.total_price) * plusQuantity
+                        }, { new: true })
+
+                    return res.status(201).json({
+                        message: 'create data suceess',
+                        datas: updateCart
+                    })
+                } else {
+                    const dataCarts = await Carts.create({ 
+                        productId, 
+                        quantity, 
+                        total_price: parseInt(product.total_price) * quantity, 
+                        userId: req.user.id,
+                        varian: req.body.varian
+                    })
+    
+                    return res.status(201).json({
+                        message: 'create data cart success',
+                        datas: dataCarts
+                    })
+                }
+                
             } else {
                 return res.status(400).json({
                     message: "kamu tidak boleh create yang hanya boleh role nya konsumen"
