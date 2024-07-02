@@ -1,5 +1,4 @@
 const { Server } = require("socket.io");
-const Conversation = require("../models/model-conversation");
 const jwt = require("../utils/jwt");
 
 const io = new Server({
@@ -10,6 +9,11 @@ const io = new Server({
 });
 
 io.use((socket, next) => {
+  if(socket.handshake.auth.fromServer){
+    socket.user = { id: '1' }
+    socket.id = socket.user.id
+    return next()
+  }
   const token = socket.handshake.auth.token;
   const verifyToken = jwt.verifyToken(token);
   if (!verifyToken) return next(new Error("Authentication error"));
@@ -22,10 +26,9 @@ const userConnected = [];
 
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
-  console.log(socket.user.email.content)
 
   userConnected.push(socket.user);
-
+  console.log('user aktif', userConnected)
   console.log(
     `${userConnected.length} ${
       userConnected.length > 1 ? "users" : "user"
@@ -35,6 +38,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", (reason) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
     if (index > -1) userConnected.splice(index, 1);
+    console.log('ada yang logout dengan socket id: ', socket.id)
   });
 
   socket.on("send msg", async (data, callback) => {
@@ -70,6 +74,11 @@ io.on("connection", (socket) => {
       io.to(foundUser.id).emit("msg", msg);
     }
   });
+
+  socket.on('notif_order', async(data) => {
+    const {userId, message} = data
+    io.to(userId).emit('notifikasi_order', message)
+  })
 });
 
 module.exports = io;

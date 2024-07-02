@@ -250,6 +250,11 @@
           console.log(res);
         }
       );
+      socket.on('notifikasi_order', (data)=>{
+        const text = document.createElement("p");
+        text.innerHTML = `${data}`;
+        document.body.appendChild(text);
+      })
     </script>
   </body>
 </html>
