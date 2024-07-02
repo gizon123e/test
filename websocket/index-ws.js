@@ -38,43 +38,36 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send msg", async (data, callback) => {
-    const { userId, msg } = data;
+    const { userEmail, msg } = data;
 
     const foundUser = userConnected.find(
-      (user) => user.id == userId
+      (user) => user.email.content == userEmail
     );
-    const chat = await Conversation.findOne({
-      participants: { $all: [foundUser.id, socket.id] },
-    });
-    if (!chat) {
-      await Conversation.create({
-        participants: [foundUser.id, socket.id],
-        messages: [
-          {
-            sender: socket.id,
-            content: msg,
-          },
-        ],
-      });
-    } else {
-      chat.messages.push({
-        sender: socket.id,
-        content: msg,
-      });
-      await chat.save();
-    }
+
+    console.log('data yang dikirim', data)
+    // const chat = await Conversation.findOne({
+    //   participants: { $all: [foundUser.id, socket.id] },
+    // });
+    // if (!chat) {
+    //   await Conversation.create({
+    //     participants: [foundUser.id, socket.id],
+    //     messages: [
+    //       {
+    //         sender: socket.id,
+    //         content: msg,
+    //       },
+    //     ],
+    //   });
+    // } else {
+    //   chat.messages.push({
+    //     sender: socket.id,
+    //     content: msg,
+    //   });
+    //   await chat.save();
+    // }
     if (foundUser) {
-      io.to(socket.id).emit("msg", msg, socket.user.name);
-      io.to(foundUser.id).emit("msg", msg, socket.user.name);
-      callback({
-        description: "message sent and stored",
-        message: `User ${nama} sedang online`,
-      });
-    } else {
-      callback({
-        description: "message not sent, but stored",
-        message: `User ${nama} tidak online`,
-      });
+      io.to(socket.id).emit("msg", msg);
+      io.to(foundUser.id).emit("msg", msg);
     }
   });
 });

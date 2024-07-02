@@ -74,7 +74,7 @@ module.exports = {
                 }
                 const dataOrders = await Orders.aggregate([
                     { $match: filter },
-                    { $project: { items: 1, status: 1, createdAt: 1 }},
+                    { $project: { items: 1, status: 1, createdAt: 1, expire: 1 }},
                     { $project: { detail_pesanan: 0 }},
                     { $unwind: "$items" },
                     { $unwind: "$items.product" },
@@ -84,12 +84,17 @@ module.exports = {
                         }
                     },
                     {
+                        $addFields:{
+                            varian_ordered: "$items.product.varian"
+                        }
+                    },
+                    {
                         $lookup: {
                             from: 'products',
                             let: { productIds: '$items.product.productId' },
                             pipeline: [
                                 { $match: { $expr: { $eq: ['$_id', '$$productIds'] } } },
-                                { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, varian: 1, detail_varian: 1, userId: 1, total_price: 1 } }
+                                { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, userId: 1, total_price: 1 } }
                             ],
                             as: 'productInfo'
                         }

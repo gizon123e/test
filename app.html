@@ -44,7 +44,7 @@
 
     <div id="sendMsg">
       <label for="nama">Nama</label>
-      <input type="text" name="nama" id="nama" />
+      <input type="text" name="nama" id="userEmail" />
       <label for="pesan">Pesan</label>
       <input type="text" name="pesan" id="pesan" />
       <button onclick="sendMsg()">SEND MSG</button>
@@ -54,6 +54,7 @@
     <button onclick="download()">DOWNLOAD EXCEL</button>
     <script>
       let socket;
+      const userEmail = document.getElementById("userEmail")
       const token = localStorage.getItem("token");
 
       document.getElementById('uploadForm').addEventListener('submit', function(event) {
@@ -202,7 +203,7 @@
       }
 
       function initializeSocket(token) {
-        socket = io("https://staging-backend.superdigitalapps.my.id",{
+        socket = io("https://probable-subtly-crawdad.ngrok-free.app",{
           transports: ['websocket'],
           auth: {
             token,
@@ -213,22 +214,24 @@
           const text = document.createElement("p");
           text.innerHTML = arg;
           document.body.appendChild(text);
+          // userEmail.value = arg
         });
       }
 
       function sendMsg() {
-        const userId = document.getElementById("userId").value;
+        const userEmail = document.getElementById('userEmail').value
         const msg = document.getElementById("pesan").value;
 
         if (socket) {
           socket.emit(
             "send msg",
             {
-              userId,
+              userEmail,
               msg,
             },
             (res) => {
               console.log(res);
+              msg.value = ''
             }
           );
         } else {
@@ -238,9 +241,9 @@
 
       socket.on(
         "msg",
-        (msg, sender) => {
+        (msg) => {
           const text = document.createElement("p");
-          text.innerHTML = `${sender}: ${msg}`;
+          text.innerHTML = `${msg}`;
           document.body.appendChild(text);
         },
         (res) => {
