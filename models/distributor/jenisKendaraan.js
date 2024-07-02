@@ -25,7 +25,10 @@ const ModelJenisKendaraan = new mongoose.Schema({
         type: String,
         required: [true, "icon distributor kendaraan harus di isi"]
     },
-
+    umurKendaraan: {
+        type: Number,
+        required: [true, "umurKendaraan kendaraan harus di isi"]
+    }
 })
 
 const JenisKendaraan = mongoose.model("JenisKendaraan", ModelJenisKendaraan)

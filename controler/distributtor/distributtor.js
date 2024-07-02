@@ -215,9 +215,7 @@ module.exports = {
 
             if (dataAllDistributtor.length > 0) {
                 if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.jenisKendaraan.jenis === 'Mobil')
-                } else {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.jenisKendaraan.jenis === 'Motor')
+                    dataKendaraanHargaTermurah = dataAllDistributtor.filter((item) => item.distributor.jenisKendaraan.jenis !== 'Motor')
                 }
             }
 
@@ -609,13 +607,6 @@ module.exports = {
             if (!dataDistributtor) {
                 return res.status(404).json({ error: `data id ${req.params.id} not found` })
             }
-
-            // const nibFilename = path.basename(dataDistributtor.imageDistributtor);
-
-            // const currentNibPath = path.join(__dirname, '../../public/image-profile-distributtor', nibFilename);
-            // if (fs.existsSync(currentNibPath)) {
-            //     fs.unlinkSync(currentNibPath);
-            // }
 
             await Distributtor.deleteOne({ _id: req.params.id })
 
