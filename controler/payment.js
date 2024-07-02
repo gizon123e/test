@@ -58,6 +58,8 @@ module.exports = {
                     user = await User.findByIdAndUpdate(pesanan.userId, {
                         $inc: { poin: -pesanan.poinTerpakai }
                     });
+                }else{
+                    user = await User.findById(pesanan.userId)
                 }
                 const transaksi =  await Transaksi.findOneAndUpdate({id_pesanan: pesanan._id}, { status: "Pembayaran Berhasil"})
                 const promisesFunct = [
@@ -93,7 +95,7 @@ module.exports = {
                             total_ongkir: pesanan.shipments[i].total_ongkir,
                             ongkir: pesanan.shipments[i].ongkir,
                             potongan_ongkir: pesanan.shipments[i].potongan_ongkir,
-                            kode_pengiriman: `PNR_${user.get('kode_role')}_${date}_${minutes}_${total_pengiriman + 1}`,
+                            kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
                         })
                     );
                 };
