@@ -116,7 +116,12 @@ module.exports = {
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
 
-                    const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan")
+                    const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id })
+                        .populate({
+                            path: "id_distributor",
+                            populate: "userId"
+                        })
+                        .populate("jenisKendaraan")
                         .populate({
                             path: "tarifId",
                             populate: "jenis_kendaraan",
@@ -212,14 +217,18 @@ module.exports = {
                 }
             }
 
-            let dataKendaraanHargaTermurah
+            const validate = dataAllDistributtor.filter(data =>
+                data.distributor.id_distributor.userId.isDetailVerified && data.distributor.id_distributor.userId.isVerifikasiDocument);
+
+            let dataKendaraanHargaTermurah = []
 
             if (dataAllDistributtor.length > 0) {
                 if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                    dataKendaraanHargaTermurah = dataAllDistributtor
+                    dataKendaraanHargaTermurah = validate
+                        .filter((item) => item.distributor.jenisKendaraan.jenis !== 'Motor')
                         .sort((a, b) => a.total_ongkir - b.total_ongkir);
                 } else {
-                    dataKendaraanHargaTermurah = dataAllDistributtor.sort((a, b) => a.total_ongkir - b.total_ongkir);
+                    dataKendaraanHargaTermurah = validate.sort((a, b) => a.total_ongkir - b.total_ongkir);
                 }
             }
 
