@@ -65,11 +65,17 @@ module.exports = {
 
     getOrders: async (req, res, next) => {
         try {
+            console.log(req.user)
+            const { status } = req.query
             let dataOrders;
             if (req.user.role === 'konsumen') {
+                const filter = { 
+                    userId: new mongoose.Types.ObjectId(req.user.id),
+                    ...(status && { status })
+                }
                 const dataOrders = await Orders.aggregate([
-                    { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
-                    { $project: { items: 1, status: 1 }},
+                    { $match: filter },
+                    { $project: { items: 1, status: 1, createdAt: 1 }},
                     { $project: { detail_pesanan: 0 }},
                     { $unwind: "$items" },
                     { $unwind: "$items.product" },
@@ -104,12 +110,12 @@ module.exports = {
                         }
                     },
                     {
-                        $addFields: {
-                            "productInfo.categoryId": { $arrayElemAt: ["$categoryInfo.name", 0] }
-                        }
+                        $unwind: "$categoryInfo"
                     },
                     {
-                        $project: { product: 0, categoryInfo: 0 }
+                        $addFields: {
+                            "productInfo.categoryId": "$categoryInfo.name"
+                        }
                     },
                     {
                         $lookup: {
@@ -119,7 +125,7 @@ module.exports = {
                                 { $match: { $expr: { $eq: ["$_id", "$$userId"]}} },
                                 { $project: { _id: 1, role: 1} }
                             ],
-                            as: "user_details"                        
+                            as: "user_details"
                         }
                     },
                     {
@@ -128,24 +134,53 @@ module.exports = {
                         }
                     },
                     {
-                        $project: { user_details: 0, items: 0 }
+                        $project: { user_details: 0, items: 0, categoryInfo: 0 }
                     },
                 ]);
                 let data = []
-                const promises = dataOrders.map(async (order) => {
-                    let namaToko;
-                    switch (order.productInfo.userId.role) {
+                const store = {}
+                for(const order of dataOrders){
+                    const storeId = order.productInfo.userId._id
+                    if(!store[storeId]){
+                        store[storeId] = {
+                            seller_user_id: storeId,
+                            role: order.productInfo.userId.role,
+                            arrayOrder: []
+                        }
+                    }
+
+                    store[storeId].arrayOrder.push(order)
+                    if(status === "Berlangsung"){
+                        const pengiriman = await Pengiriman.findOne({orderId: order._id, productToDelivers: {
+                            $elemMatch:{
+                                productId: order.productInfo._id
+                            }
+                        }})
+
+
+                        if(pengiriman === null) await Orders.deleteOne({_id: order._id})
+                        console.log(pengiriman)
+                    }
+                }
+                let detailToko
+                for(const key of Object.keys(store)){
+                    switch(store[key].role){
                         case "vendor":
-                            const vendor = await TokoVendor.findOne({ userId: order.productInfo.userId._id }).populate('address');
-                            namaToko = vendor.namaToko;
+                            detailToko = await TokoVendor.findOne({userId: store[key].seller_user_id}).select('namaToko');
                             break;
-                        default:
-                            namaToko = "Role other than vendor";
+                        case "supplier":
+                            detailToko = await Supplier.findOne({userId: store[key].seller_user_id});
+                            break;
+                        case "produsen":
+                            detailToko = await Produsen.findOne({userId: store[key].seller_user_id});
                             break;
                     }
-                    data.push({ order, namaToko });
-                });
-                await Promise.all(promises);
+                    data.push({
+                        namaToko: detailToko.namaToko,
+                        ...store[key]
+                    })
+                }
+                // await Promise.all(promises);
                 if (!dataOrders || dataOrders.length < 1) {
                     return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
                 }
@@ -215,6 +250,7 @@ module.exports = {
                 biaya_layanan,
                 poin_terpakai
             } = req.body
+            console.log(JSON.stringify(req.body))
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if (!req.body["items"]) return res.status(404).json({message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan"})
             if (!Array.isArray(req.body['items'])) return res.status(400).json({message: "Body items bukan array, kirimkan array"})
