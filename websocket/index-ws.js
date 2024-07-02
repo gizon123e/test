@@ -3,7 +3,6 @@ const Conversation = require("../models/model-conversation");
 const jwt = require("../utils/jwt");
 
 const io = new Server({
-  path: "/websocket/",
   cors: {
     origin: "*",
   },

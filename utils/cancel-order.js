@@ -12,7 +12,7 @@ async function cancelExpiredOrders() {
         { status: "Dibatalkan" }
       );
   
-      console.log(`Orders updated: ${result}`);
+      console.log(`Orders updated: ${JSON.stringify(result)}`);
     } catch (error) {
       console.error('Error updating orders:', error);
     }

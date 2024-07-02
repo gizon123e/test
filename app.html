@@ -202,8 +202,7 @@
       }
 
       function initializeSocket(token) {
-        socket = io("https://staging-backend.superdigitalapps.my.id",{
-          path:"/websocket/",
+        socket = io("https://staging-backend.superdigitalapps.my.id:5000",{
           auth: {
             token,
           },

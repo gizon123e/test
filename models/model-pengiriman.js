@@ -30,6 +30,7 @@ const modelPengiriman = new mongoose.Schema({
         ref: "JenisKendaraan"
     },
     productToDelivers:[{
+        _id: false,
         productId: {
             type: String,
             ref: "Product"
