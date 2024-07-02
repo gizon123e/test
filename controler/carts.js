@@ -250,7 +250,7 @@ module.exports = {
                 const filter = { 
                     productId, 
                     userId: req.user.id, 
-                    ...(varian.length > 0 && { varian: { $all: varian.map(v => ({ $elemMatch: v })) } })
+                    ...((varian && varian.length > 0) && { varian: { $all: varian.map(v => ({ $elemMatch: v })) } })
                 }
                 const validateCart = await Carts.findOne(filter).populate('userId')
                 if (validateCart) {
@@ -322,8 +322,8 @@ module.exports = {
     deleteCarts: async (req, res, next) => {
         try {
             const dataCart = await Carts.findOne({ _id: req.params.id })
-            if (dataCart.userId.toString() !== req.user.id) return res.status(403).json({message: "Tidak bisa menghapus data orang lain!"})
             if (!dataCart) return res.status(404).json({ message: 'delete data cart not foud' })
+            if (dataCart.userId.toString() !== req.user.id) return res.status(403).json({message: "Tidak bisa menghapus data orang lain!"})
 
             await Carts.deleteOne({ _id: req.params.id })
             return res.status(200).json({ message: 'delete data success' })
