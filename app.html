@@ -217,14 +217,14 @@
       }
 
       function sendMsg() {
-        const nama = document.getElementById("nama").value;
+        const userId = document.getElementById("userId").value;
         const msg = document.getElementById("pesan").value;
 
         if (socket) {
           socket.emit(
             "send msg",
             {
-              nama,
+              userId,
               msg,
             },
             (res) => {

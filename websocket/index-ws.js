@@ -38,10 +38,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send msg", async (data, callback) => {
-    const { nama, msg } = data;
+    const { userId, msg } = data;
 
     const foundUser = userConnected.find(
-      (user) => user.name == nama.toLowerCase()
+      (user) => user.id == userId
     );
     const chat = await Conversation.findOne({
       participants: { $all: [foundUser.id, socket.id] },
