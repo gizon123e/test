@@ -624,7 +624,7 @@ module.exports = {
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak }, { new: true })
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, is_Active: false }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
