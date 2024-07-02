@@ -104,7 +104,7 @@ module.exports = {
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak }, { new: true })
+            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, is_Active: false }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
