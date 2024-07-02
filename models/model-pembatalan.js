@@ -11,7 +11,7 @@ const modelPembatalan = mongoose.Schema({
     },
     canceledBy:{
         type: String,
-        enum: ["sistem", "konsumen", "vendor", "supplier", "produsen", "distributor"]
+        enum: ["sistem", "pengguna"]
     }
 });
 

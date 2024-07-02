@@ -134,6 +134,28 @@ module.exports = {
                         }
                     },
                     {
+                        $lookup: {
+                            from: "transaksis",
+                            foreignField: "id_pesanan",
+                            localField: "_id",
+                            as: "detail_transaction"
+                        }
+                    },
+                    {
+                        $unwind: "$detail_transaction"
+                    },
+                    {
+                        $lookup: {
+                            from: "invoices",
+                            foreignField: "id_transaksi",
+                            localField: "detail_transaction._id",
+                            as: "detail_invoice"
+                        }
+                    },
+                    {
+                        $unwind: "$detail_invoice"
+                    },
+                    {
                         $project: { user_details: 0, items: 0, categoryInfo: 0 }
                     },
                 ]);
@@ -143,14 +165,14 @@ module.exports = {
                     const storeId = order.productInfo.userId._id
                     if(!store[storeId]){
                         store[storeId] = {
-                            seller_user_id: storeId,
+                            id_user_seller: storeId,
                             role: order.productInfo.userId.role,
                             arrayOrder: []
                         }
                     }
 
-                    store[storeId].arrayOrder.push(order)
-                    if(status === "Berlangsung"){
+                    const duplicateOrder = { ...order }
+                    if(order.status === "Berlangsung"){
                         const pengiriman = await Pengiriman.findOne({orderId: order._id, productToDelivers: {
                             $elemMatch:{
                                 productId: order.productInfo._id
@@ -158,21 +180,24 @@ module.exports = {
                         }})
 
 
-                        if(pengiriman === null) await Orders.deleteOne({_id: order._id})
-                        console.log(pengiriman)
+                        if(pengiriman === null) return res.status(404).json({message: "Ada kesalahan di pengiriman, pengiriman tidak ditemukan"})
+                        duplicateOrder.detailBerlangsung = pengiriman.status_pengiriman
+                    }else{
+                        duplicateOrder.detailBerlangsung = null
                     }
+                    store[storeId].arrayOrder.push(duplicateOrder)
                 }
                 let detailToko
                 for(const key of Object.keys(store)){
                     switch(store[key].role){
                         case "vendor":
-                            detailToko = await TokoVendor.findOne({userId: store[key].seller_user_id}).select('namaToko');
+                            detailToko = await TokoVendor.findOne({userId: store[key].id_user_seller}).select('namaToko');
                             break;
                         case "supplier":
-                            detailToko = await Supplier.findOne({userId: store[key].seller_user_id});
+                            detailToko = await Supplier.findOne({userId: store[key].id_user_seller});
                             break;
                         case "produsen":
-                            detailToko = await Produsen.findOne({userId: store[key].seller_user_id});
+                            detailToko = await Produsen.findOne({userId: store[key].id_user_seller});
                             break;
                     }
                     data.push({
