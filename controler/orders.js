@@ -134,28 +134,6 @@ module.exports = {
                         }
                     },
                     {
-                        $lookup: {
-                            from: "transaksis",
-                            foreignField: "id_pesanan",
-                            localField: "_id",
-                            as: "detail_transaction"
-                        }
-                    },
-                    {
-                        $unwind: "$detail_transaction"
-                    },
-                    {
-                        $lookup: {
-                            from: "invoices",
-                            foreignField: "id_transaksi",
-                            localField: "detail_transaction._id",
-                            as: "detail_invoice"
-                        }
-                    },
-                    {
-                        $unwind: "$detail_invoice"
-                    },
-                    {
                         $project: { user_details: 0, items: 0, categoryInfo: 0 }
                     },
                 ]);
@@ -253,9 +231,11 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const dataOrder = await Orders.findById(req.params.id)
+            const dataOrder = await Orders.findOne({ _id: req.params.id, userId: req.user.id}).lean()
             if(!dataOrder) return res.status(404).json({message: `Tidak ada pesanan dengan id: ${req.params.id}`})
-            return res.status(200).json({ message: 'get detail data order success', datas: dataOrder });
+            const detail_transaksi = await Transaksi.findOne({id_pesanan: dataOrder._id})
+            const detail_invoice = await Invoice.findOne({id_transaksi: detail_transaksi._id})
+            return res.status(200).json({ message: 'get detail data order success', datas: { ...dataOrder, detail_invoice, detail_transaksi} });
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);
