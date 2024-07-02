@@ -18,7 +18,7 @@ module.exports = {
             });
             // const sellerId = [];
 
-            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id total_stok userId total_price price diskon name_product minimalOrder berat panjang lebar tinggi').populate({
+            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id total_stok userId diskon name_product minimalOrder berat panjang lebar tinggi').populate({
                 path: "userId",
                 select: "_id role"
             })
@@ -36,7 +36,7 @@ module.exports = {
                     arrayProduct: []
                   };
                 }
-                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity, cartId: getCart._id, varian: getCart.varian.length > 0? getCart.varian : null});
+                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity, cartId: getCart._id, varian: getCart.varian.length > 0? getCart.varian : null, total_price: getCart.total_price});
             };
             const finalData = []
             const keys = Object.keys(storeMap)
@@ -245,7 +245,7 @@ module.exports = {
                 })
                 
             }
-            
+
             if (req.user.role === 'konsumen') {
                 const filter = { 
                     productId, 
@@ -260,7 +260,7 @@ module.exports = {
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
                         {
                             quantity: plusQuantity,
-                            total_price: harga_varian > 0? (parseInt(product.total_price) * plusQuantity) + harga_varian : parseInt(product.total_price) * plusQuantity
+                            total_price: harga_varian > 0 ? ( parseInt(product.total_price) + harga_varian ) * plusQuantity : parseInt(product.total_price) * plusQuantity
                         }, { new: true })
 
                     return res.status(201).json({
@@ -271,7 +271,7 @@ module.exports = {
                     const dataCarts = await Carts.create({ 
                         productId, 
                         quantity, 
-                        total_price: harga_varian > 0 ? (parseInt(product.total_price) * quantity) + harga_varian : parseInt(product.total_price) * quantity, 
+                        total_price: harga_varian > 0 ? ( parseInt(product.total_price) + harga_varian ) * quantity : parseInt(product.total_price) * quantity, 
                         userId: req.user.id,
                         varian: req.body.varian
                     })
