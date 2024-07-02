@@ -22,7 +22,7 @@ module.exports = {
 
     createKendaraan: async (req, res, next) => {
         try {
-            const { jenis, description, ukuran } = req.body
+            const { jenis, description, ukuran, umurKendaraan } = req.body
             const files = req.files
             const iconAktif = files ? files.icon_aktif : null
             const iconDisable = files ? files.icon_disable : null
@@ -49,7 +49,8 @@ module.exports = {
                 ukuran,
                 icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
                 icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`,
-                icon_distributor: `${process.env.HOST}public/icon-kendaraan/${imageIconDistributor}`
+                icon_distributor: `${process.env.HOST}public/icon-kendaraan/${imageIconDistributor}`,
+                umurKendaraan
             })
 
             res.status(200).json({
@@ -64,7 +65,7 @@ module.exports = {
 
     updateKendaraan: async (req, res, next) => {
         try {
-            const { jenis, description, ukuran } = req.body
+            const { jenis, description, ukuran, umurKendaraan } = req.body
             const files = req.files
             const iconAktif = files ? files.icon_aktif : null
             const iconDisable = files ? files.icon_disable : null
@@ -119,7 +120,8 @@ module.exports = {
                     ukuran,
                     icon_aktif: `${process.env.HOST}public/icon-kendaraan/${imageIconAktif}`,
                     icon_disable: `${process.env.HOST}public/icon-kendaraan/${imageIconDisable}`,
-                    icon_distributor: `${process.env.HOST}public/icon-kendaraan/${imageIconDistributor}`
+                    icon_distributor: `${process.env.HOST}public/icon-kendaraan/${imageIconDistributor}`,
+                    umurKendaraan
                 },
                 { new: true }
             )

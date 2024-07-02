@@ -60,13 +60,13 @@ module.exports = {
     getKendaraanDistributorDetailPanel: async (req, res, next) => {
         try {
             const dataKendaraan = await KendaraanDistributor.findOne({ _id: req.params.id })
-                .populate('tarifId')
                 .populate({
                     path: "id_distributor",
                     populate: "alamat_id"
                 })
                 .populate('merekKendaraan')
                 .populate("jenisKendaraan")
+
             if (!dataKendaraan) return res.status(404).json({ message: 'data Not Found' })
 
             res.status(200).json({
@@ -173,11 +173,6 @@ module.exports = {
             if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
             let filteredDataKendaraan = dataLayanan;
-            // if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-            //     filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Mobil');
-            // } else {
-            //     filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.tarifId.jenis_kendaraan.jenis === 'Motor');
-            // }
 
             for (let kendaraan of filteredDataKendaraan) {
                 const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
