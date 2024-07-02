@@ -228,14 +228,14 @@ module.exports = {
             if(product.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
 
             if(!Array.isArray(varian) && product.bervarian)return res.status(400).json({message: "Varian yang dikirimkan bukan array"});
-            
+            let harga_varian = 0
             if (varian) {
                 const nama_varians = product.varian.map(item => item.nama_varian.toLowerCase());
                 const nilai_varians = product.varian.flatMap(item => item.nilai_varian.map(nilai => nilai.nama.toLowerCase()));
 
 
                 varian.forEach( item => {
-
+                    harga_varian += parseInt(item.harga)
                     if (!nama_varians.includes(item.nama_varian.toLowerCase()) || !nilai_varians.includes(item.nilai_varian.toLowerCase())) {
                         return res.status(400).json({
                             error: true,
@@ -245,7 +245,7 @@ module.exports = {
                 })
                 
             }
-
+            
             if (req.user.role === 'konsumen') {
                 const filter = { 
                     productId, 
@@ -260,7 +260,7 @@ module.exports = {
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
                         {
                             quantity: plusQuantity,
-                            total_price: parseInt(product.total_price) * plusQuantity
+                            total_price: harga_varian > 0? (parseInt(product.total_price) * plusQuantity) + harga_varian : parseInt(product.total_price) * plusQuantity
                         }, { new: true })
 
                     return res.status(201).json({
@@ -271,7 +271,7 @@ module.exports = {
                     const dataCarts = await Carts.create({ 
                         productId, 
                         quantity, 
-                        total_price: parseInt(product.total_price) * quantity, 
+                        total_price: harga_varian > 0 ? (parseInt(product.total_price) * quantity) + harga_varian : parseInt(product.total_price) * quantity, 
                         userId: req.user.id,
                         varian: req.body.varian
                     })
