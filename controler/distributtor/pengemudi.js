@@ -34,7 +34,7 @@ module.exports = {
 
     createPengemudi: async (req, res, next) => {
         try {
-            const { id_distributor, nama, jenisKelamin, tanggalLahir, no_telepon } = req.body
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, no_telepon, jenis_sim } = req.body
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
             const profile = files ? files.profile : null;
@@ -69,7 +69,8 @@ module.exports = {
                 file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                 no_telepon: no_telepon.toString(),
                 fileKTP: `${process.env.HOST}public/image-ktp/${imageNameProfile}`,
-                tanggalLahir
+                tanggalLahir,
+                jenis_sim
             })
 
             res.status(201).json({

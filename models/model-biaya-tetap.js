@@ -23,15 +23,12 @@ const modelBiayaTetap = mongoose.Schema({
     constanta_volume: {
         type: Number
     },
-    batas_umur_mobil: {
+    lama_pengemasan: {
         type: Number
     },
-    batas_umur_motor: {
+    rerata_kecepatan: {
         type: Number
     },
-    batas_umur_truk: {
-        type: Number
-    }
 });
 
 const BiayaTetap = mongoose.model("BiayaTetap", modelBiayaTetap);

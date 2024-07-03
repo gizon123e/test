@@ -351,7 +351,7 @@ module.exports = {
 
     createKendaraandistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId, tahun, no_telepon } = req.body
+            const { id_distributor, nama, jenisKelamin, tanggalLahir, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId, tahun, no_telepon, jenis_sim } = req.body
             const files = req.files;
             const file_sim = files ? files.file_sim : null;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
@@ -427,7 +427,8 @@ module.exports = {
                 tanggalLahir,
                 profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
-                no_telepon: no_telepon.toString()
+                no_telepon: no_telepon.toString(),
+                jenis_sim
             })
 
             const data = await KendaraanDistributor.create({

@@ -5,7 +5,7 @@ const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
 const VA = require("../models/model-virtual-account")
 const VA_Used = require("../models/model-va-used");
-const {Transaksi, Transaksi2} = require("../models/model-transaksi")
+const { Transaksi, Transaksi2 } = require("../models/model-transaksi")
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
@@ -68,13 +68,13 @@ module.exports = {
             const { status } = req.query
             let dataOrders;
             if (req.user.role === 'konsumen') {
-                const filter = { 
+                const filter = {
                     userId: new mongoose.Types.ObjectId(req.user.id),
                     ...(status && { status })
                 }
                 const dataOrders = await Orders.aggregate([
                     { $match: filter },
-                    { $project: { items: 1, status: 1, createdAt: 1, expire: 1 }},
+                    { $project: { items: 1, status: 1, createdAt: 1, expire: 1 } },
                     {
                         $lookup: {
                             from: 'detailpesanans',
@@ -87,7 +87,7 @@ module.exports = {
                         }
                     },
                     { $unwind: "$detail_pesanan" },
-                    { $addFields: { total_pesanan: "$detail_pesanan.total_price" }},
+                    { $addFields: { total_pesanan: "$detail_pesanan.total_price" } },
                     { $unwind: "$items" },
                     { $unwind: "$items.product" },
                     {
@@ -102,7 +102,7 @@ module.exports = {
                         }
                     },
                     { $unwind: "$productInfo" },
-                    { $addFields: { 'items.product.productId': "$productInfo" }},
+                    { $addFields: { 'items.product.productId': "$productInfo" } },
                     {
                         $lookup: {
                             from: "users",
@@ -115,7 +115,7 @@ module.exports = {
                         }
                     },
                     { $unwind: "$user_details" },
-                    { $addFields: { 'items.product.productId.userId': "$user_details" }},
+                    { $addFields: { 'items.product.productId.userId': "$user_details" } },
                     {
                         $lookup: {
                             from: "specificcategories",
@@ -125,8 +125,8 @@ module.exports = {
                         }
                     },
                     { $unwind: "$category_details" },
-                    { $addFields: { 'items.product.productId.categoryId': "$category_details" }},
-                    { $project: { user_details: 0, productInfo: 0, category_details: 0 }},
+                    { $addFields: { 'items.product.productId.categoryId': "$category_details" } },
+                    { $project: { user_details: 0, productInfo: 0, category_details: 0 } },
                     {
                         $group: {
                             _id: "$_id",
@@ -145,28 +145,28 @@ module.exports = {
                     },
                 ]);
                 let data = []
-                for(const order of dataOrders){
-                    const store  = {}
-                    for (const item of order.items){
+                for (const order of dataOrders) {
+                    const store = {}
+                    for (const item of order.items) {
                         const storeId = item.product.productId.userId._id.toString()
 
                         let detailToko;
-                        
-                        switch(item.product.productId.userId.role){
+
+                        switch (item.product.productId.userId.role) {
                             case "vendor":
-                                detailToko = await TokoVendor.findOne({userId: storeId}).select('namaToko');
+                                detailToko = await TokoVendor.findOne({ userId: storeId }).select('namaToko');
                                 break;
                             case "supplier":
-                                detailToko = await Supplier.findOne({userId: storeId});
+                                detailToko = await Supplier.findOne({ userId: storeId });
                                 break;
                             case "produsen":
-                                detailToko = await Produsen.findOne({userId: storeId});
+                                detailToko = await Produsen.findOne({ userId: storeId });
                                 break;
                         }
 
-                        if(!store[storeId]){
+                        if (!store[storeId]) {
                             store[storeId] = {
-                                seller : {
+                                seller: {
                                     _id: item.product.productId.userId._id,
                                     namaToko: detailToko.namaToko
                                 },
@@ -174,10 +174,10 @@ module.exports = {
                             }
                         }
                         let detailBerlangsung;
-                        if(order.status === "Berlangsung"){
-                            const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id }}});
-                            detailBerlangsung = pengiriman? "Dikirim" : "Diproses"
-                        }else if(order.status === "Belum Bayar"){
+                        if (order.status === "Berlangsung") {
+                            const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
+                            detailBerlangsung = pengiriman ? "Dikirim" : "Diproses"
+                        } else if (order.status === "Belum Bayar") {
                             detailBerlangsung = null
                         }
                         store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
@@ -238,11 +238,11 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const dataOrder = await Orders.findOne({ _id: req.params.id, userId: req.user.id}).lean()
-            if(!dataOrder) return res.status(404).json({message: `Tidak ada pesanan dengan id: ${req.params.id}`})
-            const detail_transaksi = await Transaksi.findOne({id_pesanan: dataOrder._id})
-            const detail_invoice = await Invoice.findOne({id_transaksi: detail_transaksi._id})
-            return res.status(200).json({ message: 'get detail data order success', datas: { ...dataOrder, detail_invoice, detail_transaksi} });
+            const dataOrder = await Orders.findOne({ _id: req.params.id, userId: req.user.id }).lean()
+            if (!dataOrder) return res.status(404).json({ message: `Tidak ada pesanan dengan id: ${req.params.id}` })
+            const detail_transaksi = await Transaksi.findOne({ id_pesanan: dataOrder._id })
+            const detail_invoice = await Invoice.findOne({ id_transaksi: detail_transaksi._id })
+            return res.status(200).json({ message: 'get detail data order success', datas: { ...dataOrder, detail_invoice, detail_transaksi } });
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);
@@ -264,9 +264,9 @@ module.exports = {
             } = req.body
             console.log(JSON.stringify(req.body))
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
-            if (!req.body["items"]) return res.status(404).json({message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan"})
-            if (!Array.isArray(req.body['items'])) return res.status(400).json({message: "Body items bukan array, kirimkan array"})
-            
+            if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" })
+            if (!Array.isArray(req.body['items'])) return res.status(400).json({ message: "Body items bukan array, kirimkan array" })
+
             const total_pesanan = await Orders.estimatedDocumentCount({
                 createdAt: {
                     $gte: now,
@@ -275,38 +275,38 @@ module.exports = {
             });
 
             const user = await User.findById(req.user.id)
-            
+
             items.forEach((item, index) => {
                 item.kode_pesanan = `PSN_${user.get('kode_role')}_${date}_${minutes}_${total_pesanan + index + 1}`;
             });
 
-            const productIds = items.flatMap(item => 
+            const productIds = items.flatMap(item =>
                 item.product.map(prod => prod.productId)
             );
-                        
-            const products = await Product.find({_id: { $in: productIds }}).select('_id')
-            for( const prod of productIds ){
-                const found = products.some(item => item._id === prod );
-                if(!found) return res.status(404).json({message: `Produk dengan id ${prod} tidak ditemukan`})
+
+            const products = await Product.find({ _id: { $in: productIds } }).select('_id')
+            for (const prod of productIds) {
+                const found = products.some(item => item._id === prod);
+                if (!found) return res.status(404).json({ message: `Produk dengan id ${prod} tidak ditemukan` })
             }
-            
-            if(items.length !== shipments.length) return res.status(400).json({message: "Data Toko tidak sama dengan dengan data pengiriman"})
-            
+
+            if (items.length !== shipments.length) return res.status(400).json({ message: "Data Toko tidak sama dengan dengan data pengiriman" })
+
             let va_user;
             let VirtualAccount;
             let idPay;
             let nama;
 
             const splitted = metode_pembayaran.split(" / ");
-            if(splitted[1].replace(/\u00A0/g, ' ') == "Virtual Account"){
+            if (splitted[1].replace(/\u00A0/g, ' ') == "Virtual Account") {
                 va_user = await VaUser.findOne({
                     nama_bank: splitted[0],
                     userId: req.user.id
                 }).populate('nama_bank')
                 VirtualAccount = await VA.findById(splitted[0]);
-                if(!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
+                if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
                 idPay = va_user.nama_bank._id,
-                nama = va_user.nama_virtual_account
+                    nama = va_user.nama_virtual_account
             } else {
                 paymentNumber = "123"
             }
@@ -316,9 +316,9 @@ module.exports = {
                 userId: req.user.id
             })
 
-            if(va_used) return res.status(403).json({message: "Sedang ada transaki dengan virtual account ini", data: va_used});
+            if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });
             const decimalPattern = /^\d+\.\d+$/;
-            if(decimalPattern.test(total)) return res.status(400).json({message: `Total yang dikirimkan tidak boleh decimal. ${total}`})
+            if (decimalPattern.test(total)) return res.status(400).json({ message: `Total yang dikirimkan tidak boleh decimal. ${total}` })
             const idPesanan = new mongoose.Types.ObjectId()
 
             const grossAmount = () => {
@@ -345,16 +345,16 @@ module.exports = {
                         order_id: idPesanan,
                         gross_amount: grossAmount()
                     },
-                    bank_transfer:{
+                    bank_transfer: {
                         bank: 'bca',
                         va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
                     },
                 })
             };
-                      
+
             const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
             const transaksi = await respon.json();
-            
+
             const a_day_later = new Date(today.getTime() + 24 * 60 * 60 * 1000)
 
             const dataOrder = await Orders.create({
@@ -384,7 +384,7 @@ module.exports = {
                 orderId: detailPesanan._id,
                 nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
             })
-            
+
             const total_transaksi = await Transaksi.estimatedDocumentCount({
                 createdAt: {
                     $gte: now,
@@ -406,12 +406,12 @@ module.exports = {
                 kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
             })
 
-            return res.status(201).json({ 
-                message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`, 
-                datas: dataOrder, 
-                nama, 
-                paymentNumber: transaksi.va_numbers[0].va_number, 
-                total_tagihan: detailPesanan.total_price, 
+            return res.status(201).json({
+                message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
+                datas: dataOrder,
+                nama,
+                paymentNumber: transaksi.va_numbers[0].va_number,
+                total_tagihan: detailPesanan.total_price,
                 transaksi: {
                     waktu: transaksi.transaction_time,
                     orderId: transaksi.order_id
@@ -422,9 +422,9 @@ module.exports = {
             console.log(error)
             if (error && error.name == "ValidationError") {
                 return res.status(400).json({
-                  error: true,
-                  message: error.message,
-                  fields: error.fields,
+                    error: true,
+                    message: error.message,
+                    fields: error.fields,
                 });
             }
             next(error)
@@ -434,7 +434,7 @@ module.exports = {
     update_status: async (req, res, next) => {
         try {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
-            if( req.body.status !== 'berhasil') return res.status(400).json({message: "Status yang dikirimkan tidak valid"})
+            if (req.body.status !== 'berhasil') return res.status(400).json({ message: "Status yang dikirimkan tidak valid" })
             const pesanan = await Orders.findById(req.body.pesananId).lean()
             const productIds = []
             const ships = []
@@ -449,7 +449,7 @@ module.exports = {
                 }
             });
             const writeDb = [
-                Orders.updateOne({_id: pesanan._id}, { status: req.body.status }),
+                Orders.updateOne({ _id: pesanan._id }, { status: req.body.status }),
             ]
             const finalProduct = productIds.map(item => {
                 return item[0].productId
@@ -474,7 +474,7 @@ module.exports = {
                     );
                 }
             }
-            
+
             for (const item of ships) {
                 const user_distributor = await User.findById(item.id_distributor);
                 if (user_distributor) {
@@ -509,7 +509,7 @@ module.exports = {
                     kode_transaksi: `TRX_PRH_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
                 }),
             )
-            
+
             await Promise.all(writeDb)
             return res.status(200).json({ message: "Berhasil Merubah Status" })
         } catch (err) {
