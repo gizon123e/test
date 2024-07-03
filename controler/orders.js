@@ -173,7 +173,14 @@ module.exports = {
                                 arrayProduct: []
                             }
                         }
-                        store[storeId].arrayProduct.push(item.product)
+                        let detailBerlangsung;
+                        if(order.status === "Berlangsung"){
+                            const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id }}});
+                            detailBerlangsung = pengiriman? "Dikirim" : "Diproses"
+                        }else if(order.status === "Belum Bayar"){
+                            detailBerlangsung = null
+                        }
+                        store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
                     }
                     const mappedOrder = Object.keys(store).map(key => {
                         return store[key]
@@ -181,7 +188,7 @@ module.exports = {
                     const { items, ...rest } = order
                     data.push({
                         ...rest,
-                        product_order: mappedOrder
+                        product_order: mappedOrder,
                     })
                 }
                 if (!dataOrders || dataOrders.length < 1) {
