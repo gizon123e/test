@@ -206,7 +206,6 @@ module.exports = {
         try {
             const { productId, quantity, varian } = req.body
             const product = await Product.findById(productId).populate('userId');
-            console.log(varian)
             if (!product) {
                 return res.status(404).json({
                     error: true,
@@ -249,7 +248,7 @@ module.exports = {
                 if (validateCart) {
                     
                     const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
-
+                    if(plusQuantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok"})
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
                         {
                             quantity: plusQuantity,
@@ -261,6 +260,7 @@ module.exports = {
                         datas: updateCart
                     })
                 } else {
+                    if(quantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok"})
                     const dataCarts = await Carts.create({ 
                         productId, 
                         quantity, 

@@ -9,17 +9,21 @@ const io = new Server({
 });
 
 io.use((socket, next) => {
-  if(socket.handshake.auth.fromServer){
-    socket.user = { id: '1' }
-    socket.id = socket.user.id
-    return next()
+  try {
+    if(socket.handshake.auth.fromServer){
+      socket.user = { id: '1' }
+      socket.id = socket.user.id
+      return next()
+    }
+    const token = socket.handshake.auth.token;
+    const verifyToken = jwt.verifyToken(token);
+    if (!verifyToken) return next(new Error("Authentication error"));
+    socket.user = verifyToken;
+    socket.id = socket.user.id;
+    next();
+  } catch (error) {
+    next(error)
   }
-  const token = socket.handshake.auth.token;
-  const verifyToken = jwt.verifyToken(token);
-  if (!verifyToken) return next(new Error("Authentication error"));
-  socket.user = verifyToken;
-  socket.id = socket.user.id;
-  next();
 });
 
 const userConnected = [];
