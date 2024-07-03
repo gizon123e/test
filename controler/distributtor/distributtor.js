@@ -8,6 +8,7 @@ const Address = require('../../models/model-address')
 const BiayaTetap = require('../../models/model-biaya-tetap')
 const User = require('../../models/model-auth-user')
 const LayananKendaraanDistributor = require('../../models/distributor/layananKendaraanDistributor')
+const Pengemudi = require('../../models/distributor/model-pengemudi')
 
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
@@ -220,15 +221,35 @@ module.exports = {
             const validate = dataAllDistributtor.filter(data =>
                 data.distributor.id_distributor.userId.isDetailVerified && data.distributor.id_distributor.userId.isVerifikasiDocument);
 
-            let dataKendaraanHargaTermurah = []
+            // let dataKendaraanData
+            // let dataPengemudiData
+            // for (let id of validate) {
+            //     const validateKendaraan = await KendaraanDistributor.find({ id_distributor: id.distributor.id_distributor._id })
+            //     dataKendaraanData = validateKendaraan.filter((item) => item.is_Active === true)
 
-            if (dataAllDistributtor.length > 0) {
+            //     const validatePengemudi = await Pengemudi.find({ id_distributor: id.distributor.id_distributor._id })
+            //     dataPengemudiData = validatePengemudi.filter((item) => item.is_Active === true)
+            // }
+
+            let validDistributors = []
+            for (let distributor of validate) {
+                const activeKendaraan = await KendaraanDistributor.find({ id_distributor: distributor.distributor.id_distributor._id, is_Active: true })
+                const activePengemudi = await Pengemudi.find({ id_distributor: distributor.distributor.id_distributor._id, is_Active: true })
+
+                if (activeKendaraan.length > 0 && activePengemudi.length > 0) {
+                    validDistributors.push(distributor)
+                }
+            }
+
+            let dataKendaraanHargaTermurah
+
+            if (validate.length > 0) {
                 if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                    dataKendaraanHargaTermurah = validate
+                    dataKendaraanHargaTermurah = validDistributors
                         .filter((item) => item.distributor.jenisKendaraan.jenis !== 'Motor')
                         .sort((a, b) => a.total_ongkir - b.total_ongkir);
                 } else {
-                    dataKendaraanHargaTermurah = validate.sort((a, b) => a.total_ongkir - b.total_ongkir);
+                    dataKendaraanHargaTermurah = validDistributors.sort((a, b) => a.total_ongkir - b.total_ongkir);
                 }
             }
 
@@ -297,7 +318,9 @@ module.exports = {
                 }
             }
 
-            let query = {}
+            let query = {
+
+            }
             if (name) {
                 query.nama_distributor = { $regex: name, $options: 'i' }
             }
@@ -313,11 +336,7 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id })
-                        .populate({
-                            path: "tarifId",
-                            populate: "jenis_kendaraan"
-                        })
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, is_Active: true })
                         .populate({
                             path: "id_distributor",
                             populate: "alamat_id"
@@ -325,16 +344,16 @@ module.exports = {
                         .populate("jenisKendaraan")
                         .lean()
 
-                    console.log(dataKendaraan)
+                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, is_Active: true })
 
                     let filteredDataKendaraan = dataKendaraan
                     if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
-                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis === 'Mobil');
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis !== 'Motor');
                     } else {
-                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis === 'Motor');
+                        filteredDataKendaraan = dataKendaraan
                     }
 
-                    if (filteredDataKendaraan.length > 0) {
+                    if (filteredDataKendaraan.length > 0 && dataPengemudi.length > 0) {
                         datas.push({
                             distributor,
                             jarakTempu: Math.round(distance)
