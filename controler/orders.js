@@ -176,7 +176,6 @@ module.exports = {
                         let detailBerlangsung;
                         if(order.status === "Berlangsung"){
                             const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id }}});
-                            console.log(pengiriman)
                             detailBerlangsung = pengiriman? "Dikirim" : "Diproses"
                         }else if(order.status === "Belum Bayar"){
                             detailBerlangsung = null
