@@ -30,8 +30,11 @@ const userConnected = [];
 
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
+  
+  if(!userConnected.some(user => user.id === socket.id)) {
+    userConnected.push(socket.user); 
+  }
 
-  userConnected.push(socket.user);
   console.log(
     `${userConnected.length} ${
       userConnected.length > 1 ? "users" : "user"
@@ -40,7 +43,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", (reason) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
-    console.log(index)
+    console.log('index nya: ',index)
     if (index > -1) userConnected.splice(index, 1);
     console.log('ada yang logout dengan socket id: ', socket.id)
   });
