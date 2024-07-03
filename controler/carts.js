@@ -18,7 +18,7 @@ module.exports = {
             });
             // const sellerId = [];
 
-            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id total_stok userId diskon name_product minimalOrder berat panjang lebar tinggi').populate({
+            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id total_price total_stok userId diskon name_product minimalOrder berat panjang lebar tinggi').populate({
                 path: "userId",
                 select: "_id role"
             })
@@ -36,7 +36,8 @@ module.exports = {
                     arrayProduct: []
                   };
                 }
-                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity, cartId: getCart._id, varian: getCart.varian.length > 0? getCart.varian : null, total_price: getCart.total_price});
+                console.log(product.total_price)
+                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity, cartId: getCart._id, varian: getCart.varian.length > 0? getCart.varian : null, total_price_cart: getCart.total_price});
             };
             const finalData = []
             const keys = Object.keys(storeMap)
