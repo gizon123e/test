@@ -10,6 +10,7 @@ const io = new Server({
 
 io.use((socket, next) => {
   try {
+    console.log(socket.handshake.auth)
     if(socket.handshake.auth.fromServer){
       socket.user = { id: '1' }
       socket.id = socket.user.id
@@ -41,6 +42,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", (reason) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
+    console.log(index)
     if (index > -1) userConnected.splice(index, 1);
     console.log('ada yang logout dengan socket id: ', socket.id)
   });
@@ -81,6 +83,7 @@ io.on("connection", (socket) => {
 
   socket.on('notif_order', async(data) => {
     const {userId, message} = data
+    console.log(data)
     io.to(userId).emit('notifikasi_order', message)
   })
 });
