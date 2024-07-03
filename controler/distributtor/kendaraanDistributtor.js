@@ -159,7 +159,7 @@ module.exports = {
 
             const dataLayananDistributor = []
             for (let kendaraan of dataKendaraan) {
-                const dataLayanan = await LayananKendaraanDistributor.findOne({ id_distributor: kendaraan.id_distributor._id, jenisKendaraan: kendaraan.jenisKendaraan._id })
+                const dataLayanan = await LayananKendaraanDistributor.find({ id_distributor: kendaraan.id_distributor._id, jenisKendaraan: kendaraan.jenisKendaraan._id })
                     .populate({
                         path: "tarifId",
                         populate: "jenis_kendaraan",
@@ -172,24 +172,25 @@ module.exports = {
                     .populate("jenisKendaraan")
                     .lean()
 
-                console.log("kendaraan", dataLayanan)
-                dataLayananDistributor.push(dataLayanan)
+                console.log("dataLayanan", dataLayanan)
+
+                for (let data of dataLayanan) {
+                    const dataParsingLayananDistributor = await LayananKendaraanDistributor.findOne({ _id: data._id })
+                        .populate({
+                            path: "tarifId",
+                            populate: "jenis_kendaraan",
+                            populate: "jenis_jasa"
+                        })
+                        .populate({
+                            path: "id_distributor",
+                            populate: "alamat_id"
+                        })
+                        .populate("jenisKendaraan")
+                        .lean()
+
+                    dataLayananDistributor.push(dataParsingLayananDistributor)
+                }
             }
-
-            // const dataLayanan = await LayananKendaraanDistributor.find({ id_distributor: req.params.id })
-            //     .populate({
-            //         path: "tarifId",
-            //         populate: "jenis_kendaraan",
-            //         populate: "jenis_jasa"
-            //     })
-            //     .populate({
-            //         path: "id_distributor",
-            //         populate: "alamat_id"
-            //     })
-            //     .populate("jenisKendaraan")
-            //     .lean()
-
-            // if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
 
             let filteredDataKendaraan = dataLayananDistributor;
 
