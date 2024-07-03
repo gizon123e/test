@@ -148,7 +148,7 @@ module.exports = {
             const jarakTempu = Math.round(distance)
 
             let data = []
-            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id })
+            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, is_Active: true })
                 .populate({
                     path: "id_distributor",
                     populate: "alamat_id"
@@ -157,22 +157,42 @@ module.exports = {
                 .populate("jenisKendaraan")
                 .lean()
 
-            const dataLayanan = await LayananKendaraanDistributor.find({ id_distributor: req.params.id })
-                .populate({
-                    path: "tarifId",
-                    populate: "jenis_kendaraan",
-                    populate: "jenis_jasa"
-                })
-                .populate({
-                    path: "id_distributor",
-                    populate: "alamat_id"
-                })
-                .populate("jenisKendaraan")
-                .lean()
+            const dataLayananDistributor = []
+            for (let kendaraan of dataKendaraan) {
+                const dataLayanan = await LayananKendaraanDistributor.find({ id_distributor: kendaraan.id_distributor._id, jenisKendaraan: kendaraan.jenisKendaraan._id })
+                    .populate({
+                        path: "tarifId",
+                        populate: "jenis_kendaraan",
+                        populate: "jenis_jasa"
+                    })
+                    .populate({
+                        path: "id_distributor",
+                        populate: "alamat_id"
+                    })
+                    .populate("jenisKendaraan")
+                    .lean()
 
-            if (!dataKendaraan) return res.status(404).json({ message: "data Not Found" })
+                console.log("dataLayanan", dataLayanan)
 
-            let filteredDataKendaraan = dataLayanan;
+                for (let data of dataLayanan) {
+                    const dataParsingLayananDistributor = await LayananKendaraanDistributor.findOne({ _id: data._id })
+                        .populate({
+                            path: "tarifId",
+                            populate: "jenis_kendaraan",
+                            populate: "jenis_jasa"
+                        })
+                        .populate({
+                            path: "id_distributor",
+                            populate: "alamat_id"
+                        })
+                        .populate("jenisKendaraan")
+                        .lean()
+
+                    dataLayananDistributor.push(dataParsingLayananDistributor)
+                }
+            }
+
+            let filteredDataKendaraan = dataLayananDistributor;
 
             for (let kendaraan of filteredDataKendaraan) {
                 const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
@@ -272,7 +292,6 @@ module.exports = {
                     }
 
                     if (volumeProduct > ukuranVolumeMotor || beratProduct > ukuranVolumeMotor) {
-                        console.log("testig 1")
                         if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,

@@ -27,40 +27,40 @@ module.exports = {
             switch (req.user.role) {
                 case "konsumen":
                     data = data.filter(item => item.for === "konsumen");
-                    if(requestFrom && requestFrom === "Mobile"){
+                    if (requestFrom && requestFrom === "Mobile") {
                         data.slice(0, 9)
-                    }else if(requestFrom && requestFrom === "Web"){
+                    } else if (requestFrom && requestFrom === "Web") {
                         data.slice(0, 8)
                     }
                     break;
                 case "vendor":
                     data = data.filter(item => item.for === "vendor");
-                    if(requestFrom && requestFrom === "Mobile"){
+                    if (requestFrom && requestFrom === "Mobile") {
                         data.slice(0, 9)
-                    }else if(requestFrom && requestFrom === "Web"){
+                    } else if (requestFrom && requestFrom === "Web") {
                         data.slice(0, 8)
                     }
                     break;
                 case "supplier":
                     data = data.filter(item => item.for === "supplier");
-                    if(requestFrom && requestFrom === "Mobile"){
+                    if (requestFrom && requestFrom === "Mobile") {
                         data.slice(0, 9)
-                    }else if(requestFrom && requestFrom === "Web"){
+                    } else if (requestFrom && requestFrom === "Web") {
                         data.slice(0, 8)
                     }
                     break;
                 case "produsen":
                     data = data.filter(item => item.for === "produsen");
-                    if(requestFrom && requestFrom === "Mobile"){
+                    if (requestFrom && requestFrom === "Mobile") {
                         data.slice(0, 9)
-                    }else if(requestFrom && requestFrom === "Web"){
+                    } else if (requestFrom && requestFrom === "Web") {
                         data.slice(0, 8)
                     }
                     break;
             }
-            function firstIndex(array){
-                const index = array.findIndex( item => item.name === 'makanan & minuman')
-                if(index > -1){
+            function firstIndex(array) {
+                const index = array.findIndex(item => item.name === 'makanan & minuman')
+                if (index > -1) {
                     const [item] = array.splice(index, 1)
                     array.unshift(item)
                 }
@@ -73,7 +73,7 @@ module.exports = {
         };
     },
 
-    getAllMainCategory: async(req, res, next) => {
+    getAllMainCategory: async (req, res, next) => {
         try {
             const data = await MainCategory.aggregate([
                 { $match: {} },
@@ -94,7 +94,7 @@ module.exports = {
                     break;
             };
 
-            return res.status(200).json({message: "Berhasil Mendapatkan Semua Category", data: finalData});
+            return res.status(200).json({ message: "Berhasil Mendapatkan Semua Category", data: finalData });
 
         } catch (error) {
             console.log(error);
@@ -106,24 +106,24 @@ module.exports = {
         try {
             const id = req.params.id
             const mainCategory = await MainCategory.aggregate([
-                { 
+                {
                     $match: {
                         _id: new mongoose.Types.ObjectId(id)
                     }
                 },
                 {
-                    $lookup:{
+                    $lookup: {
                         from: "subcategories",
-                        let: { subId: "$contents"},
+                        let: { subId: "$contents" },
                         pipeline: [
-                            { $match: { $expr: { $in: ["$_id","$$subId"]}}},
-                            { $project: { contents: 0,  __v: 0 }}
+                            { $match: { $expr: { $in: ["$_id", "$$subId"] } } },
+                            { $project: { contents: 0, __v: 0 } }
                         ],
                         as: "sub_categories"
                     }
                 },
                 {
-                    $project : { contents: 0, icon: 0, showAt: 0, for: 0, __v: 0 }
+                    $project: { contents: 0, icon: 0, showAt: 0, for: 0, __v: 0 }
                 }
             ])
             if (!mainCategory || mainCategory.length === 0) return res.status(404).json({ message: `Main category dengan id ${id} tidak ditemukan` });
@@ -182,7 +182,7 @@ module.exports = {
                 const check = main_category.contents.find(item => {
                     return item._id.equals(sub_category._id);
                 });
-                if(!check){
+                if (!check) {
                     const id = main_category._id
                     main_category = await MainCategory.findByIdAndUpdate(id, { $push: { contents: sub_category._id } }, { new: true });
                 }
@@ -194,8 +194,8 @@ module.exports = {
                     specific_category = await SpecificCategory.create({ name: specific });
                 }
                 let update;
-                const duplicate = await SubCategory.find({contents: {$in: specific_category._id}});
-                if(duplicate || duplicate.length > 0){
+                const duplicate = await SubCategory.find({ contents: { $in: specific_category._id } });
+                if (duplicate || duplicate.length > 0) {
                     update = await SpecificCategory.create({ name: specific });
                 }
                 const id = sub_category._id
@@ -279,7 +279,7 @@ module.exports = {
 
                 data.icon = `${process.env.HOST}/public/icon/${iconName}`
             };
-
+            console.log(data)
             const dataCategory = await MainCategory.findByIdAndUpdate(req.params.id, data, { new: true });
             return res.status(201).json({
                 message: 'Update Category success',

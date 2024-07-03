@@ -13,32 +13,35 @@ const mainModelCategory = new mongoose.Schema({
             ref: "SubCategory"
         }
     ],
-    icon:{
+    icon: {
         type: String,
         default: ""
     },
-    showAt:{
+    showAt: {
         type: String,
         enum: ["mobile", "web", "mobile dan web", "all"],
         default: "all",
         required: ['true', "show at harus ada"]
     },
-    for:{
+    for: {
         type: String,
         enum: ["konsumen", "vendor", "supplier", "produsen"]
     }
 }, { timestamp: true })
 
-mainModelCategory.pre('findOneAndUpdate', async function(next){
-    const main = await this.model.findOne({
-        contents: { $in: this.getUpdate().$push.contents }
-    }).lean()
-    if(main){
-        const specific = await SubCategory.findOne({_id: this.getUpdate().$push.contents})
-        const update = await SubCategory.create({
-            name: specific.name
-        })
-        this.getUpdate().$push.contents = update._id
+mainModelCategory.pre('findOneAndUpdate', async function (next) {
+    console.log(this.getUpdate()?.$push?.contents)
+    if (this.getUpdate()?.$push?.contents) {
+        const main = await this.model.findOne({
+            contents: { $in: this.getUpdate().$push.contents }
+        }).lean()
+        if (main) {
+            const specific = await SubCategory.findOne({ _id: this.getUpdate().$push.contents })
+            const update = await SubCategory.create({
+                name: specific.name
+            })
+            this.getUpdate().$push.contents = update._id
+        }
     }
     next()
 })
