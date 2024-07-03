@@ -43,7 +43,7 @@ module.exports = {
             for(const product of products){
                 socket.emit('notif_order', { userId: pengiriman.orderId.userId, message: `Pesanan ${product.name_product} telah dikirim`} )
             }
-            socket.disconnect()
+            // socket.disconnect()
             return res.status(200).json({message: "Berhasil Mengubah Status Pengiriman"})
         } catch (error) {
             console.log(error);

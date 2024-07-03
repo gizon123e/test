@@ -10,7 +10,6 @@ const io = new Server({
 
 io.use((socket, next) => {
   try {
-    console.log(socket.handshake.auth)
     if(socket.handshake.auth.fromServer){
       socket.user = { id: '1' }
       socket.id = socket.user.id
@@ -33,7 +32,6 @@ io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
 
   userConnected.push(socket.user);
-  console.log('user aktif', userConnected)
   console.log(
     `${userConnected.length} ${
       userConnected.length > 1 ? "users" : "user"
