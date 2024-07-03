@@ -75,19 +75,21 @@ module.exports = {
                 const dataOrders = await Orders.aggregate([
                     { $match: filter },
                     { $project: { items: 1, status: 1, createdAt: 1, expire: 1 }},
-                    { $project: { detail_pesanan: 0 }},
+                    {
+                        $lookup: {
+                            from: 'detailpesanans',
+                            let: { orderId: '$_id' },
+                            pipeline: [
+                                { $match: { $expr: { $eq: ['$id_pesanan', '$$orderId'] } } },
+                                { $project: { _id: 1, total_price: 1 } }
+                            ],
+                            as: 'detail_pesanan'
+                        }
+                    },
+                    { $unwind: "$detail_pesanan" },
+                    { $addFields: { total_pesanan: "$detail_pesanan.total_price" }},
                     { $unwind: "$items" },
                     { $unwind: "$items.product" },
-                    {
-                        $addFields:{
-                            quantity: "$items.product.quantity"
-                        }
-                    },
-                    {
-                        $addFields:{
-                            varian_ordered: "$items.product.varian"
-                        }
-                    },
                     {
                         $lookup: {
                             from: 'products',
@@ -99,95 +101,89 @@ module.exports = {
                             as: 'productInfo'
                         }
                     },
-                    {
-                        $unwind: '$productInfo'
-                    },
-                    {
-                        $lookup: {
-                            from: 'specificcategories',
-                            let: { cat: '$productInfo.categoryId'},
-                            pipeline: [
-                                { $match : { $expr: { $eq: ['$_id', "$$cat"]}}},
-                                { $project: { name: 1, _id: 0 } }
-                            ],
-                            as: "categoryInfo"
-                        }
-                    },
-                    {
-                        $unwind: "$categoryInfo"
-                    },
-                    {
-                        $addFields: {
-                            "productInfo.categoryId": "$categoryInfo.name"
-                        }
-                    },
+                    { $unwind: "$productInfo" },
+                    { $addFields: { 'items.product.productId': "$productInfo" }},
                     {
                         $lookup: {
                             from: "users",
-                            let: { userId: '$productInfo.userId'},
-                            pipeline:[
-                                { $match: { $expr: { $eq: ["$_id", "$$userId"]}} },
-                                { $project: { _id: 1, role: 1} }
+                            let: { userId: { $toObjectId: "$items.product.productId.userId" } },
+                            pipeline: [
+                                { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
+                                { $project: { _id: 1, role: 1 } }
                             ],
                             as: "user_details"
                         }
                     },
+                    { $unwind: "$user_details" },
+                    { $addFields: { 'items.product.productId.userId': "$user_details" }},
                     {
-                        $addFields: {
-                            "productInfo.userId": { $arrayElemAt: ["$user_details", 0] }
+                        $lookup: {
+                            from: "specificcategories",
+                            localField: "items.product.productId.categoryId",
+                            foreignField: "_id",
+                            as: "category_details"
                         }
                     },
+                    { $unwind: "$category_details" },
+                    { $addFields: { 'items.product.productId.categoryId': "$category_details" }},
+                    { $project: { user_details: 0, productInfo: 0, category_details: 0 }},
                     {
-                        $project: { user_details: 0, items: 0, categoryInfo: 0 }
+                        $group: {
+                            _id: "$_id",
+                            items: {
+                                $push: {
+                                    product: "$items.product",
+                                    deadline: "$items.deadline",
+                                    kode_pesanan: "$items.kode_pesanan"
+                                }
+                            },
+                            status: { $first: "$status" },
+                            expire: { $first: "$expire" },
+                            createdAt: { $first: "$createdAt" },
+                            total_pesanan: { $first: "$total_pesanan" },
+                        }
                     },
                 ]);
                 let data = []
-                const store = {}
                 for(const order of dataOrders){
-                    const storeId = order.productInfo.userId._id
-                    if(!store[storeId]){
-                        store[storeId] = {
-                            id_user_seller: storeId,
-                            role: order.productInfo.userId.role,
-                            arrayOrder: []
+                    const store  = {}
+                    for (const item of order.items){
+                        const storeId = item.product.productId.userId._id.toString()
+
+                        let detailToko;
+                        
+                        switch(item.product.productId.userId.role){
+                            case "vendor":
+                                detailToko = await TokoVendor.findOne({userId: storeId}).select('namaToko');
+                                break;
+                            case "supplier":
+                                detailToko = await Supplier.findOne({userId: storeId});
+                                break;
+                            case "produsen":
+                                detailToko = await Produsen.findOne({userId: storeId});
+                                break;
                         }
-                    }
 
-                    const duplicateOrder = { ...order }
-                    if(order.status === "Berlangsung"){
-                        const pengiriman = await Pengiriman.findOne({orderId: order._id, productToDelivers: {
-                            $elemMatch:{
-                                productId: order.productInfo._id
+                        if(!store[storeId]){
+                            store[storeId] = {
+                                seller : {
+                                    _id: item.product.productId.userId._id,
+                                    namaToko: detailToko.namaToko
+                                },
+                                arrayProduct: []
                             }
-                        }})
-
-
-                        if(pengiriman === null) return res.status(404).json({message: "Ada kesalahan di pengiriman, pengiriman tidak ditemukan"})
-                        duplicateOrder.detailBerlangsung = pengiriman.status_pengiriman
-                    }else{
-                        duplicateOrder.detailBerlangsung = null
+                        }
+                        store[storeId].arrayProduct.push(item.product)
                     }
-                    store[storeId].arrayOrder.push(duplicateOrder)
-                }
-                let detailToko
-                for(const key of Object.keys(store)){
-                    switch(store[key].role){
-                        case "vendor":
-                            detailToko = await TokoVendor.findOne({userId: store[key].id_user_seller}).select('namaToko');
-                            break;
-                        case "supplier":
-                            detailToko = await Supplier.findOne({userId: store[key].id_user_seller});
-                            break;
-                        case "produsen":
-                            detailToko = await Produsen.findOne({userId: store[key].id_user_seller});
-                            break;
-                    }
+                    const mappedOrder = Object.keys(store).map(key => {
+                        return store[key]
+                    })
+                    const { items, ...rest } = order
                     data.push({
-                        namaToko: detailToko.namaToko,
-                        ...store[key]
+                        ...rest,
+                        product_order: mappedOrder
                     })
                 }
-                // await Promise.all(promises);
                 if (!dataOrders || dataOrders.length < 1) {
                     return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
                 }
@@ -215,12 +211,12 @@ module.exports = {
                 dataOrders = dataOrders.filter(order => {
                     return order.product.some(item => item.productId.userId._id.toString() === req.user.id);
                 });
+                if (!dataOrders || dataOrders.length < 1) {
+                    return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
+                }
+                // datas: dataOrders,
+                return res.status(200).json({ message: 'get data all Order success', data })
             }
-            if (!dataOrders || dataOrders.length < 1) {
-                return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
-            }
-            // datas: dataOrders,
-            return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
