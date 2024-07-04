@@ -17,7 +17,7 @@ const modelOrder = new mongoose.Schema({
                 min: 1,
                 default: 1
             },
-            varian:[String],
+            varian: [String],
             note: {
                 type: String,
                 default: null
@@ -27,7 +27,7 @@ const modelOrder = new mongoose.Schema({
                 default: false
             }
         }],
-        deadline:{
+        deadline: {
             type: Date,
             validate: {
                 validator: (date) => {
@@ -39,7 +39,7 @@ const modelOrder = new mongoose.Schema({
             },
             required: true
         },
-        kode_pesanan:{
+        kode_pesanan: {
             type: String
         }
     }],
@@ -64,10 +64,10 @@ const modelOrder = new mongoose.Schema({
         message: `{VALUE} is not supported`,
         default: "Belum Bayar"
     },
-    isApproved:{
+    isApproved: {
         type: Boolean
     },
-    isDistributtorApproved:{
+    isDistributtorApproved: {
         type: Boolean,
         default: false
     },
@@ -90,7 +90,7 @@ const modelOrder = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    expire:{
+    expire: {
         type: Date
     },
     shipments: [
@@ -100,13 +100,13 @@ const modelOrder = new mongoose.Schema({
                 type: mongoose.Types.ObjectId,
                 ref: "Distributtor"
             },
-            total_ongkir:{
+            total_ongkir: {
                 type: Number
             },
-            potongan_ongkir:{
+            potongan_ongkir: {
                 type: Number
             },
-            ongkir:{
+            ongkir: {
                 type: Number
             },
             products: [{
@@ -121,8 +121,17 @@ const modelOrder = new mongoose.Schema({
             waktu_pengiriman: {
                 type: Date
             },
-            id_jenis_kendaraan:{
-                type: mongoose.Types.ObjectId
+            id_jenis_kendaraan: {
+                type: mongoose.Types.ObjectId,
+                ref: "JenisKendaraan"
+            },
+            id_jenis_layanan: {
+                type: mongoose.Types.ObjectId,
+                ref: "LayananKendaraanDistributor"
+            },
+            id_toko_vendor: {
+                type: mongoose.Types.ObjectId,
+                ref: "TokoVendor"
             }
         }
     ]

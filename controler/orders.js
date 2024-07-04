@@ -164,7 +164,7 @@ module.exports = {
                 for (const order of dataOrders) {
                     const { items, ...rest } = order
                     let detailBerlangsung;
-                    if( order.status === "Belum Bayar" || order.status === "Dibatalkan"){
+                    if (order.status === "Belum Bayar" || order.status === "Dibatalkan") {
                         const store = {}
                         for (const item of order.items) {
                             const storeId = item.product.productId.userId._id.toString()
@@ -192,8 +192,8 @@ module.exports = {
                                     arrayProduct: []
                                 }
                             }
-                            
-                            store[storeId].arrayProduct.push({...item.product, detailBerlangsung: null})
+
+                            store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung: null })
                         }
                         const mappedOrder = Object.keys(store).map(key => {
                             return store[key]
@@ -202,7 +202,7 @@ module.exports = {
                             ...rest,
                             product_order: mappedOrder,
                         })
-                    }else{
+                    } else {
                         const store = {}
                         for (const item of order.items) {
                             const storeId = item.product.productId.userId._id.toString()
@@ -233,17 +233,17 @@ module.exports = {
 
                             const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
                             detailBerlangsung = pengiriman ? "Dikirim" : "Diproses"
-                            
-                            store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung})
+
+                            store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
                         }
-                        
+
                         Object.keys(store).forEach(key => {
-                            
-                            data.push({ ...rest, ...store[key]})
+
+                            data.push({ ...rest, ...store[key] })
                         })
                     }
                 }
-                
+
                 return res.status(200).json({ message: 'get data all Order success', data })
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
@@ -290,7 +290,7 @@ module.exports = {
         try {
             const dataOrder = await Orders.findOne({ _id: req.params.id, userId: req.user.id }).populate('addressId').lean()
             if (!dataOrder) return res.status(404).json({ message: `Tidak ada pesanan dengan id: ${req.params.id}` })
-            const detailOrder = await DetailPesanan.findOne({id_pesanan: dataOrder._id}).populate('id_va').lean()
+            const detailOrder = await DetailPesanan.findOne({ id_pesanan: dataOrder._id }).populate('id_va').lean()
             const detail_transaksi = await Transaksi.findOne({ id_pesanan: dataOrder._id })
             const detail_invoice = await Invoice.findOne({ id_transaksi: detail_transaksi._id })
             return res.status(200).json({ message: 'get detail data order success', datas: { ...dataOrder, detailOrder, detail_invoice, detail_transaksi } });
