@@ -192,6 +192,7 @@ module.exports = {
                 finalData.push({
                     nama_toko: detailToko.namaToko,
                     id_user_seller: detailToko.userId,
+                    id_seller: detailToko._id,
                     products: store[key].arrayProduct
                 })
             }
