@@ -7,7 +7,7 @@ const modelPengiriman = new mongoose.Schema({
     },
     distributorId:{
         type: mongoose.Types.ObjectId,
-        ref: "User "
+        ref: "User"
     },
     waktu_pengiriman:{
         type: String
@@ -47,6 +47,9 @@ const modelPengiriman = new mongoose.Schema({
     kode_pengiriman:{
         type: String
     },
+    rejected:{
+        type: Boolean,
+    }
 }, {timestamps: true})
 
 const Pengiriman = mongoose.model("Pengiriman", modelPengiriman);
