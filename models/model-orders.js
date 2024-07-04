@@ -127,7 +127,7 @@ const modelOrder = new mongoose.Schema({
             },
             id_jenis_layanan: {
                 type: mongoose.Types.ObjectId,
-                ref: "LayananKendaraanDistributor"
+                ref: "JenisJasaDistributor"
             },
             id_toko_vendor: {
                 type: mongoose.Types.ObjectId,

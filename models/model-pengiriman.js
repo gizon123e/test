@@ -25,9 +25,17 @@ const modelPengiriman = new mongoose.Schema({
     potongan_ongkir: {
         type: Number
     },
-    kendaraanId: {
+    id_jenis_kendaraan: {
         type: mongoose.Types.ObjectId,
         ref: "JenisKendaraan"
+    },
+    id_layanan_kendaraan: {
+        type: mongoose.Types.ObjectId,
+        ref: "JenisJasaDistributor"
+    },
+    id_toko: {
+        type: mongoose.Types.ObjectId,
+        ref: "TokoVendor"
     },
     productToDelivers: [{
         _id: false,
