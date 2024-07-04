@@ -400,6 +400,7 @@ module.exports = {
                         invoice_detail: { $first: "$invoice_detail" },
                         transaksi_detail: { $first: "$transaksi_detail" },
                         alamat_user: { $first: "$alamat_user" },
+                        expire: { $first: "$expire" }
                     }
                 }
             ]);

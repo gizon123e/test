@@ -11,7 +11,7 @@ const io = new Server({
 io.use((socket, next) => {
   try {
     if(socket.handshake.auth.fromServer){
-      socket.user = { id: '1' }
+      socket.user = { id: '1',  email: { content: null } }
       socket.id = socket.user.id
       return next()
     }
@@ -50,12 +50,12 @@ io.on("connection", (socket) => {
 
   socket.on("send msg", async (data, callback) => {
     const { userEmail, msg } = data;
+    console.log(userConnected)
 
     const foundUser = userConnected.find(
       (user) => user.email.content == userEmail
     );
 
-    console.log('data yang dikirim', data)
     // const chat = await Conversation.findOne({
     //   participants: { $all: [foundUser.id, socket.id] },
     // });
