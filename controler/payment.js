@@ -5,32 +5,32 @@ const Pengiriman = require("../models/model-pengiriman")
 const Pesanan = require('../models/model-orders');
 const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used');
-const {Transaksi} = require('../models/model-transaksi');
+const { Transaksi } = require('../models/model-transaksi');
 const Invoice = require('../models/model-invoice');
 dotenv.config();
 
 module.exports = {
-    statusPayment: async (req, res, next) =>{
+    statusPayment: async (req, res, next) => {
         try {
             const options = {
                 method: 'GET',
                 headers: {
-                  accept: 'application/json',
-                  'content-type': 'application/json',
-                  'Authorization': `Basic ${btoa(process.env.SERVERKEY + ':')}`
+                    accept: 'application/json',
+                    'content-type': 'application/json',
+                    'Authorization': `Basic ${btoa(process.env.SERVERKEY + ':')}`
                 },
             };
             const respon = await fetch(`${process.env.MIDTRANS_URL}/${req.params.id}/status`, options);
             const finalResult = await respon.json()
             console.log(finalResult)
-            return res.status(200).json({message: `Status Transaksi Ini ${finalResult.transaction_status}`})
+            return res.status(200).json({ message: `Status Transaksi Ini ${finalResult.transaction_status}` })
         } catch (error) {
             console.log(error);
             next(error)
         }
     },
 
-    midtransWebHook: async(req, res, next) => {
+    midtransWebHook: async (req, res, next) => {
         try {
             const { order_id, transaction_status } = req.body;
             const detailPesanan = await DetailPesanan.findById(order_id);
@@ -50,26 +50,26 @@ module.exports = {
             const ss = String(today.getSeconds()).padStart(2, '0');
             const date = `${yyyy}${mm}${dd}`;
             const minutes = `${hh}${mn}${ss}`
-            if(transaction_status === "settlement"){
+            if (transaction_status === "settlement") {
                 pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Berlangsung"
                 }, { new: true });
-                if(pesanan.poinTerpakai){
+                if (pesanan.poinTerpakai) {
                     user = await User.findByIdAndUpdate(pesanan.userId, {
                         $inc: { poin: -pesanan.poinTerpakai }
                     });
-                }else{
+                } else {
                     user = await User.findById(pesanan.userId)
                 }
-                const transaksi =  await Transaksi.findOneAndUpdate({id_pesanan: pesanan._id}, { status: "Pembayaran Berhasil"})
+                const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id }, { status: "Pembayaran Berhasil" })
                 const promisesFunct = [
-                    VA_Used.findOneAndDelete({orderId: order_id}),
+                    VA_Used.findOneAndDelete({ orderId: order_id }),
                     DetailPesanan.findByIdAndUpdate(order_id, {
                         isTerbayarkan: true
                     }),
-                    Invoice.updateOne({id_transaksi: transaksi._id}, { status: "Lunas"})
+                    Invoice.updateOne({ id_transaksi: transaksi._id }, { status: "Lunas" })
                 ]
-                
+
                 const total_pengiriman = await Pengiriman.estimatedDocumentCount({
                     createdAt: {
                         $gte: now,
@@ -83,9 +83,9 @@ module.exports = {
                         $lt: tomorrow
                     }
                 });
-                
 
-                for(let i = 0; i < pesanan.shipments.length; i++){
+
+                for (let i = 0; i < pesanan.shipments.length; i++) {
                     promisesFunct.push(
                         Pengiriman.create({
                             orderId: pesanan._id,
@@ -95,7 +95,11 @@ module.exports = {
                             total_ongkir: pesanan.shipments[i].total_ongkir,
                             ongkir: pesanan.shipments[i].ongkir,
                             potongan_ongkir: pesanan.shipments[i].potongan_ongkir,
+                            jenis_pengiriman: pesanan.shipments[i].id_jenis_layanan,
+                            id_jenis_kendaraan: pesanan.shipments[i].id_jenis_kendaraan,
+                            id_toko: pesanan.shipments[i].id_toko_vendor,
                             kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+
                         })
                     );
                 };
@@ -110,13 +114,13 @@ module.exports = {
                 )
 
                 await Promise.all(promisesFunct)
-            }else if(transaction_status === "cancel"){
+            } else if (transaction_status === "cancel") {
                 await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
                     status: "Dibatalkan"
                 });
             }
-            
-            return res.status(200).json({message:"Mantap"})
+
+            return res.status(200).json({ message: "Mantap" })
         } catch (error) {
             console.log(error)
             next(error)
