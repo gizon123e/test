@@ -68,7 +68,7 @@ module.exports = {
                 profile: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
                 no_telepon: no_telepon.toString(),
-                fileKTP: `${process.env.HOST}public/image-ktp/${imageNameProfile}`,
+                fileKTP: `${process.env.HOST}public/image-ktp/${imageNameKTP}`,
                 tanggalLahir,
                 jenis_sim
             })
