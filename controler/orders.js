@@ -126,7 +126,18 @@ module.exports = {
                     },
                     { $unwind: "$category_details" },
                     { $addFields: { 'items.product.productId.categoryId': "$category_details" } },
-                    { $project: { user_details: 0, productInfo: 0, category_details: 0 } },
+                    { $project: { productInfo: 0, category_details: 0 } },
+                    // {
+                    //     $addFields: {
+                    //         groupId: {
+                    //             $cond: {
+                    //                 if: { $or: [{ $eq: [status, "Belum Bayar"] }, { $eq: [status, "Dibatalkan"] }] },
+                    //                 then: "$_id",
+                    //                 else: { $concat: [{ $toString: "$user_details._id" }, "-", { $toString: "$_id" }] }
+                    //             }
+                    //         }
+                    //     }
+                    // },
                     {
                         $group: {
                             _id: "$_id",
@@ -140,60 +151,99 @@ module.exports = {
                             status: { $first: "$status" },
                             expire: { $first: "$expire" },
                             createdAt: { $first: "$createdAt" },
-                            total_pesanan: { $first: "$total_pesanan" },
+                            total_pesanan: { $first: "$total_pesanan" }
                         }
-                    },
-                ]);
-                let data = []
-                for (const order of dataOrders) {
-                    const store = {}
-                    for (const item of order.items) {
-                        const storeId = item.product.productId.userId._id.toString()
-
-                        let detailToko;
-
-                        switch (item.product.productId.userId.role) {
-                            case "vendor":
-                                detailToko = await TokoVendor.findOne({ userId: storeId }).select('namaToko');
-                                break;
-                            case "supplier":
-                                detailToko = await Supplier.findOne({ userId: storeId });
-                                break;
-                            case "produsen":
-                                detailToko = await Produsen.findOne({ userId: storeId });
-                                break;
-                        }
-
-                        if (!store[storeId]) {
-                            store[storeId] = {
-                                seller: {
-                                    _id: item.product.productId.userId._id,
-                                    namaToko: detailToko.namaToko
-                                },
-                                arrayProduct: []
-                            }
-                        }
-                        let detailBerlangsung;
-                        if (order.status === "Berlangsung") {
-                            const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
-                            detailBerlangsung = pengiriman ? "Dikirim" : "Diproses"
-                        } else if (order.status === "Belum Bayar") {
-                            detailBerlangsung = null
-                        }
-                        store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
                     }
-                    const mappedOrder = Object.keys(store).map(key => {
-                        return store[key]
-                    })
-                    const { items, ...rest } = order
-                    data.push({
-                        ...rest,
-                        product_order: mappedOrder,
-                    })
-                }
+                ]);
                 if (!dataOrders || dataOrders.length < 1) {
                     return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
                 }
+
+                let data = []
+
+                for (const order of dataOrders) {
+                    const { items, ...rest } = order
+                    let detailBerlangsung;
+                    if( order.status === "Belum Bayar" || order.status === "Dibatalkan"){
+                        const store = {}
+                        for (const item of order.items) {
+                            const storeId = item.product.productId.userId._id.toString()
+
+                            let detailToko;
+
+                            switch (item.product.productId.userId.role) {
+                                case "vendor":
+                                    detailToko = await TokoVendor.findOne({ userId: storeId }).select('namaToko');
+                                    break;
+                                case "supplier":
+                                    detailToko = await Supplier.findOne({ userId: storeId });
+                                    break;
+                                case "produsen":
+                                    detailToko = await Produsen.findOne({ userId: storeId });
+                                    break;
+                            }
+
+                            if (!store[storeId]) {
+                                store[storeId] = {
+                                    seller: {
+                                        _id: item.product.productId.userId._id,
+                                        namaToko: detailToko.namaToko
+                                    },
+                                    arrayProduct: []
+                                }
+                            }
+                            
+                            store[storeId].arrayProduct.push({...item.product, detailBerlangsung: null})
+                        }
+                        const mappedOrder = Object.keys(store).map(key => {
+                            return store[key]
+                        })
+                        data.push({
+                            ...rest,
+                            product_order: mappedOrder,
+                        })
+                    }else{
+                        const store = {}
+                        for (const item of order.items) {
+                            const storeId = item.product.productId.userId._id.toString()
+
+                            let detailToko;
+
+                            switch (item.product.productId.userId.role) {
+                                case "vendor":
+                                    detailToko = await TokoVendor.findOne({ userId: storeId }).select('namaToko');
+                                    break;
+                                case "supplier":
+                                    detailToko = await Supplier.findOne({ userId: storeId });
+                                    break;
+                                case "produsen":
+                                    detailToko = await Produsen.findOne({ userId: storeId });
+                                    break;
+                            }
+
+                            if (!store[storeId]) {
+                                store[storeId] = {
+                                    seller: {
+                                        _id: item.product.productId.userId._id,
+                                        namaToko: detailToko.namaToko
+                                    },
+                                    arrayProduct: []
+                                }
+                            }
+
+                            const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
+                            detailBerlangsung = pengiriman ? "Dikirim" : "Diproses"
+                            
+                            store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung})
+                        }
+                        
+                        Object.keys(store).forEach(key => {
+                            
+                            data.push({ ...rest, ...store[key]})
+                        })
+                    }
+                }
+                
                 return res.status(200).json({ message: 'get data all Order success', data })
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
