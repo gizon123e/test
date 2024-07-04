@@ -27,35 +27,15 @@ module.exports = {
             switch (req.user.role) {
                 case "konsumen":
                     data = data.filter(item => item.for === "konsumen");
-                    if (requestFrom && requestFrom === "Mobile") {
-                        data.slice(0, 9)
-                    } else if (requestFrom && requestFrom === "Web") {
-                        data.slice(0, 8)
-                    }
                     break;
                 case "vendor":
                     data = data.filter(item => item.for === "vendor");
-                    if (requestFrom && requestFrom === "Mobile") {
-                        data.slice(0, 9)
-                    } else if (requestFrom && requestFrom === "Web") {
-                        data.slice(0, 8)
-                    }
                     break;
                 case "supplier":
                     data = data.filter(item => item.for === "supplier");
-                    if (requestFrom && requestFrom === "Mobile") {
-                        data.slice(0, 9)
-                    } else if (requestFrom && requestFrom === "Web") {
-                        data.slice(0, 8)
-                    }
                     break;
                 case "produsen":
                     data = data.filter(item => item.for === "produsen");
-                    if (requestFrom && requestFrom === "Mobile") {
-                        data.slice(0, 9)
-                    } else if (requestFrom && requestFrom === "Web") {
-                        data.slice(0, 8)
-                    }
                     break;
             }
             function firstIndex(array) {
@@ -64,7 +44,11 @@ module.exports = {
                     const [item] = array.splice(index, 1)
                     array.unshift(item)
                 }
-                return array;
+                if (requestFrom && requestFrom === "Mobile") {
+                    return array.slice(0,9);
+                } else if (requestFrom && requestFrom === "Web") {
+                    return array.slice(0,9);
+                }
             }
             return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data: firstIndex(data) });
         } catch (error) {

@@ -7,7 +7,7 @@ const geraiRetailModel = mongoose.Schema({
     icon:{
         type: String
     }
-}, { collection: 'gerairetails' });
+});
 
 const GeraiRetail = mongoose.model("GeraiRetail", geraiRetailModel);
 

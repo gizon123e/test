@@ -21,12 +21,12 @@ const ModelDetailPesanan = new mongoose.Schema({
     },
     id_ewallet: { 
         type: mongoose.Types.ObjectId, 
-        ref: 'EWallet', 
+        ref: 'Ewallet', 
         default: null 
     },
     id_gerai_tunai:{
         type: mongoose.Types.ObjectId,
-        ref: "GeraiTunai",
+        ref: "GeraiRetail",
         default: null
     },
     id_fintech:{

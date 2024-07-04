@@ -288,12 +288,128 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const dataOrder = await Orders.findOne({ _id: req.params.id, userId: req.user.id }).populate('addressId').lean()
-            if (!dataOrder) return res.status(404).json({ message: `Tidak ada pesanan dengan id: ${req.params.id}` })
-            const detailOrder = await DetailPesanan.findOne({id_pesanan: dataOrder._id}).populate('id_va').lean()
-            const detail_transaksi = await Transaksi.findOne({ id_pesanan: dataOrder._id })
-            const detail_invoice = await Invoice.findOne({ id_transaksi: detail_transaksi._id })
-            return res.status(200).json({ message: 'get detail data order success', datas: { ...dataOrder, detailOrder, detail_invoice, detail_transaksi } });
+            console.log(new mongoose.Types.ObjectId(req.params.id))
+            const dataOrder = await Orders.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(req.params.id)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "transaksis",
+                        foreignField: 'id_pesanan',
+                        localField: "_id",
+                        as: "transaksi_detail"
+                    }
+                },
+                {
+                    $unwind: "$transaksi_detail"
+                },
+                {
+                    $lookup: {
+                        from: "invoices",
+                        foreignField: 'id_transaksi',
+                        localField: "transaksi_detail._id",
+                        as: "invoice_detail"
+                    }
+                },
+                {
+                    $unwind: "$invoice_detail"
+                },
+                {
+                    $unwind: "$items"
+                },
+                {
+                    $unwind: "$items.product"
+                },
+                {
+                    $lookup: {
+                        from: "products",
+                        let: { productId: "$items.product.productId" },
+                        pipeline: [
+                            { $match: { $expr: { $eq: ["$_id", "$$productId"] } } },
+                            { $project: { name_product: 1, image_product: 1, userId: 1 } }
+                        ],
+                        as: "product_detail"
+                    }
+                },
+                { $unwind: "$product_detail" },
+                {
+                    $lookup: {
+                        from: "users",
+                        let: { userId: "$product_detail.userId" },
+                        pipeline: [
+                            { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
+                            { $project: { role: 1, _id: 1 } }
+                        ],
+                        as: "user_detail"
+                    }
+                },
+                { $unwind: "$user_detail" },
+                {
+                    $addFields: {
+                        'product_detail.userId': "$user_detail"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "addresses",
+                        foreignField: 'userId',
+                        localField: "user_detail._id",
+                        as: "alamat"
+                    }
+                },
+                {
+                    $unwind: "$alamat"
+                },
+                {
+                    $addFields: {
+                        'alamat_user': "$alamat"
+                    }
+                },
+                { $project: { user_detail: 0, alamat: 0 } },
+                {
+                    $group: {
+                        _id: "$_id",
+                        items: {
+                            $push: {
+                                product: "$product_detail",
+                            }
+                        },
+                        invoice_detail: { $first: "$invoice_detail" },
+                        transaksi_detail: { $first: "$transaksi_detail" },
+                        alamat_user: { $first: "$alamat_user" },
+                    }
+                }
+            ]);
+            const data = []
+            for(const order of dataOrder){
+                const  newItem = []
+                for(const item of order.items){
+                    let detailToko;
+                    const { userId, ...rest } = item.product
+                    switch(userId.role){
+                        case "vendor":
+                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko');
+                            break;
+                        case "supplier":
+                            detailToko = await Supplier.findOne({ userId: userId._id });
+                            break;
+                        case "produsen":
+                            detailToko = await Produsen.findOne({ userId: userId._id });
+                            break;
+                    }
+                    newItem.push({
+                        ...rest,
+                        detailToko
+                    })
+                }
+                const { items, _id , ...rest } = order
+                const detail_order = await DetailPesanan.findOne({id_pesanan: _id}).populate('id_va').populate('id_ewallet').populate('id_gerai_tunai').populate('id_fintech')
+                data.push({ _id, items: newItem , detail_order , ...rest })
+            }
+            return res.status(200).json({ message: 'get detail data order success', data });
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);

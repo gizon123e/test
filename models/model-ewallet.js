@@ -7,7 +7,7 @@ const ewalletModel = mongoose.Schema({
     icon:{
         type: String
     }
-}, { collection: 'ewallets' });
+});
 
 const Ewallet = mongoose.model("Ewallet", ewalletModel);
 
