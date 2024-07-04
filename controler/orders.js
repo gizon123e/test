@@ -28,7 +28,19 @@ const hh = String(today.getHours()).padStart(2, '0');
 const mn = String(today.getMinutes()).padStart(2, '0');
 const ss = String(today.getSeconds()).padStart(2, '0');
 const date = `${yyyy}${mm}${dd}`;
-const minutes = `${hh}${mn}${ss}`
+const minutes = `${hh}${mn}${ss}`;
+
+function fillPaymentNumber(detail_order) {
+    const paymentMethods = ['id_va', 'id_wallet', 'id_gerai_tunai', 'id_fintech'];
+
+    for (const method of paymentMethods) {
+        if (detail_order[method] !== null && detail_order[method] !== undefined) {
+            return detail_order[method].nama_fintech || detail_order[method].nama_gerai || detail_order[method].nama_bank || null;
+        }
+    }
+    
+    return null;
+}
 
 module.exports = {
     getOrderPanel: async (req, res, next) => {
@@ -371,10 +383,18 @@ module.exports = {
                 { $project: { user_detail: 0, alamat: 0 } },
                 {
                     $group: {
-                        _id: "$_id",
+                        _id: {
+                            $concat: [
+                                { $toString: "$_id" },
+                                "/",
+                                { $toString: "$product_detail._id" }
+                            ]
+                        },
                         items: {
                             $push: {
                                 product: "$product_detail",
+                                quantity: '$items.product.quantity',
+                                varian: '$items.product.varian'
                             }
                         },
                         invoice_detail: { $first: "$invoice_detail" },
@@ -406,10 +426,11 @@ module.exports = {
                     })
                 }
                 const { items, _id , ...rest } = order
-                const detail_order = await DetailPesanan.findOne({id_pesanan: _id}).populate('id_va').populate('id_ewallet').populate('id_gerai_tunai').populate('id_fintech')
-                data.push({ _id, items: newItem , detail_order , ...rest })
+                const detail_order = await DetailPesanan.findOne({id_pesanan: _id.split('/')[0]}).populate('id_va').populate('id_ewallet').populate('id_gerai_tunai').populate('id_fintech').lean()
+
+                data.push({ _id, items: newItem , detail_order: { ...detail_order, paymentMethod: fillPaymentNumber(detail_order)} , ...rest })
             }
-            return res.status(200).json({ message: 'get detail data order success', data });
+            return res.status(200).json({ message: 'get detail data order success', data: dataOrder });
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);
