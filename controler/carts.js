@@ -10,35 +10,27 @@ module.exports = {
 
     getCarts: async (req, res, next) => {
         try {
-            const idProducts = []
-            const dataCart = await Carts.find({ userId: req.user.id })
-
-            dataCart.forEach(element => {
-                idProducts.push(element.productId)
-            });
-            // const sellerId = [];
-
-            const productsChoosed = await Product.find({ _id: { $in : idProducts } }).select('image_product _id total_price total_stok userId diskon name_product minimalOrder berat panjang lebar tinggi').populate({
-                path: "userId",
-                select: "_id role"
-            })
-            .lean();
+            const dataCart = await Carts.find({ userId: req.user.id }).populate({
+                path: "productId",
+                select: 'image_product _id total_price total_stok userId diskon name_product minimalOrder berat panjang lebar tinggi',
+                populate: {
+                    path: "userId",
+                    select: "_id role"
+                }
+            }).lean()
 
             const storeMap = {};
-              
-            for (let product of productsChoosed) {
-                const storeId = product.userId._id.toString(); // Pastikan _id diubah menjadi string untuk pemetaan
-                const getCart = dataCart.find(cart => { return cart.productId === product._id })
-                if (!storeMap[storeId]) {
-                  storeMap[storeId] = {
-                    id: storeId,
-                    role: product.userId.role,
-                    arrayProduct: []
-                  };
+            for(let cart of dataCart){
+                const storeId = cart.productId.userId._id
+                if(!storeMap[storeId]){
+                    storeMap[storeId] = {
+                        id: storeId,
+                        role: cart.productId.userId.role,
+                        arrayProduct: []
+                    }
                 }
-                console.log(product.total_price)
-                storeMap[storeId].arrayProduct.push({...product, quantity: getCart.quantity, cartId: getCart._id, varian: getCart.varian.length > 0? getCart.varian : null, total_price_cart: getCart.total_price});
-            };
+                storeMap[storeId].arrayProduct.push({...cart.productId, quantity: cart.quantity, cartId: cart._id, varian: cart.varian.length > 0? cart.varian : null, total_price_cart: cart.total_price});
+            }
             const finalData = []
             const keys = Object.keys(storeMap)
             for (let key of keys){
@@ -214,7 +206,6 @@ module.exports = {
         try {
             const { productId, quantity, varian } = req.body
             const product = await Product.findById(productId).populate('userId');
-            
             if (!product) {
                 return res.status(404).json({
                     error: true,
@@ -240,7 +231,7 @@ module.exports = {
                     if (!nama_varians.includes(item.nama_varian.toLowerCase()) || !nilai_varians.includes(item.nilai_varian.toLowerCase())) {
                         return res.status(400).json({
                             error: true,
-                            message: `Invalid variant for product ${product.name_product}`
+                            message: `Invalid variant for product ${product.name_product}. ${item.nama_varian.toLowerCase(), item.nilai_varian.toLowerCase()}`
                         });
                     };
                 })
@@ -257,7 +248,7 @@ module.exports = {
                 if (validateCart) {
                     
                     const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
-
+                    if(plusQuantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok"})
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
                         {
                             quantity: plusQuantity,
@@ -269,6 +260,7 @@ module.exports = {
                         datas: updateCart
                     })
                 } else {
+                    if(quantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok"})
                     const dataCarts = await Carts.create({ 
                         productId, 
                         quantity, 

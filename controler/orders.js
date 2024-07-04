@@ -238,11 +238,12 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const dataOrder = await Orders.findOne({ _id: req.params.id, userId: req.user.id }).lean()
+            const dataOrder = await Orders.findOne({ _id: req.params.id, userId: req.user.id }).populate('addressId').lean()
             if (!dataOrder) return res.status(404).json({ message: `Tidak ada pesanan dengan id: ${req.params.id}` })
+            const detailOrder = await DetailPesanan.findOne({id_pesanan: dataOrder._id}).populate('id_va').lean()
             const detail_transaksi = await Transaksi.findOne({ id_pesanan: dataOrder._id })
             const detail_invoice = await Invoice.findOne({ id_transaksi: detail_transaksi._id })
-            return res.status(200).json({ message: 'get detail data order success', datas: { ...dataOrder, detail_invoice, detail_transaksi } });
+            return res.status(200).json({ message: 'get detail data order success', datas: { ...dataOrder, detailOrder, detail_invoice, detail_transaksi } });
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);

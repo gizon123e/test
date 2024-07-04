@@ -9,26 +9,32 @@ const io = new Server({
 });
 
 io.use((socket, next) => {
-  if(socket.handshake.auth.fromServer){
-    socket.user = { id: '1' }
-    socket.id = socket.user.id
-    return next()
+  try {
+    if(socket.handshake.auth.fromServer){
+      socket.user = { id: '1' }
+      socket.id = socket.user.id
+      return next()
+    }
+    const token = socket.handshake.auth.token;
+    const verifyToken = jwt.verifyToken(token);
+    if (!verifyToken) return next(new Error("Authentication error"));
+    socket.user = verifyToken;
+    socket.id = socket.user.id;
+    next();
+  } catch (error) {
+    next(error)
   }
-  const token = socket.handshake.auth.token;
-  const verifyToken = jwt.verifyToken(token);
-  if (!verifyToken) return next(new Error("Authentication error"));
-  socket.user = verifyToken;
-  socket.id = socket.user.id;
-  next();
 });
 
 const userConnected = [];
 
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
+  
+  if(!userConnected.some(user => user.id === socket.id)) {
+    userConnected.push(socket.user); 
+  }
 
-  userConnected.push(socket.user);
-  console.log('user aktif', userConnected)
   console.log(
     `${userConnected.length} ${
       userConnected.length > 1 ? "users" : "user"
@@ -37,6 +43,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", (reason) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
+    console.log('index nya: ',index)
     if (index > -1) userConnected.splice(index, 1);
     console.log('ada yang logout dengan socket id: ', socket.id)
   });
@@ -77,6 +84,7 @@ io.on("connection", (socket) => {
 
   socket.on('notif_order', async(data) => {
     const {userId, message} = data
+    console.log(data)
     io.to(userId).emit('notifikasi_order', message)
   })
 });

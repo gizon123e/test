@@ -39,7 +39,7 @@ module.exports = {
     getDetailToko: async(req, res, next) => {
         try {
             const dataToko = await Toko.findOne({userId: req.params.id}).populate('address');
-            const products = await Product.find({userId: req.params.id}).select("_id image_product total_stok name_product total_price").sort({total_stok: -1})
+            const products = await Product.find({userId: req.params.id, 'status.value': "terpublish"}).select("_id image_product total_stok name_product total_price").sort({total_stok: -1})
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
             return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: dataToko, dataProduct: products})
         } catch (error) {
