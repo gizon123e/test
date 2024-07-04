@@ -22,6 +22,8 @@ module.exports = {
             const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
 
+            const updateDistributor = await Distributor.findByIdAndUpdate({})
+
             res.status(200).json({
                 message: "data profile success",
                 data: dataDistributor

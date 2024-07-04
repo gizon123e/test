@@ -1,20 +1,20 @@
 const mongoose = require('mongoose')
 
 const modelPengiriman = new mongoose.Schema({
-    orderId:{
+    orderId: {
         type: mongoose.Types.ObjectId,
         ref: "Pesanan"
     },
-    distributorId:{
+    distributorId: {
         type: mongoose.Types.ObjectId,
-        ref: "User"
+        ref: "Distributtor"
     },
-    waktu_pengiriman:{
+    waktu_pengiriman: {
         type: String
     },
-    jenis_pengiriman:{
-        type: String,
-        enum: ["express", "hemat"]
+    jenis_pengiriman: {
+        type: mongoose.Types.ObjectId,
+        ref: "JenisJasaDistributor"
     },
     total_ongkir: {
         type: Number
@@ -25,11 +25,11 @@ const modelPengiriman = new mongoose.Schema({
     potongan_ongkir: {
         type: Number
     },
-    kendaraanId:{
+    kendaraanId: {
         type: mongoose.Types.ObjectId,
         ref: "JenisKendaraan"
     },
-    productToDelivers:[{
+    productToDelivers: [{
         _id: false,
         productId: {
             type: String,
@@ -39,18 +39,19 @@ const modelPengiriman = new mongoose.Schema({
             type: Number
         }
     }],
-    status_pengiriman:{
+    status_pengiriman: {
         type: String,
         enum: ["diproses", "dikirim", "pesanan selesai"],
         default: "diproses"
     },
-    kode_pengiriman:{
+    kode_pengiriman: {
         type: String
     },
-    rejected:{
+    rejected: {
         type: Boolean,
+        default: false
     }
-}, {timestamps: true})
+}, { timestamps: true })
 
 const Pengiriman = mongoose.model("Pengiriman", modelPengiriman);
 module.exports = Pengiriman
