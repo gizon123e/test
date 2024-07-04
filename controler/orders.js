@@ -300,11 +300,17 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            console.log(new mongoose.Types.ObjectId(req.params.id))
+            // const dataOrder = await Orders.findById(req.params.id).populate('')
+            const { productId } = req.body
             const dataOrder = await Orders.aggregate([
                 {
                     $match: {
                         _id: new mongoose.Types.ObjectId(req.params.id)
+                    }
+                },
+                {
+                    $project: {
+                        shipments: 0 
                     }
                 },
                 {
@@ -347,10 +353,12 @@ module.exports = {
                     }
                 },
                 { $unwind: "$product_detail" },
+                { $addFields: { 'items.product.productId': "$product_detail" }},
+                { $project: { product_detail: 0 }},
                 {
                     $lookup: {
                         from: "users",
-                        let: { userId: "$product_detail.userId" },
+                        let: { userId: "$items.product.productId.userId" },
                         pipeline: [
                             { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
                             { $project: { role: 1, _id: 1 } }
@@ -359,16 +367,13 @@ module.exports = {
                     }
                 },
                 { $unwind: "$user_detail" },
-                {
-                    $addFields: {
-                        'product_detail.userId': "$user_detail"
-                    }
-                },
+                { $addFields: { 'items.product.productId.userId': "$user_detail" }},
+                { $project: { user_detail: 0 }},
                 {
                     $lookup: {
                         from: "addresses",
-                        foreignField: 'userId',
-                        localField: "user_detail._id",
+                        foreignField: '_id',
+                        localField: "addressId",
                         as: "alamat"
                     }
                 },
@@ -377,40 +382,51 @@ module.exports = {
                 },
                 {
                     $addFields: {
-                        'alamat_user': "$alamat"
+                        addressId: "$alamat"
                     }
                 },
-                { $project: { user_detail: 0, alamat: 0 } },
+                { $project: { alamat: 0 } },
                 {
                     $group: {
-                        _id: {
-                            $concat: [
-                                { $toString: "$_id" },
-                                "/",
-                                { $toString: "$product_detail._id" }
-                            ]
-                        },
+                        _id: "$_id",
                         items: {
                             $push: {
-                                product: "$product_detail",
-                                quantity: '$items.product.quantity',
-                                varian: '$items.product.varian'
+                                product: "$items.product",
+                                // quantity: '$items.product.quantity',
+                                // varian: '$items.product.varian'
                             }
                         },
                         invoice_detail: { $first: "$invoice_detail" },
                         transaksi_detail: { $first: "$transaksi_detail" },
-                        alamat_user: { $first: "$alamat_user" },
+                        addressId: { $first: "$addressId" },
                         expire: { $first: "$expire" },
                         status: { $first: "$status" }
                     }
+                },
+                {
+                    $project: {
+                        data: {
+                            _id: "$_id",
+                            items: "$items",
+                            invoice_detail: "$invoice_detail",
+                            transaksi_detail: "$transaksi_detail",
+                            addressId: "$addressId",
+                            expire: "$expire",
+                            status: "$status"
+                        }
+                    }
+                },
+                {
+                    $replaceRoot: { newRoot: "$data" }
                 }
             ]);
-            const data = []
-            for(const order of dataOrder){
-                const  newItem = []
-                for(const item of order.items){
+            const { _id, items, ...restOfOrder } = dataOrder[0]
+            
+            if(dataOrder[0].status === "Belum Bayar" || dataOrder[0].status === "Dibatalkan"){
+                const store = {}
+                for(const item of items){
                     let detailToko;
-                    const { userId, ...rest } = item.product
+                    const { userId } = item.product.productId
                     switch(userId.role){
                         case "vendor":
                             detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko');
@@ -420,19 +436,67 @@ module.exports = {
                             break;
                         case "produsen":
                             detailToko = await Produsen.findOne({ userId: userId._id });
-                            break;
+                        break;
                     }
-                    newItem.push({
-                        ...rest,
-                        detailToko
-                    })
-                }
-                const { items, _id , ...rest } = order
-                const detail_order = await DetailPesanan.findOne({id_pesanan: _id.split('/')[0]}).populate('id_va').populate('id_ewallet').populate('id_gerai_tunai').populate('id_fintech').lean()
+                    
+                    if(!store[userId._id]){
+                        store[userId._id] = {
+                            toko: detailToko,
+                            products: []
+                        }
+                    }
 
-                data.push({ _id, items: newItem , detail_order: { ...detail_order, paymentMethod: fillPaymentNumber(detail_order)} , ...rest })
+                    store[userId._id].products.push(item.product)
+                }
+                const newItem = Object.keys(store).map(key => { return store[key] })
+
+                data = {
+                    _id,
+                    item: newItem,
+                    ...restOfOrder
+                }
+            }else if(productId && (dataOrder[0].status !== "Belum Bayar" || dataOrder[0].status !== "Dibatalkan")){
+                const store = {}
+                for(const item of items){
+                    const { userId, ...rest } = item.product.productId
+                    const pengiriman = await Pengiriman.findOne({
+                        orderId: req.params.id, 
+                        productToDelivers: {
+                            $elemMatch: {
+                                productId: { $in: productId }
+                            }
+                        }
+                    })
+                    switch(userId.role){
+                        case "vendor":
+                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko');
+                            break;
+                        case "supplier":
+                            detailToko = await Supplier.findOne({ userId: userId._id });
+                            break;
+                        case "produsen":
+                            detailToko = await Produsen.findOne({ userId: userId._id });
+                        break;
+                    }
+
+                    if(!store[userId._id]){
+                        store[userId._id] = {
+                            toko: detailToko,
+                            product: []
+                        }
+                    }
+
+                    store[userId._id].product.push({...rest, status_pengiriman: pengiriman})
+                }
+                const newItem = Object.keys(store).map(key => { return store[key] })
+
+                data = {
+                    _id,
+                    item: newItem,
+                    ...restOfOrder
+                }
             }
-            return res.status(200).json({ message: 'get detail data order success', data: dataOrder });
+            return res.status(200).json({ message: 'get detail data order success', data });
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);

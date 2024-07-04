@@ -53,7 +53,13 @@ module.exports = {
 
             const products = await Product.find({ _id: { $in: prodIds } })
             for (const product of products) {
-                socket.emit('notif_order', { userId: pengiriman.orderId.userId, message: `Pesanan ${product.name_product} telah dikirim` })
+                socket.emit('notif_order', { 
+                    jenis: 'pesanan',
+                    userId: pengiriman.orderId.userId, 
+                    message: `Pesanan ${product.name_product} telah dikirim` ,
+                    image: product.image_product[0],
+                    status: "Pesanan dalam Pengiriman"
+                })
             }
             // socket.disconnect()
             return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
