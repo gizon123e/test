@@ -22,7 +22,8 @@ module.exports = {
             const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
 
-            const updateDistributor = await Distributor.findByIdAndUpdate({})
+            // tugas di sini buat poin untuk distributor update dengan kondisi poin d refres ulang jadi 0
+            // const updateDistributor = await Distributor.findByIdAndUpdate({})
 
             res.status(200).json({
                 message: "data profile success",
