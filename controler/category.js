@@ -48,6 +48,8 @@ module.exports = {
                     return array.slice(0,9);
                 } else if (requestFrom && requestFrom === "Web") {
                     return array.slice(0,9);
+                }else{
+                    return array
                 }
             }
             return res.status(200).json({ message: `Berhasil Mendapatkan Kategori Untuk ${requestFrom}`, data: firstIndex(data) });
