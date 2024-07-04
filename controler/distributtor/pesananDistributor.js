@@ -6,7 +6,18 @@ const Product = require("../../models/model-product");
 module.exports = {
     getAllPesananDistributor: async (req, res, next) => {
         try {
-            const datas = await Pengiriman.find({ distributorId: req.params.id }).populate("orderId").populate("distributorId")
+            const datas = await Pengiriman.find({ distributorId: req.params.id })
+                .populate({
+                    path: "orderId",
+                    populate: "addressId"
+                })
+                .populate("distributorId")
+                .populate({
+                    path: "id_toko",
+                    populate: "address"
+                })
+                .populate("id_jenis_kendaraan")
+                .populate("jenis_pengiriman")
             if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
 
             res.status(200).json({ message: "get data All success", datas })
