@@ -12,7 +12,9 @@ const Produsen = require('../../models/produsen/model-produsen')
 const DokumenPenanggungJawab = require("../../models/distributor/model-documenPenanggungJawab")
 const ModelPenanggungJawabKonsumen = require('../../models/konsumen/model-penanggung-jawab')
 const BiayaTetap = require("../../models/model-biaya-tetap")
-
+const Invoice = require('../../models/model-invoice')
+const { Transaksi } = require("../../models/model-transaksi")
+const Pengiriman = require("../../models/model-pengiriman")
 
 module.exports = {
     register: async (req, res, next) => {
@@ -207,6 +209,44 @@ module.exports = {
             if (!data) return res.status(404).json({ message: "data Not Found" })
 
             res.status(201).json({ message: "get by id success", data })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getAllPesananKonsument: async (req, res, next) => {
+        try {
+            const data = await Transaksi.find().populate("id_pesanan")
+
+            if (!data) return res.status(400).json({ message: "data saat ini masi kosong" })
+
+            res.status(200).json({
+                message: "data get all success",
+                data
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getAllPengiriman: async (req, res, next) => {
+        try {
+            const data = await Pengiriman.find()
+                .populate("distributorId")
+                .populate({
+                    path: "productToDelivers.productId",
+                    model: "Product"
+                })
+                .populate("id_jenis_kendaraan")
+
+            if (!data) return res.status(400).json({ message: "data saat ini masi kosong" })
+
+            res.status(200).json({
+                message: "data get all success",
+                data
+            })
         } catch (error) {
             console.log(error);
             next(error)
