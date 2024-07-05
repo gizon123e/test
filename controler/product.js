@@ -14,6 +14,7 @@ const path = require('path');
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
 const SalesReport = require("../models/model-laporan-penjualan");
+const Pesanan = require("../models/model-orders");
 // const BahanBaku = require("../models/model-bahan-baku");
 // const SalesReport = require("../models/model-laporan-penjualan");
 
@@ -565,10 +566,11 @@ module.exports = {
           .status(400)
           .json({ message: "Diperlukan payload product_id" });
       delete req.body.product_id;
-      console.log(productId)
-      const product = await Product.findOneAndUpdate(
-        { _id: productId, userId: req.user.id}
-      )
+      const product = await Product.findByIdAndUpdate(
+        productId,
+        updateData,
+        { new: true }
+      );
       if (!product) {
         return res.status(404).json({
           error: true,
@@ -576,6 +578,10 @@ module.exports = {
           datas: product,
         });
       }
+      if (product.userId.toString() !== req.user.id && req.user.role !== "administrator")
+        return res
+          .status(403)
+          .json({ message: "Tidak bisa mengubah produk orang lain!" });
 
       return res.status(201).json({
         error: false,
@@ -628,6 +634,21 @@ module.exports = {
     } catch (err) {
       console.log(err);
       next(err);
+    }
+  },
+
+  arsipkanProduct: async (req, res, next) => {
+    try {
+      const { productId, status } = req.body
+      const product = await Product.findOne({ _id: productId, userId: req.user.id });
+      const ordered = await Pesanan.find({item: {
+        product: {
+          productId
+        }
+      }}).lean()
+      return res.status(200).json({data: ordered})
+    } catch (error) {
+      console.log(error)
     }
   },
 

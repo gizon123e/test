@@ -25,6 +25,7 @@ router.put('/performance', authorization, controlerProduct.updateProductPerforma
 router.put('/verify/:id', authorization, controlerProduct.verifyOrBlockProduct);
 router.put("/editPemasok", authorization, emptyData, roleClasification.vendor, controlerProduct.pemasok);
 router.put("/edit", authorization, controlerProduct.edit);
+router.put("/arsipkan", authorization, controlerProduct.arsipkanProduct);
 router.delete("/delete", authorization, controlerProduct.delete);
 
 module.exports = router;

@@ -166,6 +166,9 @@ const productModels = new mongoose.Schema(
     berat: {
       type: Number,
       required: true,
+    },
+    isReviewed: {
+      type: Boolean
     }
     // bahanBaku: [
     //   {

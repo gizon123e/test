@@ -350,7 +350,7 @@ module.exports = {
                         let: { productId: "$items.product.productId" },
                         pipeline: [
                             { $match: { $expr: { $eq: ["$_id", "$$productId"] } } },
-                            { $project: { name_product: 1, image_product: 1, userId: 1 } }
+                            { $project: { name_product: 1, image_product: 1, userId: 1, total_price: 1 } }
                         ],
                         as: "product_detail"
                     }
