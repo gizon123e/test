@@ -42,11 +42,16 @@ module.exports = {
             if (distri.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak Bisa Mengubah Pengiriman Orang Lain!" });
 
             if (status === "dibatalkan") {
-                await Pengiriman.updateOne({ _id: req.params.id }, {
-                    rejected: true
-                });
-                console.log(distri)
-                // await Distributtor.
+                await Pengiriman.updateOne({ _id: req.params.id }, { rejected: true });
+
+                const currentDate = new Date();
+                const formattedDate = currentDate.toISOString().split('T')[0]
+
+                const currentDateResert = new Date();
+                currentDateResert.setDate(currentDateResert.getDate() + 1);
+                const formattedDateResert = currentDateResert.toISOString().split('T')[0]
+
+                await Distributtor.findByIdAndUpdate({ _id: distri._id }, { tolak_pesanan: distri.tolak_pesanan + 1, date_activity: formattedDate, date_resert: formattedDateResert }, { new: true })
             } else {
                 await Pengiriman.updateOne({ _id: req.params.id }, {
                     status_pengiriman: status

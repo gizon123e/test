@@ -68,7 +68,10 @@ const modelDistributtor = mongoose.Schema({
         default: 0
     },
     date_activity: {
-
+        type: String
+    },
+    date_resert: {
+        type: String
     }
 }, { timestamp: true });
 
