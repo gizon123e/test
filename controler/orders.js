@@ -521,9 +521,16 @@ module.exports = {
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
 
+                const result = newItem.map(toko => {
+                    return {
+                      ...toko,
+                      products: toko.products.filter(product => productId.includes(product._id))
+                    };
+                }).filter(toko => toko.products.length > 0);
+
                 data = {
                     _id,
-                    item: newItem,
+                    item: result,
                     ...restOfOrder,
                     paymentMethod: paymentMethod.find(item =>{ return item !== null })
                 }
