@@ -574,7 +574,12 @@ module.exports = {
 
   editReviewed: async(req, res, next) => {
     try {
-      
+      if(req.user.role !== 'administrator') return res.status(403).json({message: "Hanya administrator yang diizinkan"})
+      const product = await Product.findByIdAndUpdate(req.body.productId, {
+        isReviewed: req.body.review
+      }, { new: true })
+      console.log(req.body)
+      return res.status(200).json({message: "Berhasil mengubah reviewd status product", data: product})
     } catch (error) {
       console.log(error);
       next(error)

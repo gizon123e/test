@@ -425,7 +425,6 @@ module.exports = {
                     $replaceRoot: { newRoot: "$data" }
                 }
             ]);
-            // return res.status(200).json({ message: 'get detail data order success', data: dataOrder[0] });
             const { _id, items, ...restOfOrder } = dataOrder[0]
             const promises = Object.keys(dataOrder[0].order_detail).map(async (key) => {
                 const paymentMethods = ['id_va', 'id_wallet', 'id_gerai_tunai', 'id_fintech'];
