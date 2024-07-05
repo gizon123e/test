@@ -168,7 +168,8 @@ const productModels = new mongoose.Schema(
       required: true,
     },
     isReviewed: {
-      type: Boolean
+      type: Boolean,
+      default: false
     }
     // bahanBaku: [
     //   {
