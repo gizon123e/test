@@ -513,11 +513,11 @@ module.exports = {
                     if(!store[userId._id]){
                         store[userId._id] = {
                             toko: { ...detailToko, ...restOfItem},
-                            product: []
+                            products: []
                         }
                     }
 
-                    store[userId._id].product.push({...restOfProduct, ...restOfItemProduct, status_pengiriman: pengiriman})
+                    store[userId._id].products.push({...restOfProduct, ...restOfItemProduct, status_pengiriman: pengiriman})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
 

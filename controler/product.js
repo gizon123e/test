@@ -641,12 +641,21 @@ module.exports = {
     try {
       const { productId, status } = req.body
       const product = await Product.findOne({ _id: productId, userId: req.user.id });
-      const ordered = await Pesanan.find({item: {
-        product: {
-          productId
+      const ordered = await Pesanan.find({
+        items: {
+          $elemMatch: {
+              product: {
+                  $elemMatch: {
+                      productId: productId
+                  }
+              }
+          }
+        },
+        status:{
+          value: "Belum Bayar" || "Berlangsung"
         }
-      }}).lean()
-      return res.status(200).json({data: ordered})
+      }).lean()
+      if(ordered || ordered.length > 0) return res.status(403)
     } catch (error) {
       console.log(error)
     }
