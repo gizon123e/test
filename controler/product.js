@@ -14,6 +14,7 @@ const path = require('path');
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
 const SalesReport = require("../models/model-laporan-penjualan");
+const Pesanan = require("../models/model-orders");
 // const BahanBaku = require("../models/model-bahan-baku");
 // const SalesReport = require("../models/model-laporan-penjualan");
 
@@ -556,20 +557,43 @@ module.exports = {
     }
   },
 
+  checkReviewedProduct: async(req, res, next) => {
+    try {
+      const { productId } = req.body
+
+      const product = await Product.findOne({ _id: productId, userId: req.user.id});
+
+      if(product.isReviewed) return res.status(403).json({message: "Product sedang direview, tidak bisa diubah"});
+
+      return res.status(200).json({message: "Product bisa diedit"})
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
+  editReviewed: async(req, res, next) => {
+    try {
+      
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
   edit: async (req, res, next) => {
     try {
-      const updateData = req.body;
-      const productId = req.body.product_id;
-      if (!productId)
-        return res
-          .status(400)
-          .json({ message: "Diperlukan payload product_id" });
-      delete req.body.product_id;
-      const product = await Product.findByIdAndUpdate(
-        productId,
-        updateData,
-        { new: true }
-      );
+      let updateData;
+      const productId = req.body.productId;
+      // const directlyEdited = ["total_stok", "minimalOrder", "minimalDp", "price", "diskon"];
+      const notDirectlyEdited = [ "name_product", "id_main_category", "id_sub_category", "categoryId", "image_product", "description", "long_description", "varian"]
+      
+      if (!productId) return res
+        .status(400)
+        .json({ message: "Diperlukan payload product_id" });
+
+      const product = await Product.findById(productId);
+
       if (!product) {
         return res.status(404).json({
           error: true,
@@ -577,16 +601,30 @@ module.exports = {
           datas: product,
         });
       }
+
+      if(product.isReviewed) return res.status(403).json({message: "Product sedang direview, tidak bisa diubah"});
+
+      Object.keys(req.body).forEach(key => {
+        if(notDirectlyEdited.includes(key)){
+          return updateData = {
+            ...req.body,
+            'status.value': "ditinjau"
+          }
+        }
+      });
+
       if (product.userId.toString() !== req.user.id && req.user.role !== "administrator")
         return res
           .status(403)
           .json({ message: "Tidak bisa mengubah produk orang lain!" });
-
+      
+      const editedProduct = await Product.findByIdAndUpdate(productId, updateData)
       return res.status(201).json({
         error: false,
         message: "Berhasil Mengubah Data Produk",
-        datas: product,
+        datas: editedProduct,
       });
+
     } catch (err) {
       console.log(err);
       next(err);
@@ -636,6 +674,36 @@ module.exports = {
     }
   },
 
+  arsipkanProduct: async (req, res, next) => {
+    try {
+      const { productId, status } = req.body
+      const product = await Product.findOne({ _id: productId, userId: req.user.id });
+      if(!product) return res.status(404).json({message: `Tidak ditemukan product dengan id: ${productId}`})
+      const ordered = await Pesanan.find({
+        items: {
+          $elemMatch: {
+              product: {
+                  $elemMatch: {
+                      productId: productId
+                  }
+              }
+          }
+        },
+        status: { $in: ["Belum Bayar", "Berlangsung"] }
+      })
+
+      if(status === 'diarsipkan'){
+        if(product.status.value === "diarsipkan") return res.status(400).json({message: "Product sudah diarsipkan"})
+        if(ordered.length > 0) return res.status(403).json({ message: "Tidak bisa mengarsipkan product karena ada orderan yang sedang aktif", data: ordered})
+      }
+
+      await Product.updateOne({ _id: productId }, { 'status.value': status })
+      return res.status(200).json({message: "Berhasil mengarsipkan product"})
+    } catch (error) {
+      console.log(error)
+    }
+  },
+
   updateProductPerformance: async (req, res, next) => {
     try {
       const { views, impressions } = req.query
@@ -671,11 +739,27 @@ module.exports = {
 
   delete: async (req, res, next) => {
     try {
-      const productId = req.body.product_id;
+      const productId = req.body.productId;
       const deleted = await Product.findById(productId);
       if(!deleted) return res.status(404).json({message: `Tidak ada produk dengan id: ${productId}`})
       if(req.user.id.toString() !== deleted.userId.toString() && req.user.role !== 'administrator') return res.status(403).json({message: "Anda Tidak Bisa Menghapus Produk Ini"})
-      await Product.deleteOne({_id: deleted._id})
+      
+      const ordered = await Pesanan.find({
+        items: {
+          $elemMatch: {
+              product: {
+                  $elemMatch: {
+                      productId: productId
+                  }
+              }
+          }
+        },
+        status: { $in: ["Belum Bayar", "Berlangsung"] }
+      }).lean();
+
+      if(ordered.length > 0) return res.status(403).json({ message: "Tidak bisa menghapus product karena ada orderan yang sedang aktif", data: ordered});
+      if(deleted.isReviewed) return res.status(403).json({message: "Product sedang direview, tidak bisa hapus"})
+      await Product.deleteOne({_id: deleted._id});
       return res.status(201).json({
         error: false,
         message: "Berhasil Menghapus Data Produk",

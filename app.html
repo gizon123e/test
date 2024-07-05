@@ -252,7 +252,7 @@
       );
       socket.on('notifikasi_order', (data)=>{
         const text = document.createElement("p");
-        text.innerHTML = `${data}`;
+        text.innerHTML = `${JSON.stringify(data)}`;
         document.body.appendChild(text);
       })
     </script>

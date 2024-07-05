@@ -83,9 +83,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on('notif_order', async(data) => {
-    const {userId, message} = data
+    const {userId, ...rest} = data
     console.log(data)
-    io.to(userId).emit('notifikasi_order', message)
+    io.to(userId).emit('notifikasi_order', JSON.stringify({...rest}))
   })
 });
 

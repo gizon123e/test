@@ -20,11 +20,13 @@ router.get('/product_by_specific_category/:id', authorization, controlerProduct.
 router.get('/product_by_sub_category/:id', authorization, controlerProduct.getProductWithSub);
 router.get('/list_all', authorization, controlerProduct.list_all)
 router.get('/list_panel', authorization, controlerProduct.list_product_adminPanel);
+router.get('/check_reviewed', authorization, controlerProduct.checkReviewedProduct);
 router.post("/upload", authorization, notEmptyDetailData, controlerProduct.upload);
 router.put('/performance', authorization, controlerProduct.updateProductPerformance);
 router.put('/verify/:id', authorization, controlerProduct.verifyOrBlockProduct);
 router.put("/editPemasok", authorization, emptyData, roleClasification.vendor, controlerProduct.pemasok);
-router.put("/edit", controlerProduct.edit);
+router.put("/edit", authorization, controlerProduct.edit);
+router.put("/arsipkan", authorization, controlerProduct.arsipkanProduct);
 router.delete("/delete", authorization, controlerProduct.delete);
 
 module.exports = router;

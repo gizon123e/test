@@ -9,7 +9,7 @@ const router = require('express').Router()
 
 router.get('/list-order-panel', controlerOrder.getOrderPanel)
 router.get('/list', authorization, controlerOrder.getOrders)
-router.get('/detail/:id', authorization, controlerOrder.getOrderDetail);
+router.post('/detail/:id', authorization, controlerOrder.getOrderDetail);
 router.post('/create', authorization, notEmptyDetailData, controlerOrder.createOrder)
 router.put("/update_status", authorization, emptyData, controlerOrder.update_status)
 router.delete('/delete/:id', authorization, controlerOrder.deleteOrder)
