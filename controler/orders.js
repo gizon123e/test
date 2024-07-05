@@ -13,6 +13,10 @@ const TokoVendor = require('../models/vendor/model-toko');
 const User = require("../models/model-auth-user");
 const Pengiriman = require("../models/model-pengiriman");
 const Invoice = require("../models/model-invoice");
+const VirtualAccount = require("../models/model-virtual-account");
+const Ewallet = require("../models/model-ewallet");
+const GeraiRetail = require("../models/model-gerai");
+const Fintech = require("../models/model-fintech");
 dotenv.config();
 
 const now = new Date();
@@ -29,18 +33,6 @@ const mn = String(today.getMinutes()).padStart(2, '0');
 const ss = String(today.getSeconds()).padStart(2, '0');
 const date = `${yyyy}${mm}${dd}`;
 const minutes = `${hh}${mn}${ss}`;
-
-function fillPaymentNumber(detail_order) {
-    const paymentMethods = ['id_va', 'id_wallet', 'id_gerai_tunai', 'id_fintech'];
-
-    for (const method of paymentMethods) {
-        if (detail_order[method] !== null && detail_order[method] !== undefined) {
-            return detail_order[method].nama_fintech || detail_order[method].nama_gerai || detail_order[method].nama_bank || null;
-        }
-    }
-    
-    return null;
-}
 
 module.exports = {
     getOrderPanel: async (req, res, next) => {
@@ -315,6 +307,17 @@ module.exports = {
                 },
                 {
                     $lookup: {
+                        from: "detailpesanans",
+                        foreignField: 'id_pesanan',
+                        localField: "_id",
+                        as: "order_detail"
+                    }
+                },
+                {
+                    $unwind: "$order_detail"
+                },
+                {
+                    $lookup: {
                         from: "transaksis",
                         foreignField: 'id_pesanan',
                         localField: "_id",
@@ -392,12 +395,13 @@ module.exports = {
                         items: {
                             $push: {
                                 product: "$items.product",
-                                // quantity: '$items.product.quantity',
-                                // varian: '$items.product.varian'
+                                deadline: '$items.deadline',
+                                kode_pesanan: '$items.kode_pesanan'
                             }
                         },
                         invoice_detail: { $first: "$invoice_detail" },
                         transaksi_detail: { $first: "$transaksi_detail" },
+                        order_detail: { $first: "$order_detail" },
                         addressId: { $first: "$addressId" },
                         expire: { $first: "$expire" },
                         status: { $first: "$status" }
@@ -411,6 +415,7 @@ module.exports = {
                             invoice_detail: "$invoice_detail",
                             transaksi_detail: "$transaksi_detail",
                             addressId: "$addressId",
+                            order_detail: "$order_detail",
                             expire: "$expire",
                             status: "$status"
                         }
@@ -420,45 +425,69 @@ module.exports = {
                     $replaceRoot: { newRoot: "$data" }
                 }
             ]);
+            // return res.status(200).json({ message: 'get detail data order success', data: dataOrder[0] });
             const { _id, items, ...restOfOrder } = dataOrder[0]
-            
+            const promises = Object.keys(dataOrder[0].order_detail).map(async (key) => {
+                const paymentMethods = ['id_va', 'id_wallet', 'id_gerai_tunai', 'id_fintech'];
+                if (paymentMethods.includes(key) && dataOrder[0].order_detail[key] !== null) {
+                    switch (key) {
+                        case "id_va":
+                            return await VirtualAccount.findById(dataOrder[0].order_detail[key]);
+                        case "id_wallet":
+                            return await Ewallet.findById(dataOrder[0].order_detail[key]);
+                        case "id_gerai_tunai":
+                            return await GeraiRetail.findById(dataOrder[0].order_detail[key]);
+                        case "id_fintech":
+                            return await Fintech.findById(dataOrder[0].order_detail[key]);
+                        default:
+                            return null;
+                    }
+                } else {
+                    return null;
+                }
+            });
+            const paymentMethod = await Promise.all(promises)
+            let data;
             if(dataOrder[0].status === "Belum Bayar" || dataOrder[0].status === "Dibatalkan"){
                 const store = {}
                 for(const item of items){
+                    const { product, ...restOfItem } = item
                     let detailToko;
-                    const { userId } = item.product.productId
+                    const { userId, ...restOfProduct } = product.productId
                     switch(userId.role){
                         case "vendor":
-                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko');
+                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
                             break;
                         case "supplier":
-                            detailToko = await Supplier.findOne({ userId: userId._id });
+                            detailToko = await Supplier.findOne({ userId: userId._id }).lean();
                             break;
                         case "produsen":
-                            detailToko = await Produsen.findOne({ userId: userId._id });
+                            detailToko = await Produsen.findOne({ userId: userId._id }).lean();
                         break;
                     }
                     
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: detailToko,
+                            toko: { ...detailToko, ...restOfItem},
                             products: []
                         }
                     }
-
-                    store[userId._id].products.push(item.product)
+                    store[userId._id].products.push(restOfProduct)
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
-
                 data = {
                     _id,
                     item: newItem,
-                    ...restOfOrder
+                    ...restOfOrder,
+                    paymentMethod: paymentMethod.find(item =>{ return item !== null })
                 }
-            }else if(productId && (dataOrder[0].status !== "Belum Bayar" || dataOrder[0].status !== "Dibatalkan")){
+            }else if(dataOrder[0].status !== "Belum Bayar" || dataOrder[0].status !== "Dibatalkan"){
+                if(!productId) return res.status(400).json({message: "Kirimkan array dari productId"})
                 const store = {}
                 for(const item of items){
-                    const { userId, ...rest } = item.product.productId
+                    const { product, ...restOfItem } = item
+                    let detailToko;
+                    const { userId, ...restOfProduct } = product.productId
                     const pengiriman = await Pengiriman.findOne({
                         orderId: req.params.id, 
                         productToDelivers: {
@@ -469,31 +498,32 @@ module.exports = {
                     })
                     switch(userId.role){
                         case "vendor":
-                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko');
+                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
                             break;
                         case "supplier":
-                            detailToko = await Supplier.findOne({ userId: userId._id });
+                            detailToko = await Supplier.findOne({ userId: userId._id }).lean();
                             break;
                         case "produsen":
-                            detailToko = await Produsen.findOne({ userId: userId._id });
+                            detailToko = await Produsen.findOne({ userId: userId._id }).lean();
                         break;
                     }
 
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: detailToko,
+                            toko: { ...detailToko, ...restOfItem},
                             product: []
                         }
                     }
 
-                    store[userId._id].product.push({...rest, status_pengiriman: pengiriman})
+                    store[userId._id].product.push({...restOfProduct, status_pengiriman: pengiriman, ...item})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
 
                 data = {
                     _id,
                     item: newItem,
-                    ...restOfOrder
+                    ...restOfOrder,
+                    paymentMethod: paymentMethod.find(item =>{ return item !== null })
                 }
             }
             return res.status(200).json({ message: 'get detail data order success', data });
