@@ -641,6 +641,7 @@ module.exports = {
     try {
       const { productId, status } = req.body
       const product = await Product.findOne({ _id: productId, userId: req.user.id });
+      if(!product) return res.status(404).json({message: `Tidak ditemukan product dengan id: ${productId}`})
       const ordered = await Pesanan.find({
         items: {
           $elemMatch: {
@@ -651,11 +652,13 @@ module.exports = {
               }
           }
         },
-        status:{
-          value: "Belum Bayar" || "Berlangsung"
-        }
+        status: { $in: ["Belum Bayar", "Berlangsung"] }
       }).lean()
-      if(ordered || ordered.length > 0) return res.status(403)
+      if(status === 'diarsipkan'){
+        if(ordered || ordered.length > 0) return res.status(403).json({ message: "Tidak bisa mengarsipkan product karena ada orderan yang sedang aktif", data: ordered})
+      }
+      await Product.updateOne({ _id: productId }, { 'status.value': status })
+      return res.status(200).json({message: "Berhasil mengarsipkan product"})
     } catch (error) {
       console.log(error)
     }
