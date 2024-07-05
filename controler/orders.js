@@ -453,7 +453,8 @@ module.exports = {
                 for(const item of items){
                     const { product, ...restOfItem } = item
                     let detailToko;
-                    const { userId, ...restOfProduct } = product.productId
+                    const { productId, ...restOfItemProduct } = item.product
+                    const { userId, ...restOfProduct } = productId
                     switch(userId.role){
                         case "vendor":
                             detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
@@ -472,7 +473,7 @@ module.exports = {
                             products: []
                         }
                     }
-                    store[userId._id].products.push(restOfProduct)
+                    store[userId._id].products.push({ ...restOfProduct, ...restOfItemProduct})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
                 data = {
@@ -487,7 +488,8 @@ module.exports = {
                 for(const item of items){
                     const { product, ...restOfItem } = item
                     let detailToko;
-                    const { userId, ...restOfProduct } = product.productId
+                    const { productId, ...restOfItemProduct } = item.product
+                    const { userId, ...restOfProduct } = productId
                     const pengiriman = await Pengiriman.findOne({
                         orderId: req.params.id, 
                         productToDelivers: {
@@ -515,7 +517,7 @@ module.exports = {
                         }
                     }
 
-                    store[userId._id].product.push({...restOfProduct, status_pengiriman: pengiriman, ...item})
+                    store[userId._id].product.push({...restOfProduct, ...restOfItemProduct, status_pengiriman: pengiriman})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
 

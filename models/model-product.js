@@ -101,7 +101,7 @@ const productModels = new mongoose.Schema(
     status: {
       value: {
         type: String,
-        enum: ["ditinjau", "terpublish", "ditolak", "diblokir"],
+        enum: ["ditinjau", "terpublish", "ditolak", "diblokir", "diarsipkan"],
         message: "{VALUE} is not supported",
         default: "ditinjau",
       },
@@ -166,11 +166,7 @@ const productModels = new mongoose.Schema(
     berat: {
       type: Number,
       required: true,
-    },
-    isArchived: {
-      type: Boolean,
-      default: false,
-    },
+    }
     // bahanBaku: [
     //   {
     //     _id: false,
@@ -227,7 +223,7 @@ productModels.pre("save", function (next) {
 productModels.post("findOneAndUpdate", async function (doc, next) {
   try {
     const document = await this.model.findOne(this.getQuery());
-
+    console.log(this._update)
     if (!document) {
       next();
     }

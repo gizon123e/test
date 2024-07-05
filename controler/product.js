@@ -565,11 +565,10 @@ module.exports = {
           .status(400)
           .json({ message: "Diperlukan payload product_id" });
       delete req.body.product_id;
-      const product = await Product.findByIdAndUpdate(
-        productId,
-        updateData,
-        { new: true }
-      );
+      console.log(productId)
+      const product = await Product.findOneAndUpdate(
+        { _id: productId, userId: req.user.id}
+      )
       if (!product) {
         return res.status(404).json({
           error: true,
@@ -577,10 +576,6 @@ module.exports = {
           datas: product,
         });
       }
-      if (product.userId.toString() !== req.user.id && req.user.role !== "administrator")
-        return res
-          .status(403)
-          .json({ message: "Tidak bisa mengubah produk orang lain!" });
 
       return res.status(201).json({
         error: false,

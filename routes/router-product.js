@@ -24,7 +24,7 @@ router.post("/upload", authorization, notEmptyDetailData, controlerProduct.uploa
 router.put('/performance', authorization, controlerProduct.updateProductPerformance);
 router.put('/verify/:id', authorization, controlerProduct.verifyOrBlockProduct);
 router.put("/editPemasok", authorization, emptyData, roleClasification.vendor, controlerProduct.pemasok);
-router.put("/edit", controlerProduct.edit);
+router.put("/edit", authorization, controlerProduct.edit);
 router.delete("/delete", authorization, controlerProduct.delete);
 
 module.exports = router;
