@@ -211,6 +211,7 @@ module.exports = {
                         const pembatalan = await Pembatalan.findOne({pesananId: order._id})
                         data.push({
                             ...rest,
+                            total_pesanan,
                             product_order: mappedOrder,
                             dibatalkanOleh: pembatalan? pembatalan.canceledBy : null
                         })
