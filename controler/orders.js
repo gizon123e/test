@@ -472,6 +472,12 @@ module.exports = {
                     let detailToko;
                     const { productId, ...restOfItemProduct } = item.product
                     const { userId, ...restOfProduct } = productId
+
+                    const pengiriman = await Pengiriman.find({
+                        orderId: req.params.id,
+                    });
+
+                    console.log(pengiriman)
                     switch(userId.role){
                         case "vendor":
                             detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
@@ -494,7 +500,6 @@ module.exports = {
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
                 const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });
-                console.log(pembatalan)
                 data = {
                     _id,
                     item: newItem,
@@ -583,7 +588,6 @@ module.exports = {
                 biaya_layanan,
                 poin_terpakai
             } = req.body
-            console.log(JSON.stringify(req.body))
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" })
             if (!Array.isArray(req.body['items'])) return res.status(400).json({ message: "Body items bukan array, kirimkan array" })
@@ -685,6 +689,34 @@ module.exports = {
                 biaya_asuransi: biaya_asuransi ? true : false,
                 expire: a_day_later
             });
+
+            const total_pengiriman = await Pengiriman.estimatedDocumentCount({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
+            });
+            
+            const promisesFunct = []
+
+            for (let i = 0; i < dataOrder.shipments.length; i++) {
+                promisesFunct.push(
+                    Pengiriman.create({
+                        orderId: dataOrder._id,
+                        distributorId: dataOrder.shipments[i].id_distributor,
+                        productToDelivers: dataOrder.shipments[i].products,
+                        waktu_pengiriman: new Date(dataOrder.items[i].deadline),
+                        total_ongkir: dataOrder.shipments[i].total_ongkir,
+                        ongkir: dataOrder.shipments[i].ongkir,
+                        potongan_ongkir: dataOrder.shipments[i].potongan_ongkir,
+                        jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
+                        id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
+                        id_toko: dataOrder.shipments[i].id_toko_vendor,
+                        kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+
+                    })
+                );
+            };
 
             const detailPesanan = await DetailPesanan.create({
                 _id: idPesanan,

@@ -71,39 +71,12 @@ module.exports = {
                     Invoice.updateOne({ id_transaksi: transaksi._id }, { status: "Lunas" })
                 ]
 
-                const total_pengiriman = await Pengiriman.estimatedDocumentCount({
-                    createdAt: {
-                        $gte: now,
-                        $lt: tomorrow
-                    }
-                });
-
                 const total_transaksi = await Transaksi.estimatedDocumentCount({
                     createdAt: {
                         $gte: now,
                         $lt: tomorrow
                     }
                 });
-
-
-                for (let i = 0; i < pesanan.shipments.length; i++) {
-                    promisesFunct.push(
-                        Pengiriman.create({
-                            orderId: pesanan._id,
-                            distributorId: pesanan.shipments[i].id_distributor,
-                            productToDelivers: pesanan.shipments[i].products,
-                            waktu_pengiriman: new Date(pesanan.items[i].deadline),
-                            total_ongkir: pesanan.shipments[i].total_ongkir,
-                            ongkir: pesanan.shipments[i].ongkir,
-                            potongan_ongkir: pesanan.shipments[i].potongan_ongkir,
-                            jenis_pengiriman: pesanan.shipments[i].id_jenis_layanan,
-                            id_jenis_kendaraan: pesanan.shipments[i].id_jenis_kendaraan,
-                            id_toko: pesanan.shipments[i].id_toko_vendor,
-                            kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-
-                        })
-                    );
-                };
 
                 promisesFunct.push(
                     Transaksi.create({
