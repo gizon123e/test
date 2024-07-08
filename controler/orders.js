@@ -473,11 +473,6 @@ module.exports = {
                     const { productId, ...restOfItemProduct } = item.product
                     const { userId, ...restOfProduct } = productId
 
-                    const pengiriman = await Pengiriman.find({
-                        orderId: req.params.id,
-                    });
-
-                    console.log(pengiriman)
                     switch(userId.role){
                         case "vendor":
                             detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
@@ -498,14 +493,26 @@ module.exports = {
                     }
                     store[userId._id].products.push({ ...restOfProduct, ...restOfItemProduct})
                 }
+                const pengiriman = await Pengiriman.find({
+                    orderId: req.params.id,
+                });
                 const newItem = Object.keys(store).map(key => { return store[key] })
                 const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });
+                let potongan_ongkir = 0, total_ongkir = 0;
+                pengiriman.forEach(item => {
+                    potongan_ongkir += item.potongan_ongkir;
+                    total_ongkir += item.total_ongkir;
+                })
                 data = {
                     _id,
                     item: newItem,
                     ...restOfOrder,
                     paymentMethod: paymentMethod.find(item =>{ return item !== null }),
-                    dibatalkanOleh: pembatalan? pembatalan.canceledBy : null
+                    dibatalkanOleh: pembatalan? pembatalan.canceledBy : null,
+                    pengiriman: {
+                        potongan_ongkir,
+                        total_ongkir
+                    }
                 }
             }else if(dataOrder[0].status !== "Belum Bayar" || dataOrder[0].status !== "Dibatalkan"){
                 if(!productId) return res.status(400).json({message: "Kirimkan array dari productId"})
