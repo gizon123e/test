@@ -170,9 +170,9 @@ module.exports = {
                 }
 
                 let data = []
-
+                let jumlah_uang = 0
                 for (const order of dataOrders) {
-                    const { items, ...rest } = order
+                    let { items, total_pesanan , ...rest } = order
                     let detailBerlangsung;
                     if (order.status === "Belum Bayar" || order.status === "Dibatalkan") {
                         const store = {}
@@ -232,9 +232,14 @@ module.exports = {
                                     detailToko = await Produsen.findOne({ userId: storeId });
                                     break;
                             }
+                            
+                            const pengiriman = await Pengiriman.findOne({ orderId: order._id, productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
+                            detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
+                            jumlah_uang += item.product.productId.total_price * item.product.quantity + pengiriman.total_ongkir
 
                             if (!store[storeId]) {
                                 store[storeId] = {
+                                    total_pesanan: jumlah_uang,
                                     seller: {
                                         _id: item.product.productId.userId._id,
                                         namaToko: detailToko.namaToko
@@ -242,15 +247,10 @@ module.exports = {
                                     arrayProduct: []
                                 }
                             }
-
-                            const pengiriman = await Pengiriman.findOne({ orderId: order._id, productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
-                            detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
-
                             store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
+                            jumlah_uang = 0
                         }
-
                         Object.keys(store).forEach(key => {
-
                             data.push({ ...rest, ...store[key], dibatalkanOleh: null })
                         })
                     }
@@ -559,7 +559,7 @@ module.exports = {
                     ...restOfOrder,
                     paymentMethod: paymentMethod.find(item =>{ return item !== null }),
                     total_pesanan,
-                    pembatalan: null
+                    dibatalkanOleh: null
                 }
             }
             return res.status(200).json({ message: 'get detail data order success', data });
@@ -754,7 +754,7 @@ module.exports = {
     update_status: async (req, res, next) => {
         try {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
-            if (req.body.status !== 'berhasil') return res.status(400).json({ message: "Status yang dikirimkan tidak valid" })
+            if (req.body.status !== 'Berhasil') return res.status(400).json({ message: "Status yang dikirimkan tidak valid" })
             const pesanan = await Orders.findById(req.body.pesananId).lean()
             if(!pesanan) return res.status(404).json({message: `Tidak ada pesanan dengan id: ${req.body.pesananId}`})
             const productIds = []
