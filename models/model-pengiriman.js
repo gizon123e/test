@@ -54,6 +54,11 @@ const modelPengiriman = new mongoose.Schema({
     rejected: {
         type: Boolean,
         default: false
+    },
+    status_distributor: {
+        type: String,
+        enum: ["Pesanan terbaru", "Diterima", "Ditolak", "Kadaluwarsa", "Selesai"],
+        default: "Pesanan terbaru"
     }
 }, { timestamps: true })
 
