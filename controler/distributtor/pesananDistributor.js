@@ -6,7 +6,16 @@ const Product = require("../../models/model-product");
 module.exports = {
     getAllPesananDistributor: async (req, res, next) => {
         try {
-            const datas = await Pengiriman.find({ distributorId: req.params.id })
+            const { status } = req.query
+            let query = {
+                distributorId: req.params.id
+            }
+
+            if (status) {
+                query.status_distributor = { $regex: status, $options: 'i' }
+            }
+
+            const datas = await Pengiriman.find(query)
                 .populate({
                     path: "orderId",
                     populate: "addressId"
@@ -35,6 +44,27 @@ module.exports = {
         }
     },
 
+    updateOrderStatuses: async () => {
+        try {
+            const currentTime = new Date();
+            const twentyFourHoursAgo = new Date(currentTime.getTime() - 24 * 60 * 60 * 1000);
+
+            const orders = await Pengiriman.find({
+                status_distributor: { $ne: "Kadaluwarsa" }, // Ensure we only update non-expired orders
+                createdAt: { $lte: twentyFourHoursAgo }
+            });
+
+            for (const order of orders) {
+                order.status_distributor = "Kadaluwarsa";
+                await order.save();
+            }
+
+            console.log(`${orders.length} orders updated to "Kadaluwarsa".`);
+        } catch (error) {
+            console.error('Error updating order statuses:', error);
+        }
+    },
+
     ubahStatus: async (req, res, next) => {
         try {
             const { status } = req.body
@@ -50,16 +80,9 @@ module.exports = {
             if (distri.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak Bisa Mengubah Pengiriman Orang Lain!" });
 
             if (status === "dibatalkan") {
-                await Pengiriman.updateOne({ _id: req.params.id }, { rejected: true });
+                await Pengiriman.updateOne({ _id: req.params.id }, { rejected: true, status_distributor: "Ditolak" });
 
-                const currentDate = new Date();
-                const formattedDate = currentDate.toISOString().split('T')[0]
-
-                const currentDateResert = new Date();
-                currentDateResert.setDate(currentDateResert.getDate() + 1);
-                const formattedDateResert = currentDateResert.toISOString().split('T')[0]
-
-                await Distributtor.findByIdAndUpdate({ _id: distri._id }, { tolak_pesanan: distri.tolak_pesanan + 1, date_activity: formattedDate, date_resert: formattedDateResert }, { new: true })
+                await Distributtor.findByIdAndUpdate({ _id: distri._id }, { tolak_pesanan: distri.tolak_pesanan + 1 }, { new: true })
             } else {
                 await Pengiriman.updateOne({ _id: req.params.id }, {
                     status_pengiriman: status
@@ -90,6 +113,25 @@ module.exports = {
         } catch (error) {
             console.log(error);
             next(error)
+        }
+    },
+
+    updatePelanggaranDistributor: async (req, res, next) => {
+        try {
+            const currentTime = new Date();
+            const twentyFourHoursAgo = new Date(currentTime.getTime() - 23 * 60 * 60 * 1000);
+
+            const dataRisertAnkaPelanggaran = await Distributtor.find({
+                updatedAt: { $lte: twentyFourHoursAgo }
+            })
+
+            for (let id of dataRisertAnkaPelanggaran) {
+                await Distributtor.updateOne({ _id: id._id }, { tolak_pesanan: 0 })
+            }
+
+            console.log(`${dataRisertAnkaPelanggaran.length} distributor violations reset to 0.`);
+        } catch (error) {
+            console.error('Error updating pelanggaran distributor statuses:', error);
         }
     }
 }

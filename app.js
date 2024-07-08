@@ -1,6 +1,7 @@
 require("./database/database");
 const flash_sale_checker = require('./utils/flash-sale-checker');
 const checker_order = require("./utils/cancel-order")
+const { batalPesanan } = require('./utils/pembatalan-distributor')
 const express = require("express");
 const cors = require("cors");
 const logger = require("morgan");
@@ -9,6 +10,7 @@ const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const websocket = require("./websocket/index-ws");
+const pembatalanDistributor = require("./utils/pembatalan-distributor");
 // const session = require("express-session");
 const app = express();
 
@@ -85,6 +87,7 @@ app.use(require("./midelware/error-midelware"));
 app.listen(4000, () => {
   // flash_sale_checker.start()
   checker_order()
+  batalPesanan()
   console.log("connection express success");
   websocket.listen(5000, () => {
     console.log("Connection websocket success");

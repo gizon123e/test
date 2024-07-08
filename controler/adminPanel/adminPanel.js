@@ -15,6 +15,9 @@ const BiayaTetap = require("../../models/model-biaya-tetap")
 const Invoice = require('../../models/model-invoice')
 const { Transaksi } = require("../../models/model-transaksi")
 const Pengiriman = require("../../models/model-pengiriman")
+const Pembatalan = require("../../models/model-pembatalan")
+const Pesanan = require("../../models/model-orders")
+const Product = require('../../models/model-product')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -217,13 +220,67 @@ module.exports = {
 
     getAllPesananKonsument: async (req, res, next) => {
         try {
-            const data = await Transaksi.find().populate("id_pesanan")
+            const data = await Pesanan.find().populate("userId")
 
             if (!data) return res.status(400).json({ message: "data saat ini masi kosong" })
+            const dataPayload = []
+
+            for (const pesanan of data) {
+                // Menggunakan populate untuk mengisi data productId dalam items
+                await pesanan.populate({
+                    path: 'items.product.productId',
+                    model: 'Product' // Nama model Product Anda
+                })
+
+                // Menemukan konsumen berdasarkan userId dari pesanan
+                const konsumen = await Konsumen.findOne({ userId: pesanan.userId._id })
+
+                // Menyiapkan dataPayload dengan informasi produk yang telah dipopulasi
+                const itemsWithPopulatedProducts = await Promise.all(
+                    pesanan.items.map(async (item) => {
+                        const productsWithRoleAndInfo = await Promise.all(
+                            item.product.map(async (prod) => {
+                                const product = prod.productId
+                                let vendorOrSupplierInfo = null
+
+                                // Mencari role dan informasi berdasarkan userId dari produk
+                                if (product && product.userId) {
+                                    const vendor = await Vendor.findOne({ userId: product.userId })
+                                    const supplier = await Supplier.findOne({ userId: product.userId })
+
+                                    if (vendor) {
+                                        vendorOrSupplierInfo = vendor
+                                    } else if (supplier) {
+                                        vendorOrSupplierInfo = supplier
+                                    }
+                                }
+
+                                return {
+                                    ...prod._doc,
+                                    productId: product,
+                                    vendorOrSupplierInfo
+                                }
+                            })
+                        )
+
+                        return {
+                            ...item._doc,
+                            product: productsWithRoleAndInfo
+                        }
+                    })
+                )
+
+                dataPayload.push({
+                    ...pesanan._doc,
+                    items: itemsWithPopulatedProducts,
+                    konsumen: konsumen // Menambahkan data konsumen jika diperlukan
+                })
+            }
 
             res.status(200).json({
                 message: "data get all success",
-                data
+                // leng: dataPayload.length,
+                data: dataPayload
             })
         } catch (error) {
             console.log(error);
@@ -240,11 +297,31 @@ module.exports = {
                     model: "Product"
                 })
                 .populate("id_jenis_kendaraan")
+                .populate({
+                    path: "orderId",
+                    populate: "userId"
+                })
 
             if (!data) return res.status(400).json({ message: "data saat ini masi kosong" })
 
+
             res.status(200).json({
                 message: "data get all success",
+                data
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getAllPembatalan: async (req, res, next) => {
+        try {
+            const data = await Pembatalan.find().populate("pesananId")
+            if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
+
+            res.status(200).json({
+                message: "get data all distributor succcess",
                 data
             })
         } catch (error) {
