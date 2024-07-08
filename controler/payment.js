@@ -7,6 +7,7 @@ const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used');
 const { Transaksi } = require('../models/model-transaksi');
 const Invoice = require('../models/model-invoice');
+const Pembatalan = require('../models/model-pembatalan');
 dotenv.config();
 
 module.exports = {

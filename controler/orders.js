@@ -17,6 +17,7 @@ const VirtualAccount = require("../models/model-virtual-account");
 const Ewallet = require("../models/model-ewallet");
 const GeraiRetail = require("../models/model-gerai");
 const Fintech = require("../models/model-fintech");
+const Pembatalan = require("../models/model-pembatalan");
 dotenv.config();
 
 const now = new Date();
@@ -202,9 +203,11 @@ module.exports = {
                         const mappedOrder = Object.keys(store).map(key => {
                             return store[key]
                         })
+                        const pembatalan = await Pembatalan.findOne({pesananId: order._id})
                         data.push({
                             ...rest,
                             product_order: mappedOrder,
+                            dibatalkanOleh: pembatalan? pembatalan.canceledBy : null
                         })
                     } else {
                         const store = {}
@@ -235,15 +238,16 @@ module.exports = {
                                 }
                             }
 
-                            const pengiriman = await Pengiriman.findOne({ productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
-                            detailBerlangsung = pengiriman ? "Dikirim" : "Diproses"
+                            const pengiriman = await Pengiriman.findOne({ orderId: order._id, productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
+                            console.log(pengiriman)
+                            detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
 
                             store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
                         }
 
                         Object.keys(store).forEach(key => {
 
-                            data.push({ ...rest, ...store[key] })
+                            data.push({ ...rest, ...store[key], dibatalkanOleh: null })
                         })
                     }
                 }
@@ -425,6 +429,7 @@ module.exports = {
                     $replaceRoot: { newRoot: "$data" }
                 }
             ]);
+            if(!dataOrder[0]) return res.status(404).json({message: `Order dengan id: ${req.params.id} tidak ditemukan`})
             const { _id, items, ...restOfOrder } = dataOrder[0]
             const promises = Object.keys(dataOrder[0].order_detail).map(async (key) => {
                 const paymentMethods = ['id_va', 'id_wallet', 'id_gerai_tunai', 'id_fintech'];
@@ -475,17 +480,20 @@ module.exports = {
                     store[userId._id].products.push({ ...restOfProduct, ...restOfItemProduct})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
+                const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });
+                console.log(pembatalan)
                 data = {
                     _id,
                     item: newItem,
                     ...restOfOrder,
-                    paymentMethod: paymentMethod.find(item =>{ return item !== null })
+                    paymentMethod: paymentMethod.find(item =>{ return item !== null }),
+                    dibatalkanOleh: pembatalan? pembatalan.canceledBy : null
                 }
             }else if(dataOrder[0].status !== "Belum Bayar" || dataOrder[0].status !== "Dibatalkan"){
                 if(!productId) return res.status(400).json({message: "Kirimkan array dari productId"})
                 const store = {}
                 for(const item of items){
-                    const { product, ...restOfItem } = item
+                    let { product, ...restOfItem } = item
                     let detailToko;
                     const { productId, ...restOfItemProduct } = item.product
                     const { userId, ...restOfProduct } = productId
@@ -496,7 +504,7 @@ module.exports = {
                                 productId: { $in: productId }
                             }
                         }
-                    })
+                    }).populate('distributorId').populate('id_jenis_kendaraan').populate('jenis_pengiriman')
                     switch(userId.role){
                         case "vendor":
                             detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
@@ -515,23 +523,31 @@ module.exports = {
                             products: []
                         }
                     }
-
                     store[userId._id].products.push({...restOfProduct, ...restOfItemProduct, status_pengiriman: pengiriman})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
-
+                let total_pesanan = 0
                 const result = newItem.map(toko => {
                     return {
                       ...toko,
                       products: toko.products.filter(product => productId.includes(product._id))
                     };
                 }).filter(toko => toko.products.length > 0);
-
+                result.forEach(item => {
+                    const pengiriman = {}
+                    item.products.forEach(prod =>{
+                        total_pesanan += prod.total_price * prod.quantity
+                        if(!pengiriman[prod.status_pengiriman._id]) total_pesanan += prod.status_pengiriman.total_ongkir
+                        pengiriman[prod.status_pengiriman._id] = true
+                    })
+                })
                 data = {
                     _id,
                     item: result,
                     ...restOfOrder,
-                    paymentMethod: paymentMethod.find(item =>{ return item !== null })
+                    paymentMethod: paymentMethod.find(item =>{ return item !== null }),
+                    total_pesanan,
+                    pembatalan: null
                 }
             }
             return res.status(200).json({ message: 'get detail data order success', data });
@@ -728,6 +744,7 @@ module.exports = {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })
             if (req.body.status !== 'berhasil') return res.status(400).json({ message: "Status yang dikirimkan tidak valid" })
             const pesanan = await Orders.findById(req.body.pesananId).lean()
+            if(!pesanan) return res.status(404).json({message: `Tidak ada pesanan dengan id: ${req.body.pesananId}`})
             const productIds = []
             const ships = []
             pesanan.items.map(item => productIds.push(item.product));

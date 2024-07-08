@@ -9,7 +9,7 @@ async function cancelExpiredOrders() {
   
       const result = await Pesanan.updateMany(
         { expire: { $lt: now }, status: "Belum Bayar" },
-        { status: "Dibatalkan" }
+        { status: "Dibatalkan", canceledBy: "sistem" }
       );
   
       console.log(`Orders updated: ${JSON.stringify(result)}`);

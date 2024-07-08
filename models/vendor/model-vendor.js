@@ -80,7 +80,7 @@ const vendorModel = new mongoose.Schema({
             },
             message: "Jenis Perusahaan hanya untuk user perusahaan"
         },
-        enum: ["PT", "CV", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
+        enum: ["PT", "CV", "BUMDes", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
         default: null
     },
     legalitasBadanUsaha: {

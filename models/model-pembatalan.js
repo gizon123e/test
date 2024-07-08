@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const modelPembatalan = mongoose.Schema({
+const modelPembatalan = new mongoose.Schema({
     pesananId:{
         type: mongoose.Types.ObjectId,
         ref: "Pesanan"
@@ -13,7 +13,7 @@ const modelPembatalan = mongoose.Schema({
         type: String,
         enum: ["sistem", "pengguna"]
     }
-});
+}, { timestamps: true });
 
 const Pembatalan = mongoose.model("Pembatalan", modelPembatalan);
 

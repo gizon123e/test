@@ -1,5 +1,6 @@
 const { Decimal128 } = require('mongodb');
 const mongoose = require('mongoose');
+const Pembatalan = require('./model-pembatalan');
 
 const modelOrder = new mongoose.Schema({
     items: [{
@@ -138,6 +139,20 @@ const modelOrder = new mongoose.Schema({
 }, { timestamps: true }
 )
 
+modelOrder.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate", "updateMany"], async function (next){
+    if(this.getUpdate().status === "Dibatalkan"){
+        const orders = await this.model.find(this.getQuery()).exec();
+  
+        for (const order of orders) {
+            await Pembatalan.create({
+            pesananId: order._id,
+            userId: order.userId,
+            canceledBy: this.getUpdate().canceledBy
+            });
+        }
+    }
+    next()
+})
 // const updateExpiredOrderStatus = async (order) => {
 //     if (order.expire && order.expire < new Date() && order.status !== "Dibatalkan") {
 //         order.status = "Dibatalkan";
