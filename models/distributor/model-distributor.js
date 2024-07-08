@@ -66,12 +66,6 @@ const modelDistributtor = mongoose.Schema({
     tolak_pesanan: {
         type: Number,
         default: 0
-    },
-    date_activity: {
-        type: String
-    },
-    date_resert: {
-        type: String
     }
 }, { timestamp: true });
 
