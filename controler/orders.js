@@ -158,8 +158,13 @@ module.exports = {
                             createdAt: { $first: "$createdAt" },
                             total_pesanan: { $first: "$total_pesanan" }
                         }
+                    },
+                    {
+                        $sort: {
+                            createdAt: -1
+                        }
                     }
-                ]);
+                ])
                 if (!dataOrders || dataOrders.length < 1) {
                     return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
                 }
@@ -239,7 +244,6 @@ module.exports = {
                             }
 
                             const pengiriman = await Pengiriman.findOne({ orderId: order._id, productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
-                            console.log(pengiriman)
                             detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
 
                             store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
@@ -251,7 +255,15 @@ module.exports = {
                         })
                     }
                 }
-
+                data.sort((a,b)=>{
+                    if (a.status === 'Belum Bayar' && b.status !== 'Belum Bayar') {
+                        return -1;
+                    }
+                    if (a.status !== 'Belum Bayar' && b.status === 'Belum Bayar') {
+                        return 1;
+                    }
+                    return 0;
+                })
                 return res.status(200).json({ message: 'get data all Order success', data })
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 dataOrders = await Orders.find()
