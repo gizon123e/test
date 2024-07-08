@@ -25,8 +25,8 @@ module.exports = {
             const currentDate = new Date();
             const formattedDate = currentDate.toISOString().split('T')[0]
 
-            if (formattedDate === dataDistributor.date_resert) {
-                await Distributtor.findByIdAndUpdate({ _id: dataDistributor._id }, { tolak_pesanan: 0 })
+            if (formattedDate !== dataDistributor.date_resert) {
+                await Distributtor.findByIdAndUpdate({ _id: dataDistributor._id }, { tolak_pesanan: 0 }, { new: true })
             }
 
             res.status(200).json({

@@ -18,6 +18,14 @@ module.exports = {
                 })
                 .populate("id_jenis_kendaraan")
                 .populate("jenis_pengiriman")
+                .populate({
+                    path: "productToDelivers.productId",
+                    model: "Product",
+                    populate: {
+                        path: "categoryId"
+                    }
+                })
+
             if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
 
             res.status(200).json({ message: "get data All success", datas })
@@ -69,10 +77,10 @@ module.exports = {
 
             const products = await Product.find({ _id: { $in: prodIds } })
             for (const product of products) {
-                socket.emit('notif_order', { 
+                socket.emit('notif_order', {
                     jenis: 'pesanan',
-                    userId: pengiriman.orderId.userId, 
-                    message: `Pesanan ${product.name_product} telah dikirim` ,
+                    userId: pengiriman.orderId.userId,
+                    message: `Pesanan ${product.name_product} telah dikirim`,
                     image: product.image_product[0],
                     status: "Pesanan dalam Pengiriman"
                 })
