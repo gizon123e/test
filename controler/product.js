@@ -270,7 +270,7 @@ module.exports = {
       function auth() {
         const token = getToken(req)
 
-        const verifyToken = jwt.verify(token);
+        const verifyToken = jwt.verifyToken(token);
         if (!verifyToken) return null
         return verifyToken
       };

@@ -18,6 +18,7 @@ const Ewallet = require("../models/model-ewallet");
 const GeraiRetail = require("../models/model-gerai");
 const Fintech = require("../models/model-fintech");
 const Pembatalan = require("../models/model-pembatalan");
+const Pesanan = require("../models/model-orders");
 dotenv.config();
 
 const now = new Date();
@@ -878,7 +879,20 @@ module.exports = {
             next(err)
         }
     },
-
+    cancelOrder: async (req, res, next) => {
+        try {
+            const { pesananId } = req.body
+            const order = await Pesanan.findOneAndUpdate({ _id: pesananId, userId: req.user.id }, {
+                status: "Dibatalkan",
+                canceledBy: "pengguna"
+            })
+            if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${productId}`})
+            return res.status(200).json({message: "Berhasil Membatalkan Order", data: order})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
     deleteOrder: async (req, res, next) => {
         try {
             const dataOrder = await Orders.findOne({ _id: req.params.id })

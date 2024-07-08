@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const uniqueValidator = require("mongoose-unique-validator");
+const Carts = require("./model-cart");
 
 const varianSchema = new mongoose.Schema({
   _id: false,
@@ -250,6 +251,14 @@ productModels.post("findOneAndDelete", async function (next) {
   }
 });
 
+productModels.post(["deleteMany", "deleteOne", "findOneAndDelete"], async function (next){
+  try {
+    await Carts.deleteMany({productId: this.getQuery()._id})
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+})
 const Product = mongoose.model("Product", productModels);
 
 module.exports = Product;
