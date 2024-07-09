@@ -19,6 +19,7 @@ const GeraiRetail = require("../models/model-gerai");
 const Fintech = require("../models/model-fintech");
 const Pembatalan = require("../models/model-pembatalan");
 const Pesanan = require("../models/model-orders");
+const VirtualAccountUser = require("../models/model-user-va");
 dotenv.config();
 
 const now = new Date();
@@ -280,24 +281,70 @@ module.exports = {
                     ...(status && { status })
                 }
                 
-                dataOrders = await Pesanan.find(filter).lean();
-
-                const filteredOrder = []
-                for(const order of dataOrders){
-                    const { items, shipments, ...restOfOrder } = order
-                    for(const item of items){
-                        for(const prod of item.product){
-                            if(productIds.includes(prod.productId)){
-                                filteredOrder.push({
-                                    ...restOfOrder,
-                                    product: prod
-                                })
-                            }
+                dataOrders = await Pesanan.aggregate([
+                    { $match: filter },
+                    { $project: { shipments: 0 }},
+                    { $unwind: "$items" },
+                    { $unwind: "$items.product" },
+                    {
+                        $lookup: {
+                            from: 'products',
+                            let: { productIds: '$items.product.productId' },
+                            pipeline: [
+                                { $match: { $expr: { $eq: ['$_id', '$$productIds'] } } },
+                                { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, userId: 1, total_price: 1 } }
+                            ],
+                            as: 'productInfo'
                         }
-                    }
-                }
+                    },
+                    { $unwind: "$productInfo" },
+                    {
+                        $addFields: { 'items.product.productId': "$productInfo" }
+                    },
+                    {
+                        $project: { productInfo: 0 }
+                    },
+                    {
+                        $group: {
+                          _id: {
+                            orderId: "$_id",
+                            userId: req.user.id
+                          },
+                          items: {
+                            $push: "$items"
+                          },
+                          addressId: { $first: "$addressId" },
+                          date_order: { $first: "$date_order" },
+                          status: { $first: "$status" },
+                          isDistributtorApproved: { $first: "$isDistributtorApproved" },
+                          poinTerpakai: { $first: "$poinTerpakai" },
+                          biaya_asuransi: { $first: "$biaya_asuransi" },
+                          dp: { $first: "$dp" },
+                          is_dibatalkan: { $first: "$is_dibatalkan" },
+                          expire: { $first: "$expire" },
+                          createdAt: { $first: "$createdAt" },
+                          updatedAt: { $first: "$updatedAt" },
+                          __v: { $first: "$__v" }
+                        }
+                      },
+                ])
 
-                return res.status(200).json({ message: 'get data all Order success', data: filteredOrder })
+                // const filteredOrder = []
+                // for(const order of dataOrders){
+                //     const { items, shipments, ...restOfOrder } = order
+                //     for(const item of items){
+                //         for(const prod of item.product){
+                //             if(productIds.includes(prod.productId)){
+                //                 filteredOrder.push({
+                //                     ...restOfOrder,
+                //                     product: prod
+                //                 })
+                //             }
+                //         }
+                //     }
+                // }
+
+                return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
             }
         } catch (error) {
             if (error && error.name === 'ValidationError') {
@@ -453,13 +500,13 @@ module.exports = {
                 if (paymentMethods.includes(key) && dataOrder[0].order_detail[key] !== null) {
                     switch (key) {
                         case "id_va":
-                            return await VirtualAccount.findById(dataOrder[0].order_detail[key]);
+                            return await VirtualAccount.findById(dataOrder[0].order_detail[key]).lean();
                         case "id_wallet":
-                            return await Ewallet.findById(dataOrder[0].order_detail[key]);
+                            return await Ewallet.findById(dataOrder[0].order_detail[key]).lean();
                         case "id_gerai_tunai":
-                            return await GeraiRetail.findById(dataOrder[0].order_detail[key]);
+                            return await GeraiRetail.findById(dataOrder[0].order_detail[key]).lean();
                         case "id_fintech":
-                            return await Fintech.findById(dataOrder[0].order_detail[key]);
+                            return await Fintech.findById(dataOrder[0].order_detail[key]).lean();
                         default:
                             return null;
                     }
@@ -507,11 +554,13 @@ module.exports = {
                     potongan_ongkir += item.potongan_ongkir;
                     total_ongkir += item.total_ongkir;
                 })
+                const pay = paymentMethod.find(item =>{ return item !== null })
+                const paymentNumber = await VirtualAccountUser.findOne({userId: req.user.id, nama_bank: pay._id}).select("nomor_va").lean()
                 data = {
                     _id,
                     item: newItem,
                     ...restOfOrder,
-                    paymentMethod: paymentMethod.find(item =>{ return item !== null }),
+                    paymentMethod: { ...pay, paymentNumber } ,
                     dibatalkanOleh: pembatalan? pembatalan.canceledBy : null,
                     pengiriman: {
                         potongan_ongkir,
