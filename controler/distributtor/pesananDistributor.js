@@ -66,7 +66,7 @@ module.exports = {
             const twentyFourHoursAgo = new Date(currentTime.getTime() - 24 * 60 * 60 * 1000);
 
             const orders = await Pengiriman.find({
-                status_distributor: { $ne: "Kadaluwarsa" }, // Ensure we only update non-expired orders
+                status_distributor: "Pesanan terbaru", // Ensure we only update non-expired orders
                 createdAt: { $lte: twentyFourHoursAgo }
             });
 
