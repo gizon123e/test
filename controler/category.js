@@ -64,22 +64,54 @@ module.exports = {
             const data = await MainCategory.aggregate([
                 { $match: {} },
                 {
-                    $project: { _id: 1, name: 1, for: 1 }
+                    $project: { _id: 1, name: 1, for: 1, contents: 1 }
+                },
+                {
+                    $lookup:{
+                        from: 'subcategories',
+                        let: { subs: "$contents" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $in : [ "$_id", "$$subs" ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    name: 1,
+                                    _id: 1
+                                }
+                            }
+                        ],
+                        as: 'sub_categories'
+                    }
+                },
+                { 
+                    $addFields: {
+                        contents: "$sub_categories"
+                    }
+                },
+                {
+                    $project : { sub_categories: 0 }
                 }
             ]);
             let finalData
             switch (req.user.role) {
+                case "konsumen":
+                    finalData = data.filter(item => { return item.for === "konsumen"});
+                    break;
                 case "vendor":
-                    finalData = data.filter(item => item.for === "konsumen");
+                    finalData = data.filter(item => { return item.for === "vendor"});
                     break;
                 case "supplier":
-                    finalData = data.filter(item => item.for === "vendor");
+                    finalData = data.filter(item => { return item.for === "supplier"});
                     break;
                 case "produsen":
-                    finalData = data.filter(item => item.for === "supplier");
+                    finalData = data.filter(item => { return item.for === "produsen"});
                     break;
             };
-
             return res.status(200).json({ message: "Berhasil Mendapatkan Semua Category", data: finalData });
 
         } catch (error) {
