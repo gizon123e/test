@@ -4,8 +4,7 @@ const SubCategory = require('./model-sub-category')
 const mainModelCategory = new mongoose.Schema({
     name: {
         required: [true, 'name Category harus di isi'],
-        type: String,
-        index: true
+        type: String
     },
     contents: [
         {
@@ -28,6 +27,8 @@ const mainModelCategory = new mongoose.Schema({
         enum: ["konsumen", "vendor", "supplier", "produsen"]
     }
 }, { timestamp: true })
+
+mainModelCategory.index({ name: 1, for: 1 }, { unique: true });
 
 mainModelCategory.pre('findOneAndUpdate', async function (next) {
     console.log(this.getUpdate()?.$push?.contents)
