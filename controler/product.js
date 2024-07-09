@@ -559,7 +559,7 @@ module.exports = {
 
   checkReviewedProduct: async(req, res, next) => {
     try {
-      const { productId } = req.body
+      const { productId } = req.query
 
       const product = await Product.findOne({ _id: productId, userId: req.user.id});
 
@@ -589,13 +589,14 @@ module.exports = {
   edit: async (req, res, next) => {
     try {
       let updateData;
+      console.log(req.body)
       const productId = req.body.productId;
       // const directlyEdited = ["total_stok", "minimalOrder", "minimalDp", "price", "diskon"];
       const notDirectlyEdited = [ "name_product", "id_main_category", "id_sub_category", "categoryId", "image_product", "description", "long_description", "varian"]
       
       if (!productId) return res
         .status(400)
-        .json({ message: "Diperlukan payload product_id" });
+        .json({ message: "Diperlukan payload productId" });
 
       const product = await Product.findById(productId);
 

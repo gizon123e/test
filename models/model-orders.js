@@ -26,6 +26,10 @@ const modelOrder = new mongoose.Schema({
             proteksi: {
                 type: Boolean,
                 default: false
+            },
+            rejected: {
+                type: Boolean,
+                default: false
             }
         }],
         deadline: {

@@ -269,31 +269,35 @@ module.exports = {
                 return res.status(200).json({ message: 'get data all Order success', data })
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 const products = await Product.find({userId: req.user.id});
-                console.log(req.user.id)
-                const productIds = products.map(item => { return item._id })
-                console.log(productIds)
-                dataOrders = await Pesanan.find({
-                    items: {
-                      $elemMatch: {
-                        'product.productId': { $in: productIds }
-                      }
-                    }
-                }).lean();
-                
-                const filteredOrders = dataOrders.map(order => {
-                    const { shipments, ...restOfOrder } = order
-                    return {
-                        ...restOfOrder,
-                        items: order.items.map(item => {
-                            return {
-                                ...item,
-                                product: item.product.filter(prod => productIds.includes(prod.productId))
-                            };
-                        })
-                    };
-                });
+                const productIds = products.map(item => { return item._id });
 
-                return res.status(200).json({ message: 'get data all Order success', data: filteredOrders, productIds })
+                const filter = {
+                    items: {
+                        $elemMatch: {
+                          'product.productId': { $in: productIds }
+                        }
+                    },
+                    ...(status && { status })
+                }
+                
+                dataOrders = await Pesanan.find(filter).lean();
+
+                const filteredOrder = []
+                for(const order of dataOrders){
+                    const { items, shipments, ...restOfOrder } = order
+                    for(const item of items){
+                        for(const prod of item.product){
+                            if(productIds.includes(prod.productId)){
+                                filteredOrder.push({
+                                    ...restOfOrder,
+                                    product: prod
+                                })
+                            }
+                        }
+                    }
+                }
+
+                return res.status(200).json({ message: 'get data all Order success', data: filteredOrder })
             }
         } catch (error) {
             if (error && error.name === 'ValidationError') {
