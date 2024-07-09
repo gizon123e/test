@@ -145,9 +145,10 @@ modelOrder.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate", "updateMan
   
         for (const order of orders) {
             await Pembatalan.create({
-            pesananId: order._id,
-            userId: order.userId,
-            canceledBy: this.getUpdate().canceledBy
+                pesananId: order._id,
+                userId: order.userId,
+                canceledBy: this.getUpdate().canceledBy,
+                reason: this.getUpdate().reason
             });
         }
     }

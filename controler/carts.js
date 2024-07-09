@@ -17,7 +17,10 @@ module.exports = {
                     path: "userId",
                     select: "_id role"
                 }
-            }).lean()
+            }).lean().sort({
+                updatedAt: -1,
+                createdAt: -1 
+            })
 
             const storeMap = {};
             for(let cart of dataCart){
@@ -249,7 +252,7 @@ module.exports = {
                 if (validateCart) {
                     
                     const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
-                    if(plusQuantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok"})
+                    if(plusQuantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok", data: validateCart})
                     const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
                         {
                             quantity: plusQuantity,

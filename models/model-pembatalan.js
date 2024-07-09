@@ -11,7 +11,21 @@ const modelPembatalan = new mongoose.Schema({
     },
     canceledBy:{
         type: String,
-        enum: ["sistem", "pengguna"]
+        enum: ["sistem", "pengguna"],
+        message: '{VALUE} is not valid'
+    },
+    reason:{
+        type: String,
+        enum: [
+            "berubah pikiran", 
+            "ingin mengubah alamat tujuan",
+            "ingin mengubah pesanan",
+            "menemukan produk yang lebih murah",
+            "order expired",
+            "lainnya"
+        ],
+        message: '{VALUE} is not valid',
+        default: null
     }
 }, { timestamps: true });
 

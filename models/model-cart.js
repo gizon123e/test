@@ -36,7 +36,7 @@ const modelCarts = new mongoose.Schema({
         type: Number,
         required: [true, 'total price harus di isi'],
     }
-})
+}, { timestamps: true })
 
 const Carts = mongoose.model('Carts', modelCarts)
 

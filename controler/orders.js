@@ -881,9 +881,10 @@ module.exports = {
     },
     cancelOrder: async (req, res, next) => {
         try {
-            const { pesananId } = req.body
-            const order = await Pesanan.findOneAndUpdate({ _id: pesananId, userId: req.user.id }, {
+            const { pesananId, reason } = req.body
+            const order = await Pesanan.findOneAndUpdate({ _id: pesananId, reason, userId: req.user.id }, {
                 status: "Dibatalkan",
+                reason,
                 canceledBy: "pengguna"
             })
             if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${productId}`})
