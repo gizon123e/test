@@ -2,6 +2,7 @@ const Distributtor = require("../../models/distributor/model-distributor")
 const { io } = require("socket.io-client");
 const Pengiriman = require("../../models/model-pengiriman");
 const Product = require("../../models/model-product");
+const Konsumen = require("../../models/konsumen/model-konsumen");
 
 module.exports = {
     getAllPesananDistributor: async (req, res, next) => {
@@ -43,13 +44,16 @@ module.exports = {
                 .skip(skip) // Lewati dokumen sesuai dengan nilai skip
                 .limit(parseInt(limit));
 
+            const payload = []
+            for (let data of datas) {
+                const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
+
+                payload.push({ data, konsumen: dataKonsumen })
+            }
+
             if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
 
-            datas.sort((a, b) => {
-                return new Date(b.createdAt) - new Date(a.createdAt);
-            });
-
-            res.status(200).json({ message: "get data All success", datas })
+            res.status(200).json({ message: "get data All success", datas: payload })
         } catch (error) {
             console.log(error)
             next(error)
