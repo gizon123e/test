@@ -3,6 +3,10 @@ const { io } = require("socket.io-client");
 const Pengiriman = require("../../models/model-pengiriman");
 const Product = require("../../models/model-product");
 const Konsumen = require("../../models/konsumen/model-konsumen");
+const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
+const BiayaTetap = require('../../models/model-biaya-tetap')
+
+const { calculateDistance } = require('../../utils/menghitungJarak')
 
 module.exports = {
     getAllPesananDistributor: async (req, res, next) => {
@@ -126,6 +130,65 @@ module.exports = {
             }
             // socket.disconnect()
             return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    updateDiTerimaDistributor: async (req, res, next) => {
+        try {
+            const dataPengiriman = await Pengiriman.findOne({ _id: req.params.id })
+                .populate({
+                    path: "orderId",
+                    populate: "addressId"
+                })
+                .populate({
+                    path: "id_toko",
+                    populate: "address"
+                })
+
+            if (!dataPengiriman) return res.status(404).json({ message: "data Not Found" })
+
+            const longAlamatKonsumen = parseFloat(dataPengiriman.orderId.addressId.pinAlamat.long)
+            const latKAlamatKonsumen = parseFloat(dataPengiriman.orderId.addressId.pinAlamat.lat)
+
+            const longTokoVendorAddress = parseFloat(dataPengiriman.id_toko.address.pinAlamat.long)
+            const latTokoVendorAddress = parseFloat(dataPengiriman.id_toko.address.pinAlamat.lat)
+
+            const nilaiJarak = calculateDistance(latTokoVendorAddress, longTokoVendorAddress, latKAlamatKonsumen, longAlamatKonsumen, 100);
+            const jarakOngkir = nilaiJarak.toFixed(2)
+
+            const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
+            const timeInSeconds = (jarakOngkir / biayaTetap.rerata_kecepatan) * 3600; // cari hitungan detik
+
+            const dataKonsumen = await Konsumen.findOne({ userId: dataPengiriman.orderId.userId })
+
+            const payloadProduk = []
+            for (const id of dataPengiriman.productToDelivers) {
+                payloadProduk.push({ produkId: id.productId })
+            }
+
+
+            const createProsesPengiriman = await ProsesPengirimanDistributor.create({
+                distributorId: dataPengiriman.distributorId,
+                konsumenId: dataKonsumen._id,
+                tokoId: dataPengiriman.id_toko._id,
+                jarakPengiriman: jarakOngkir,
+                jenisPengiriman: dataPengiriman.jenis_pengiriman,
+                optimasi_pengiriman: timeInSeconds,
+                kode_pengiriman: dataPengiriman.kode_pengiriman,
+                tarif_pengiriman: dataPengiriman.total_ongkir,
+                produk_pengiriman: payloadProduk
+            })
+
+            const updateStatusDistributor = await Pengiriman.findByIdAndUpdate({ _id: req.params.id }, { status_distributor: "Diterima" })
+
+            res.status(201).json({
+                message: "update data success",
+                dataConfirmasiDistributor: updateStatusDistributor,
+                dataProsesPengirimanDistributor: createProsesPengiriman
+            })
         } catch (error) {
             console.log(error);
             next(error)

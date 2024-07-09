@@ -4,6 +4,7 @@ const controlerPesananDistributor = require('../../controler/distributtor/pesana
 
 router.get("/list/:id", controlerPesananDistributor.getAllPesananDistributor)
 router.put("/ubah-status/:id", authorization, controlerPesananDistributor.ubahStatus)
+router.get('/terima/:id', controlerPesananDistributor.updateDiTerimaDistributor)
 
 module.exports = router
 
