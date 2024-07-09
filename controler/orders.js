@@ -1,6 +1,6 @@
 const Orders = require("../models/model-orders")
-const Product = require('../models/model-product')
-const Carts = require('../models/model-cart')
+const Product = require('../models/model-product');
+const axios = require("axios")
 const DetailPesanan = require('../models/model-detail-pesanan');
 const VaUser = require("../models/model-user-va");
 const VA = require("../models/model-virtual-account")
@@ -268,33 +268,32 @@ module.exports = {
                 })
                 return res.status(200).json({ message: 'get data all Order success', data })
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
-                dataOrders = await Orders.find()
-                    .populate({
-                        path: 'product.productId',
-                        populate: [
-                            { path: 'categoryId' },
-                            {
-                                path: 'userId',
-                                select: '-password'
-                            }
-                        ]
-                        // populate: {
-                        //     path: 'categoryId',
-                        // },
-                        // populate: {
-                        //     path: 'userId',
-                        // },
-                    })
-                    .populate('userId', '-password').populate('addressId')
-
-                dataOrders = dataOrders.filter(order => {
-                    return order.product.some(item => item.productId.userId._id.toString() === req.user.id);
+                const products = await Product.find({userId: req.user.id});
+                console.log(req.user.id)
+                const productIds = products.map(item => { return item._id })
+                console.log(productIds)
+                dataOrders = await Pesanan.find({
+                    items: {
+                      $elemMatch: {
+                        'product.productId': { $in: productIds }
+                      }
+                    }
+                }).lean();
+                
+                const filteredOrders = dataOrders.map(order => {
+                    const { shipments, ...restOfOrder } = order
+                    return {
+                        ...restOfOrder,
+                        items: order.items.map(item => {
+                            return {
+                                ...item,
+                                product: item.product.filter(prod => productIds.includes(prod.productId))
+                            };
+                        })
+                    };
                 });
-                if (!dataOrders || dataOrders.length < 1) {
-                    return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
-                }
-                // datas: dataOrders,
-                return res.status(200).json({ message: 'get data all Order success', data })
+
+                return res.status(200).json({ message: 'get data all Order success', data: filteredOrders, productIds })
             }
         } catch (error) {
             if (error && error.name === 'ValidationError') {
@@ -887,6 +886,8 @@ module.exports = {
                 reason,
                 canceledBy: "pengguna"
             })
+            const detailPesanan = await DetailPesanan.exists({id_pesanan: pesananId});
+            await axios.post(`https://api.sandbox.midtrans.com/v2/${detailPesanan._id}/cancel`)
             if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${productId}`})
             return res.status(200).json({message: "Berhasil Membatalkan Order", data: order})
         } catch (error) {
