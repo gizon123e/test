@@ -6,7 +6,9 @@ const Product = require("../../models/model-product");
 module.exports = {
     getAllPesananDistributor: async (req, res, next) => {
         try {
-            const { status } = req.query
+            const { status, page = 1, limit = 5 } = req.query
+            const skip = (page - 1) * limit;
+
             let query = {
                 distributorId: req.params.id
             }
@@ -34,6 +36,9 @@ module.exports = {
                         path: "categoryId"
                     }
                 })
+                .sort({ createdAt: -1 }) // Urutkan berdasarkan createdAt descending
+                .skip(skip) // Lewati dokumen sesuai dengan nilai skip
+                .limit(parseInt(limit));
 
             if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
 
