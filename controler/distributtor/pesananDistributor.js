@@ -37,6 +37,10 @@ module.exports = {
 
             if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
 
+            datas.sort((a, b) => {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+
             res.status(200).json({ message: "get data All success", datas })
         } catch (error) {
             console.log(error)
