@@ -22,7 +22,10 @@ module.exports = {
                     path: "orderId",
                     populate: "addressId"
                 })
-                .populate("distributorId")
+                .populate({
+                    path: "distributorId",
+                    populate: "alamat_id"
+                })
                 .populate({
                     path: "id_toko",
                     populate: "address"
