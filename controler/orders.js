@@ -888,7 +888,7 @@ module.exports = {
             })
             const detailPesanan = await DetailPesanan.exists({id_pesanan: pesananId});
             await axios.post(`https://api.sandbox.midtrans.com/v2/${detailPesanan._id}/cancel`)
-            if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${productId}`})
+            if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${pesananId}`})
             return res.status(200).json({message: "Berhasil Membatalkan Order", data: order})
         } catch (error) {
             console.log(error);
