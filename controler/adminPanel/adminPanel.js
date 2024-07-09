@@ -245,8 +245,8 @@ module.exports = {
 
                                 // Mencari role dan informasi berdasarkan userId dari produk
                                 if (product && product.userId) {
-                                    const vendor = await Vendor.findOne({ userId: product.userId })
-                                    const supplier = await Supplier.findOne({ userId: product.userId })
+                                    const vendor = await Vendor.findOne({ userId: product.userId }).populate("userId")
+                                    const supplier = await Supplier.findOne({ userId: product.userId }).populate("userId")
 
                                     if (vendor) {
                                         vendorOrSupplierInfo = vendor

@@ -2,11 +2,14 @@ const Distributtor = require("../../models/distributor/model-distributor")
 const { io } = require("socket.io-client");
 const Pengiriman = require("../../models/model-pengiriman");
 const Product = require("../../models/model-product");
+const Konsumen = require("../../models/konsumen/model-konsumen");
 
 module.exports = {
     getAllPesananDistributor: async (req, res, next) => {
         try {
-            const { status } = req.query
+            const { status, page = 1, limit = 5 } = req.query
+            const skip = (page - 1) * limit;
+
             let query = {
                 distributorId: req.params.id
             }
@@ -20,7 +23,10 @@ module.exports = {
                     path: "orderId",
                     populate: "addressId"
                 })
-                .populate("distributorId")
+                .populate({
+                    path: "distributorId",
+                    populate: "alamat_id"
+                })
                 .populate({
                     path: "id_toko",
                     populate: "address"
@@ -34,10 +40,20 @@ module.exports = {
                         path: "categoryId"
                     }
                 })
+                .sort({ createdAt: -1 }) // Urutkan berdasarkan createdAt descending
+                .skip(skip) // Lewati dokumen sesuai dengan nilai skip
+                .limit(parseInt(limit));
+
+            const payload = []
+            for (let data of datas) {
+                const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
+
+                payload.push({ data, konsumen: dataKonsumen })
+            }
 
             if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
 
-            res.status(200).json({ message: "get data All success", datas })
+            res.status(200).json({ message: "get data All success", datas: payload })
         } catch (error) {
             console.log(error)
             next(error)
