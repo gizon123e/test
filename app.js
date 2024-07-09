@@ -71,6 +71,7 @@ app.use('/api/minat', require('./routes/router-minat'));
 app.use('/api/flash-sale', require('./routes/router-flash-sale'));
 app.use('/api/gratong', require('./routes/router-gratong'));
 app.use('/api/alamat', require('./routes/router-alamat'));
+app.use('/api/sekolah', require('./routes/router-sekolah'));
 
 // Admin Panel
 app.use('/api/user-system', require('./routes/router-system-user'));
