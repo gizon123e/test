@@ -225,10 +225,13 @@ productModels.pre("save", function (next) {
   next();
 });
 
+productModels.pre("findOneAndUpdate", async function (next){
+  if(this.getUpdate().minimalDp < 40) next(new Error("minimalDp tidak boleh kurang dari 40%"))
+})
+
 productModels.post("findOneAndUpdate", async function (doc, next) {
   try {
     const document = await this.model.findOne(this.getQuery());
-    console.log(this._update)
     if (!document) {
       next();
     }
@@ -239,14 +242,6 @@ productModels.post("findOneAndUpdate", async function (doc, next) {
     await doc.save();
     next();
   } catch (error) {
-    next(error);
-  }
-});
-
-productModels.post("findOneAndDelete", async function (next) {
-  try {
-  } catch (error) {
-    console.log(error);
     next(error);
   }
 });

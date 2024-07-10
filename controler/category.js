@@ -205,17 +205,18 @@ module.exports = {
 
             if (specific) {
                 specific_category = await SpecificCategory.findOne({ name: { $regex: new RegExp(`^${specific}$`, 'i') } });
-                if (!specific_category) {
-                    specific_category = await SpecificCategory.create({ name: specific });
-                }
+                // if (!specific_category) {
+                //     specific_category = await SpecificCategory.create({ name: specific });
+                // }
                 let update;
-                const duplicate = await SubCategory.find({ contents: { $in: specific_category._id } });
+                const duplicate = await SubCategory.find({ contents: { $in: specific_category?._id } });
                 if (duplicate || duplicate.length > 0) {
                     update = await SpecificCategory.create({ name: specific });
                 }
                 const id = sub_category._id
                 sub_category = await SubCategory.findByIdAndUpdate(id, { $push: { contents: update._id } }, { new: true });
             };
+            console.log(req.body)
 
             return res.status(201).json({ message: "Berhasil Menambahkan Category", main_category, sub_category, specific_category });
         } catch (error) {

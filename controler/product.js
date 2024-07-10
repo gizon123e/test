@@ -632,6 +632,13 @@ module.exports = {
       });
 
     } catch (err) {
+      if (err && err.name == "ValidationError") {
+        return res.status(400).json({
+          error: true,
+          message: err.message,
+          fields: err.fields,
+        });
+      }
       console.log(err);
       next(err);
     }
@@ -764,7 +771,7 @@ module.exports = {
       }).lean();
 
       if(ordered.length > 0) return res.status(403).json({ message: "Tidak bisa menghapus product karena ada orderan yang sedang aktif", data: ordered});
-      if(deleted.isReviewed) return res.status(403).json({message: "Product sedang direview, tidak bisa hapus"})
+      if(deleted.isReviewed && req.user.role !== 'administrator') return res.status(403).json({message: "Product sedang direview, tidak bisa hapus"})
       await Product.deleteOne({_id: deleted._id});
       return res.status(201).json({
         error: false,
