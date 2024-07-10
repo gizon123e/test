@@ -90,6 +90,9 @@ const modelOrder = new mongoose.Schema({
     biaya_awal_asuransi:{
         type: Number
     },
+    biaya_awal_proteksi: {
+        type: Number
+    }, 
     dp: {
         isUsed: {
             type: Boolean
