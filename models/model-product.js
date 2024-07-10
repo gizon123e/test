@@ -212,6 +212,14 @@ productModels.pre("save", function (next) {
     this.total_price = this.price;
   }
 
+  const minimalDp = parseInt(this.minimalDp);
+
+  // Check for minimalDp conditions
+  if (minimalDp < 40 && minimalDp !== 0) {
+    return next(new Error("minimalDp tidak boleh kurang dari 40%"));
+  }
+
+  if(minimalDp === 0) this.minimalDp = null
   // if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
   //   this.detail_varian.forEach(element => {
   //     this.total_stok += element.stok

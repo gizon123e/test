@@ -209,7 +209,7 @@ module.exports = {
                     specific_category = await SpecificCategory.create({ name: specific });
                 }
                 const check = sub_category.contents.find(item => {
-                    return item._id.equals(sub_category._id);
+                    return item._id.equals(specific_category._id);
                 });
                 if (!check || check.length < 0) {
                     const id = sub_category._id
