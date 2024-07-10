@@ -671,7 +671,7 @@ module.exports = {
                     }).populate('distributorId').populate('id_jenis_kendaraan').populate('jenis_pengiriman')
                     switch(userId.role){
                         case "vendor":
-                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko address').populate('address');
+                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko address').populate('address').lean();
                             break;
                         case "supplier":
                             detailToko = await Supplier.findOne({ userId: userId._id }).lean();
