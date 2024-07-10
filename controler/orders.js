@@ -579,8 +579,6 @@ module.exports = {
             ]);
             if(!dataOrder[0]) return res.status(404).json({message: `Order dengan id: ${req.params.id} tidak ditemukan`})
             const { _id, items, ...restOfOrder } = dataOrder[0]
-            const user = await User.findById(dataOrder[0].userId).select('email phone').lean()
-            console.log(user)
             const promises = Object.keys(dataOrder[0].order_detail).map(async (key) => {
                 const paymentMethods = ['id_va', 'id_wallet', 'id_gerai_tunai', 'id_fintech'];
                 if (paymentMethods.includes(key) && dataOrder[0].order_detail[key] !== null) {
@@ -609,7 +607,7 @@ module.exports = {
                     let detailToko;
                     const { productId, ...restOfItemProduct } = item.product
                     const { userId, ...restOfProduct } = productId
-
+                    const user = await User.findById(userId._id).select('email phone').lean()
                     switch(userId.role){
                         case "vendor":
                             detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko address').populate('address').lean();
@@ -661,6 +659,7 @@ module.exports = {
                     let detailToko;
                     const { productId, ...restOfItemProduct } = item.product
                     const { userId, ...restOfProduct } = productId
+                    const user = await User.findById(userId._id).select('email phone').lean()
                     const pengiriman = await Pengiriman.findOne({
                         orderId: req.params.id, 
                         productToDelivers: {

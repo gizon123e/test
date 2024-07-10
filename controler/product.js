@@ -704,7 +704,7 @@ module.exports = {
       }
 
       await Product.updateOne({ _id: productId }, { 'status.value': status })
-      return res.status(200).json({message: "Berhasil mengarsipkan product"})
+      return res.status(200).json({message: `Berhasil ${status} product`})
     } catch (error) {
       console.log(error)
     }
