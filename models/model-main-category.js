@@ -31,7 +31,6 @@ const mainModelCategory = new mongoose.Schema({
 mainModelCategory.index({ name: 1, for: 1 }, { unique: true });
 
 mainModelCategory.pre('findOneAndUpdate', async function (next) {
-    console.log(this.getUpdate()?.$push?.contents)
     if (this.getUpdate()?.$push?.contents) {
         const main = await this.model.findOne({
             contents: { $in: this.getUpdate().$push.contents }
