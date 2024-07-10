@@ -49,8 +49,21 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
             type: String,
             ref: "Product",
             require: [true, "produk_pengiriman harus di isi"]
+        },
+        quantity: {
+            type: Number,
+            required: [true, "quantity harus di isi"]
         }
-    }]
+    }],
+    waktu_pesanan: {
+        type: Date,
+        required: [true, "waktu_pesanan harus di isi"]
+    },
+    jenisKendaraan: {
+        type: mongoose.Types.ObjectId,
+        ref: "JenisKendaraan",
+        required: [true, "jenisKendaraan harus di isi"]
+    }
 }, { timestamps: true })
 
 const ProsesPengirimanDistributor = mongoose.model("ProsesPengirimanDistributor", modelProsesPengirimanDistributor)

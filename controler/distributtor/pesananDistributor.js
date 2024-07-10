@@ -166,9 +166,11 @@ module.exports = {
 
             const payloadProduk = []
             for (const id of dataPengiriman.productToDelivers) {
-                payloadProduk.push({ produkId: id.productId })
+                payloadProduk.push({
+                    produkId: id.productId,
+                    quantity: id.quantity
+                })
             }
-
 
             const createProsesPengiriman = await ProsesPengirimanDistributor.create({
                 distributorId: dataPengiriman.distributorId,
@@ -179,7 +181,9 @@ module.exports = {
                 optimasi_pengiriman: timeInSeconds,
                 kode_pengiriman: dataPengiriman.kode_pengiriman,
                 tarif_pengiriman: dataPengiriman.total_ongkir,
-                produk_pengiriman: payloadProduk
+                produk_pengiriman: payloadProduk,
+                waktu_pesanan: dataPengiriman.orderId.items[0].deadline,
+                jenisKendaraan: dataPengiriman.id_jenis_kendaraan
             })
 
             const updateStatusDistributor = await Pengiriman.findByIdAndUpdate({ _id: req.params.id }, { status_distributor: "Diterima" })
