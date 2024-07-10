@@ -158,7 +158,7 @@ module.exports = {
                             status: { $first: "$status" },
                             expire: { $first: "$expire" },
                             createdAt: { $first: "$createdAt" },
-                            total_pesanan: { $first: "$total_pesanan" }
+                            total_pesanan: { $first: "$total_pesanan" },
                         }
                     },
                     {
@@ -554,7 +554,9 @@ module.exports = {
                         addressId: { $first: "$addressId" },
                         expire: { $first: "$expire" },
                         status: { $first: "$status" },
-                        biaya_awal_asuransi: { $first: "$biaya_awal_asuransi" }
+                        biaya_awal_asuransi: { $first: "$biaya_awal_asuransi" },
+                        biaya_awal_proteksi: { $first: "$biaya_awal_proteksi" }
+
                     }
                 },
                 {
@@ -569,7 +571,8 @@ module.exports = {
                             order_detail: "$order_detail",
                             expire: "$expire",
                             status: "$status",
-                            biaya_awal_asuransi: "$biaya_awal_asuransi"
+                            biaya_awal_asuransi: "$biaya_awal_asuransi",
+                            biaya_awal_proteksi: "$biaya_awal_proteksi"
                         }
                     }
                 },
