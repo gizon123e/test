@@ -99,17 +99,14 @@ module.exports = {
             ]);
             let finalData
             switch (req.user.role) {
-                case "konsumen":
+                case "vendor":
                     finalData = data.filter(item => { return item.for === "konsumen"});
                     break;
-                case "vendor":
+                case "supplier":
                     finalData = data.filter(item => { return item.for === "vendor"});
                     break;
-                case "supplier":
-                    finalData = data.filter(item => { return item.for === "supplier"});
-                    break;
                 case "produsen":
-                    finalData = data.filter(item => { return item.for === "produsen"});
+                    finalData = data.filter(item => { return item.for === "supplier"});
                     break;
             };
             return res.status(200).json({ message: "Berhasil Mendapatkan Semua Category", data: finalData });

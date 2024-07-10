@@ -27,9 +27,8 @@ const modelOrder = new mongoose.Schema({
                 type: Boolean,
                 default: false
             },
-            rejected: {
-                type: Boolean,
-                default: false
+            promo: {
+                type: String
             }
         }],
         deadline: {
@@ -46,6 +45,18 @@ const modelOrder = new mongoose.Schema({
         },
         kode_pesanan: {
             type: String
+        },
+        isDistributtorApproved: {
+            type: Boolean,
+            default: false
+        },
+        isApproved: {
+            type: Boolean,
+            default: false
+        },
+        rejected: {
+            type: Boolean,
+            default: false
         }
     }],
     userId: {
@@ -69,19 +80,15 @@ const modelOrder = new mongoose.Schema({
         message: `{VALUE} is not supported`,
         default: "Belum Bayar"
     },
-    isApproved: {
-        type: Boolean
-    },
-    isDistributtorApproved: {
-        type: Boolean,
-        default: false
-    },
     poinTerpakai: {
         type: Number
     },
     biaya_asuransi: {
         type: Boolean,
         default: false
+    },
+    biaya_awal_asuransi:{
+        type: Number
     },
     dp: {
         isUsed: {
@@ -90,10 +97,6 @@ const modelOrder = new mongoose.Schema({
         value: {
             type: Decimal128
         }
-    },
-    is_dibatalkan: {
-        type: Boolean,
-        default: false
     },
     expire: {
         type: Date

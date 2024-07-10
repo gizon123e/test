@@ -278,14 +278,31 @@ module.exports = {
                           'product.productId': { $in: productIds }
                         }
                     },
-                    ...(status && { status })
+                    status: {
+                        $ne: "Belum Bayar"
+                    }
+                    // ...(status && { status })
                 }
                 
                 dataOrders = await Pesanan.aggregate([
                     { $match: filter },
-                    { $project: { shipments: 0 }},
                     { $unwind: "$items" },
+                    { $unwind: "$shipments" },
                     { $unwind: "$items.product" },
+                    {
+                        $lookup:{
+                            from: "distributtors",
+                            foreignField: '_id',
+                            localField: "shipments.id_distributor",
+                            as: 'dataDistributor'
+                        }
+                    },
+                    { $unwind: "$dataDistributor" },
+                    {
+                        $addFields:{
+                            dataPengiriman: "$dataDistributor"
+                        }
+                    },
                     {
                         $lookup: {
                             from: 'products',
@@ -305,44 +322,107 @@ module.exports = {
                         $project: { productInfo: 0 }
                     },
                     {
+                        $lookup:{
+                            from: "konsumens",
+                            foreignField: "userId",
+                            localField: "userId",
+                            as: "konsumens_detail"
+                        },
+                    },
+                    {
+                        $lookup:{
+                            from: "vendors",
+                            foreignField: "userId",
+                            localField: "userId",
+                            as: "vendors_detail"
+                        },
+                    },
+                    {
+                        $lookup:{
+                            from: "suppliers",
+                            foreignField: "userId",
+                            localField: "userId",
+                            as: "suppliers_detail"
+                        },
+                    },
+                    {
+                        $lookup:{
+                            from: "produsens",
+                            foreignField: "userId",
+                            localField: "userId",
+                            as: "produsens_detail"
+                        },
+                    },
+                    {
+                        $addFields: {
+                            userId: {
+                                $arrayElemAt: [
+                                    {
+                                        $filter: {
+                                            input: ["$konsumens_detail", "$vendors_detail", "$suppliers_detail", "$produsens_detail"],
+                                            as: "detail",
+                                            cond: { $gt: [{ $size: "$$detail" }, 0] }
+                                        }
+                                    },
+                                    0
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from: "addresses",
+                            foreignField: "_id",
+                            localField: "addressId",
+                            as: "detailAlamat"
+                        },
+                    },
+                    {
+                        $unwind: "$detailAlamat"
+                    },
+                    {
+                        $addFields:{
+                            addressId: "$detailAlamat"
+                        }
+                    },
+                    {
+                        $project: {
+                            konsumens_detail: 0,
+                            vendors_detail: 0,
+                            suppliers_detail: 0,
+                            produsens_detail: 0,
+                            detailAlamat: 0,
+                            dataDistributor: 0
+                        }
+                    },
+                    
+                    {
+                        $unwind:"$userId"
+                    },
+                    {
                         $group: {
                           _id: {
                             orderId: "$_id",
-                            userId: req.user.id
+                            sellerId: "$items.product.productId.userId",
+                            distributorId: "$dataPengiriman._id"
                           },
                           items: {
                             $push: "$items"
                           },
                           addressId: { $first: "$addressId" },
+                          dataPengiriman: { $first: "$dataPengiriman" },
+                          userId: { $first: "$userId" },
                           date_order: { $first: "$date_order" },
                           status: { $first: "$status" },
-                          isDistributtorApproved: { $first: "$isDistributtorApproved" },
                           poinTerpakai: { $first: "$poinTerpakai" },
                           biaya_asuransi: { $first: "$biaya_asuransi" },
                           dp: { $first: "$dp" },
-                          is_dibatalkan: { $first: "$is_dibatalkan" },
                           expire: { $first: "$expire" },
                           createdAt: { $first: "$createdAt" },
                           updatedAt: { $first: "$updatedAt" },
-                          __v: { $first: "$__v" }
                         }
-                      },
-                ])
-
-                // const filteredOrder = []
-                // for(const order of dataOrders){
-                //     const { items, shipments, ...restOfOrder } = order
-                //     for(const item of items){
-                //         for(const prod of item.product){
-                //             if(productIds.includes(prod.productId)){
-                //                 filteredOrder.push({
-                //                     ...restOfOrder,
-                //                     product: prod
-                //                 })
-                //             }
-                //         }
-                //     }
-                // }
+                    },
+                ]);
 
                 return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
             }
@@ -468,11 +548,13 @@ module.exports = {
                             }
                         },
                         invoice_detail: { $first: "$invoice_detail" },
+                        userId: { $first: "$userId" },
                         transaksi_detail: { $first: "$transaksi_detail" },
                         order_detail: { $first: "$order_detail" },
                         addressId: { $first: "$addressId" },
                         expire: { $first: "$expire" },
-                        status: { $first: "$status" }
+                        status: { $first: "$status" },
+                        biaya_awal_asuransi: { $first: "$biaya_awal_asuransi" }
                     }
                 },
                 {
@@ -481,11 +563,13 @@ module.exports = {
                             _id: "$_id",
                             items: "$items",
                             invoice_detail: "$invoice_detail",
+                            userId: "$userId",
                             transaksi_detail: "$transaksi_detail",
                             addressId: "$addressId",
                             order_detail: "$order_detail",
                             expire: "$expire",
-                            status: "$status"
+                            status: "$status",
+                            biaya_awal_asuransi: "$biaya_awal_asuransi"
                         }
                     }
                 },
@@ -495,6 +579,8 @@ module.exports = {
             ]);
             if(!dataOrder[0]) return res.status(404).json({message: `Order dengan id: ${req.params.id} tidak ditemukan`})
             const { _id, items, ...restOfOrder } = dataOrder[0]
+            const user = await User.findById(dataOrder[0].userId).select('email phone').lean()
+            console.log(user)
             const promises = Object.keys(dataOrder[0].order_detail).map(async (key) => {
                 const paymentMethods = ['id_va', 'id_wallet', 'id_gerai_tunai', 'id_fintech'];
                 if (paymentMethods.includes(key) && dataOrder[0].order_detail[key] !== null) {
@@ -526,7 +612,7 @@ module.exports = {
 
                     switch(userId.role){
                         case "vendor":
-                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
+                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko address').populate('address').lean();
                             break;
                         case "supplier":
                             detailToko = await Supplier.findOne({ userId: userId._id }).lean();
@@ -538,7 +624,7 @@ module.exports = {
                     
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: { ...detailToko, ...restOfItem},
+                            toko: { email: user.email.content, phone: user.phone.content,  ...detailToko, ...restOfItem },
                             products: []
                         }
                     }
@@ -585,7 +671,7 @@ module.exports = {
                     }).populate('distributorId').populate('id_jenis_kendaraan').populate('jenis_pengiriman')
                     switch(userId.role){
                         case "vendor":
-                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko').lean();
+                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko address').populate('address');
                             break;
                         case "supplier":
                             detailToko = await Supplier.findOne({ userId: userId._id }).lean();
@@ -597,7 +683,7 @@ module.exports = {
 
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: { ...detailToko, ...restOfItem},
+                            toko: { email: user.email.content, phone: user.phone.content , ...detailToko, ...restOfItem  },
                             products: []
                         }
                     }
@@ -646,7 +732,8 @@ module.exports = {
                 biaya_asuransi,
                 biaya_jasa_aplikasi,
                 biaya_layanan,
-                poin_terpakai
+                poin_terpakai,
+                biaya_awal_asuransi
             } = req.body
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" })
@@ -940,7 +1027,12 @@ module.exports = {
                 canceledBy: "pengguna"
             })
             const detailPesanan = await DetailPesanan.exists({id_pesanan: pesananId});
-            await axios.post(`https://api.sandbox.midtrans.com/v2/${detailPesanan._id}/cancel`)
+            await axios.post(`https://api.sandbox.midtrans.com/v2/${detailPesanan._id}/cancel`, {}, {
+                headers: {
+                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
+                }
+            })
+            await VA_Used.deleteOne({orderId: pesananId, userId: req.user.id})
             if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${pesananId}`})
             return res.status(200).json({message: "Berhasil Membatalkan Order", data: order})
         } catch (error) {
