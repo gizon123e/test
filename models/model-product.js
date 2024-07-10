@@ -225,26 +225,42 @@ productModels.pre("save", function (next) {
   next();
 });
 
-productModels.pre("findOneAndUpdate", async function (next){
-  if(this.getUpdate().minimalDp < 40) next(new Error("minimalDp tidak boleh kurang dari 40%"))
-})
-
-productModels.post("findOneAndUpdate", async function (doc, next) {
+productModels.pre("findOneAndUpdate", async function (next) {
   try {
-    const document = await this.model.findOne(this.getQuery());
-    if (!document) {
-      next();
+    const update = this.getUpdate();
+    const minimalDp = parseInt(update.minimalDp);
+
+    // Check for minimalDp conditions
+    if (minimalDp < 40 && minimalDp !== 0) {
+      return next(new Error("minimalDp tidak boleh kurang dari 40%"));
     }
 
-    const updatedDoc = this._update;
-    updatedDoc.total_price =
-      updatedDoc.price - (updatedDoc.price * updatedDoc.diskon) / 100;
-    await doc.save();
+    // Find the current document
+    const document = await this.model.findOne(this.getQuery());
+    if (!document) {
+      return next();
+    }
+
+    // Handle minimalDp value
+    if (minimalDp === 0) {
+      update.minimalDp = null;
+    }
+
+    // Calculate and set the total_price
+    if(update.diskon){
+      update.total_price = update.price - (update.price * update.diskon) / 100;
+    }
+
+    // Update the document with new values
+    this.setUpdate(update);
+
+    console.log(update);
     next();
   } catch (error) {
     next(error);
   }
 });
+
 
 productModels.post(["deleteMany", "deleteOne", "findOneAndDelete"], async function (next){
   try {

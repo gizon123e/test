@@ -205,16 +205,16 @@ module.exports = {
 
             if (specific) {
                 specific_category = await SpecificCategory.findOne({ name: { $regex: new RegExp(`^${specific}$`, 'i') } });
-                // if (!specific_category) {
-                //     specific_category = await SpecificCategory.create({ name: specific });
-                // }
-                let update;
-                const duplicate = await SubCategory.find({ contents: { $in: specific_category?._id } });
-                if (duplicate || duplicate.length > 0) {
-                    update = await SpecificCategory.create({ name: specific });
+                if (!specific_category) {
+                    specific_category = await SpecificCategory.create({ name: specific });
                 }
-                const id = sub_category._id
-                sub_category = await SubCategory.findByIdAndUpdate(id, { $push: { contents: update._id } }, { new: true });
+                const check = sub_category.contents.find(item => {
+                    return item._id.equals(sub_category._id);
+                });
+                if (!check || check.length < 0) {
+                    const id = sub_category._id
+                    sub_category = await SubCategory.findByIdAndUpdate(id, { $push: { contents: specific_category._id } }, { new: true });
+                }
             };
             console.log(req.body)
 
