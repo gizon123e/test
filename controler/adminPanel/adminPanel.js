@@ -328,5 +328,31 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+
+    getAllTransaksi: async (req, res, next) => {
+        try {
+            const dataTransaksi = await Transaksi.find()
+                .populate({
+                    path: 'id_pesanan',
+                    populate: {
+                        path: 'items.product',  // Populate product details in items
+                        model: 'Product',
+                        populate: {
+                            path: "productId"
+                        }
+                    }
+                });
+
+            if (!dataTransaksi) return res.status(400).json({ message: "data transaksi masi kosong" })
+
+            res.status(200).json({
+                message: "get data all Transaksi success",
+                datas: dataTransaksi
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }
