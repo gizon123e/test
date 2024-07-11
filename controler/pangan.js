@@ -25,4 +25,80 @@ module.exports = {
             next(error)
         }
     },
+
+    getAllKelompokPangan: async( req, res, next ) => {
+        try {
+            const data = await KelompokPangan.find().lean();
+            return res.status(200).json({message: "Berhasil Mendapatkan data", data})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getPanganByKelompok: async (req, res, next) => {
+        try {
+            const { kelompok_pangan, jenis_pangan } = req.query
+            if(!kelompok_pangan || !jenis_pangan) return res.status(400).json({message: "Body yang diperlukan tidak dikirim!"})
+            const dataPangan = await Pangan.aggregate([
+                {
+                    $match: {
+                        kelompok_pangan: { $regex: new RegExp(`^${kelompok_pangan}$`, 'i') },
+                        jenis_pangan: { $regex: new RegExp(`^${jenis_pangan}$`, 'i') }
+                    }
+                },
+                {
+                    $addFields: {
+                        nutrisi: [
+                            "air",
+                            "energi",
+                            "protein",
+                            "lemak",
+                            "karbohidrat",
+                            "serat",
+                            "kalsium",
+                            "fosfor",
+                            "besi",
+                            "natrium",
+                            "kalium",
+                            "tembaga",
+                            "thiamin",
+                            "riboflavin",
+                            "vitamin_c"
+                        ]
+                    }
+                },
+                {
+                    $unset: [
+                        "air",
+                        "energi",
+                        "protein",
+                        "lemak",
+                        "kh",
+                        "serat",
+                        "kalsium",
+                        "fosfor",
+                        "besi",
+                        "natrium",
+                        "kalium",
+                        "tembaga",
+                        "thiamin",
+                        "riboflavin",
+                        "vitc",
+                        "__v"
+                    ]
+                },
+                {
+                    $project: {
+                        nama_bahan: 1,
+                        nutrisi: 1
+                    }
+                }
+            ]);
+            return res.status(200).json({message: "Berhasil Mendapatkan data", data: dataPangan});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    }
 }
