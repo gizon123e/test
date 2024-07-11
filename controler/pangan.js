@@ -110,5 +110,16 @@ module.exports = {
             console.log(error)
             next(error)
         }
+    },
+    
+    getDetailPangan: async(req, res, next) => {
+        try {
+            const data = await Pangan.findById(req.params.id);
+            if(!data) return res.status(404).json({message: `Data pangan dengan id: ${req.params.id} tidak ditemukan`})
+            return res.status(200).json({message: "Berhasil mendapatkan data", data})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }
