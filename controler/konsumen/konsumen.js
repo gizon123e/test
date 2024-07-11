@@ -250,8 +250,9 @@ module.exports = {
             // }
 
             if(req.files && req.files.profile_pict){
-                const name = konsumen.profile_pict.split('/')
+                const name = konsumen.profile_pict ? konsumen.profile_pict.split('/') : "notfound"
                 if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
+                    console.log('ada')
                     fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
                         if (err) {
                             console.error('Error while deleting file:', err);
@@ -260,10 +261,10 @@ module.exports = {
                         }
                     });
                 }
-                const profile_pict_file = `${Date.now()}_${konsumen.namaBadanUsaha || konsumen.nama}_${path.extname(req.files.profile_pict.name)}`;
+                const profile_pict_file = `${konsumen.namaBadanUsaha || konsumen.nama}_${Date.now()}${path.extname(req.files.profile_pict.name)}`;
                     
                 const profile_pict = path.join(__dirname, '../../public', 'profile_picts', profile_pict_file);
-                filePath = `${process.env.HOST}/public/profile_picts/${profile_pict_file}`;
+                filePath = `${process.env.HOST}public/profile_picts/${profile_pict_file}`;
                 await req.files.profile_pict.mv(profile_pict);
             }
 

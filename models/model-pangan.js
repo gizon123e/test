@@ -83,7 +83,13 @@ const modelPangan = new mongoose.Schema({
         value: { type: Decimal128 },
         deskripsi: { type: String }
     }
+});
+
+const modelKelompokPangan = new mongoose.Schema({
+    nama: String,
+    icon: String
 })
 
+const KelompokPangan = mongoose.model("KelompokPangan", modelKelompokPangan);
 const Pangan = mongoose.model("Pangan", modelPangan);
-module.exports = Pangan;
+module.exports = { Pangan, KelompokPangan };
