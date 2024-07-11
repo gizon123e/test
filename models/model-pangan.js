@@ -87,7 +87,8 @@ const modelPangan = new mongoose.Schema({
 
 const modelKelompokPangan = new mongoose.Schema({
     nama: String,
-    icon: String
+    icon: String,
+    deskripsi: String
 })
 
 const KelompokPangan = mongoose.model("KelompokPangan", modelKelompokPangan);

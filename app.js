@@ -73,12 +73,14 @@ app.use('/api/flash-sale', require('./routes/router-flash-sale'));
 app.use('/api/gratong', require('./routes/router-gratong'));
 app.use('/api/alamat', require('./routes/router-alamat'));
 app.use('/api/sekolah', require('./routes/router-sekolah'));
+app.use('/api/pangan', require('./routes/router-pangan'));
 
 // Admin Panel
 app.use('/api/user-system', require('./routes/router-system-user'));
 app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
+
 
 app.use('/api/tarif', require('./routes/router-tarif'))
 
