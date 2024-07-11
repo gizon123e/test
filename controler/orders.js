@@ -634,7 +634,14 @@ module.exports = {
                     
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: { email: user.email.content, phone: user.phone.content,  ...detailToko, ...restOfItem, status_pengiriman: null },
+                            toko: { 
+                                userIdSeller: user._id,
+                                email: user.email.content, 
+                                phone: user.phone.content,  
+                                ...detailToko, 
+                                ...restOfItem, 
+                                status_pengiriman: null
+                            },
                             products: []
                         }
                     }
@@ -694,7 +701,14 @@ module.exports = {
 
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: { email: user.email.content, phone: user.phone.content , ...detailToko, ...restOfItem, status_pengiriman: pengiriman },
+                            toko: { 
+                                userIdSeller: user._id,
+                                email: user.email.content, 
+                                phone: user.phone.content , 
+                                ...detailToko, 
+                                ...restOfItem, 
+                                status_pengiriman: pengiriman 
+                            },
                             products: []
                         }
                     }
