@@ -957,6 +957,74 @@ module.exports = {
         }
     },
 
+    update_shipments: async(req, res, next) => {
+        try {
+            const { 
+                old_id_toko_vendor, 
+                old_id_distributor, 
+                new_id_distributor, 
+                total_ongkir, 
+                potongan_ongkir, 
+                ongkir, 
+                id_jenis_kendaraan, 
+                id_jenis_layanan 
+            } = req.body
+
+            const updateFields = {
+                'shipments.$.id_distributor': new_id_distributor,
+                'shipments.$.total_ongkir': total_ongkir,
+                'shipments.$.ongkir': ongkir,
+                'shipments.$.potongan_ongkir': potongan_ongkir,
+                'shipments.$.id_jenis_kendaraan': id_jenis_kendaraan,
+                'shipments.$.id_jenis_layanan': id_jenis_layanan,
+            };
+
+            const order = await Orders.findOne(
+                { _id: req.params.id, userId: req.user.id, 'shipments.id_distributor': old_id_distributor, 'shipments.id_toko_vendor': old_id_toko_vendor },
+            ).lean();
+            
+            if(!order) return res.status(404).json({message: "Tidak ditemukan order dan pengiriman"});
+
+            const filteredIndex = order.shipments.findIndex( item => {
+                return item.id_distributor.toString() === old_id_distributor && item.id_toko_vendor.toString() === old_id_toko_vendor
+            });
+            
+            const products = order.shipments[filteredIndex].products.map( item => {
+                return item.productId
+            });
+
+            const updatedOrder = await Orders.updateOne(
+                { _id: req.params.id, userId: req.user.id, 'shipments.id_distributor': old_id_distributor, 'shipments.id_toko_vendor': old_id_toko_vendor },
+                { $set: updateFields },
+                { new: true }
+            )
+
+            const pengiriman = await Pengiriman.findOneAndUpdate(
+                {
+                    orderId: updatedOrder._id,
+                    productToDelivers: {
+                        $elemMatch: {
+                            productId: { $in: products }
+                        }
+                    }
+                },
+                {
+                    distributorId: new_id_distributor,
+                    rejected: false,
+                    total_ongkir,
+                    potongan_ongkir,
+                    ongkir,
+                    id_jenis_kendaraan,
+                }
+            );
+
+            return res.status(200).json({data: updatedOrder, pengiriman})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     update_status: async (req, res, next) => {
         try {
             if (!req.body.pesananId || !req.body.status) return res.status(401).json({ message: `Dibutuhkan payload dengan nama pesananId dan status` })

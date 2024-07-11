@@ -15,7 +15,7 @@ const modelVaUsed = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        // index: { expires: '1d' }  // TTL index to expire documents 7 days after creation
+        index: { expires: '1d' }
     } 
 });
 
