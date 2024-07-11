@@ -524,7 +524,7 @@ module.exports = {
       });
     } catch (err) {
       if(err.name == "ValidationError"){
-        return res.status(400).json({error: true, err: err.message})
+        return res.status(400).json({error: true, message: err.message})
       }
       console.log(err);
       next(err);
