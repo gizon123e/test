@@ -201,6 +201,7 @@ module.exports = {
                                         _id: item.product.productId.userId._id,
                                         namaToko: detailToko.namaToko
                                     },
+                                    status_pengiriman: null,
                                     arrayProduct: []
                                 }
                             }
@@ -235,8 +236,15 @@ module.exports = {
                                     detailToko = await Produsen.findOne({ userId: storeId });
                                     break;
                             }
-                            
-                            const pengiriman = await Pengiriman.findOne({ orderId: order._id, productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
+                            const pengiriman = await Pengiriman.findOne({
+                                orderId: order._id, 
+                                productToDelivers: {
+                                    $elemMatch: {
+                                        productId: item.product.productId._id
+                                    }
+                                }
+                            }).lean()
+                            // const pengiriman = await Pengiriman.findOne({ orderId: order._id, productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
                             detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
                             jumlah_uang += item.product.productId.total_price * item.product.quantity + pengiriman.total_ongkir
 
@@ -247,6 +255,7 @@ module.exports = {
                                         _id: item.product.productId.userId._id,
                                         namaToko: detailToko.namaToko
                                     },
+                                    status_pengiriman: pengiriman,
                                     arrayProduct: []
                                 }
                             }
@@ -625,7 +634,7 @@ module.exports = {
                     
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: { email: user.email.content, phone: user.phone.content,  ...detailToko, ...restOfItem },
+                            toko: { email: user.email.content, phone: user.phone.content,  ...detailToko, ...restOfItem, status_pengiriman: null },
                             products: []
                         }
                     }
@@ -670,7 +679,7 @@ module.exports = {
                                 productId: { $in: productId }
                             }
                         }
-                    }).populate('distributorId').populate('id_jenis_kendaraan').populate('jenis_pengiriman')
+                    }).populate('distributorId').populate('id_jenis_kendaraan').populate('jenis_pengiriman').lean()
                     switch(userId.role){
                         case "vendor":
                             detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko address').populate('address').lean();
@@ -685,11 +694,11 @@ module.exports = {
 
                     if(!store[userId._id]){
                         store[userId._id] = {
-                            toko: { email: user.email.content, phone: user.phone.content , ...detailToko, ...restOfItem  },
+                            toko: { email: user.email.content, phone: user.phone.content , ...detailToko, ...restOfItem, status_pengiriman: pengiriman },
                             products: []
                         }
                     }
-                    store[userId._id].products.push({...restOfProduct, ...restOfItemProduct, status_pengiriman: pengiriman})
+                    store[userId._id].products.push({...restOfProduct, ...restOfItemProduct})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
                 let total_pesanan = 0
@@ -699,12 +708,11 @@ module.exports = {
                       products: toko.products.filter(product => productId.includes(product._id))
                     };
                 }).filter(toko => toko.products.length > 0);
+
                 result.forEach(item => {
-                    const pengiriman = {}
+                    total_pesanan += item.toko.status_pengiriman.total_ongkir;
                     item.products.forEach(prod =>{
-                        total_pesanan += prod.total_price * prod.quantity
-                        if(!pengiriman[prod.status_pengiriman._id]) total_pesanan += prod.status_pengiriman.total_ongkir
-                        pengiriman[prod.status_pengiriman._id] = true
+                        total_pesanan += prod.total_price * prod.quantity;
                     })
                 })
                 data = {
@@ -741,7 +749,7 @@ module.exports = {
             if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" })
             if (!Array.isArray(req.body['items'])) return res.status(400).json({ message: "Body items bukan array, kirimkan array" })
 
-            const total_pesanan = await Orders.estimatedDocumentCount({
+            let total_pesanan = await Orders.countDocuments({
                 createdAt: {
                     $gte: now,
                     $lt: tomorrow
@@ -752,6 +760,7 @@ module.exports = {
 
             items.forEach((item, index) => {
                 item.kode_pesanan = `PSN_${user.get('kode_role')}_${date}_${minutes}_${total_pesanan + index + 1}`;
+                total_pesanan += 1
             });
 
             const productIds = items.flatMap(item =>
@@ -839,7 +848,7 @@ module.exports = {
                 expire: a_day_later
             });
 
-            const total_pengiriman = await Pengiriman.estimatedDocumentCount({
+            let total_pengiriman = await Pengiriman.countDocuments({
                 createdAt: {
                     $gte: now,
                     $lt: tomorrow
@@ -865,6 +874,7 @@ module.exports = {
 
                     })
                 );
+                total_pengiriman += 1
             };
 
             const detailPesanan = await DetailPesanan.create({
@@ -887,7 +897,7 @@ module.exports = {
                 nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
             })
 
-            const total_transaksi = await Transaksi.estimatedDocumentCount({
+            const total_transaksi = await Transaksi.countDocuments({
                 createdAt: {
                     $gte: now,
                     $lt: tomorrow
@@ -945,7 +955,7 @@ module.exports = {
             pesanan.shipments.map(item => ships.push(item))
             if (!pesanan) return res.status(404).json({ message: `pesanan dengan id: ${req.body.pesananID} tidak ditemukan` })
             if (pesanan.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah data orang lain!" })
-            const total_transaksi = await Transaksi.estimatedDocumentCount({
+            const total_transaksi = await Transaksi.countDocuments({
                 createdAt: {
                     $gte: now,
                     $lt: tomorrow
