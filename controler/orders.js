@@ -980,7 +980,7 @@ module.exports = {
             };
 
             const order = await Orders.findOne(
-                { _id: req.params.id, userId: req.user.id, 'shipments.id_distributor': old_id_distributor, 'shipments.id_toko_vendor': old_id_toko_vendor },
+                { _id: req.params.id, userId: req.user.id, 'shipments.id_distributor': old_id_distributor, 'shipments.id_toko_vendor': old_id_toko_vendor, status: "Berlangsung" },
             ).lean();
             
             if(!order) return res.status(404).json({message: "Tidak ditemukan order dan pengiriman"});
@@ -993,7 +993,7 @@ module.exports = {
                 return item.productId
             });
 
-            const updatedOrder = await Orders.updateOne(
+            const updatedOrder = await Orders.findOneAndUpdate(
                 { _id: req.params.id, userId: req.user.id, 'shipments.id_distributor': old_id_distributor, 'shipments.id_toko_vendor': old_id_toko_vendor },
                 { $set: updateFields },
                 { new: true }
