@@ -1,7 +1,7 @@
 const path = require("path");
-const { Pangan, KelompokPangan } = require("../models/model-pangan");
+const { Pangan, KelompokPangan, KebutuhanGizi } = require("../models/model-pangan");
 const fs = require('fs')
-const env = require('dotenv')
+const env = require('dotenv');
 env.config()
 module.exports = {
     uploadKelompokPangan: async( req, res, next ) => {
@@ -98,6 +98,16 @@ module.exports = {
             return res.status(200).json({message: "Berhasil Mendapatkan data", data: dataPangan});
         } catch (error) {
             console.log(error);
+            next(error)
+        }
+    },
+
+    getKebutuhanGizi: async(req, res, next) => {
+        try {
+            const data = await KebutuhanGizi.find();
+            return res.status(200).json({message: "Berhasil Mendapatkan Data", data})
+        } catch (error) {
+            console.log(error)
             next(error)
         }
     }
