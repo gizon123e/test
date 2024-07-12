@@ -1015,6 +1015,7 @@ module.exports = {
                     potongan_ongkir,
                     ongkir,
                     id_jenis_kendaraan,
+                    id_jenis_layanan
                 }
             );
 

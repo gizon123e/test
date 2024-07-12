@@ -29,6 +29,10 @@ const modelPengiriman = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: "JenisKendaraan"
     },
+    id_jenis_layanan: {
+        type: mongoose.Types.ObjectId,
+        ref: "JenisJasaDistributor"
+    },
     id_toko: {
         type: mongoose.Types.ObjectId,
         ref: "TokoVendor"
