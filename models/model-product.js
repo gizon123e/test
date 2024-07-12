@@ -280,14 +280,25 @@ productModels.pre("findOneAndUpdate", async function (next) {
 });
 
 
-productModels.post(["deleteMany", "deleteOne", "findOneAndDelete"], async function (next){
+productModels.pre(["deleteMany", "deleteOne", "findOneAndDelete"], async function (next){
   try {
-    await Carts.deleteMany({productId: this.getQuery()._id})
+    const products = await this.model.find(this.getQuery()).lean()
+    for(const prod of products){
+      await Carts.updateMany(
+        { productId: prod._id },
+        { 
+          productTerhapus: { _id: prod._id, name_product: prod.name_product, total_price: prod.total_price, image_product: prod.image_product },
+          productDeleted: true
+        }
+      )
+    }
+    console.log(products)
   } catch (error) {
     console.log(error);
     next(error);
   }
-})
+});
+
 const Product = mongoose.model("Product", productModels);
 
 module.exports = Product;

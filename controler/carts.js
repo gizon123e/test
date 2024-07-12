@@ -12,7 +12,7 @@ module.exports = {
         try {
             const dataCart = await Carts.find({ userId: req.user.id }).populate({
                 path: "productId",
-                select: 'image_product _id total_price total_stok userId diskon name_product minimalOrder berat panjang lebar tinggi',
+                select: 'image_product _id total_price total_stok userId diskon name_product minimalOrder berat panjang lebar tinggi status',
                 populate: {
                     path: "userId",
                     select: "_id role"
@@ -32,7 +32,39 @@ module.exports = {
                         arrayProduct: []
                     }
                 }
-                storeMap[storeId].arrayProduct.push({...cart.productId, quantity: cart.quantity, cartId: cart._id, varian: cart.varian.length > 0? cart.varian : null, total_price_cart: cart.total_price});
+
+                const tersedia = {
+                    value: true,
+                    message: null
+                }
+
+                if(cart.productId.total_stok === 0){
+                    tersedia.value = false;
+                    tersedia.message = "Produk tidak tersedia"
+                }else if(cart.productId.total_stok < cart.productId.minimalOrder){
+                    tersedia.value = false;
+                    tersedia.message = "Stok produk tidak mencukupi minimal pemesanan"
+                }else if (cart.productId.status.value !== 'terpublish'){
+                    switch(cart.productId.status.value){
+                        case "ditinjau":
+                            tersedia.value = false
+                            tersedia.message = "Product Sedang ditinjau"
+                            break;
+                        case "diarsipkan":
+                            tersedia.value = false
+                            tersedia.message = "Product tidak tersedia"
+                            break;
+                    }
+                }
+                
+                storeMap[storeId].arrayProduct.push({
+                    ...cart.productId, 
+                    quantity: cart.quantity, 
+                    cartId: cart._id, 
+                    varian: cart.varian.length > 0? cart.varian : null, 
+                    total_price_cart: cart.total_price,
+                    tersedia
+                });
             }
             const finalData = []
             const keys = Object.keys(storeMap)

@@ -35,6 +35,25 @@ const modelCarts = new mongoose.Schema({
     total_price: {
         type: Number,
         required: [true, 'total price harus di isi'],
+    },
+    productTerhapus: {
+        type: {
+            _id: String,
+            name_product: {
+                type: String
+            },
+            total_price: {
+                type: Number
+            },
+            image_product: [
+                String
+            ],
+        },
+        default: null
+    },
+    productDeleted:{
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true })
 

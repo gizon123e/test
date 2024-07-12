@@ -439,6 +439,7 @@ module.exports = {
 
   upload: async (req, res, next) => {
     try {
+      console.log(req.body)
       if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });      
       //JANGAN DULU DIHAPUS!!
       // if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
@@ -491,13 +492,18 @@ module.exports = {
           imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`)
         };
       };
+      const pangan = []
       if( req.body.bervarian === "false" || !req.body.bervarian){
         const dataProduct = req.body;
         dataProduct.image_product = imgPaths
         dataProduct.userId = req.user.id;
+        JSON.parse(req.body.pangan).forEach(item => {
+          pangan.push(item)
+        })
         newProduct = await Product.create({
           ...dataProduct,
           isPublished: true,
+          pangan,
           id_sub_category: subCategory._id,
           id_main_category: mainCategory._id
         });
@@ -505,7 +511,6 @@ module.exports = {
       }else{       
         if(!req.body.varian) return res.status(400).json({message: "Kurang Body Request *varian*"});
         const varian = [];
-        const pangan = []
         JSON.parse(req.body.varian).forEach(element => {
           varian.push(element)
         });
