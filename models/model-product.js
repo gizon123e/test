@@ -171,7 +171,17 @@ const productModels = new mongoose.Schema(
     isReviewed: {
       type: Boolean,
       default: false
-    }
+    },
+    pangan:[{
+      _id: false,
+      panganId: {
+        type: mongoose.Types.ObjectId,
+        ref: "Pangan"
+      },
+      berat: {
+        type: Number
+      }
+    }]
     // bahanBaku: [
     //   {
     //     _id: false,
