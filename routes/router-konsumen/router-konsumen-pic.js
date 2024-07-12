@@ -1,8 +1,8 @@
 // import middleware
-const authorization = require("../midelware/authorization");
+const authorization = require("../../midelware/authorization");
 
 // import controler
-const controllerPic = require("../controler/konsumen/pic-konsumen");
+const controllerPic = require("../../controler/konsumen/pic-konsumen");
 
 const router = require("express").Router();
 

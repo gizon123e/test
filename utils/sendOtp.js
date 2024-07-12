@@ -33,6 +33,7 @@ module.exports = {
     sendOtpPhone: async (nomor, content) => {
         try {
             const splittedNomor = nomor.split('08');
+            console.log(splittedNomor)
             const params = {
                 from: "KBI",
                 to: `628${splittedNomor[1]}`,

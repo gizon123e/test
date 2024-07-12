@@ -1,11 +1,19 @@
 const mongoose = require('mongoose');
 
-const modelSimulasiSekolah = new mongoose.Schema({
+const modelSekolah = new mongoose.Schema({
     namaSekolah: {
         type: String
     },
     NPSN:{
         type: Number,
+    },
+    userId:{
+        type: mongoose.Types.ObjectId,
+        ref: "User"
+    },
+    detailId: {
+        type: mongoose.Types.ObjectId,
+        ref: "Konsumen"
     },
     jumlahMurid: {
         type: Number
@@ -74,8 +82,14 @@ const modelSimulasiSekolah = new mongoose.Schema({
             "MAK"
         ],
         message: "{VALUE} is not valid"
-    }
+    },
+    address: {
+        type: mongoose.Types.ObjectId,
+        ref: "Address",
+        required: [true, "Harus memiliki alamat"]
+    },
 })
 
-const SimulasiSekolah = mongoose.model("SimulasiSekolah", modelSimulasiSekolah);
-module.exports = SimulasiSekolah
+const Sekolah = mongoose.model("Sekolah", modelSekolah);
+
+module.exports = Sekolah

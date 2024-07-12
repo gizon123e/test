@@ -16,7 +16,9 @@ const Distributor = require("./distributor/model-distributor");
 const Supplier = require("./supplier/model-supplier");
 const Produsen = require("./produsen/model-produsen");
 const Konsumen = require("./konsumen/model-konsumen");
-const TokoVendor = require("./vendor/model-toko")
+const TokoVendor = require("./vendor/model-toko");
+const ModelPenanggungJawabKonsumen = require("./konsumen/model-penanggung-jawab");
+const Sekolah = require("./model-sekolah");
 
 
 const userModels = new mongoose.Schema(
@@ -135,26 +137,26 @@ userModels.pre('findOneAndUpdate', function (next) {
 
 userModels.post("findOneAndDelete", async function (doc) {
   try {
-
-      await Cart.deleteMany({ userId: doc._id })
-      await Conversation.deleteMany({ participants: { $in: doc._id } })
-      await Invoice.deleteMany({ userId: doc._id })
-      await Comment.deleteMany({ userId: doc._id })
-      await Minat.deleteMany({ userId: doc._id })
-      await Pembatalan.deleteMany({ userId: doc._id })
-      await Product.deleteMany({ userId: doc._id })
-      await Produksi.deleteMany({ userId: doc._id })
-      await VirtualAccountUser.deleteMany({ userId: doc._id })
-      await Address.deleteMany({ userId: doc._id })
-      await BahanBaku.deleteMany({ userId: doc._id })
-      await Pesanan.deleteMany({ userId: doc._id })
-      await Vendor.deleteMany({ userId: doc._id })
-      await Distributor.deleteMany({ userId: doc._id })
-      await Supplier.deleteMany({ userId: doc._id })
-      await Produsen.deleteMany({ userId: doc._id })
-      await Konsumen.deleteMany({ userId: doc._id })
-      await TokoVendor.deleteMany({userId: doc._id})
-
+    await Cart.deleteMany({ userId: doc._id })
+    await Conversation.deleteMany({ participants: { $in: doc._id } })
+    await Invoice.deleteMany({ userId: doc._id })
+    await Comment.deleteMany({ userId: doc._id })
+    await Minat.deleteMany({ userId: doc._id })
+    await Pembatalan.deleteMany({ userId: doc._id })
+    await Product.deleteMany({ userId: doc._id })
+    await Produksi.deleteMany({ userId: doc._id })
+    await VirtualAccountUser.deleteMany({ userId: doc._id })
+    await Address.deleteMany({ userId: doc._id })
+    await BahanBaku.deleteMany({ userId: doc._id })
+    await Pesanan.deleteMany({ userId: doc._id })
+    await Vendor.deleteMany({ userId: doc._id })
+    await Distributor.deleteMany({ userId: doc._id })
+    await Supplier.deleteMany({ userId: doc._id })
+    await Produsen.deleteMany({ userId: doc._id })
+    await Konsumen.deleteMany({ userId: doc._id })
+    await TokoVendor.deleteMany({userId: doc._id})
+    await ModelPenanggungJawabKonsumen.deleteMany({userId: doc._id})
+    await Sekolah.deleteMany({userId: doc._id})
   } catch (error) {
     console.log(error)
   }

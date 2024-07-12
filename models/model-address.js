@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const { Decimal128 } = require('mongodb')
 
-const modelAddress = mongoose.Schema({
+const modelAddress = new mongoose.Schema({
     label_alamat:{
         type: String
     },
@@ -44,6 +44,9 @@ const modelAddress = mongoose.Schema({
     },
     isStore:{
         type: Boolean,
+    },
+    isSchool:{
+        type: Boolean
     },
     pinAlamat: {
         long:{

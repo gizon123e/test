@@ -44,11 +44,12 @@ app.use("/api/report", require("./routes/router-laporan"));
 app.use("/api/produsen", require("./routes/router-produsen"));
 app.use("/api/comment", require("./routes/router-komentar"));
 app.use("/api/export", require("./routes/router-export"));
-app.use("/api/vendor", require('./routes/router-vendor'));
+app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
 app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/data/produsen", require('./routes/router-data-produsen'));
-app.use("/api/konsumen", require('./routes/router-konsumen'));
-app.use("/api/konsumen/pic", require('./routes/router-konsumen-pic'));
+app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
+app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
+app.use("/api/konsumen/sekolah", require("./routes/router-konsumen/router-sekolah"))
 
 // router distributtor
 app.use("/api/distributor", require('./routes/router-distributtor/router-distributtor'));
@@ -72,7 +73,7 @@ app.use('/api/minat', require('./routes/router-minat'));
 app.use('/api/flash-sale', require('./routes/router-flash-sale'));
 app.use('/api/gratong', require('./routes/router-gratong'));
 app.use('/api/alamat', require('./routes/router-alamat'));
-app.use('/api/sekolah', require('./routes/router-sekolah'));
+app.use('/api/sekolah', require('./routes/router-simulasi-sekolah'));
 app.use('/api/pangan', require('./routes/router-pangan'));
 
 // Admin Panel
