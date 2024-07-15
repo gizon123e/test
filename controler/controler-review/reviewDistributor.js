@@ -22,5 +22,36 @@ module.exports = {
             }
             next(error)
         }
+    },
+
+    createReviewDistributor: async (req, res, next) => {
+        try {
+            const { id_distributor, nilai_review } = req.body
+
+            const dataDistributor = await Distributtor.findOne({ _id: id_distributor })
+            if (!dataDistributor) return res.status(404).json({ message: "data Not Found" })
+
+            const nilaiReview = dataDistributor.nilai_review + nilai_review
+            console.log(nilaiReview)
+
+            const updateDistributor = await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: nilaiReview })
+
+            // const dataReview = await ReviewDistributor.create({ id_distributor, nilai_review, id_user: req.user.id })
+
+            res.status(201).json({
+                message: "create data success",
+                data: dataDistributor
+            })
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
     }
 }

@@ -34,6 +34,7 @@ module.exports = {
             const imagePath = path.join(__dirname, '../../public/profil-sekolah', imageName);
 
             await logoSekolah.mv(imagePath);
+            const numberNPSN = parseInt(NPSN)
 
             let alamat
             if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
@@ -52,10 +53,10 @@ module.exports = {
                 });
             }
 
-            const dataKemendiknas = await SimulasiSekolah.findOne({ NPSN })
+            const dataKemendiknas = await SimulasiSekolah.findOne({ NPSN: numberNPSN })
             if (!dataKemendiknas) return res.status(404).json({ message: "data NPSN tidak terdaftar di Kemendikes" })
 
-            const validateNpsn = await Sekolah.findOne({ NPSN })
+            const validateNpsn = await Sekolah.findOne({ NPSN: numberNPSN })
             if (validateNpsn) return res.status(400).json({ message: "data NPSN sudah terdaftar di Super Apps" })
 
             const kelas = []
@@ -74,7 +75,7 @@ module.exports = {
                     userId: req.user.id,
                     detailId: dataKonsumen._id,
                     address: alamat._id,
-                    NPSN,
+                    NPSN: numberNPSN,
                     jumlahMurid: dataKemendiknas.jumlahMurid,
                     jenisPendidikan: dataKemendiknas.jenisPendidikan,
                     statusSekolah: dataKemendiknas.statusSekolah,
@@ -89,7 +90,7 @@ module.exports = {
                     userId: req.user.id,
                     detailId: dataKonsumen._id,
                     address: addressId,
-                    NPSN,
+                    NPSN: numberNPSN,
                     jumlahMurid: dataKemendiknas.jumlahMurid,
                     jenisPendidikan: dataKemendiknas.jenisPendidikan,
                     statusSekolah: dataKemendiknas.statusSekolah,

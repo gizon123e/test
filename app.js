@@ -49,7 +49,6 @@ app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
-app.use("/api/konsumen/sekolah", require("./routes/router-konsumen/router-sekolah"))
 
 // router distributtor
 app.use("/api/distributor", require('./routes/router-distributtor/router-distributtor'));
@@ -63,10 +62,11 @@ app.use('/api/pengemudi', require('./routes/router-distributtor/router-pengemudi
 app.use('/api/jasa-distributor', require('./routes/router-distributtor/router-jenisJasaDistributor'))
 app.use('/api/type-kendaraan', require('./routes/router-distributtor/router-typeKendaraan'))
 app.use('/api/proses-pengiriman', require('./routes/router-distributtor/router-prosesPengiriman'))
+app.use('/api/review-distributor', require('./routes/router-review/router-reviewDistributor'))
 
 // router Sekolah
 app.use('/api/instansi', require('./routes/router-controler-sekolah/router-instansi'))
-
+app.use("/api/konsumen/sekolah", require("./routes/router-konsumen/router-sekolah"))
 
 app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));
