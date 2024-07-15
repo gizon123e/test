@@ -8,6 +8,20 @@ const dotenv = require('dotenv');
 dotenv.config()
 
 module.exports = {
+    getAllSekolah: async (req,res,next)=>{
+        try {
+            const data = await Sekolah.find()
+
+            return res.status(200).json({
+                message: "get data all success",
+                data
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     createSekolah: async (req, res, next) => {
         try {
             const {

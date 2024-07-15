@@ -239,7 +239,7 @@ module.exports = {
     updateVendor: async (req, res, next) => {
         try {
             const vendor = await Vendor.findOne({userId: req.user.id});
-            if(!vendor) return res.status(404).json({message: `Vendor dengan id ${id} tidak ditemukan`});
+            if(!vendor) return res.status(404).json({message: `User belum mengisi detail`});
             let filePath = vendor.profile_pict;
             
             // if(req.body.noTeleponKantor){
@@ -250,8 +250,9 @@ module.exports = {
             // }
 
             if(req.files && req.files.profile_pict){
-                const name = vendor.profile_pict.split('/')
+                const name = vendor.profile_pict ? vendor.profile_pict.split('/') : "notfound"
                 if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
+                    console.log('ada')
                     fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
                         if (err) {
                             console.error('Error while deleting file:', err);
@@ -260,10 +261,10 @@ module.exports = {
                         }
                     });
                 }
-                const profile_pict_file = `${Date.now()}_${vendor.namaBadanUsaha || vendor.nama}_${path.extname(req.files.profile_pict.name)}`;
+                const profile_pict_file = `${vendor.namaBadanUsaha || vendor.nama}_${Date.now()}${path.extname(req.files.profile_pict.name)}`;
                     
                 const profile_pict = path.join(__dirname, '../../public', 'profile_picts', profile_pict_file);
-                filePath = `${process.env.HOST}/public/profile_picts/${profile_pict_file}`;
+                filePath = `${process.env.HOST}public/profile_picts/${profile_pict_file}`;
                 await req.files.profile_pict.mv(profile_pict);
             }
 
