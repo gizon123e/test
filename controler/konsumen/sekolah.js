@@ -31,7 +31,7 @@ module.exports = {
             }
 
             const imageName = `${Date.now()}${path.extname(logoSekolah.name)}`;
-            const imagePath = path.join(__dirname, '../../public/profile-sekolah', imageName);
+            const imagePath = path.join(__dirname, '../../public/profil-sekolah', imageName);
 
             await logoSekolah.mv(imagePath);
 
@@ -81,7 +81,7 @@ module.exports = {
                     jenjangPendidikan: dataKemendiknas.jenjangPendidikan,
                     satuanPendidikan: dataKemendiknas.satuanPendidikan,
                     kelas,
-                    logoSekolah: `${process.env.HOST}public/profile-sekolah/${imageName}`,
+                    logoSekolah: `${process.env.HOST}public/profil-sekolah/${imageName}`,
                     namaSekolah
                 });
             } else if (addressId) {
@@ -96,7 +96,7 @@ module.exports = {
                     jenjangPendidikan: dataKemendiknas.jenjangPendidikan,
                     satuanPendidikan: dataKemendiknas.satuanPendidikan,
                     kelas,
-                    logoSekolah: `${process.env.HOST}public/profile-sekolah/${imageName}`,
+                    logoSekolah: `${process.env.HOST}public/profil-sekolah/${imageName}`,
                     namaSekolah
                 });
             }
