@@ -161,6 +161,25 @@ modelOrder.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate", "updateMan
                 reason: this.getUpdate().reason
             });
         }
+    }else if(this.getUpdate().status === "Berlangsung"){
+        const orders = await this.model.find(this.getQuery()).lean();
+        for (const order of orders) {
+            const { items, ...restOfOrder } = order;
+            for( const item of items ){
+                const { product, ...restOfItem } = item;
+                for ( let prod of product ){
+                    const { productId, ...restOfProd } = prod
+                    const produk = await mongoose.model("Product").findById(productId).populate({ path: "userId", select: "_id role" }).lean()
+                    prod = {
+                        productId: produk,
+                        ...restOfProd
+                    }
+
+                    item.product = prod
+                }
+            }
+            console.log(JSON.stringify(order))
+        }
     }
     next()
 })

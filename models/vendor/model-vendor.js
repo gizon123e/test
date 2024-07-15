@@ -93,7 +93,8 @@ const vendorModel = new mongoose.Schema({
         default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
     },
     tanggal_lahir: {
-        type: String
+        type: String,
+        default: null
     }
 })
 

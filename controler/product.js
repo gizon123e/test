@@ -412,7 +412,7 @@ module.exports = {
         riboflavin: 0,
         vitamin_c: 0
       };
-      pangan.forEach(item => {
+      pangan?.forEach(item => {
         nutrisi.air += parseFloat(item.panganId.air.value) / 100 * item.berat;
         nutrisi.energi += parseFloat(item.panganId.energi.value) / 100 * item.berat;
         nutrisi.protein += parseFloat(item.panganId.protein.value) / 100 * item.berat;
