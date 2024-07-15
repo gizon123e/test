@@ -244,10 +244,8 @@ module.exports = {
                                     }
                                 }
                             }).lean()
-                            // const pengiriman = await Pengiriman.findOne({ orderId: order._id, productToDelivers: { $elemMatch: { productId: item.product.productId._id } } });
                             detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
                             jumlah_uang += item.product.productId.total_price * item.product.quantity + pengiriman.total_ongkir
-
                             if (!store[storeId]) {
                                 store[storeId] = {
                                     total_pesanan: jumlah_uang,
@@ -259,7 +257,8 @@ module.exports = {
                                     arrayProduct: []
                                 }
                             }
-                            store[storeId].arrayProduct.push({ ...item.product, detailBerlangsung })
+                            const { productId, dataProduct, ...restOfProduct } = item.product
+                            store[storeId].arrayProduct.push({ productId: dataProduct, ...restOfProduct , detailBerlangsung })
                             jumlah_uang = 0
                         }
                         Object.keys(store).forEach(key => {

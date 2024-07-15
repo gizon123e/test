@@ -8,6 +8,8 @@ const VA_Used = require('../models/model-va-used');
 const { Transaksi } = require('../models/model-transaksi');
 const Invoice = require('../models/model-invoice');
 const Pembatalan = require('../models/model-pembatalan');
+const Product = require('../models/model-product');
+const { promises } = require('nodemailer/lib/xoauth2');
 dotenv.config();
 
 module.exports = {
@@ -51,10 +53,32 @@ module.exports = {
             const ss = String(today.getSeconds()).padStart(2, '0');
             const date = `${yyyy}${mm}${dd}`;
             const minutes = `${hh}${mn}${ss}`
+            const promisesFunct = []
             if (transaction_status === "settlement") {
-                pesanan = await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
-                    status: "Berlangsung"
-                }, { new: true });
+                pesanan = await Pesanan.findById(detailPesanan.id_pesanan).lean();
+                const { items, ...restOfOrder } = pesanan;
+                for( const item of items ){
+                    const { product, ...restOfItem } = item;
+                    for ( let prod of product ){
+                        const { productId, ...restOfProd } = prod
+                        const produk = await Product.findById(productId).populate({ path: "userId", select: "_id role" }).lean()
+                        prod = {
+                            productId,
+                            dataProduct: produk,
+                            ...restOfProd
+                        }
+
+                        item.product = prod
+                    }
+                }
+
+                promisesFunct.push(
+                    Pesanan.updateOne({_id: detailPesanan.id_pesanan}, {
+                        status: "Berlangsung",
+                        items
+                    })
+                )
+
                 if (pesanan.poinTerpakai) {
                     user = await User.findByIdAndUpdate(pesanan.userId, {
                         $inc: { poin: -pesanan.poinTerpakai }
@@ -63,13 +87,13 @@ module.exports = {
                     user = await User.findById(pesanan.userId)
                 }
                 const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id }, { status: "Pembayaran Berhasil" })
-                const promisesFunct = [
+                promisesFunct.push (
                     VA_Used.findOneAndDelete({ orderId: order_id }),
                     DetailPesanan.findByIdAndUpdate(order_id, {
                         isTerbayarkan: true
                     }),
                     Invoice.updateOne({ id_transaksi: transaksi._id }, { status: "Lunas" })
-                ]
+                )
 
                 const total_transaksi = await Transaksi.estimatedDocumentCount({
                     createdAt: {

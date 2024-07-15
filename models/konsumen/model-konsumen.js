@@ -89,7 +89,8 @@ const konsumenModel = new mongoose.Schema({
         default: null
     },
     tanggal_lahir: {
-        type: String
+        type: String,
+        default: null
     }
 });
 
