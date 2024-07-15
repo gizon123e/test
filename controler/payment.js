@@ -62,7 +62,7 @@ module.exports = {
                     const prods = []
                     for ( let prod of product ){
                         let { productId, dataProduct, ...restOfProd } = prod
-                        const produk = await Product.findById(productId).populate({ path: "userId", select: "_id role" }).lean()
+                        const produk = await Product.findById(productId).populate({ path: "userId", select: "_id role" }).populate('categoryId').lean()
                         dataProduct = produk
                         prods.push({
                             productId,
@@ -72,7 +72,7 @@ module.exports = {
                     }
                     item.product = prods
                 }
-                
+
                 promisesFunct.push(
                     Pesanan.updateOne({_id: detailPesanan.id_pesanan}, {
                         status: "Berlangsung",
