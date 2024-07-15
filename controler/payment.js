@@ -63,6 +63,12 @@ module.exports = {
                     for ( let prod of product ){
                         let { productId, dataProduct, ...restOfProd } = prod
                         const produk = await Product.findById(productId).populate({ path: "userId", select: "_id role" }).populate('categoryId').lean()
+                        promisesFunct.push(
+                            Product.updateOne(
+                                { _id: productId },
+                                { $inc: { total_stok: -prod.quantity } }
+                            )
+                        )
                         dataProduct = produk
                         prods.push({
                             productId,
