@@ -58,20 +58,21 @@ module.exports = {
                 pesanan = await Pesanan.findById(detailPesanan.id_pesanan).lean();
                 const { items, ...restOfOrder } = pesanan;
                 for( const item of items ){
-                    const { product, ...restOfItem } = item;
+                    let { product, ...restOfItem } = item;
+                    const prods = []
                     for ( let prod of product ){
-                        const { productId, ...restOfProd } = prod
+                        let { productId, dataProduct, ...restOfProd } = prod
                         const produk = await Product.findById(productId).populate({ path: "userId", select: "_id role" }).lean()
-                        prod = {
+                        dataProduct = produk
+                        prods.push({
                             productId,
-                            dataProduct: produk,
+                            dataProduct,
                             ...restOfProd
-                        }
-
-                        item.product = prod
+                        })
                     }
+                    item.product = prods
                 }
-
+                
                 promisesFunct.push(
                     Pesanan.updateOne({_id: detailPesanan.id_pesanan}, {
                         status: "Berlangsung",
