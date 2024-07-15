@@ -2,8 +2,6 @@ const Carts = require('../models/model-cart')
 const Product = require('../models/model-product');
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
-const Vendor = require("../models/vendor/model-vendor");
-const { default: mongoose } = require('mongoose');
 const TokoVendor = require('../models/vendor/model-toko');
 
 module.exports = {
@@ -24,11 +22,11 @@ module.exports = {
 
             const storeMap = {};
             for(let cart of dataCart){
-                const storeId = cart.productId.userId._id
+                const storeId = cart.productDeleted ? cart.productTerhapus.userId._id : cart.productId.userId._id
                 if(!storeMap[storeId]){
                     storeMap[storeId] = {
                         id: storeId,
-                        role: cart.productId.userId.role,
+                        role: cart.productDeleted ? cart.productTerhapus.userId.role : cart.productId.userId.role,
                         arrayProduct: []
                     }
                 }
@@ -38,7 +36,10 @@ module.exports = {
                     message: null
                 }
 
-                if(cart.productId.total_stok === 0){
+                if(cart.productDeleted){
+                    tersedia.value = false;
+                    tersedia.message = "Produk sudah dihapus"
+                }else if(cart.productId.total_stok === 0){
                     tersedia.value = false;
                     tersedia.message = "Produk tidak tersedia"
                 }else if(cart.productId.total_stok < cart.productId.minimalOrder){
@@ -58,7 +59,7 @@ module.exports = {
                 }
                 
                 storeMap[storeId].arrayProduct.push({
-                    ...cart.productId, 
+                    ...(cart.productDeleted ? cart.productTerhapus : cart.productId), 
                     quantity: cart.quantity, 
                     cartId: cart._id, 
                     varian: cart.varian.length > 0? cart.varian : null, 

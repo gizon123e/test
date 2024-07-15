@@ -42,6 +42,15 @@ const modelCarts = new mongoose.Schema({
             name_product: {
                 type: String
             },
+            userId:{
+                _id: {
+                    type:mongoose.Types.ObjectId,
+                    ref: "User"
+                },
+                role: {
+                    type: String
+                }
+            },
             total_price: {
                 type: Number
             },
