@@ -8,9 +8,9 @@ const dotenv = require('dotenv');
 dotenv.config()
 
 module.exports = {
-    getAllSekolah: async (req,res,next)=>{
+    getAllSekolah: async (req, res, next) => {
         try {
-            const data = await Sekolah.find()
+            const data = await Sekolah.find({ detailId: req.params.id }).populate('address')
 
             return res.status(200).json({
                 message: "get data all success",
