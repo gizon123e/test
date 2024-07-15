@@ -66,6 +66,11 @@ const modelDistributtor = mongoose.Schema({
     tolak_pesanan: {
         type: Number,
         default: 0
+    },
+    nilai_review: {
+        type: Number,
+        required: false,
+        default: 0
     }
 }, { timestamp: true });
 

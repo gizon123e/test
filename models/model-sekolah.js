@@ -2,70 +2,79 @@ const mongoose = require('mongoose');
 
 const modelSekolah = new mongoose.Schema({
     namaSekolah: {
-        type: String
+        type: String,
+        required: [true, "Harus memiliki namaSekolah"],
     },
-    NPSN:{
+    NPSN: {
         type: Number,
+        required: [true, "Harus memiliki NPSN"],
+        unique: [true, 'NPSN sudah terdaftar']
     },
-    userId:{
+    userId: {
         type: mongoose.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        required: [true, "Harus memiliki userId"]
     },
     detailId: {
         type: mongoose.Types.ObjectId,
-        ref: "Konsumen"
+        ref: "Konsumen",
+        required: [true, "Harus memiliki detailId"]
     },
     jumlahMurid: {
-        type: Number
+        type: Number,
+        required: [true, "Harus memiliki jumlahMurid"]
     },
     kelas: [
-        {   
+        {
             _id: false,
             namaKelas: {
                 type: String
             },
-            jumlahMuridKelas:{
+            jumlahMuridKelas: {
                 type: Number
             }
         }
     ],
-    dataMurids:[
-        {
-            _id: false,
-            nama: {
-                type: String
-            },
-            gender: {
-                type: String,
-                enum: ["perempuan", "laki-laki"]
-            },
-            nik:{
-                type: String
-            },
-            nisn: {
-                type: String
-            },
-            pict:{
-                type: String
-            }
-        }
-    ],
-    jenisPendidikan:{
+    // dataMurids: [
+    //     {
+    //         _id: false,
+    //         nama: {
+    //             type: String
+    //         },
+    //         gender: {
+    //             type: String,
+    //             enum: ["perempuan", "laki-laki"]
+    //         },
+    //         nik: {
+    //             type: String
+    //         },
+    //         nisn: {
+    //             type: String
+    //         },
+    //         pict: {
+    //             type: String
+    //         }
+    //     }
+    // ],
+    jenisPendidikan: {
         type: String,
-        enum: [ "formal", "non-formal" ],
-        message: "{VALUE} is not valid"
+        enum: ["formal", "non-formal"],
+        message: "{VALUE} is not valid",
+        required: [true, "Harus memiliki jenisPendidikan"]
     },
-    statusSekolah:{
+    statusSekolah: {
         type: String,
         enum: ["swasta", "negeri"],
-        message: "{VALUE} is not valid"
+        message: "{VALUE} is not valid",
+        required: [true, "Harus memiliki statusSekolah"]
     },
-    jenjangPendidikan:{
+    jenjangPendidikan: {
         type: String,
         enum: ["pendidikan anak usia dini", "pendidikan dasar", "pendidikan menengah"],
-        message: "{VALUE} is not valid"
+        message: "{VALUE} is not valid",
+        required: [true, "Harus memiliki jenjangPendidikan"]
     },
-    satuanPendidikan:{
+    satuanPendidikan: {
         type: String,
         enum: [
             "KB",
@@ -81,13 +90,18 @@ const modelSekolah = new mongoose.Schema({
             "MA",
             "MAK"
         ],
-        message: "{VALUE} is not valid"
+        message: "{VALUE} is not valid",
+        required: [true, "Harus memiliki satuanPendidikan"]
     },
     address: {
         type: mongoose.Types.ObjectId,
         ref: "Address",
-        required: [true, "Harus memiliki alamat"]
+        required: [true, "Harus memiliki address"]
     },
+    logoSekolah: {
+        type: String,
+        required: [true, "Harus memiliki logoSekolah"]
+    }
 })
 
 const Sekolah = mongoose.model("Sekolah", modelSekolah);
