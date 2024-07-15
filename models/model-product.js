@@ -246,8 +246,8 @@ productModels.pre("save", function (next) {
 productModels.pre("findOneAndUpdate", async function (next) {
   try {
     const update = this.getUpdate();
-    const minimalDp = parseInt(update.minimalDp);
-
+    console.log(update)
+    const minimalDp = parseInt(update?.minimalDp);
     // Check for minimalDp conditions
     if (minimalDp < 40 && minimalDp !== 0) {
       return next(new Error("minimalDp tidak boleh kurang dari 40%"));
@@ -265,14 +265,13 @@ productModels.pre("findOneAndUpdate", async function (next) {
     }
 
     // Calculate and set the total_price
-    if(update.diskon){
-      update.total_price = update.price - (update.price * update.diskon) / 100;
+    if(update?.diskon || update.price){
+      update.total_price = update.price - (update.price * update.diskon? update.diskon : 0) / 100;
     }
 
     // Update the document with new values
     this.setUpdate(update);
 
-    console.log(update);
     next();
   } catch (error) {
     next(error);

@@ -121,5 +121,21 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+
+    searchPanganByName: async(req, res, next) => {
+        try {
+            const { nama } = req.query;
+            const pangan = await Pangan.find({ 
+                nama_bahan: { 
+                    $regex: new RegExp(nama, 'i') 
+                } 
+            }).select('kode_bahan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan').lean()
+            if(pangan.length === 0) return res.status(404).json({message: "Data tidak ditemukan"})
+            return res.status(200).json({message: "Berhasil mendapatkan data", data: pangan})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }

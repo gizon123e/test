@@ -633,9 +633,7 @@ module.exports = {
   edit: async (req, res, next) => {
     try {
       let updateData;
-      console.log(req.body)
       const productId = req.body.productId;
-      // const directlyEdited = ["total_stok", "minimalOrder", "minimalDp", "price", "diskon"];
       const notDirectlyEdited = [ "name_product", "id_main_category", "id_sub_category", "categoryId", "image_product", "description", "long_description", "varian"]
       
       if (!productId) return res
@@ -658,8 +656,11 @@ module.exports = {
         if(notDirectlyEdited.includes(key)){
           return updateData = {
             ...req.body,
-            'status.value': "ditinjau"
+            'status.value': "ditinjau",
+            'status.message': "Produk kamu sedang dalam proses tinjauan superapp. Produk kamu akan segera terunggah setelah tinjauan selesai."
           }
+        }else{
+          updateData = req.body
         }
       });
 
@@ -667,8 +668,8 @@ module.exports = {
         return res
           .status(403)
           .json({ message: "Tidak bisa mengubah produk orang lain!" });
-      
-      const editedProduct = await Product.findByIdAndUpdate(productId, updateData)
+      console.log(updateData)
+      const editedProduct = await Product.findByIdAndUpdate(productId, updateData, {new: true})
       return res.status(201).json({
         error: false,
         message: "Berhasil Mengubah Data Produk",
