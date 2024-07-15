@@ -91,7 +91,7 @@ module.exports = {
 
             if(!dataCart || dataCart.length == 0) return res.status(404).json({message:"User belum memiliki cart"});
 
-            return res.status(200).json({ datas: finalData });
+            return res.status(200).json({ message: "Berhasil menampilkan keranjang user", datas: finalData });
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
