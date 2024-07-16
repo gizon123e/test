@@ -299,7 +299,7 @@ productModels.pre("findOneAndUpdate", async function (next) {
                   { $inc: { total_price: selisih } },
                   { new: true }
                 ).then(async(result) => {
-                  const va_user = await VirtualAccountUser.findOne({userId: item.userId, nama_bank: result.id_va}).populate('id_va');
+                  const va_user = await VirtualAccountUser.findOne({userId: item.userId, nama_bank: result.id_va}).populate('nama_bank');
                   const options = {
                     method: 'POST',
                     headers: {
@@ -315,12 +315,21 @@ productModels.pre("findOneAndUpdate", async function (next) {
                         },
                         bank_transfer: {
                           bank: 'bca',
-                          va_number: va_user.nomor_va.split(va_user.id_va.kode_perusahaan)[1]
+                          va_number: va_user.nomor_va.split(va_user.nama_bank.kode_perusahaan)[1]
                         },
                     })
                   };
-                  await fetch(`${process.env.MIDTRANS_URL}/cancel`, options);
+                  await fetch(`${process.env.MIDTRANS_URL}/${result._id}/cancel`, {
+                    method: "POST",
+                    headers: {
+                      accept: 'application/json',
+                      'content-type': 'application/json',
+                      Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
+                    }
+                  });
+                  await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
                 }).catch(err => {
+                  console.log(err)
                 })
               );
               selisih = 0

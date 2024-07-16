@@ -675,7 +675,7 @@ module.exports = {
                 for(const item of items){
                     let { product, ...restOfItem } = item
                     let detailToko;
-                    const { productId, ...restOfItemProduct } = item.product
+                    const { productId, dataProduct , ...restOfItemProduct } = item.product
                     const { userId, ...restOfProduct } = productId
                     const user = await User.findById(userId._id).select('email phone').lean()
                     const pengiriman = await Pengiriman.findOne({
@@ -711,7 +711,7 @@ module.exports = {
                             products: []
                         }
                     }
-                    store[userId._id].products.push({...restOfProduct, ...restOfItemProduct})
+                    store[userId._id].products.push({...dataProduct, ...restOfItemProduct})
                 }
                 const newItem = Object.keys(store).map(key => { return store[key] })
                 let total_pesanan = 0
