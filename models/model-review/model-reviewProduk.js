@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const modelReviewProduk = new mongoose.Schema({
     id_produk: {
-        type: mongoose.Types.ObjectId,
+        type: String,
         ref: "Product",
         required: [true, "id_produk harus di isi"]
     },

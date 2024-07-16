@@ -64,6 +64,9 @@ app.use('/api/type-kendaraan', require('./routes/router-distributtor/router-type
 app.use('/api/proses-pengiriman', require('./routes/router-distributtor/router-prosesPengiriman'))
 app.use('/api/review-distributor', require('./routes/router-distributtor/router-reviewDistributor'))
 
+// review produk
+app.use('/api/review-produk', require('./routes/router-review/router-reviewProduk'))
+
 // router Sekolah
 app.use('/api/instansi', require('./routes/router-controler-sekolah/router-instansi'))
 app.use("/api/konsumen/sekolah", require("./routes/router-konsumen/router-sekolah"))
@@ -96,7 +99,7 @@ app.use(require("./midelware/error-midelware"));
 app.listen(4000, () => {
   // flash_sale_checker.start()
   checker_order()
-  batalPesanan()
+  // batalPesanan()
   console.log("connection express success");
   websocket.listen(5000, () => {
     console.log("Connection websocket success");

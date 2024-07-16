@@ -3,14 +3,14 @@ const Product = require('../../models/model-product')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
-        const { id_produk } = req.params;
-        const { userId, komentar_review, nilai_review } = req.body;
-
         try {
+            const { id_produk } = req.params;
+            const { komentar_review, nilai_review } = req.body;
+            console.log(req.user.id)
             // Membuat ulasan baru
             const review = new ReviewProduk({
                 id_produk,
-                userId,
+                userId: req.user.id,
                 komentar_review,
                 nilai_review
             });
@@ -19,7 +19,7 @@ module.exports = {
             const savedReview = await review.save();
 
             // Menambahkan ulasan ke produk terkait
-            const product = await Product.findById(id_produk);
+            const product = await Product.findOne({ _id: id_produk });
             product.reviews.push(savedReview._id);
             await product.save();
 
