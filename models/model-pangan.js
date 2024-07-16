@@ -24,6 +24,15 @@ const modelPangan = new mongoose.Schema({
     keterangan: {
         type: String
     },
+    nama_latin: {
+      type: String
+    },
+    genus:{
+      type: String
+    },
+    familia:{
+      type: String
+    },
     air:{
         value: { type: Decimal128 },
         simbol: { type: String },
