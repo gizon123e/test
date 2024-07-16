@@ -67,6 +67,11 @@ const modelDistributtor = mongoose.Schema({
         type: Number,
         default: 0
     },
+    nilai_pinalti: {
+        type: Number,
+        required: false,
+        default: 0
+    },
     nilai_review: {
         type: Number,
         required: false,

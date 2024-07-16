@@ -1,9 +1,9 @@
 const mongoose = require("mongoose")
 
 const modelReviewPengguna = new mongoose.Schema({
-    id_userReview: {
+    id_konsumen: {
         type: mongoose.Types.ObjectId,
-        ref: "User",
+        ref: "Vendor",
         required: [true, "id_userReview harus di isi"]
     },
     nilai_review: {
