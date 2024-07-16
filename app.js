@@ -62,7 +62,7 @@ app.use('/api/pengemudi', require('./routes/router-distributtor/router-pengemudi
 app.use('/api/jasa-distributor', require('./routes/router-distributtor/router-jenisJasaDistributor'))
 app.use('/api/type-kendaraan', require('./routes/router-distributtor/router-typeKendaraan'))
 app.use('/api/proses-pengiriman', require('./routes/router-distributtor/router-prosesPengiriman'))
-app.use('/api/review-distributor', require('./routes/router-review/router-reviewDistributor'))
+app.use('/api/review-distributor', require('./routes/router-distributtor/router-reviewDistributor'))
 
 // router Sekolah
 app.use('/api/instansi', require('./routes/router-controler-sekolah/router-instansi'))

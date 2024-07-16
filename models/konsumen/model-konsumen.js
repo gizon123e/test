@@ -75,7 +75,7 @@ const konsumenModel = new mongoose.Schema({
             },
             message: "Jenis Perusahaan hanya untuk user perusahaan"
         },
-        enum: ["PT", "BUMDes" ,"Yayasan", "Sekolah Negeri"],
+        enum: ["PT", "BUMDes", "Yayasan", "Sekolah Negeri"],
         default: null
     },
     legalitasBadanUsaha: {
@@ -91,6 +91,10 @@ const konsumenModel = new mongoose.Schema({
     tanggal_lahir: {
         type: String,
         default: null
+    },
+    nilai_review: {
+        type: Number,
+        default: 0
     }
 });
 
@@ -103,15 +107,15 @@ konsumenModel.pre('save', function (next) {
 
 konsumenModel.pre('findOneAndUpdate', async function (next) {
     const update = this.getUpdate();
-    
+
     const docToUpdate = await this.model.findOne(this.getQuery()).lean();
-    
+
     Object.keys(update).forEach(item => {
-        if(item === 'profile_pict'){
+        if (item === 'profile_pict') {
             return;
         };
 
-        if(Object.keys(docToUpdate).includes(item) && update[item] && docToUpdate[item]) return next(`${item} tidak bisa diubah lagi, karena sudah punya`)
+        if (Object.keys(docToUpdate).includes(item) && update[item] && docToUpdate[item]) return next(`${item} tidak bisa diubah lagi, karena sudah punya`)
     });
 
     if (update && docToUpdate.namaBadanUsaha && update.jenis_kelamin) {

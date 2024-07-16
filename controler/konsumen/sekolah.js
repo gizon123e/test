@@ -22,6 +22,20 @@ module.exports = {
         }
     },
 
+    getByNPSNSekolahSimulasi: async (req, res, next) => {
+        try {
+            const data = await SimulasiSekolah.findOne({ NPSN: req.params.id })
+
+            return res.status(200).json({
+                message: "get data all success",
+                data
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     createSekolah: async (req, res, next) => {
         try {
             const {
