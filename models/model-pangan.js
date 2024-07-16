@@ -3,7 +3,8 @@ const Decimal128 = mongoose.Types.Decimal128;
 
 const modelPangan = new mongoose.Schema({
     kode_bahan: {
-        type: String
+        type: String,
+        index: true
     },
     nama_bahan: {
         type: String

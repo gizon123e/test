@@ -29,6 +29,9 @@ const modelBiayaTetap = mongoose.Schema({
     rerata_kecepatan: {
         type: Number
     },
+    nilai_toleransi:{
+        type: Number
+    }
 });
 
 const BiayaTetap = mongoose.model("BiayaTetap", modelBiayaTetap);
