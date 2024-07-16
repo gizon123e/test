@@ -25,62 +25,77 @@ const modelPangan = new mongoose.Schema({
     },
     air:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     energi:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     protein:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     lemak:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     kh:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     serat:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     kalsium:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     fosfor:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     besi:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     natrium:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     kalium:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     tembaga:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     thiamin:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     riboflavin:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     },
     vitc:{
         value: { type: Decimal128 },
+        simbol: { type: String },
         deskripsi: { type: String }
     }
 });

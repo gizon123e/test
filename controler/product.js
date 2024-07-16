@@ -413,21 +413,21 @@ module.exports = {
         vitamin_c: 0
       };
       pangan?.forEach(item => {
-        nutrisi.air += parseFloat(item.panganId.air.value) / 100 * item.berat;
-        nutrisi.energi += parseFloat(item.panganId.energi.value) / 100 * item.berat;
-        nutrisi.protein += parseFloat(item.panganId.protein.value) / 100 * item.berat;
-        nutrisi.lemak += parseFloat(item.panganId.lemak.value) / 100 * item.berat;
-        nutrisi.karbohidrat += parseFloat(item.panganId.kh.value) / 100 * item.berat;
-        nutrisi.serat += parseFloat(item.panganId.serat.value) / 100 * item.berat;
-        nutrisi.kalsium += parseFloat(item.panganId.kalsium.value) / 100 * item.berat;
-        nutrisi.fosfor += parseFloat(item.panganId.fosfor.value) / 100 * item.berat;
-        nutrisi.besi += parseFloat(item.panganId.besi.value) / 100 * item.berat;
-        nutrisi.natrium += parseFloat(item.panganId.natrium.value) / 100 * item.berat;
-        nutrisi.kalium += parseFloat(item.panganId.kalium.value) / 100 * item.berat;
-        nutrisi.tembaga += parseFloat(item.panganId.tembaga.value) / 100 * item.berat;
-        nutrisi.thiamin += parseFloat(item.panganId.thiamin.value) / 100 * item.berat;
-        nutrisi.riboflavin += parseFloat(item.panganId.riboflavin.value) / 100 * item.berat;
-        nutrisi.vitamin_c += parseFloat(item.panganId.vitc.value) / 100 * item.berat;
+        nutrisi.air += parseFloat(item?.panganId?.air?.value) / 100 * item?.berat;
+        nutrisi.energi += parseFloat(item?.panganId?.energi?.value) / 100 * item?.berat;
+        nutrisi.protein += parseFloat(item?.panganId?.protein?.value) / 100 * item?.berat;
+        nutrisi.lemak += parseFloat(item?.panganId?.lemak?.value) / 100 * item?.berat;
+        nutrisi.karbohidrat += parseFloat(item?.panganId?.kh?.value) / 100 * item?.berat;
+        nutrisi.serat += parseFloat(item?.panganId?.serat?.value) / 100 * item?.berat;
+        nutrisi.kalsium += parseFloat(item?.panganId?.kalsium?.value) / 100 * item?.berat;
+        nutrisi.fosfor += parseFloat(item?.panganId?.fosfor?.value) / 100 * item?.berat;
+        nutrisi.besi += parseFloat(item?.panganId?.besi?.value) / 100 * item?.berat;
+        nutrisi.natrium += parseFloat(item?.panganId?.natrium?.value) / 100 * item?.berat;
+        nutrisi.kalium += parseFloat(item?.panganId?.kalium?.value) / 100 * item?.berat;
+        nutrisi.tembaga += parseFloat(item?.panganId?.tembaga?.value) / 100 * item?.berat;
+        nutrisi.thiamin += parseFloat(item?.panganId?.thiamin?.value) / 100 * item?.berat;
+        nutrisi.riboflavin += parseFloat(item?.panganId?.riboflavin?.value) / 100 * item?.berat;
+        nutrisi.vitamin_c += parseFloat(item?.panganId?.vitc?.value) / 100 * item.berat;
       });
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
       return res.status(200).json({ datas: restOfProduct, toko, nutrisi });
