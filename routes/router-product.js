@@ -28,6 +28,6 @@ router.put("/editPemasok", authorization, emptyData, roleClasification.vendor, c
 router.put("/edit", authorization, controlerProduct.edit);
 router.put("/arsipkan", authorization, controlerProduct.arsipkanProduct);
 router.put("/edit_reviewed", authorization, controlerProduct.editReviewed);
-router.delete("/delete", authorization, controlerProduct.delete);
+router.delete("/delete/:productId", authorization, controlerProduct.delete);
 
 module.exports = router;
