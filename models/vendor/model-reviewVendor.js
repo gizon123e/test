@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const modelReviewPengguna = new mongoose.Schema({
-    id_konsumen: {
+    id_vendor: {
         type: mongoose.Types.ObjectId,
         ref: "Vendor",
         required: [true, "id_userReview harus di isi"]
@@ -17,6 +17,6 @@ const modelReviewPengguna = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-const ReviewPengguna = mongoose.model("ReviewPengguna", modelReviewPengguna)
+const ReviewVendor = mongoose.model("ReviewPengguna", modelReviewPengguna)
 
-module.exports = ReviewPengguna
+module.exports = ReviewVendor
