@@ -39,6 +39,14 @@ const modelSimulasiSekolah = new mongoose.Schema({
             },
             pict:{
                 type: String
+            },
+            wali:{
+                nama: {
+                    type: String
+                },
+                nomor: {
+                    type: String
+                }
             }
         }
     ],

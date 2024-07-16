@@ -119,10 +119,6 @@ module.exports = {
                 )
 
                 await Promise.all(promisesFunct)
-            } else if (transaction_status === "cancel") {
-                await Pesanan.findByIdAndUpdate(detailPesanan.id_pesanan, {
-                    status: "Dibatalkan"
-                });
             }
 
             return res.status(200).json({ message: "Mantap" })

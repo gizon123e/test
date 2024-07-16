@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
-const uniqueValidator = require("mongoose-unique-validator");
 const Carts = require("./model-cart");
+const Pesanan = require("./model-orders");
+const DetailPesanan = require("./model-detail-pesanan");
+const VirtualAccountUser = require("./model-user-va");
+const { EventEmitterAsyncResource } = require("nodemailer/lib/xoauth2");
 
 const varianSchema = new mongoose.Schema({
   _id: false,
@@ -246,30 +249,88 @@ productModels.pre("save", function (next) {
 productModels.pre("findOneAndUpdate", async function (next) {
   try {
     const update = this.getUpdate();
-    console.log(update)
+
     const minimalDp = parseInt(update?.minimalDp);
-    // Check for minimalDp conditions
+
     if (minimalDp < 40 && minimalDp !== 0) {
       return next(new Error("minimalDp tidak boleh kurang dari 40%"));
     }
 
-    // Find the current document
     const document = await this.model.findOne(this.getQuery());
     if (!document) {
       return next();
     }
 
-    // Handle minimalDp value
     if (minimalDp === 0) {
       update.minimalDp = null;
     }
 
-    // Calculate and set the total_price
     if(update?.diskon || update.price){
       update.total_price = update.price - (update.price * update.diskon? update.diskon : 0) / 100;
-    }
+      let selisih;
+      if (update.price > document.total_price) {
+        selisih = update.price - document.total_price;
+      } else {
+        selisih = update.price - document.total_price;
+      };
 
-    // Update the document with new values
+      const ordered = await Pesanan.find({
+        items: {
+          $elemMatch: {
+              product: {
+                  $elemMatch: {
+                    productId: document._id.toString()
+                  }
+              }
+          }
+        },
+        status: "Belum Bayar"
+      }).lean();
+      const promises = []
+      ordered.map( item => { 
+        item.items.map( elem => {
+          elem.product.map((prod) => {
+            if(document._id === prod.productId) {
+              selisih *= prod.quantity
+              console.log(selisih)
+              promises.push(
+                DetailPesanan.findOneAndUpdate(
+                  { id_pesanan: item._id },
+                  { $inc: { total_price: selisih } },
+                  { new: true }
+                ).then(async(result) => {
+                  const va_user = await VirtualAccountUser.findOne({userId: item.userId, nama_bank: result.id_va}).populate('id_va');
+                  const options = {
+                    method: 'POST',
+                    headers: {
+                      accept: 'application/json',
+                      'content-type': 'application/json',
+                      Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
+                    },
+                    body: JSON.stringify({
+                        payment_type: 'bank_transfer',
+                        transaction_details: {
+                          order_id: result._id,
+                          gross_amount: result.total_price
+                        },
+                        bank_transfer: {
+                          bank: 'bca',
+                          va_number: va_user.nomor_va.split(va_user.id_va.kode_perusahaan)[1]
+                        },
+                    })
+                  };
+                  await fetch(`${process.env.MIDTRANS_URL}/cancel`, options);
+                }).catch(err => {
+                })
+              );
+              selisih = 0
+            }
+          })
+        })
+      });
+      await Promise.all(promises)
+    }
+    
     this.setUpdate(update);
 
     next();
@@ -300,7 +361,6 @@ productModels.pre(["deleteMany", "deleteOne", "findOneAndDelete"], async functio
         }
       )
     }
-    console.log(products)
   } catch (error) {
     console.log(error);
     next(error);
