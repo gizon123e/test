@@ -245,7 +245,7 @@ module.exports = {
                                 }
                             }).lean()
                             detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
-                            jumlah_uang += item.product.productId.total_price * item.product.quantity + pengiriman.total_ongkir
+                            jumlah_uang += item.product.dataProduct.total_price * item.product.quantity + pengiriman.total_ongkir
                             if (!store[storeId]) {
                                 store[storeId] = {
                                     total_pesanan: jumlah_uang,
