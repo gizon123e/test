@@ -820,40 +820,6 @@ module.exports = {
             if (decimalPattern.test(total)) return res.status(400).json({ message: `Total yang dikirimkan tidak boleh decimal. ${total}` })
             const idPesanan = new mongoose.Types.ObjectId()
 
-            const grossAmount = () => {
-                if (dp.isUsed && poin_terpakai) {
-                    return (dp.value * total) - poin_terpakai;
-                } else if (dp.isUsed) {
-                    return dp.value * total;
-                } else {
-                    return total;
-                }
-            };
-
-
-            const options = {
-                method: 'POST',
-                headers: {
-                    accept: 'application/json',
-                    'content-type': 'application/json',
-                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
-                },
-                body: JSON.stringify({
-                    payment_type: 'bank_transfer',
-                    transaction_details: {
-                        order_id: idPesanan,
-                        gross_amount: grossAmount()
-                    },
-                    bank_transfer: {
-                        bank: 'bca',
-                        va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
-                    },
-                })
-            };
-
-            const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
-            const transaksi = await respon.json();
-
             const a_day_later = new Date(today.getTime() + 24 * 60 * 60 * 1000)
 
             const dataOrder = await Orders.create({
@@ -907,6 +873,8 @@ module.exports = {
                     totalQuantity += prod.quantity
                 })
             })
+            let transaksiMidtrans
+            let total_tagihan = 0
             if (sekolah.jumlahMurid === totalQuantity){
                 const kode_transaksi = await Transaksi.create({
                     id_pesanan: dataOrder._id,
@@ -942,6 +910,7 @@ module.exports = {
                     );
                     total_pengiriman += 1
                 };
+
             }else if(totalQuantity > sekolah.jumlahMurid){
 
                 const kode_transaksi_piutang = await Transaksi.create({
@@ -1003,10 +972,11 @@ module.exports = {
                     status: "Belum Lunas",
                     kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
                 })
-
                 for (let i = 0; i < dataOrder.shipments.length; i++) {
                     let totalProduk = 0
-                    const productToDelivers = dataOrder.shipments[i].products.map(prod => {
+                    const productToDelivers = dataOrder.shipments[i].products.map(async(prod) => {
+                        const product = await Product.findById(prod.productId).select('total_price')
+                        total_tagihan += product.total_price
                         const { quantity , ...restOfProd } = prod
                         totalProduk += quantity
                         return {
@@ -1031,19 +1001,53 @@ module.exports = {
                             invoice: invoiceNonSubsidi._id
                         })
                     );
+                    total_tagihan += (totalQuantity - sekolah.jumlahMurid) * baseOngkir + biaya_jasa_aplikasi + biaya_layanan + biaya_asuransi
                     total_pengiriman += 1
                 };
+
+                const grossAmount = () => {
+                    if (dp.isUsed && poin_terpakai) {
+                        return (dp.value * total_tagihan) - poin_terpakai;
+                    } else if (dp.isUsed) {
+                        return dp.value * total_tagihan;
+                    } else {
+                        return total_tagihan;
+                    }
+                };
+
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        accept: 'application/json',
+                        'content-type': 'application/json',
+                        Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
+                    },
+                    body: JSON.stringify({
+                        payment_type: 'bank_transfer',
+                        transaction_details: {
+                            order_id: idPesanan,
+                            gross_amount: grossAmount()
+                        },
+                        bank_transfer: {
+                            bank: 'bca',
+                            va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                        },
+                    })
+                };
+    
+                const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
+                transaksiMidtrans = await respon.json();
             }
             await Promise.all(promisesFunct)
             return res.status(201).json({
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
                 datas: dataOrder,
                 nama,
-                paymentNumber: transaksi.va_numbers[0].va_number,
-                total_tagihan: detailPesanan.total_price,
+                paymentNumber: transaksiMidtrans.va_numbers[0].va_number,
+                total_tagihan,
                 transaksi: {
-                    waktu: transaksi.transaction_time,
-                    orderId: transaksi.order_id
+                    waktu: transaksiMidtrans.transaction_time,
+                    orderId: transaksiMidtrans.order_id
                 }
             });
 
