@@ -6,7 +6,7 @@ const modelPinaltiDistributor = new mongoose.Schema({
         ref: "Distributtor",
         required: [true, "id_distributor harus di isi"]
     },
-    id_alasan_pinalti: {
+    alasan_pinalti: {
         type: String,
         required: [true, "id_alasan_pinalti harus di isi"]
     },

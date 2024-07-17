@@ -23,29 +23,6 @@ const varianSchema = new mongoose.Schema({
   ],
 });
 
-// const detailVarianSchema = new mongoose.Schema({
-//   varian:{
-//     type: String
-//   },
-//   price: {
-//     type: Number
-//   },
-//   stok: {
-//     type: Number
-//   },
-//   image:{
-//     type: String
-//   },
-//   minimalOrder: {
-//     type: String
-//   },
-//   harga_diskon:{
-//     type: String
-//   }
-// });
-
-// detailVarianSchema.plugin(uniqueValidator);
-
 const productModels = new mongoose.Schema(
   {
     _id: {
@@ -175,7 +152,7 @@ const productModels = new mongoose.Schema(
       type: Boolean,
       default: false
     },
-    pangan:[{
+    pangan: [{
       _id: false,
       panganId: {
         type: mongoose.Types.ObjectId,
@@ -184,21 +161,15 @@ const productModels = new mongoose.Schema(
       berat: {
         type: Number
       }
+    }],
+    poin_review: {
+      type: Number,
+      default: 0
+    },
+    reviews: [{ // Menambahkan array referensi ulasan
+      type: mongoose.Types.ObjectId,
+      ref: "ReviewProduk"
     }]
-    // bahanBaku: [
-    //   {
-    //     _id: false,
-    //     bahanBakuId: {
-    //       type: mongoose.Types.ObjectId,
-    //       ref: "BahanBaku",
-    //       required: true
-    //     },
-    //     quantityNeed: {
-    //       type: Number,
-    //       required: true
-    //     }
-    //   }
-    // ],
   },
   { timestamps: true }
 );
@@ -232,7 +203,7 @@ productModels.pre("save", function (next) {
     return next(new Error("minimalDp tidak boleh kurang dari 40%"));
   }
 
-  if(minimalDp === 0) this.minimalDp = null
+  if (minimalDp === 0) this.minimalDp = null
   // if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
   //   this.detail_varian.forEach(element => {
   //     this.total_stok += element.stok
@@ -265,8 +236,8 @@ productModels.pre("findOneAndUpdate", async function (next) {
       update.minimalDp = null;
     }
 
-    if(update?.diskon || update.price){
-      update.total_price = update.price - (update.price * update.diskon? update.diskon : 0) / 100;
+    if (update?.diskon || update.price) {
+      update.total_price = update.price - (update.price * update.diskon ? update.diskon : 0) / 100;
       let selisih;
       if (update.price > document.total_price) {
         selisih = update.price - document.total_price;
@@ -277,20 +248,20 @@ productModels.pre("findOneAndUpdate", async function (next) {
       const ordered = await Pesanan.find({
         items: {
           $elemMatch: {
-              product: {
-                  $elemMatch: {
-                    productId: document._id.toString()
-                  }
+            product: {
+              $elemMatch: {
+                productId: document._id.toString()
               }
+            }
           }
         },
         status: "Belum Bayar"
       }).lean();
       const promises = []
-      ordered.map( item => { 
-        item.items.map( elem => {
+      ordered.map(item => {
+        item.items.map(elem => {
           elem.product.map((prod) => {
-            if(document._id === prod.productId) {
+            if (document._id === prod.productId) {
               selisih *= prod.quantity
               console.log(selisih)
               promises.push(
@@ -298,8 +269,8 @@ productModels.pre("findOneAndUpdate", async function (next) {
                   { id_pesanan: item._id },
                   { $inc: { total_price: selisih } },
                   { new: true }
-                ).then(async(result) => {
-                  const va_user = await VirtualAccountUser.findOne({userId: item.userId, nama_bank: result.id_va}).populate('nama_bank');
+                ).then(async (result) => {
+                  const va_user = await VirtualAccountUser.findOne({ userId: item.userId, nama_bank: result.id_va }).populate('nama_bank');
                   const options = {
                     method: 'POST',
                     headers: {
@@ -308,15 +279,15 @@ productModels.pre("findOneAndUpdate", async function (next) {
                       Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
                     },
                     body: JSON.stringify({
-                        payment_type: 'bank_transfer',
-                        transaction_details: {
-                          order_id: result._id,
-                          gross_amount: result.total_price
-                        },
-                        bank_transfer: {
-                          bank: 'bca',
-                          va_number: va_user.nomor_va.split(va_user.nama_bank.kode_perusahaan)[1]
-                        },
+                      payment_type: 'bank_transfer',
+                      transaction_details: {
+                        order_id: result._id,
+                        gross_amount: result.total_price
+                      },
+                      bank_transfer: {
+                        bank: 'bca',
+                        va_number: va_user.nomor_va.split(va_user.id_va.kode_perusahaan)[1]
+                      },
                     })
                   };
                   await fetch(`${process.env.MIDTRANS_URL}/${result._id}/cancel`, {
@@ -339,7 +310,7 @@ productModels.pre("findOneAndUpdate", async function (next) {
       });
       await Promise.all(promises)
     }
-    
+
     this.setUpdate(update);
 
     next();
@@ -349,17 +320,17 @@ productModels.pre("findOneAndUpdate", async function (next) {
 });
 
 
-productModels.pre(["deleteMany", "deleteOne", "findOneAndDelete"], async function (next){
+productModels.pre(["deleteMany", "deleteOne", "findOneAndDelete"], async function (next) {
   try {
-    const products = await this.model.find(this.getQuery()).populate({ path: 'userId', select: "_id role"}).lean()
-    for(const prod of products){
+    const products = await this.model.find(this.getQuery()).populate({ path: 'userId', select: "_id role" }).lean()
+    for (const prod of products) {
       await Carts.updateMany(
         { productId: prod._id },
-        { 
-          productTerhapus: { 
-            _id: prod._id, 
-            name_product: prod.name_product, 
-            total_price: prod.total_price, 
+        {
+          productTerhapus: {
+            _id: prod._id,
+            name_product: prod.name_product,
+            total_price: prod.total_price,
             image_product: prod.image_product,
             userId: {
               _id: prod.userId._id,

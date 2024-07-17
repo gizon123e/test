@@ -5,6 +5,7 @@ const Product = require("../../models/model-product");
 const Konsumen = require("../../models/konsumen/model-konsumen");
 const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
 const BiayaTetap = require('../../models/model-biaya-tetap')
+const PinaltiDistributor = require('../../models/distributor/model-pinaltiDistributor')
 
 const { calculateDistance } = require('../../utils/menghitungJarak')
 
@@ -75,8 +76,19 @@ module.exports = {
             });
 
             for (const order of orders) {
+                const nilai = 2
+
                 order.status_distributor = "Kadaluwarsa";
                 await order.save();
+
+                await PinaltiDistributor.create({
+                    id_distributor: order.distributorId,
+                    alasan_pinalti: "Tidak menerima pesanan sampai batas waktu habis",
+                    poin_pinalti: nilai
+                })
+                const distributor = await Distributtor.findOne({ _id: order.distributorId })
+                const jumlahPinalti = distributor.nilai_pinalti + nilai
+                await Distributtor.findByIdAndUpdate({ _id: order.distributorId, nilai_pinalti: jumlahPinalti })
             }
 
             console.log(`${orders.length} orders updated to "Kadaluwarsa".`);

@@ -1,10 +1,11 @@
-const ReviewPengguna = require('../../models/vendor/model-reviewVendor')
+const ReviewVendor = require('../../models/vendor/model-reviewVendor')
 const Konsumen = require('../../models/konsumen/model-konsumen')
+const Vendor = require('../../models/vendor/model-vendor')
 
 module.exports = {
     getAllReviewKonsumen: async (req, res, next) => {
         try {
-            const datas = await ReviewPengguna.find()
+            const datas = await ReviewVendor.find()
             if (!datas) return res.status(400).json({ message: "saat ini data masi kosong" })
 
             res.status(200).json({
@@ -26,24 +27,31 @@ module.exports = {
 
     createDataReviewKonsumen: async (req, res, next) => {
         try {
-            const { id_konsumen, nilai_review, komentar_review } = req.body
-            const datas = await ReviewPengguna.find({ id_konsumen: id_konsumen })
-            const indexReview = datas.length
+            const { id_vendor, nilai_review } = req.body
+            const datas = await ReviewVendor.find({ id_vendor })
+            const indexReview = datas.length + 1
 
-            const konsumenDetail = await Konsumen.findOne({ _id: id_konsumen })
+            const vendorDetail = await Vendor.findOne({ _id: id_vendor })
             const nilaiReview = nilai_review + konsumenDetail.nilai_review
             let numberReview
             if (indexReview > 0) {
-                numberReview = nilaiReview / indexReview
+                const hitunganView = nilaiReview - vendorDetail.nilai_pinalti
+                numberReview = hitunganView / indexReview
             } else {
-                numberReview = nilaiReview / 1
+                const hitunganView = nilaiReview - vendorDetail.nilai_pinalti
+                numberReview = hitunganView / 1
             }
 
-            // const konsumen = await Konsumen.findByIdAndUpdate({ _id: id_konsumen }, { nilai_review: numberReview })
+            const vendorUpdate = await Vendor.findByIdAndUpdate({ _id: id_vendor }, { nilai_review: numberReview })
+            const createReview = await ReviewVendor.create({
+                id_vendor,
+                nilai_review,
+                userId: req.user.id
+            })
 
             res.status(201).json({
                 message: "create data success",
-                numberReview
+                createReview
             })
 
         } catch (error) {

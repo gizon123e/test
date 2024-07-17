@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const modelReviewProduk = new mongoose.Schema({
     id_produk: {
-        type: mongoose.Types.ObjectId,
+        type: String,
         ref: "Product",
         required: [true, "id_produk harus di isi"]
     },
@@ -13,14 +13,17 @@ const modelReviewProduk = new mongoose.Schema({
     },
     nilai_review: {
         type: Number,
-        required: false,
-        default: null
+        required: [true, "nilai_review harus di isi"],
     },
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User",
         required: [true, "userId harus di isi"]
-    }
+    },
+    replies: [{
+        type: mongoose.Types.ObjectId,
+        ref: "Reply"
+    }]
 }, { timestamps: true })
 
 const ReviewProduk = mongoose.model("ReviewProduk", modelReviewProduk)
