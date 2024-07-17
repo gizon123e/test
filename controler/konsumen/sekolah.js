@@ -25,6 +25,10 @@ module.exports = {
     getByNPSNSekolahSimulasi: async (req, res, next) => {
         try {
             const data = await SimulasiSekolah.findOne({ NPSN: req.params.id })
+            if (!data) return res.status(404).json({ message: "NPSN yang kamu masukan tidak terdaftar di Kemendiknas" })
+
+            const datas = await Sekolah.findOne({ NPSN: req.params.id })
+            if (datas) return res.status(400).json({ message: "NPSN sudah terdaftar" })
 
             return res.status(200).json({
                 message: "get data all success",
