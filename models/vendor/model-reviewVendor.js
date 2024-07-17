@@ -25,6 +25,6 @@ const modelReviewPengguna = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-const ReviewVendor = mongoose.model("ReviewPengguna", modelReviewPengguna)
+const ReviewVendor = mongoose.model("ReviewVendor", modelReviewPengguna)
 
 module.exports = ReviewVendor
