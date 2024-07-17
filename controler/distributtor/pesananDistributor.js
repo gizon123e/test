@@ -68,6 +68,7 @@ module.exports = {
     updateOrderStatuses: async () => {
         try {
             const currentTime = new Date();
+
             const twentyFourHoursAgo = new Date(currentTime.getTime() - 24 * 60 * 60 * 1000);
 
             const orders = await Pengiriman.find({
@@ -88,7 +89,7 @@ module.exports = {
                 })
                 const distributor = await Distributtor.findOne({ _id: order.distributorId })
                 const jumlahPinalti = distributor.nilai_pinalti + nilai
-                await Distributtor.findByIdAndUpdate({ _id: order.distributorId, nilai_pinalti: jumlahPinalti })
+                await Distributtor.findByIdAndUpdate({ _id: order.distributorId }, { nilai_pinalti: jumlahPinalti }, { new: true })
             }
 
             console.log(`${orders.length} orders updated to "Kadaluwarsa".`);

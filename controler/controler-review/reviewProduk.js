@@ -1,46 +1,118 @@
 const ReviewProduk = require('../../models/model-review/model-reviewProduk')
 const Product = require('../../models/model-product')
+const ReviewVendor = require('../../models/vendor/model-reviewVendor')
+const TokoVendor = require('../../models/vendor/model-toko')
+const path = require('path')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
         try {
-            const { id_produk } = req.params;
-            const { komentar_review, nilai_review } = req.body;
+            const { komentar_review, nilai_review, id_toko, id_produk, nilai_pengemasan, nilai_kualitas, nilai_keberhasilan } = req.body;
+            const files = req.files
+            const images = files ? files.images : [];
+            const video = files ? files.video : null
+
+            const imagePaths = [];
+            if (Array.isArray(images) && images.length > 0) {
+                for (const image of images) {
+                    const namaImage = `${Date.now()}-${image.name}`;
+                    const imagePath = path.join(__dirname, '../../public/ulasan-produk', namaImage);
+                    await image.mv(imagePath);
+                    const urlImages = `${process.env.HOST}/public/ulasan-produk/${namaImage}`;
+                    imagePaths.push(urlImages);
+                }
+            }
+            let urlVideo
+            if (video) {
+                const namaVideo = `${Date.now()}${path.extname(video.name)}`;
+                const videoPath = path.join(__dirname, '../../public/ulasan-produk', namaVideo);
+                await video.mv(videoPath);
+
+                urlVideo = `${process.env.HOST}/public/ulasan-produk/${namaVideo}`
+            }
+
+            const datasReviewVendor = await ReviewVendor.find({ id_toko })
+            const indexReviewVendor = datasReviewVendor.length + 1
+
+            let poinVendor = 0
+            if (datasReviewVendor) {
+                for (let vendorPoin of datasReviewVendor) {
+                    const data = parseInt(vendorPoin.nilai_pengemasan) + parseInt(vendorPoin.nilai_kualitas) + parseInt(vendorPoin.nilai_keberhasilan)
+                    bagiData = data / 3
+                    poinVendor += bagiData
+                }
+            }
+            const hitungVendor = parseInt(nilai_pengemasan) + parseInt(nilai_kualitas) + parseInt(nilai_keberhasilan)
+            const bagiVendor = hitungVendor / 3
+            poinVendor += bagiVendor
+
+            const tokoDetail = await TokoVendor.findOne({ _id: id_toko })
+            if (!tokoDetail) return res.status(404).json({ message: "data id_toko Not Fount" })
+
+            const totalReviewVendor = (poinVendor - tokoDetail.nilai_pinalti) / indexReviewVendor
+            console.log(totalReviewVendor)
+
+            await ReviewVendor.create({ id_toko, nilai_pengemasan, nilai_kualitas, nilai_keberhasilan, userId: req.user.id })
+
+            if (totalReviewVendor < 1) {
+                await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: 1 }, { new: true })
+            } else {
+                await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: totalReviewVendor }, { new: true })
+            }
+
             const reviews = await ReviewProduk.find({ id_produk })
             const indexReviews = reviews.length + 1
+
             // Membuat ulasan baru
             const review = new ReviewProduk({
                 id_produk,
                 userId: req.user.id,
                 komentar_review,
-                nilai_review
+                nilai_review,
+                images: imagePaths,
+                video: urlVideo
             });
 
+            let nilaiPoin = parseInt(nilai_review)
+            if (reviews) {
+                for (let vendorPoin of reviews) {
+                    nilaiPoin += vendorPoin.nilai_review;
+                }
+            }
             // Menyimpan ulasan ke database
             const savedReview = await review.save();
 
-            // Menambahkan ulasan ke produk terkait
-            const product = await Product.findOne({ _id: id_produk });
-            const hitungReview = product.poin_review + nilai_review
-
             if (indexReviews > 0) {
-                const totalReview = hitungReview / indexReviews
-                console.log(product.poin_review)
-                await Product.findByIdAndUpdate({ _id: id_produk }, {
-                    $push: { reviews: savedReview._id },
-                    poin_review: totalReview
-                }, { new: true, useFindAndModify: false })
+                const totalReview = nilaiPoin / indexReviews
+                if (totalReview < 1) {
+                    await Product.findByIdAndUpdate({ _id: id_produk }, {
+                        $push: { reviews: savedReview._id },
+                        poin_review: 1
+                    }, { new: true, useFindAndModify: false })
+                } else {
+                    await Product.findByIdAndUpdate({ _id: id_produk }, {
+                        $push: { reviews: savedReview._id },
+                        poin_review: totalReview
+                    }, { new: true, useFindAndModify: false })
+                }
+
             } else {
-                const totalReview = hitungReview / 1
-                console.log(product.poin_review)
-                await Product.findByIdAndUpdate({ _id: id_produk }, {
-                    $push: { reviews: savedReview._id },
-                    poin_review: totalReview
-                }, { new: true, useFindAndModify: false })
+                const totalReview = nilaiPoin / 1
+                if (totalReview > 0) {
+                    await Product.findByIdAndUpdate({ _id: id_produk }, {
+                        $push: { reviews: savedReview._id },
+                        poin_review: totalReview
+                    }, { new: true, useFindAndModify: false })
+                } else {
+                    await Product.findByIdAndUpdate({ _id: id_produk }, {
+                        $push: { reviews: savedReview._id },
+                        poin_review: 1
+                    }, { new: true, useFindAndModify: false })
+                }
             }
 
             res.status(200).json({
-                message: "",
+                message: "create data review success",
                 data: savedReview
             });
         } catch (error) {
