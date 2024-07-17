@@ -2,14 +2,14 @@ const dotenv = require('dotenv');
 const fetch = require('node-fetch');
 const DetailPesanan = require('../models/model-detail-pesanan');
 const Pengiriman = require("../models/model-pengiriman")
-const Pesanan = require('../models/model-orders');
+const Pesanan = require('../models/pesanan/model-orders');
 const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used');
 const { Transaksi } = require('../models/model-transaksi');
 const Invoice = require('../models/model-invoice');
+const DataProductOrder = require("../models/pesanan/model-data-product-order");
 const Pembatalan = require('../models/model-pembatalan');
 const Product = require('../models/model-product');
-const { promises } = require('nodemailer/lib/xoauth2');
 dotenv.config();
 
 module.exports = {
@@ -57,27 +57,6 @@ module.exports = {
             if (transaction_status === "settlement") {
                 pesanan = await Pesanan.findById(detailPesanan.id_pesanan).lean();
                 const { items, ...restOfOrder } = pesanan;
-                for( const item of items ){
-                    let { product, ...restOfItem } = item;
-                    const prods = []
-                    for ( let prod of product ){
-                        let { productId, dataProduct, ...restOfProd } = prod
-                        const produk = await Product.findById(productId).populate({ path: "userId", select: "_id role" }).populate('categoryId').lean()
-                        promisesFunct.push(
-                            Product.updateOne(
-                                { _id: productId },
-                                { $inc: { total_stok: -prod.quantity } }
-                            )
-                        )
-                        dataProduct = produk
-                        prods.push({
-                            productId,
-                            dataProduct,
-                            ...restOfProd
-                        })
-                    }
-                    item.product = prods
-                }
 
                 promisesFunct.push(
                     Pesanan.updateOne({_id: detailPesanan.id_pesanan}, {
@@ -93,13 +72,27 @@ module.exports = {
                 } else {
                     user = await User.findById(pesanan.userId)
                 }
+
+                
+                const ids = []
+                items.map(item => {
+                    item.product.map(prod => ids.push(prod.productId))
+                })
+                
+                const arrayProducts = await Product.find({_id: { $in: ids }});
+                
                 const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
                 promisesFunct.push (
                     VA_Used.findOneAndDelete({ orderId: order_id }),
                     DetailPesanan.findByIdAndUpdate(order_id, {
                         isTerbayarkan: true
                     }),
-                    Invoice.updateOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }, { status: "Lunas" })
+                    Invoice.updateOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }, { status: "Lunas" }),
+                    DataProductOrder.create({
+                        transaksiId: transaksi._id,
+                        pesananId: pesanan._id,
+                        dataProduct: arrayProducts
+                    })
                 )
 
                 const total_transaksi = await Transaksi.estimatedDocumentCount({

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Carts = require("./model-cart");
-const Pesanan = require("./model-orders");
+const Pesanan = require("./pesanan/model-orders");
 const DetailPesanan = require("./model-detail-pesanan");
 const VirtualAccountUser = require("./model-user-va");
 const { EventEmitterAsyncResource } = require("nodemailer/lib/xoauth2");
@@ -153,14 +153,18 @@ const productModels = new mongoose.Schema(
       default: false
     },
     pangan: [{
-      _id: false,
-      panganId: {
-        type: mongoose.Types.ObjectId,
-        ref: "Pangan"
+      type: {
+        _id: false,
+        panganId: {
+          type: mongoose.Types.ObjectId,
+          ref: "Pangan"
+        },
+        berat: {
+          type: Number
+        },
       },
-      berat: {
-        type: Number
-      }
+      required: true,
+      min: 1
     }],
     poin_review: {
       type: Number,

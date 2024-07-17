@@ -14,7 +14,7 @@ const path = require('path');
 const jwt = require('../utils/jwt');
 const { getToken } = require('../utils/getToken');
 const SalesReport = require("../models/model-laporan-penjualan");
-const Pesanan = require("../models/model-orders");
+const Pesanan = require("../models/pesanan/model-orders");
 // const BahanBaku = require("../models/model-bahan-baku");
 // const SalesReport = require("../models/model-laporan-penjualan");
 

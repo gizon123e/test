@@ -17,7 +17,7 @@ module.exports = {
         try {
             const data = await SimulasiSekolah.find()
 
-            if (!data) return res.status(400).json({ message: "data saat ini masi kosong" })
+            if (!data) return res.status(400).json({ message: "data saat ini masih kosong" })
 
             res.status(200).json({
                 message: "get All data success",
