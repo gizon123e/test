@@ -63,6 +63,10 @@ const modelPengiriman = new mongoose.Schema({
         type: String,
         enum: ["Pesanan terbaru", "Diterima", "Ditolak", "Kadaluwarsa", "Selesai"],
         default: "Pesanan terbaru"
+    },
+    invoice: {
+        type: mongoose.Types.ObjectId,
+        ref: "Invoice"
     }
 }, { timestamps: true })
 

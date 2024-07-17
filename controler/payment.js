@@ -93,13 +93,13 @@ module.exports = {
                 } else {
                     user = await User.findById(pesanan.userId)
                 }
-                const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id }, { status: "Pembayaran Berhasil" })
+                const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
                 promisesFunct.push (
                     VA_Used.findOneAndDelete({ orderId: order_id }),
                     DetailPesanan.findByIdAndUpdate(order_id, {
                         isTerbayarkan: true
                     }),
-                    Invoice.updateOne({ id_transaksi: transaksi._id }, { status: "Lunas" })
+                    Invoice.updateOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }, { status: "Lunas" })
                 )
 
                 const total_transaksi = await Transaksi.estimatedDocumentCount({

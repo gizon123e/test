@@ -20,6 +20,8 @@ const Fintech = require("../models/model-fintech");
 const Pembatalan = require("../models/model-pembatalan");
 const Pesanan = require("../models/model-orders");
 const VirtualAccountUser = require("../models/model-user-va");
+const Sekolah = require("../models/model-sekolah");
+
 dotenv.config();
 
 const now = new Date();
@@ -756,9 +758,10 @@ module.exports = {
                 biaya_jasa_aplikasi,
                 biaya_layanan,
                 poin_terpakai,
-                biaya_awal_asuransi
+                sekolahId
             } = req.body
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
+            if(!sekolahId) return res.status(400).json({message: "Kirimkan Id Sekolah"})
             if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" })
             if (!Array.isArray(req.body['items'])) return res.status(400).json({ message: "Body items bukan array, kirimkan array" })
 
@@ -870,26 +873,6 @@ module.exports = {
             
             const promisesFunct = []
 
-            for (let i = 0; i < dataOrder.shipments.length; i++) {
-                promisesFunct.push(
-                    Pengiriman.create({
-                        orderId: dataOrder._id,
-                        distributorId: dataOrder.shipments[i].id_distributor,
-                        productToDelivers: dataOrder.shipments[i].products,
-                        waktu_pengiriman: new Date(dataOrder.items[i].deadline),
-                        total_ongkir: dataOrder.shipments[i].total_ongkir,
-                        ongkir: dataOrder.shipments[i].ongkir,
-                        potongan_ongkir: dataOrder.shipments[i].potongan_ongkir,
-                        jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
-                        id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
-                        id_toko: dataOrder.shipments[i].id_toko_vendor,
-                        kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-
-                    })
-                );
-                total_pengiriman += 1
-            };
-
             const detailPesanan = await DetailPesanan.create({
                 _id: idPesanan,
                 id_pesanan: dataOrder._id,
@@ -917,20 +900,141 @@ module.exports = {
                 }
             });
 
-            const kode_transaksi = await Transaksi.create({
-                id_pesanan: dataOrder._id,
-                jenis_transaksi: "keluar",
-                status: "Menunggu Pembayaran",
-                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+            const sekolah = await Sekolah.findOne({_id: sekolahId, userId: req.user.id})
+            let totalQuantity = 0
+            items.map(item => {
+                item.product.map( prod => {
+                    totalQuantity += prod.quantity
+                })
             })
+            if (sekolah.jumlahMurid === totalQuantity){
+                const kode_transaksi = await Transaksi.create({
+                    id_pesanan: dataOrder._id,
+                    jenis_transaksi: "keluar",
+                    status: "Menunggu Pembayaran",
+                    subsidi: true,
+                    kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                });
 
-            await Invoice.create({
-                id_transaksi: kode_transaksi,
-                userId: req.user.id,
-                status: "Belum Lunas",
-                kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
-            })
+                const invoice = await Invoice.create({
+                    id_transaksi: kode_transaksi,
+                    userId: req.user.id,
+                    status: "Piutang",
+                    kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                });
 
+                for (let i = 0; i < dataOrder.shipments.length; i++) {
+                    promisesFunct.push(
+                        Pengiriman.create({
+                            orderId: dataOrder._id,
+                            distributorId: dataOrder.shipments[i].id_distributor,
+                            productToDelivers: dataOrder.shipments[i].products,
+                            waktu_pengiriman: new Date(dataOrder.items[i].deadline),
+                            total_ongkir: dataOrder.shipments[i].total_ongkir,
+                            ongkir: dataOrder.shipments[i].ongkir,
+                            potongan_ongkir: dataOrder.shipments[i].potongan_ongkir,
+                            jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
+                            id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
+                            id_toko: dataOrder.shipments[i].id_toko_vendor,
+                            kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+                            invoice: invoice._id
+                        })
+                    );
+                    total_pengiriman += 1
+                };
+            }else if(totalQuantity > sekolah.jumlahMurid){
+
+                const kode_transaksi_piutang = await Transaksi.create({
+                    id_pesanan: dataOrder._id,
+                    jenis_transaksi: "keluar",
+                    status: "Menunggu Pembayaran",
+                    subsidi: true,
+                    kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                });
+    
+                const invoiceSubsidi = await Invoice.create({
+                    id_transaksi: kode_transaksi_piutang,
+                    userId: req.user.id,
+                    status: "Piutang",
+                    kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                });
+
+                for (let i = 0; i < dataOrder.shipments.length; i++) {
+                    let totalProduk = 0
+                    const productToDelivers = dataOrder.shipments[i].products.map(prod => {
+                        const { quantity , ...restOfProd } = prod
+                        totalProduk += quantity
+                        return {
+                            ...restOfProd,
+                            quantity: sekolah.jumlahMurid
+                        }
+                    })
+                    const baseOngkir = dataOrder.shipments[i].total_ongkir / totalProduk
+                    promisesFunct.push(
+                        Pengiriman.create({
+                            orderId: dataOrder._id,
+                            distributorId: dataOrder.shipments[i].id_distributor,
+                            productToDelivers,
+                            waktu_pengiriman: new Date(dataOrder.items[i].deadline),
+                            total_ongkir: sekolah.jumlahMurid * baseOngkir,
+                            ongkir: dataOrder.shipments[i].ongkir,
+                            potongan_ongkir: dataOrder.shipments[i].potongan_ongkir,
+                            jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
+                            id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
+                            id_toko: dataOrder.shipments[i].id_toko_vendor,
+                            kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+                            invoice: invoiceSubsidi._id
+                        })
+                    );
+                    total_pengiriman += 1
+                };
+
+                const kode_transaksi = await Transaksi.create({
+                    id_pesanan: dataOrder._id,
+                    jenis_transaksi: "keluar",
+                    status: "Menunggu Pembayaran",
+                    subsidi: false,
+                    kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                })
+    
+                const invoiceNonSubsidi = await Invoice.create({
+                    id_transaksi: kode_transaksi,
+                    userId: req.user.id,
+                    status: "Belum Lunas",
+                    kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                })
+
+                for (let i = 0; i < dataOrder.shipments.length; i++) {
+                    let totalProduk = 0
+                    const productToDelivers = dataOrder.shipments[i].products.map(prod => {
+                        const { quantity , ...restOfProd } = prod
+                        totalProduk += quantity
+                        return {
+                            ...restOfProd,
+                            quantity: totalQuantity - sekolah.jumlahMurid
+                        }
+                    })
+                    const baseOngkir = dataOrder.shipments[i].total_ongkir / totalProduk
+                    promisesFunct.push(
+                        Pengiriman.create({
+                            orderId: dataOrder._id,
+                            distributorId: dataOrder.shipments[i].id_distributor,
+                            productToDelivers,
+                            waktu_pengiriman: new Date(dataOrder.items[i].deadline),
+                            total_ongkir: (totalQuantity - sekolah.jumlahMurid) * baseOngkir,
+                            ongkir: dataOrder.shipments[i].ongkir,
+                            potongan_ongkir: dataOrder.shipments[i].potongan_ongkir,
+                            jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
+                            id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
+                            id_toko: dataOrder.shipments[i].id_toko_vendor,
+                            kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+                            invoice: invoiceNonSubsidi._id
+                        })
+                    );
+                    total_pengiriman += 1
+                };
+            }
+            await Promise.all(promisesFunct)
             return res.status(201).json({
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
                 datas: dataOrder,

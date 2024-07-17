@@ -19,6 +19,9 @@ const modelTransaksi = new mongoose.Schema({
     kode_transaksi:{
         type: String,
         required: true
+    },
+    subsidi: {
+        type: Boolean
     }
 }, {timestamps: true});
 
