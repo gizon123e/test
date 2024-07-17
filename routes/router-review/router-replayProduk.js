@@ -1,9 +1,8 @@
-const router = require('express').Router();
-const replyController = require('../../controler/controler-review/replayProduk');
+const router = require('express').Router()
+const authorization = require("../../midelware/authorization");
+const replyController = require('../../controler/controler-review/replayProduk')
 
-// Mendapatkan ulasan dan balasan
-router.get('/:reviewId', replyController.getBalasanByReviewId)
-// Tambah balasan
-router.post('/:reviewId/reply', replyController.tambahBalasan)
+router.get('/reply/:reviewId', replyController.getBalasanByReviewId)
+router.post('/reply/:reviewId', authorization, replyController.tambahBalasan)
 
 module.exports = router;

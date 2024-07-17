@@ -6,7 +6,8 @@ module.exports = {
         try {
             const { id_produk } = req.params;
             const { komentar_review, nilai_review } = req.body;
-            console.log(req.user.id)
+            const reviews = await ReviewProduk.find({ id_produk })
+            const indexReviews = reviews.length + 1
             // Membuat ulasan baru
             const review = new ReviewProduk({
                 id_produk,
@@ -20,8 +21,23 @@ module.exports = {
 
             // Menambahkan ulasan ke produk terkait
             const product = await Product.findOne({ _id: id_produk });
-            product.reviews.push(savedReview._id);
-            await product.save();
+            const hitungReview = product.poin_review + nilai_review
+
+            if (indexReviews > 0) {
+                const totalReview = hitungReview / indexReviews
+                console.log(product.poin_review)
+                await Product.findByIdAndUpdate({ _id: id_produk }, {
+                    $push: { reviews: savedReview._id },
+                    poin_review: totalReview
+                }, { new: true, useFindAndModify: false })
+            } else {
+                const totalReview = hitungReview / 1
+                console.log(product.poin_review)
+                await Product.findByIdAndUpdate({ _id: id_produk }, {
+                    $push: { reviews: savedReview._id },
+                    poin_review: totalReview
+                }, { new: true, useFindAndModify: false })
+            }
 
             res.status(200).json({
                 message: "",
@@ -44,7 +60,7 @@ module.exports = {
         const { id_produk } = req.params;
 
         try {
-            const reviews = await ReviewProduk.find({ id_produk }).populate('replies');
+            const reviews = await ReviewProduk.find({ id_produk }).populate('replies').populate("id_produk");
             res.status(200).json({
                 message: "get all review",
                 data: reviews

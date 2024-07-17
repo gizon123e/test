@@ -66,6 +66,7 @@ app.use('/api/review-distributor', require('./routes/router-distributtor/router-
 
 // review produk
 app.use('/api/review-produk', require('./routes/router-review/router-reviewProduk'))
+app.use('/api/replay-produk', require('./routes/router-review/router-replayProduk'))
 
 // router Sekolah
 app.use('/api/instansi', require('./routes/router-controler-sekolah/router-instansi'))
