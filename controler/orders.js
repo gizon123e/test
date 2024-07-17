@@ -852,13 +852,6 @@ module.exports = {
                 biaya_layanan,
                 biaya_asuransi
             });
-
-            await VA_Used.create({
-                userId: req.user.id,
-                orderId: detailPesanan._id,
-                nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
-            })
-
             const total_transaksi = await Transaksi.countDocuments({
                 createdAt: {
                     $gte: now,
@@ -873,9 +866,10 @@ module.exports = {
                     totalQuantity += prod.quantity
                 })
             })
-            let transaksiMidtrans
-            let total_tagihan = 0
-            if (sekolah.jumlahMurid === totalQuantity){
+            let transaksiMidtrans;
+            let total_tagihan = 0;
+
+            if (sekolah.jumlahMurid === totalQuantity) {
                 const kode_transaksi = await Transaksi.create({
                     id_pesanan: dataOrder._id,
                     jenis_transaksi: "keluar",
@@ -908,11 +902,10 @@ module.exports = {
                             invoice: invoice._id
                         })
                     );
-                    total_pengiriman += 1
-                };
+                    total_pengiriman += 1;
+                }
 
-            }else if(totalQuantity > sekolah.jumlahMurid){
-
+            } else if (totalQuantity > sekolah.jumlahMurid) {
                 const kode_transaksi_piutang = await Transaksi.create({
                     id_pesanan: dataOrder._id,
                     jenis_transaksi: "keluar",
@@ -920,7 +913,7 @@ module.exports = {
                     subsidi: true,
                     kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
                 });
-    
+
                 const invoiceSubsidi = await Invoice.create({
                     id_transaksi: kode_transaksi_piutang,
                     userId: req.user.id,
@@ -929,16 +922,19 @@ module.exports = {
                 });
 
                 for (let i = 0; i < dataOrder.shipments.length; i++) {
-                    let totalProduk = 0
+                    let totalProduk = 0;
                     const productToDelivers = dataOrder.shipments[i].products.map(prod => {
-                        const { quantity , ...restOfProd } = prod
-                        totalProduk += quantity
+                        const { quantity, ...restOfProd } = prod;
+                        totalProduk += quantity;
                         return {
                             ...restOfProd,
                             quantity: sekolah.jumlahMurid
-                        }
-                    })
-                    const baseOngkir = dataOrder.shipments[i].total_ongkir / totalProduk
+                        };
+                    });
+
+                    if (totalProduk === 0) throw new Error("Total products cannot be zero.");
+
+                    const baseOngkir = dataOrder.shipments[i].total_ongkir / totalProduk;
                     promisesFunct.push(
                         Pengiriman.create({
                             orderId: dataOrder._id,
@@ -955,8 +951,8 @@ module.exports = {
                             invoice: invoiceSubsidi._id
                         })
                     );
-                    total_pengiriman += 1
-                };
+                    total_pengiriman += 1;
+                }
 
                 const kode_transaksi = await Transaksi.create({
                     id_pesanan: dataOrder._id,
@@ -964,27 +960,31 @@ module.exports = {
                     status: "Menunggu Pembayaran",
                     subsidi: false,
                     kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
-                })
-    
+                });
+
                 const invoiceNonSubsidi = await Invoice.create({
                     id_transaksi: kode_transaksi,
                     userId: req.user.id,
                     status: "Belum Lunas",
                     kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
-                })
+                });
+
                 for (let i = 0; i < dataOrder.shipments.length; i++) {
-                    let totalProduk = 0
-                    const productToDelivers = dataOrder.shipments[i].products.map(async(prod) => {
-                        const product = await Product.findById(prod.productId).select('total_price')
-                        total_tagihan += product.total_price
-                        const { quantity , ...restOfProd } = prod
-                        totalProduk += quantity
+                    let totalProduk = 0;
+                    const productToDelivers = await Promise.all(dataOrder.shipments[i].products.map(async prod => {
+                        const product = await Product.findById(prod.productId).select('total_price');
+                        const { quantity, ...restOfProd } = prod;
+                        total_tagihan += product.total_price * (totalQuantity - sekolah.jumlahMurid);
+                        totalProduk += quantity;
                         return {
                             ...restOfProd,
                             quantity: totalQuantity - sekolah.jumlahMurid
-                        }
-                    })
-                    const baseOngkir = dataOrder.shipments[i].total_ongkir / totalProduk
+                        };
+                    }));
+
+                    if (totalProduk === 0) throw new Error("Total products cannot be zero.");
+
+                    const baseOngkir = dataOrder.shipments[i].total_ongkir / totalProduk;
                     promisesFunct.push(
                         Pengiriman.create({
                             orderId: dataOrder._id,
@@ -1001,9 +1001,10 @@ module.exports = {
                             invoice: invoiceNonSubsidi._id
                         })
                     );
-                    total_tagihan += (totalQuantity - sekolah.jumlahMurid) * baseOngkir + biaya_jasa_aplikasi + biaya_layanan + biaya_asuransi
-                    total_pengiriman += 1
-                };
+
+                    total_tagihan += (totalQuantity - sekolah.jumlahMurid) * baseOngkir + (biaya_jasa_aplikasi + biaya_layanan + biaya_asuransi);
+                    total_pengiriman += 1;
+                }
 
                 const grossAmount = () => {
                     if (dp.isUsed && poin_terpakai) {
@@ -1034,10 +1035,16 @@ module.exports = {
                         },
                     })
                 };
-    
                 const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
                 transaksiMidtrans = await respon.json();
             }
+            promisesFunct.push(
+                VA_Used.create({
+                    userId: req.user.id,
+                    orderId: detailPesanan._id,
+                    nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                })
+            )
             await Promise.all(promisesFunct)
             return res.status(201).json({
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
