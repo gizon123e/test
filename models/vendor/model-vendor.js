@@ -96,16 +96,6 @@ const vendorModel = new mongoose.Schema({
         type: String,
         default: null
     },
-    nilai_pinalti: {
-        type: Number,
-        required: false,
-        default: 0
-    },
-    nilai_review: {
-        type: Number,
-        required: false,
-        default: 0
-    }
 })
 
 vendorModel.pre('save', function (next) {

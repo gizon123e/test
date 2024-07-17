@@ -1,6 +1,6 @@
 const ReviewVendor = require('../../models/vendor/model-reviewVendor')
 const Konsumen = require('../../models/konsumen/model-konsumen')
-const Vendor = require('../../models/vendor/model-vendor')
+const TokoVendor = require('../../models/vendor/model-toko')
 
 module.exports = {
     getAllReviewKonsumen: async (req, res, next) => {
@@ -27,12 +27,12 @@ module.exports = {
 
     createDataReviewKonsumen: async (req, res, next) => {
         try {
-            const { id_vendor, nilai_review } = req.body
-            const datas = await ReviewVendor.find({ id_vendor })
+            const { id_toko, nilai_review } = req.body
+            const datas = await ReviewVendor.find({ id_toko })
             const indexReview = datas.length + 1
 
-            const vendorDetail = await Vendor.findOne({ _id: id_vendor })
-            const nilaiReview = nilai_review + konsumenDetail.nilai_review
+            const vendorDetail = await TokoVendor.findOne({ _id: id_toko })
+            const nilaiReview = nilai_review + vendorDetail.nilai_review
             let numberReview
             if (indexReview > 0) {
                 const hitunganView = nilaiReview - vendorDetail.nilai_pinalti
@@ -42,9 +42,9 @@ module.exports = {
                 numberReview = hitunganView / 1
             }
 
-            const vendorUpdate = await Vendor.findByIdAndUpdate({ _id: id_vendor }, { nilai_review: numberReview })
+            const vendorUpdate = await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: numberReview }, { new: true })
             const createReview = await ReviewVendor.create({
-                id_vendor,
+                id_toko,
                 nilai_review,
                 userId: req.user.id
             })

@@ -15,6 +15,14 @@ const modelReviewProduk = new mongoose.Schema({
         type: Number,
         required: [true, "nilai_review harus di isi"],
     },
+    images: {
+        type: [String],
+        required: [true, "images harus di isi"],
+    },
+    video: {
+        type: String,
+        required: [true, "video harus di isi"],
+    },
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User",
