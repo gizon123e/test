@@ -13,22 +13,37 @@ module.exports = {
             const video = files ? files.video : null
 
             const imagePaths = [];
-            if (Array.isArray(images) && images.length > 0) {
+            if (Array.isArray(images)) {
                 for (const image of images) {
                     const namaImage = `${Date.now()}-${image.name}`;
                     const imagePath = path.join(__dirname, '../../public/ulasan-produk', namaImage);
                     await image.mv(imagePath);
-                    const urlImages = `${process.env.HOST}/public/ulasan-produk/${namaImage}`;
-                    imagePaths.push(urlImages);
+                    const urlImage = `${process.env.HOST}/public/ulasan-produk/${namaImage}`;
+                    imagePaths.push(urlImage);
                 }
+            } else if (images) {
+                const namaImage = `${Date.now()}-${images.name}`;
+                const imagePath = path.join(__dirname, '../../public/ulasan-produk', namaImage);
+                await images.mv(imagePath);
+                const urlImage = `${process.env.HOST}/public/ulasan-produk/${namaImage}`;
+                imagePaths.push(urlImage);
             }
-            let urlVideo
-            if (video) {
-                const namaVideo = `${Date.now()}${path.extname(video.name)}`;
+
+            const videoPaths = []
+            if (Array.isArray(video)) {
+                for (const vid of video) {
+                    const namaVideo = `${Date.now()}-${vid.name}`;
+                    const videoPath = path.join(__dirname, '../../public/ulasan-produk', namaVideo);
+                    await vid.mv(videoPath);
+                    const urlVideo = `${process.env.HOST}/public/ulasan-produk/${namaVideo}`;
+                    videoPaths.push(urlVideo);
+                }
+            } else if (video) {
+                const namaVideo = `${Date.now()}-${video.name}`;
                 const videoPath = path.join(__dirname, '../../public/ulasan-produk', namaVideo);
                 await video.mv(videoPath);
-
-                urlVideo = `${process.env.HOST}/public/ulasan-produk/${namaVideo}`
+                const urlVideo = `${process.env.HOST}/public/ulasan-produk/${namaVideo}`;
+                videoPaths.push(urlVideo);
             }
 
             const datasReviewVendor = await ReviewVendor.find({ id_toko })
@@ -70,7 +85,7 @@ module.exports = {
                 komentar_review,
                 nilai_review,
                 images: imagePaths,
-                video: urlVideo
+                video: videoPaths
             });
 
             let nilaiPoin = parseInt(nilai_review)

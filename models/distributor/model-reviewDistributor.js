@@ -6,9 +6,15 @@ const modelReviewDistributor = new mongoose.Schema({
         ref: "Distributtor",
         required: [true, "id_distributor harus di isi"]
     },
-    nilai_review: {
+    nilai_ketepatan: {
         type: Number,
-        required: [true, "nilai_review harus di isi"]
+        required: [true, "nilai_review harus di isi"],
+        default: 0
+    },
+    nilai_komunikasi: {
+        type: Number,
+        required: [true, "nilai_review harus di isi"],
+        default: 0
     },
     userId: {
         type: mongoose.Types.ObjectId,

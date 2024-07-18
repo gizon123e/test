@@ -115,7 +115,8 @@ module.exports = {
             if (status === "dibatalkan") {
                 await Pengiriman.updateOne({ _id: req.params.id }, { rejected: true, status_distributor: "Ditolak" });
 
-                await Distributtor.findByIdAndUpdate({ _id: distri._id }, { tolak_pesanan: distri.tolak_pesanan + 1 }, { new: true })
+                const currentDate = new Date();
+                await Distributtor.findByIdAndUpdate({ _id: distri._id }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
                 await Pengiriman.updateOne({ _id: req.params.id }, {
                     status_pengiriman: status
@@ -218,7 +219,7 @@ module.exports = {
             const twentyFourHoursAgo = new Date(currentTime.getTime() - 23 * 60 * 60 * 1000);
 
             const dataRisertAnkaPelanggaran = await Distributtor.find({
-                updatedAt: { $lte: twentyFourHoursAgo }
+                date_tolak: { $lte: twentyFourHoursAgo }
             })
 
             for (let id of dataRisertAnkaPelanggaran) {
