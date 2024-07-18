@@ -1,6 +1,6 @@
 const { Decimal128 } = require('mongodb');
 const mongoose = require('mongoose');
-const Pembatalan = require('./model-pembatalan');
+const Pembatalan = require('../model-pembatalan');
 
 const modelOrder = new mongoose.Schema({
     items: [{
@@ -29,10 +29,6 @@ const modelOrder = new mongoose.Schema({
             },
             promo: {
                 type: String
-            },
-            dataProduct: {
-                type: Object,
-                default: null
             }
         }],
         deadline: {

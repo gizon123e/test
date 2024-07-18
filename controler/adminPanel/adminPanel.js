@@ -16,7 +16,7 @@ const Invoice = require('../../models/model-invoice')
 const { Transaksi } = require("../../models/model-transaksi")
 const Pengiriman = require("../../models/model-pengiriman")
 const Pembatalan = require("../../models/model-pembatalan")
-const Pesanan = require("../../models/model-orders")
+const Pesanan = require("../../models/pesanan/model-orders")
 const Product = require('../../models/model-product')
 
 module.exports = {

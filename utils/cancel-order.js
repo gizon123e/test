@@ -1,5 +1,5 @@
 const cron = require('node-cron')
-const Pesanan = require('../models/model-orders');
+const Pesanan = require('../models/pesanan/model-orders');
 const FlashSale = require('../models/model-flashsale');
 const Product = require('../models/model-product');
 
