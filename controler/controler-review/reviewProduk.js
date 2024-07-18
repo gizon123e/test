@@ -67,7 +67,7 @@ module.exports = {
             const totalReviewVendor = (poinVendor - tokoDetail.nilai_pinalti) / indexReviewVendor
             console.log(totalReviewVendor)
 
-            await ReviewVendor.create({ id_toko, nilai_pengemasan, nilai_kualitas, nilai_keberhasilan, userId: req.user.id })
+            await ReviewVendor.create({ id_toko, nilai_pengemasan: parseInt(nilai_pengemasan), nilai_kualitas: parseInt(nilai_kualitas), nilai_keberhasilan: parseInt(videoPaths), userId: req.user.id })
 
             if (totalReviewVendor < 1) {
                 await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: 1 }, { new: true })
@@ -83,7 +83,7 @@ module.exports = {
                 id_produk,
                 userId: req.user.id,
                 komentar_review,
-                nilai_review,
+                nilai_review: parseInt(nilai_review),
                 images: imagePaths,
                 video: videoPaths
             });
