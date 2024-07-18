@@ -206,6 +206,7 @@ module.exports = {
                                 store[storeId] = {
                                     seller: {
                                         _id: item.product.productId.userId._id,
+                                        idToko: detailToko._id,
                                         namaToko: detailToko.namaToko
                                     },
                                     status_pengiriman: null,
@@ -264,6 +265,7 @@ module.exports = {
                                     total_pesanan: jumlah_uang,
                                     seller: {
                                         _id: item.product.productId.userId._id,
+                                        idToko: detailToko._id,
                                         namaToko: detailToko.namaToko
                                     },
                                     status_pengiriman: pengiriman,
@@ -604,9 +606,9 @@ module.exports = {
             });
             const paymentMethod = await Promise.all(promises)
             let data;
+            let total_pesanan = 0;
             if( status === "Belum Bayar" && transaksi && transaksiSubsidi){
                 const store = {};
-                let total_pesanan = 0;
                 const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksi._id, status: { $in: ["Belum Lunas", "Lunas"] }});
                 
                 const pengiriman = await Pengiriman.findOne({
@@ -632,6 +634,7 @@ module.exports = {
                         break;
                     }
                     const productToDeliver = pengiriman.productToDelivers.find( prod => prod.productId.toString() === productId._id )
+                    total_pesanan +=  productToDeliver.quantity * productId.total_price + pengiriman.total_ongkir
                     if(!store[userId._id]){
                         store[userId._id] = {
                             toko: { 
@@ -663,6 +666,7 @@ module.exports = {
                     pengiriman,
                     paymentMethod: { ...pay, paymentNumber } ,
                     dibatalkanOleh: pembatalan? pembatalan.canceledBy : null,
+                    total_pesanan
                     // pengiriman: {
                     //     potongan_ongkir,
                     //     total_ongkir
@@ -695,6 +699,7 @@ module.exports = {
                         break;
                     }
                     const productToDeliver = pengiriman.productToDelivers.find( prod => prod.productId.toString() === productId._id )
+                    total_pesanan +=  productToDeliver.quantity * productId.total_price + pengiriman.total_ongkir
                     if(!store[userId._id]){
                         store[userId._id] = {
                             toko: { 
@@ -726,6 +731,7 @@ module.exports = {
                     pengiriman,
                     paymentMethod: { ...pay, paymentNumber } ,
                     dibatalkanOleh: pembatalan? pembatalan.canceledBy : null,
+                    total_pesanan
                     // pengiriman: {
                     //     potongan_ongkir,
                     //     total_ongkir
@@ -924,6 +930,8 @@ module.exports = {
                     nama_bank: splitted[0],
                     userId: req.user.id
                 }).populate('nama_bank')
+                console.log(req.body)
+                console.log(splitted[0], req.user.id)
                 VirtualAccount = await VA.findById(splitted[0]);
                 if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
                 idPay = va_user.nama_bank._id,
@@ -982,6 +990,7 @@ module.exports = {
             });
 
             const sekolah = await Sekolah.findOne({_id: sekolahId, userId: req.user.id})
+            if(!sekolah) return res.status(404).json({message: "Tidak ada sekolah yang ditemukan"})
             let totalQuantity = 0
             const ids = []
             items.map(item => {
@@ -994,7 +1003,7 @@ module.exports = {
             let transaksiMidtrans;
             let total_tagihan = 0;
 
-            if (sekolah.jumlahMurid === totalQuantity) {
+            if ((sekolah.jumlahMurid === totalQuantity) || (sekolah.jumlahMurid > totalQuantity)) {
                 const kode_transaksi = await Transaksi.create({
                     id_pesanan: dataOrder._id,
                     jenis_transaksi: "keluar",
