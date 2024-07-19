@@ -26,7 +26,7 @@ module.exports = {
 
     createReviewDistributor: async (req, res, next) => {
         try {
-            const { id_distributor, nilai_review } = req.body
+            const { id_distributor, nilai_ketepatan, nilai_komunikasi } = req.body
 
             const dataDistributor = await Distributtor.findOne({ _id: id_distributor })
             if (!dataDistributor) return res.status(404).json({ message: "data Not Found" })
@@ -34,19 +34,32 @@ module.exports = {
             const reviewDistributor = await ReviewDistributor.find({ id_distributor })
             const indexReview = reviewDistributor.length + 1
 
-            const nilaiReview = dataDistributor.nilai_review + nilai_review
-            let numberTotalReview
-            if (indexReview > 0) {
-                const penguranganNilai = nilaiReview - dataDistributor.nilai_pinalti
-                numberTotalReview = penguranganNilai / indexReview
+            let hitunganPoinReview = 0
+            if (reviewDistributor) {
+                for (let viewDistributor of reviewDistributor) {
+                    const perhitunganPoinTotal = viewDistributor.nilai_ketepatan + viewDistributor.nilai_komunikasi
+                    const bagiPerhitungan = perhitunganPoinTotal / 2
+
+                    hitunganPoinReview += bagiPerhitungan
+                }
+            }
+            console.log("tes 1", hitunganPoinReview)
+
+            const perhitunganNilaiPoin = (nilai_ketepatan + nilai_komunikasi) / 2
+            hitunganPoinReview += perhitunganNilaiPoin
+
+            console.log("tes 2", hitunganPoinReview)
+            const totalPerhitunganPoin = (hitunganPoinReview - dataDistributor.nilai_pinalti) / indexReview
+
+            console.log("tes 3", hitunganPoinReview)
+
+            if (totalPerhitunganPoin < 1) {
+                await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: 1 }, { new: true })
             } else {
-                const penguranganNilai = nilaiReview - dataDistributor.nilai_pinalti
-                numberTotalReview = penguranganNilai / 1
+                await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: totalPerhitunganPoin }, { new: true })
             }
 
-            await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: numberTotalReview })
-
-            const dataReview = await ReviewDistributor.create({ id_distributor, nilai_review, userId: req.user.id })
+            const dataReview = await ReviewDistributor.create({ id_distributor, nilai_ketepatan, nilai_komunikasi, userId: req.user.id })
 
             res.status(201).json({
                 message: "create data success",
