@@ -1044,7 +1044,7 @@ module.exports = {
                     totalQuantity += prod.quantity
                 })
             })
-            const arrayProducts = await Product.find({_id: {$in: ids}})
+            const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
             let transaksiMidtrans;
             let total_tagihan = 0;
 
