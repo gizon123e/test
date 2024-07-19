@@ -50,8 +50,15 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         type: String,
         required: false,
         default: null
+    },
+    statusKendaraan: {
+        type: Boolean,
+        default: false
+    },
+    descriptionStatusKendaraan: {
+        type: String,
+        default: null
     }
-
 }, { timestamps: true });
 
 const KendaraanDistributor = mongoose.model('KendaraanDistributor', kendaraanDistributorSchema);
