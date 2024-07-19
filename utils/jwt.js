@@ -17,12 +17,5 @@ module.exports = {
         throw new Error("Invalid Token");
       }
     }
-  },
-  verify: (token) => {
-    try{
-      return jwt.verify(token, config.secretKey);
-    }catch{
-      return null
-    }
   }
 };
