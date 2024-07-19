@@ -79,8 +79,7 @@ module.exports = {
                     item.product.map(prod => ids.push(prod.productId))
                 })
                 
-                const arrayProducts = await Product.find({_id: { $in: ids }});
-                
+                const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()                
                 const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
                 promisesFunct.push (
                     VA_Used.findOneAndDelete({ orderId: order_id }),
