@@ -15,6 +15,8 @@ router.post('/create', controlerKendaraanDistributtor.createKendaraandistributto
 router.post('/create-perusahaan', controlerKendaraanDistributtor.createKendaraanPerusahaan)
 router.put('/update/:id', authorization, controlerKendaraanDistributtor.updateKendaraanDistributtor)
 router.put('/tolak/:id', controlerKendaraanDistributtor.tolakKenendaraan)
+router.put('/aktif/:id', controlerKendaraanDistributtor.kendaraanDiAktifkan)
+router.put('/tidak-aktif/:id', controlerKendaraanDistributtor.kendaraanDiNonaktifkan)
 router.delete('/delete/:id', controlerKendaraanDistributtor.deleteKendaraanDistributtor)
 
 module.exports = router
