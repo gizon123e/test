@@ -210,6 +210,7 @@ module.exports = {
                                                 idToko: detailToko._id,
                                                 namaToko: detailToko.namaToko
                                             },
+                                            status_pengiriman: [pengiriman],
                                             arrayProduct: []
                                         }
                                     }
@@ -258,6 +259,7 @@ module.exports = {
                                                 idToko: detailToko._id,
                                                 namaToko: detailToko.namaToko
                                             },
+                                            status_pengiriman: [pengiriman],
                                             arrayProduct: []
                                         }
                                     }
@@ -293,7 +295,7 @@ module.exports = {
                             }
                             const dataProduct = await DataProductOrder.findOne({pesananId: order._id})
                             const productSelected = dataProduct.dataProduct.find(prod => { return prod._id.toString() === item.product.productId._id })
-                            const pengiriman = await Pengiriman.findOne({
+                            const pengiriman = await Pengiriman.find({
                                 orderId: order._id, 
                                 productToDelivers: {
                                     $elemMatch: {
@@ -312,6 +314,7 @@ module.exports = {
                                         idToko: detailToko._id,
                                         namaToko: detailToko.namaToko
                                     },
+                                    status_pengiriman: pengiriman,
                                     arrayProduct: []
                                 }
                             }
