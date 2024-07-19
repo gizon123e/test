@@ -255,6 +255,7 @@ module.exports = {
                                             total_pesanan: jumlah_uang,
                                             seller: {
                                                 _id: item.product.productId.userId._id,
+                                                idToko: detailToko._id,
                                                 namaToko: detailToko.namaToko
                                             },
                                             arrayProduct: []
@@ -264,7 +265,7 @@ module.exports = {
                                     store[storeId].arrayProduct.push({ productId, ...restOfProduct, quantity: totalQuantity , detailBerlangsung })
                                     jumlah_uang = 0
                                     Object.keys(store).forEach(key => {
-                                        data.push({ ...rest, ...store[key], dibatalkanOleh: null })
+                                        data.push({ ...rest, status, ...store[key], dibatalkanOleh: null })
                                     })
                                 }
                             }
@@ -308,6 +309,7 @@ module.exports = {
                                     total_pesanan: jumlah_uang,
                                     seller: {
                                         _id: item.product.productId.userId._id,
+                                        idToko: detailToko._id,
                                         namaToko: detailToko.namaToko
                                     },
                                     arrayProduct: []
@@ -317,7 +319,7 @@ module.exports = {
                             store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct , detailBerlangsung })
                             jumlah_uang = 0
                             Object.keys(store).forEach(key => {
-                                data.push({ ...rest, ...store[key], dibatalkanOleh: null })
+                                data.push({ ...rest, status, ...store[key], dibatalkanOleh: null })
                             })
                         }
                     }
