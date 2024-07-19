@@ -26,7 +26,7 @@ module.exports = {
 
     getDetailProdusen: async (req, res, next) => {
         try {
-            const dataProdusen = await Produsen.findById(req.params.id).populate('userId', '-password').populate('addressId')
+            const dataProdusen = await Produsen.findOne({userId:req.user.id}).populate('userId', '-password').populate('addressId')
             if (!dataProdusen) return res.status(404).json({ error: `data Produsen id :${req.params.id} not Found` })
 
             res.status(200).json({ message: 'success', datas: dataProdusen })

@@ -1,11 +1,26 @@
 const mongoose = require('mongoose')
 
-const modelCarts = mongoose.Schema({
+const modelCarts = new mongoose.Schema({
     productId: {
-        type: mongoose.Types.ObjectId,
+        type: String,
         required: [true, "productId harus di isi"],
         ref: 'Product'
     },
+    varian:[
+        {   
+            _id: false,
+            harga: {
+                type: Number,
+                default: null
+            },
+            nama_varian: {
+                type: String
+            },
+            nilai_varian:{
+                type: String
+            }
+        }
+    ],
     quantity: {
         type: Number,
         min: [1, 'minimal quantity adalah 1'],
@@ -20,8 +35,36 @@ const modelCarts = mongoose.Schema({
     total_price: {
         type: Number,
         required: [true, 'total price harus di isi'],
+    },
+    productTerhapus: {
+        type: {
+            _id: String,
+            name_product: {
+                type: String
+            },
+            userId:{
+                _id: {
+                    type:mongoose.Types.ObjectId,
+                    ref: "User"
+                },
+                role: {
+                    type: String
+                }
+            },
+            total_price: {
+                type: Number
+            },
+            image_product: [
+                String
+            ],
+        },
+        default: null
+    },
+    productDeleted:{
+        type: Boolean,
+        default: false
     }
-})
+}, { timestamps: true })
 
 const Carts = mongoose.model('Carts', modelCarts)
 

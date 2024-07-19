@@ -3,7 +3,7 @@ require("./model-product");
 
 const salesReport = mongoose.Schema({
   productId: {
-    type: mongoose.Types.ObjectId,
+    type: String,
     required: true,
     ref: "Product",
   },

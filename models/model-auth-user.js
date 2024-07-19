@@ -1,51 +1,173 @@
 const mongoose = require("mongoose");
+const Cart = require("./model-cart");
+const Conversation = require("./model-conversation");
+const Invoice = require("./model-invoice");
+const Comment = require("./model-komentar");
+const Minat = require("./model-minat-user");
+const Pembatalan = require("./model-pembatalan");
+const Product = require("./model-product")
+const Produksi = require("./model-produksi");
+const VirtualAccountUser = require("./model-user-va");
+const Address = require("./model-address");
+const BahanBaku = require("./model-bahan-baku");
+const Pesanan = require("./pesanan/model-orders");
+const Vendor = require("./vendor/model-vendor");
+const Distributor = require("./distributor/model-distributor");
+const Supplier = require("./supplier/model-supplier");
+const Produsen = require("./produsen/model-produsen");
+const Konsumen = require("./konsumen/model-konsumen");
+const TokoVendor = require("./vendor/model-toko");
+const ModelPenanggungJawabKonsumen = require("./konsumen/model-penanggung-jawab");
+const Sekolah = require("./model-sekolah");
 
-const userModels = mongoose.Schema(
+
+const userModels = new mongoose.Schema(
   {
-    username: {
-      type: String,
-      maxlength: [250, "panjang nama harus antara 3 - 250 karakter"],
-      minlength: [3, "panjang nama harus antara 3 - 250 karakter"],
-      required: [true, "full_name harus di isi"],
-    },
     email: {
-      type: String,
-      required: [true, "email harus di isi"],
-      maxlength: [250, "panjang email harus di antara 3 - 250 karakter"],
-      validate: {
-        validator: (email) => {
-          const emailRegex =
-            /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
-          return emailRegex.test(email);
+      content: {
+        type: String,
+        maxlength: [250, "panjang email harus di antara 3 - 250 karakter"],
+        validate: {
+          validator: (email) => {
+            if (email === null) return true
+            const emailRegex =
+              /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-]+)(\.[a-zA-Z]{2,5}){1,2}$/;
+            return emailRegex.test(email);
+          },
+          message: (props) => `${props.value} email tidak valid`,
         },
-        message: (props) => `${props.value} email tidak valid`,
+        default: null
       },
+      isVerified: {
+        type: Boolean,
+        default: false
+      }
     },
     password: {
       type: String,
-      required: [true, "password harus di isi"],
-      maxlength: [250, "panjang password harus di antara 3 - 250 karakter"],
-      minlength: [3, "panjang password harus di antara 3 - 250 karakter"],
     },
     phone: {
+      content: {
+        type: String,
+        validate: {
+          validator: (phone) => validationPhone(phone),
+          message: (props) => `${props.value} nomor handphone tidak valid`
+        },
+        default: null
+      },
+      isVerified: {
+        type: Boolean,
+        default: false
+      }
+    },
+    pin: {
       type: String,
-      required: [true, "phone harus di isi"],
-      minlength: [9, "panjang password harus di antara 3 - 250 karakter"],
+      default: null
     },
     role: {
       type: String,
       enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
       message: "{VALUE} is not supported",
-      required: true,
     },
-    verifikasi: {
+    kode_role: {
+      type: String,
+      get: function () {
+        const roleCodes = {
+          vendor: "VND",
+          konsumen: "KNS",
+          produsen: "PDS",
+          supplier: "SPL",
+          distributor: "DBR"
+        };
+        return roleCodes[this.role] || null;
+      }
+    },
+    codeOtp: {
+      code: {
+        type: String
+      },
+      expire: {
+        type: Date
+      }
+    },
+    poin: {
+      type: Number,
+      min: 0,
+      default: 0
+    },
+    saldo: {
+      type: Number,
+      default: 0
+    },
+    isActive: {
       type: Boolean,
-      required: [true, 'verifikasi harus di isi'],
+      default: false,
+      required: true
+    },
+    isDetailVerified: {
+      type: Boolean,
+      required: true,
       default: false
-    }
+    },
+    isBlocked: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    pesanPenolakan: {
+      type: String,
+      required: false
+    },
+    isVerifikasiDocument: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
   },
-  { temestamp: true }
+  { timestamps: true }
 );
+
+userModels.pre('findOneAndUpdate', function (next) {
+  if (this.getUpdate()['phone.content'] !== undefined) {
+    const isValid = validationPhone(this.getUpdate()['phone.content'])
+    if (!isValid) throw new Error(`${this.getUpdate()['phone.content']} nomor tidak valid`)
+  }
+  next()
+})
+
+userModels.post("findOneAndDelete", async function (doc) {
+  try {
+    await Cart.deleteMany({ userId: doc._id })
+    await Conversation.deleteMany({ participants: { $in: doc._id } })
+    await Invoice.deleteMany({ userId: doc._id })
+    await Comment.deleteMany({ userId: doc._id })
+    await Minat.deleteMany({ userId: doc._id })
+    await Pembatalan.deleteMany({ userId: doc._id })
+    await Product.deleteMany({ userId: doc._id })
+    await Produksi.deleteMany({ userId: doc._id })
+    await VirtualAccountUser.deleteMany({ userId: doc._id })
+    await Address.deleteMany({ userId: doc._id })
+    await BahanBaku.deleteMany({ userId: doc._id })
+    await Pesanan.deleteMany({ userId: doc._id })
+    await Vendor.deleteMany({ userId: doc._id })
+    await Distributor.deleteMany({ userId: doc._id })
+    await Supplier.deleteMany({ userId: doc._id })
+    await Produsen.deleteMany({ userId: doc._id })
+    await Konsumen.deleteMany({ userId: doc._id })
+    await TokoVendor.deleteMany({userId: doc._id})
+    await ModelPenanggungJawabKonsumen.deleteMany({userId: doc._id})
+    await Sekolah.deleteMany({userId: doc._id})
+  } catch (error) {
+    console.log(error)
+  }
+
+});
+
+function validationPhone(phone) {
+  const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
+  if (phone === null) return true
+  return regexNoTelepon.test(phone)
+}
 
 const User = mongoose.model("User", userModels);
 

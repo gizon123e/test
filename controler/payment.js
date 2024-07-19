@@ -1,98 +1,122 @@
-// const config = require('../config/config-env');
-const midtransClient = require('midtrans-client');
-const Order = require('../models/models-orders');
-
-const snap = new midtransClient.Snap({
-    // Set to true if you want Production Environment (accept real transaction).
-    isProduction : false,
-    serverKey : "SB-Mid-server-VLclSfu-uNzm9coDCkDrg3wU"
-});
-// async function test(){
-//     try {
-
-        
-//         // let parameter = {
-//         //     "transaction_details": {
-//         //         "order_id": "YOUR-ORDERID-7",
-//         //         "gross_amount": 100000
-//         //     },
-//         //     "credit_card":{
-//         //         "secure" : true
-//         //     },
-//         //     "customer_details": {
-//         //         "first_name": "budi",
-//         //         "last_name": "pratama",
-//         //         "email": "budi.pra@example.com",
-//         //         "phone": "08111222333"
-//         //     }
-//         // };
-
-//         const parameter = {
-//             transaction_details:{
-//                 order_id: `Order ${Math.random(1000)}`,
-//                 gross_amount: 200000
-//             },
-//             credit_card:{
-//                 secure: true
-//             },
-//             customer_details:{
-//                 first_name: "Gizon",
-//                 last_name: "Jakituna",
-//                 email: "gizon@gmail.com",
-//                 phone: "085846131702"
-//             }
-//         }
-        
-//         const transaksi = await snap.createTransaction(JSON.stringify(parameter))
-//         console.log(transaksi)
-//     } catch (error) {
-//         console.log(error)
-//     }
-// }
-// test();
+const dotenv = require('dotenv');
+const fetch = require('node-fetch');
+const DetailPesanan = require('../models/model-detail-pesanan');
+const Pengiriman = require("../models/model-pengiriman")
+const Pesanan = require('../models/pesanan/model-orders');
+const User = require('../models/model-auth-user')
+const VA_Used = require('../models/model-va-used');
+const { Transaksi } = require('../models/model-transaksi');
+const Invoice = require('../models/model-invoice');
+const DataProductOrder = require("../models/pesanan/model-data-product-order");
+const Pembatalan = require('../models/model-pembatalan');
+const Product = require('../models/model-product');
+dotenv.config();
 
 module.exports = {
-    getPayment: async (req, res, next) =>{
+    statusPayment: async (req, res, next) => {
         try {
-            const id = req.query.order_id;
-
-            if(!id) return res.status(400).json({message:"tolong masukan order_id didalam query"});
-
-            const order = await Order.findById(id).populate('userId');
-            
-            const midtransPayload = {
-                transaction_details:{
-                    order_id: id,
-                    gross_amount: order.total_price
+            const options = {
+                method: 'GET',
+                headers: {
+                    accept: 'application/json',
+                    'content-type': 'application/json',
+                    'Authorization': `Basic ${btoa(process.env.SERVERKEY + ':')}`
                 },
-                credit_card: {
-                    secure: true
-                },
-                customer_details:{
-                    first_name: order.userId.username,
-                    email: order.userId.email,
-                    phone: order.userId.phone
-                }
             };
-
-            const transaksi = await snap.createTransaction(JSON.stringify(midtransPayload));
-            if(transaksi) return res.status(200).json({message: "Berhasil mendapatkan detail pembayaran", data: transaksi});
-
+            const respon = await fetch(`${process.env.MIDTRANS_URL}/${req.params.id}/status`, options);
+            const finalResult = await respon.json()
+            console.log(finalResult)
+            return res.status(200).json({ message: `Status Transaksi Ini ${finalResult.transaction_status}` })
         } catch (error) {
             console.log(error);
             next(error)
         }
     },
-    statusPayment: async (req, res, next) =>{
-        const { status, order_id } = req.query;
-        if(!status) return res.status(400).json({message:"Status Pembayaran tidak ditemukan. Status nya apa yak? [error, success]"});
-        if(!order_id) return res.status(400).json({message:"Kirimkan juga dong order_id nya"});
-        if(status !== "error" && status !== "success") return res.status(400).json({message: "statusnya cukup kasih error atau success aja ya. Gak perlu yang lain"});
-        if(status === "success"){
-            const order = await Order.findByIdAndUpdate( order_id, {status: "Sedang diproses"}, {new: true});
-            return res.status(200).json({message:"Berhasil memperbarui status order", data: order});
-        }else{
-            return res.status(226).json({message:"Gagal memperbarui status order", data: null});
+
+    midtransWebHook: async (req, res, next) => {
+        try {
+            const { order_id, transaction_status } = req.body;
+            const detailPesanan = await DetailPesanan.findById(order_id);
+            let pesanan;
+            let user;
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+
+            const hh = String(today.getHours()).padStart(2, '0');
+            const mn = String(today.getMinutes()).padStart(2, '0');
+            const ss = String(today.getSeconds()).padStart(2, '0');
+            const date = `${yyyy}${mm}${dd}`;
+            const minutes = `${hh}${mn}${ss}`
+            const promisesFunct = []
+            if (transaction_status === "settlement") {
+                pesanan = await Pesanan.findById(detailPesanan.id_pesanan).lean();
+                const { items, ...restOfOrder } = pesanan;
+
+                promisesFunct.push(
+                    Pesanan.updateOne({_id: detailPesanan.id_pesanan}, {
+                        status: "Berlangsung",
+                        items
+                    })
+                )
+
+                if (pesanan.poinTerpakai) {
+                    user = await User.findByIdAndUpdate(pesanan.userId, {
+                        $inc: { poin: -pesanan.poinTerpakai }
+                    });
+                } else {
+                    user = await User.findById(pesanan.userId)
+                }
+
+                
+                const ids = []
+                items.map(item => {
+                    item.product.map(prod => ids.push(prod.productId))
+                })
+                
+                const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()                
+                const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
+                promisesFunct.push (
+                    VA_Used.findOneAndDelete({ orderId: order_id }),
+                    DetailPesanan.findByIdAndUpdate(order_id, {
+                        isTerbayarkan: true
+                    }),
+                    Invoice.updateOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }, { status: "Lunas" }),
+                    DataProductOrder.create({
+                        transaksiId: transaksi._id,
+                        pesananId: pesanan._id,
+                        dataProduct: arrayProducts
+                    })
+                )
+
+                const total_transaksi = await Transaksi.estimatedDocumentCount({
+                    createdAt: {
+                        $gte: now,
+                        $lt: tomorrow
+                    }
+                });
+
+                promisesFunct.push(
+                    Transaksi.create({
+                        id_pesanan: pesanan._id,
+                        jenis_transaksi: "masuk",
+                        status: "Pembayaran Berhasil",
+                        kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                    })
+                )
+
+                await Promise.all(promisesFunct)
+            }
+
+            return res.status(200).json({ message: "Mantap" })
+        } catch (error) {
+            console.log(error)
+            next(error)
         }
     }
 }

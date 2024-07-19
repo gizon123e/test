@@ -6,9 +6,17 @@ const controlerCategory = require('../controler/category')
 
 const router = require("express").Router();
 
-router.get('/list', authorization, controlerCategory.getCategory)
-router.post('/create', authorization, controlerCategory.createCategory)
-router.put('/update/:id', authorization, controlerCategory.updateCategory)
-router.delete('/delete/:id', authorization, controlerCategory.deleteCategory)
+router.get('/list', authorization, controlerCategory.getCategory);
+router.get('/all-main-category', authorization, controlerCategory.getAllMainCategory);
+router.get('/detail-main/:id', controlerCategory.getDetailMainCategory);
+router.get('/detail-sub-category/:id', controlerCategory.getCategorySub);
+router.get('/specific-category', controlerCategory.getAllSpecificCategory);
+router.post('/create', controlerCategory.createCategory);
+router.put('/specific-category/:id', authorization, controlerCategory.editShowSpecificCategory);
+router.put('/update/:id', controlerCategory.updateCategory);
+router.put('/update-sub/:id', controlerCategory.updateSubCategory);
+router.put('/update-specific/:id', controlerCategory.updateSpacific)
+
+router.delete('/delete/:id', controlerCategory.deleteCategory);
 
 module.exports = router
