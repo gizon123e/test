@@ -191,12 +191,12 @@ module.exports = {
 
     updateBiayaTetap: async (req, res, next) => {
         try {
-            const { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan } = req.body
+            const { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan, nilai_toleransi } = req.body
 
             const dataBiayatetap = await BiayaTetap.findOne({ _id: req.params.id })
             if (!dataBiayatetap) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await BiayaTetap.updateOne({ _id: req.params.id }, { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan })
+            const data = await BiayaTetap.updateOne({ _id: req.params.id }, { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan, nilai_toleransi })
 
             res.status(201).json({ message: "update success", data })
 
