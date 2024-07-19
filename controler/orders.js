@@ -210,7 +210,6 @@ module.exports = {
                                                 idToko: detailToko._id,
                                                 namaToko: detailToko.namaToko
                                             },
-                                            status_pengiriman: pengiriman,
                                             arrayProduct: []
                                         }
                                     }
@@ -258,7 +257,6 @@ module.exports = {
                                                 _id: item.product.productId.userId._id,
                                                 namaToko: detailToko.namaToko
                                             },
-                                            status_pengiriman: pengiriman,
                                             arrayProduct: []
                                         }
                                     }
@@ -292,6 +290,8 @@ module.exports = {
                                     detailToko = await Produsen.findOne({ userId: storeId });
                                     break;
                             }
+                            const dataProduct = await DataProductOrder.findOne({pesananId: order._id})
+                            const productSelected = dataProduct.dataProduct.find(prod => { return prod._id.toString() === item.product.productId._id })
                             const pengiriman = await Pengiriman.findOne({
                                 orderId: order._id, 
                                 productToDelivers: {
@@ -300,6 +300,7 @@ module.exports = {
                                     }
                                 }
                             }).lean()
+                            
                             detailBerlangsung = pengiriman ? pengiriman.status_pengiriman : null
                             jumlah_uang += item.product.productId.total_price * item.product.quantity + pengiriman.total_ongkir
                             if (!store[storeId]) {
@@ -309,12 +310,11 @@ module.exports = {
                                         _id: item.product.productId.userId._id,
                                         namaToko: detailToko.namaToko
                                     },
-                                    status_pengiriman: pengiriman,
                                     arrayProduct: []
                                 }
                             }
-                            const { productId, dataProduct, ...restOfProduct } = item.product
-                            store[storeId].arrayProduct.push({ productId: dataProduct, ...restOfProduct , detailBerlangsung })
+                            const { productId, ...restOfProduct } = item.product
+                            store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct , detailBerlangsung })
                             jumlah_uang = 0
                             Object.keys(store).forEach(key => {
                                 data.push({ ...rest, ...store[key], dibatalkanOleh: null })
@@ -917,7 +917,6 @@ module.exports = {
 
     createOrder: async (req, res, next) => {
         try {
-            console.log(req.user)
             const {
                 metode_pembayaran,
                 total,
