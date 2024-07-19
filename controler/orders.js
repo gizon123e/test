@@ -83,7 +83,7 @@ module.exports = {
                 }
                 const dataOrders = await Orders.aggregate([
                     { $match: filter },
-                    { $project: { items: 1, status: 1, createdAt: 1, expire: 1 } },
+                    { $project: { items: 1, status: 1, createdAt: 1, expire: 1, biaya_layanan: 1, biaya_jasa_aplikasi: 1 } },
                     {
                         $lookup: {
                             from: 'detailpesanans',
@@ -150,6 +150,8 @@ module.exports = {
                             expire: { $first: "$expire" },
                             createdAt: { $first: "$createdAt" },
                             total_pesanan: { $first: "$total_pesanan" },
+                            biaya_layanan: { $first: "$biaya_layanan" },
+                            biaya_jasa_aplikasi: { $first: "$biaya_jasa_aplikasi" },
                         }
                     },
                     {
@@ -158,21 +160,27 @@ module.exports = {
                         }
                     }
                 ])
+                // return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
+
                 if (!dataOrders || dataOrders.length < 1) {
                     return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
                 }
 
                 let data = []
                 let jumlah_uang = 0
+                let totalPriceVendor = 0
+
                 for (const order of dataOrders) {
                     let { items, status, total_pesanan , ...rest } = order
                     let detailBerlangsung;
+                    let productSelected;
+                    let totalQuantity;
                     const transaksi = await Transaksi.exists({id_pesanan: order._id, subsidi: false})
                     const transaksiSubsidi = await Transaksi.exists({id_pesanan: order._id, subsidi: true})
-
                     if (order.status === "Belum Bayar" || order.status === "Dibatalkan") {
                         if(transaksi && transaksiSubsidi){
                             if( transaksiSubsidi ){
+                                jumlah_uang += order.biaya_layanan + order.biaya_jasa_aplikasi
                                 const dataProduct = await DataProductOrder.findOne({pesananId: order._id, transaksiId: transaksiSubsidi._id})
                                 const invoice = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
                                 const pengiriman = await Pengiriman.findOne({
@@ -224,6 +232,7 @@ module.exports = {
                             }
 
                             if(transaksi){
+                                jumlah_uang += order.biaya_layanan + order.biaya_jasa_aplikasi
                                 const store = {}
                                 const invoice = await Invoice.findOne({id_transaksi: transaksi._id})
                                 for (const item of order.items) {
@@ -293,9 +302,10 @@ module.exports = {
                                     detailToko = await Produsen.findOne({ userId: storeId });
                                     break;
                             }
+
                             const dataProduct = await DataProductOrder.findOne({pesananId: order._id})
-                            const productSelected = dataProduct.dataProduct.find(prod => { return prod._id.toString() === item.product.productId._id })
-                            const pengiriman = await Pengiriman.find({
+                            productSelected = dataProduct.dataProduct.find(prod => { return prod._id.toString() === item.product.productId._id })
+                            const pengiriman = await Pengiriman.findOne({
                                 orderId: order._id, 
                                 productToDelivers: {
                                     $elemMatch: {
@@ -303,12 +313,17 @@ module.exports = {
                                     }
                                 }
                             }).lean()
-                            
-                            detailBerlangsung = pengiriman[0].status_pengiriman? pengiriman[0].status_pengiriman : null
-                            jumlah_uang += item.product.productId.total_price * item.product.quantity + pengiriman.total_ongkir
+
+                            totalQuantity = pengiriman.productToDelivers.reduce((accumulator, currentValue) => {
+                                return accumulator + currentValue.quantity;
+                            }, 0);
+
+                            detailBerlangsung = pengiriman.status_pengiriman? pengiriman.status_pengiriman : null
+                            jumlah_uang += productSelected.total_price * totalQuantity + pengiriman.total_ongkir
                             if (!store[storeId]) {
+                                totalPriceVendor += productSelected.total_price * totalQuantity
                                 store[storeId] = {
-                                    total_pesanan,
+                                    total_pesanan: jumlah_uang,
                                     seller: {
                                         _id: item.product.productId.userId._id,
                                         idToko: detailToko._id,
@@ -321,15 +336,21 @@ module.exports = {
                             const { productId, ...restOfProduct } = item.product
                             store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct , detailBerlangsung })
                             jumlah_uang = 0
-                            Object.keys(store).forEach(key => {
-                                data.push({ ...rest, status, ...store[key], dibatalkanOleh: null })
-                            })
                         }
+                        Object.keys(store).forEach(key => {
+                            let { total_pesanan, ...restOfStore } = store[key]
+                            const totalHargaProduk = store[key].arrayProduct.reduce((accumulator, currentValue)=>{
+                                return accumulator + currentValue.productId.total_price * currentValue.quantity
+                            }, 0)
+                            total_pesanan += Math.round(totalHargaProduk / totalPriceVendor * rest.biaya_jasa_aplikasi * 2)
+                            data.push({ ...rest, status, total_pesanan, ...restOfStore , dibatalkanOleh: null })
+                        })
                     }
                 }
-                data
-                .filter(ord => ord.status === status)
-                .sort((a,b)=>{
+                const filteredData = data.filter(ord => {
+                    if(!status) return true
+                    return ord.status === status;
+                }).sort((a,b)=>{
                     if (a.status === 'Belum Bayar' && b.status !== 'Belum Bayar') {
                         return -1;
                     }
@@ -338,7 +359,7 @@ module.exports = {
                     }
                     return 0;
                 })
-                return res.status(200).json({ message: 'get data all Order success', data })
+                return res.status(200).json({ message: 'get data all Order success', data: filteredData })
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 const products = await Product.find({userId: req.user.id});
                 const productIds = products.map(item => { return item._id });
@@ -1179,7 +1200,6 @@ module.exports = {
                     }));
                     if (totalProduk === 0) throw new Error("Total products cannot be zero.");
 
-                    console.log((totalQuantity - sekolah.jumlahMurid) * baseOngkir)
                     promisesFunct.push(
                         Pengiriman.create({
                             orderId: dataOrder._id,
