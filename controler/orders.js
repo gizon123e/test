@@ -311,6 +311,7 @@ module.exports = {
                         }
                     }
                     else {
+                        let jumlah_uang = 0
                         const store = {}
                         for (const item of order.items) {
                             const storeId = item.product.productId.userId._id.toString()
@@ -1129,7 +1130,6 @@ module.exports = {
 
                 promisesFunct.push(
                     DataProductOrder.create({
-                        transaksiId: kode_transaksi._id,
                         pesananId: dataOrder._id,
                         dataProduct: arrayProducts
                     }),
@@ -1315,6 +1315,14 @@ module.exports = {
 
                 const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
                 transaksiMidtrans = await respon.json();
+
+                promisesFunct.push(
+                    VA_Used.create({
+                        nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
+                        orderId: idPesanan,
+                        userId: req.user.id
+                    })
+                )
             }
 
             await Promise.all(promisesFunct)
