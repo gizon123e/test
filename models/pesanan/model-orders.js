@@ -110,6 +110,10 @@ const modelOrder = new mongoose.Schema({
     expire: {
         type: Date
     },
+    sekolahId:{
+        type: mongoose.Types.ObjectId,
+        ref: "Sekolah"
+    },
     shipments: [
         {
             _id: false,
