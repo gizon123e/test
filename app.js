@@ -20,8 +20,13 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 // Sertifikat SSL
+<<<<<<< HEAD
 // const privateKey = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/privkey.pem', 'utf8');
 // const certificate = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/fullchain.pem', 'utf8');
+=======
+// const privateKey = fs.readFileSync(`${process.env.SSLKEY}`, 'utf8');
+// const certificate = fs.readFileSync(`${process.env.SSLCERTIFIKAT}`, 'utf8');
+>>>>>>> 4a1f211588e44fec00129fdf3ef7d72bae729634
 // const credentials = { key: privateKey, cert: certificate };
 
 const app = express();
