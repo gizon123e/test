@@ -16,16 +16,16 @@ const socketIo = require('socket.io')
 const initSocketIo = require('./utils/pelacakanDistributor')
 
 // Sertifikat SSL
-// const privateKey = fs.readFileSync('path/to/your/server.key', 'utf8');
-// const certificate = fs.readFileSync('path/to/your/server.crt', 'utf8');
-// const credentials = { key: privateKey, cert: certificate };
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/fullchain.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
 
 const app = express();
 
-const httpServer = http.createServer(app);
-// const httpsServer = https.createServer(credentials, app);
+// const httpServer = http.createServer(app);
+const httpsServer = https.createServer(credentials, app);
 
-const io = socketIo(httpServer, {
+const io = socketIo(httpsServer, {
   cors: {
     origin: '*',
   }
