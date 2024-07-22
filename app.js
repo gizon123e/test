@@ -1,6 +1,9 @@
 require("./database/database");
 const flash_sale_checker = require('./utils/flash-sale-checker');
 const checker_order = require("./utils/cancel-order")
+const http = require('http');
+const https = require('https')
+const fs = require('fs');
 const { batalPesanan } = require('./utils/pembatalan-distributor')
 const express = require("express");
 const cors = require("cors");
@@ -10,9 +13,26 @@ const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const websocket = require("./websocket/index-ws");
-const pembatalanDistributor = require("./utils/pembatalan-distributor");
-// const session = require("express-session");
+const socketIo = require('socket.io')
+const initSocketIo = require('./utils/pelacakanDistributor')
+
+// Sertifikat SSL
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/fullchain.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+
 const app = express();
+
+// const httpServer = http.createServer(app);
+const httpsServer = https.createServer(credentials, app);
+
+const io = socketIo(httpsServer, {
+  cors: {
+    origin: '*',
+  }
+});
+
+initSocketIo(io);
 
 app.use(cors());
 app.use(logger("dev"));
@@ -26,6 +46,12 @@ app.use(bodyParser.json({ limit: '250mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
+
+// Middleware to add io to req object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // router
 app.get('/failed', (req, res) => {
@@ -93,7 +119,6 @@ app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
 
 
 app.use('/api/tarif', require('./routes/router-tarif'))
-
 
 // midelware error
 app.use(require("./midelware/error-midelware"));
