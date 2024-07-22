@@ -5,7 +5,7 @@ const Pengiriman = require("../models/model-pengiriman")
 const Pesanan = require('../models/pesanan/model-orders');
 const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used');
-const { Transaksi } = require('../models/model-transaksi');
+const { Transaksi, Transaksi2 } = require('../models/model-transaksi');
 const Invoice = require('../models/model-invoice');
 const DataProductOrder = require("../models/pesanan/model-data-product-order");
 const Pembatalan = require('../models/model-pembatalan');
@@ -72,26 +72,40 @@ module.exports = {
                 } else {
                     user = await User.findById(pesanan.userId)
                 }
-
-                
-                const ids = []
-                items.map(item => {
-                    item.product.map(prod => ids.push(prod.productId))
-                })
-                
-                const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()                
                 const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
+                const dataProd = await DataProductOrder.findOne({
+                    pesananId: pesanan._id,
+                }).lean()
+
+                const ids = dataProd.dataProduct.map(prod =>{
+                    return prod._id
+                })
+                const prodNotCopied = []
+
+                items.map(item=>{
+                    item.product.map(prod =>{
+                        if(!ids.includes(prod.productId)) prodNotCopied.push(prod.productId)
+                    })
+                })
+                const arrayProduct = await Product.find({_id: {$in: prodNotCopied}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
+
                 promisesFunct.push (
                     VA_Used.findOneAndDelete({ orderId: order_id }),
                     DetailPesanan.findByIdAndUpdate(order_id, {
                         isTerbayarkan: true
                     }),
                     Invoice.updateOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }, { status: "Lunas" }),
-                    DataProductOrder.create({
-                        transaksiId: transaksi._id,
-                        pesananId: pesanan._id,
-                        dataProduct: arrayProducts
-                    })
+                    DataProductOrder.updateOne(
+                        { _id: dataProd._id },
+                        {
+                          $push: {
+                            dataProduct: {
+                              $each: arrayProduct
+                            }
+                          }
+                        }
+                    )
+                    
                 )
 
                 const total_transaksi = await Transaksi.estimatedDocumentCount({
@@ -102,7 +116,7 @@ module.exports = {
                 });
 
                 promisesFunct.push(
-                    Transaksi.create({
+                    Transaksi2.create({
                         id_pesanan: pesanan._id,
                         jenis_transaksi: "masuk",
                         status: "Pembayaran Berhasil",

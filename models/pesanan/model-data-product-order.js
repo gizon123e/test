@@ -1,9 +1,5 @@
 const mongoose = require('mongoose');
 const modelData = new mongoose.Schema({
-    transaksiId: {
-        type: mongoose.Types.ObjectId,
-        ref: "Transaksi"
-    },
     pesananId:{
         type: mongoose.Types.ObjectId,
         ref: "Pesanan"

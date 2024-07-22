@@ -80,7 +80,7 @@ const modelOrder = new mongoose.Schema({
         message: `{VALUE} is not supported`,
         default: "Belum Bayar"
     },
-    biaya_asuransi: {
+    biaya_layanan: {
         type: Number
     },
     biaya_jasa_aplikasi: {
@@ -109,6 +109,10 @@ const modelOrder = new mongoose.Schema({
     },
     expire: {
         type: Date
+    },
+    sekolahId:{
+        type: mongoose.Types.ObjectId,
+        ref: "Sekolah"
     },
     shipments: [
         {
