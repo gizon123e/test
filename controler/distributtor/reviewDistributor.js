@@ -26,7 +26,7 @@ module.exports = {
 
     createReviewDistributor: async (req, res, next) => {
         try {
-            const { id_distributor, nilai_ketepatan, nilai_komunikasi } = req.body
+            const { id_distributor, nilai_ketepatan, nilai_komunikasi, nilai_keseluruhan } = req.body
 
             const dataDistributor = await Distributtor.findOne({ _id: id_distributor })
             if (!dataDistributor) return res.status(404).json({ message: "data Not Found" })
@@ -35,6 +35,7 @@ module.exports = {
             const indexReview = reviewDistributor.length + 1
 
             let hitunganPoinReview = 0
+            let nilaiKeseluruan = 0
             if (reviewDistributor) {
                 for (let viewDistributor of reviewDistributor) {
                     const perhitunganPoinTotal = viewDistributor.nilai_ketepatan + viewDistributor.nilai_komunikasi
@@ -59,7 +60,7 @@ module.exports = {
                 await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: totalPerhitunganPoin }, { new: true })
             }
 
-            const dataReview = await ReviewDistributor.create({ id_distributor, nilai_ketepatan, nilai_komunikasi, userId: req.user.id })
+            const dataReview = await ReviewDistributor.create({ id_distributor, nilai_ketepatan, nilai_komunikasi, userId: req.user.id, nilai_keseluruhan })
 
             res.status(201).json({
                 message: "create data success",

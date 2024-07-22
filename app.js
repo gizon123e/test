@@ -24,12 +24,9 @@ const privateKey = fs.readFileSync(`${process.env.SSLKEY}`, 'utf8');
 const certificate = fs.readFileSync(`${process.env.SSLCERTIFIKAT}`, 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 
-console.log(process.env.SSLKEY)
-console.log(process.env.SSLCERTIFIKAT)
-
 const app = express();
 
-const httpServer = http.createServer(app);
+// const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
 const io = socketIo(httpsServer, {
