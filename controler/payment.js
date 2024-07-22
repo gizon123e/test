@@ -5,7 +5,7 @@ const Pengiriman = require("../models/model-pengiriman")
 const Pesanan = require('../models/pesanan/model-orders');
 const User = require('../models/model-auth-user')
 const VA_Used = require('../models/model-va-used');
-const { Transaksi } = require('../models/model-transaksi');
+const { Transaksi, Transaksi2 } = require('../models/model-transaksi');
 const Invoice = require('../models/model-invoice');
 const DataProductOrder = require("../models/pesanan/model-data-product-order");
 const Pembatalan = require('../models/model-pembatalan');
@@ -116,7 +116,7 @@ module.exports = {
                 });
 
                 promisesFunct.push(
-                    Transaksi.create({
+                    Transaksi2.create({
                         id_pesanan: pesanan._id,
                         jenis_transaksi: "masuk",
                         status: "Pembayaran Berhasil",
