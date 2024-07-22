@@ -31,7 +31,7 @@ module.exports = {
             const dataDistributor = await Distributtor.findOne({ _id: id_distributor })
             if (!dataDistributor) return res.status(404).json({ message: "data Not Found" })
 
-            const reviewDistributor = await ReviewDistributor.find({ id_distributor })
+            const reviewDistributor = await ReviewDistributor.find({ _id: id_distributor })
             const indexReview = reviewDistributor.length + 1
 
             let hitunganPoinReview = 0
@@ -48,15 +48,18 @@ module.exports = {
             hitunganPoinReview += perhitunganNilaiPoin
 
             const totalPerhitunganPoin = (hitunganPoinReview - dataDistributor.nilai_pinalti) / indexReview
-
+            console.log(hitunganPoinReview)
+            console.log(totalPerhitunganPoin)
 
             if (totalPerhitunganPoin < 1) {
-                await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: 1 }, { new: true })
+                const data = await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: 1 }, { new: true })
+                console.log("data 1", data)
             } else {
-                await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: totalPerhitunganPoin }, { new: true })
+                const data = await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: totalPerhitunganPoin }, { new: true })
+                console.log("data 2", data)
             }
 
-            const dataReview = await ReviewDistributor.create({ id_distributor, nilai_ketepatan, nilai_komunikasi, userId: req.user.id, nilai_keseluruhan })
+            const dataReview = await ReviewDistributor.create({ id_distributor, nilai_ketepatan, nilai_komunikasi, userId: req.user.id })
 
             res.status(201).json({
                 message: "create data success",
