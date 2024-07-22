@@ -96,7 +96,7 @@ module.exports = {
                     }),
                     Invoice.updateOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }, { status: "Lunas" }),
                     DataProductOrder.updateOne(
-                        { pesananId: pesanan._id },
+                        { _id: dataProd._id },
                         {
                           $push: {
                             dataProduct: {

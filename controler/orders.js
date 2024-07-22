@@ -187,7 +187,7 @@ module.exports = {
                                 const invoice = await Invoice.findOne({ id_transaksi: transaksiSubsidi._id }).lean();
                                 let jumlah_uang = order.biaya_layanan + order.biaya_jasa_aplikasi;
                                 const pengiriman = await Pengiriman.find({ invoice: invoice._id }).lean();
-                                const dataProduct = await DataProductOrder.findOne({ pesananId: order._id, transaksiId: transaksiSubsidi._id });
+                                const dataProduct = await DataProductOrder.findOne({ pesananId: order._id });
                                 for (const item of order.items){
                                     const { productId, quantity, ...restOfProduct } = item.product;
                                     const productSelected = dataProduct.dataProduct.find(prod => prod._id.toString() === item.product.productId._id);
@@ -232,7 +232,7 @@ module.exports = {
                                                     idToko: detailToko._id,
                                                     namaToko: detailToko.namaToko
                                                 },
-                                                status_pengiriman: pengiriman,
+                                                status_pengiriman: selectedPengiriman,
                                                 arrayProduct: []
                                             };
                                         }
@@ -332,16 +332,19 @@ module.exports = {
 
                             const dataProduct = await DataProductOrder.findOne({pesananId: order._id})
                             productSelected = dataProduct.dataProduct.find(prod => { return prod._id.toString() === item.product.productId._id })
-                            const pengiriman = await Pengiriman.findOne({
+                            console.log(dataProduct)
+                            const pengiriman = await Pengiriman.find({
                                 orderId: order._id, 
-                                productToDelivers: {
-                                    $elemMatch: {
-                                        productId: item.product.productId._id
-                                    }
-                                }
                             }).lean()
 
-                            totalQuantity = pengiriman.productToDelivers.reduce((accumulator, currentValue) => {
+                            const selectedPengiriman = pengiriman.find(pgr => {
+                                const found = pgr.productToDelivers.some(prd => {
+                                    return item.product.productId._id.toString() === prd.productId.toString();
+                                });
+                                return found;
+                            });
+
+                            totalQuantity = selectedPengiriman.productToDelivers.reduce((accumulator, currentValue) => {
                                 return accumulator + currentValue.quantity;
                             }, 0);
 
