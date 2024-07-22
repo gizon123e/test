@@ -12,9 +12,9 @@ const updateDistributorTokoLocation = async (data) => {
 };
 
 const updateDistributorKonsumenLocation = async (data) => {
-  const { id_distributor, id_address, latitude, longitude } = data;
+  const { id_toko, id_address, latitude, longitude } = data;
   const updatedLocation = await PelacakanDistributorKonsumen.findOneAndUpdate(
-    { id_distributor, id_address },
+    { id_toko, id_address },
     { latitude, longitude },
     { new: true, upsert: true, runValidators: true }
   );

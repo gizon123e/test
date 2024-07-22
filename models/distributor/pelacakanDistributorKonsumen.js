@@ -6,6 +6,11 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
         required: [true, "id_distributor harus di isi"],
         ref: "Distributtor"
     },
+    id_toko: {
+        type: mongoose.Types.ObjectId,
+        required: [true, "id_distributor harus di isi"],
+        ref: "TokoVendor"
+    },
     id_address: {
         type: mongoose.Types.ObjectId,
         required: [true, "id_toko harus di isi"],
