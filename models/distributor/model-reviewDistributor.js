@@ -16,6 +16,11 @@ const modelReviewDistributor = new mongoose.Schema({
         required: [true, "nilai_review harus di isi"],
         default: 0
     },
+    nilai_keseluruhan: {
+        type: Number,
+        required: [true, "nilai_review harus di isi"],
+        default: 0
+    },
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User",

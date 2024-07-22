@@ -16,6 +16,9 @@ const websocket = require("./websocket/index-ws");
 const socketIo = require('socket.io')
 const initSocketIo = require('./utils/pelacakanDistributor')
 
+const dotenv = require('dotenv')
+dotenv.config()
+
 // Sertifikat SSL
 // const privateKey = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/privkey.pem', 'utf8');
 // const certificate = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/fullchain.pem', 'utf8');
