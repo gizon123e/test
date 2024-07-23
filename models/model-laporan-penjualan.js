@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 require("./model-product");
 
-const salesReport = mongoose.Schema({
+const salesReport = new mongoose.Schema({
   productId: {
     type: String,
     required: true,

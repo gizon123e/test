@@ -357,7 +357,7 @@ module.exports = {
       for(const produk of data){
         const namaVendor = await TokoVendor.findOne({userId: produk.userId._id});
         const terjual = await SalesReport.findOne({productId: produk._id})
-        const totalTerjual = terjual? terjual.track.reduce((accumulator, current)=> accumulator + current.soldAtMoment) : 0
+        const totalTerjual = terjual? terjual.track.reduce((accumulator, current)=> { return accumulator + current.soldAtMoment }, 0) : 0
         dataProds.push({
           ...produk,
           nama: namaVendor?.namaToko,
@@ -381,6 +381,8 @@ module.exports = {
         path: 'userId',
         select: '-password -codeOtp -pin -saldo -poin'
       }).populate('id_main_category').populate('id_sub_category').populate("pangan.panganId").lean()
+      const terjual = await SalesReport.findOne({productId: req.params.id}).lean()
+      const total_terjual = terjual.track.reduce((acc, val)=> { return acc + val.soldAtMoment }, 0) || 0
       let toko;
       if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){
@@ -396,7 +398,7 @@ module.exports = {
       }
       const { pangan, ...restOfProduct } = dataProduct
       const nutrisi = {
-        air: 0,
+        takaran_saji: 0,
         energi: 0,
         protein: 0,
         lemak: 0,
@@ -410,10 +412,9 @@ module.exports = {
         tembaga: 0,
         thiamin: 0,
         riboflavin: 0,
-        vitamin_c: 0
+        vitamin_c: 0,
       };
       pangan?.forEach(item => {
-        nutrisi.air += parseFloat(item?.panganId?.air?.value) / 100 * item?.berat;
         nutrisi.energi += parseFloat(item?.panganId?.energi?.value) / 100 * item?.berat;
         nutrisi.protein += parseFloat(item?.panganId?.protein?.value) / 100 * item?.berat;
         nutrisi.lemak += parseFloat(item?.panganId?.lemak?.value) / 100 * item?.berat;
@@ -428,9 +429,17 @@ module.exports = {
         nutrisi.thiamin += parseFloat(item?.panganId?.thiamin?.value) / 100 * item?.berat;
         nutrisi.riboflavin += parseFloat(item?.panganId?.riboflavin?.value) / 100 * item?.berat;
         nutrisi.vitamin_c += parseFloat(item?.panganId?.vitc?.value) / 100 * item.berat;
+        nutrisi.takaran_saji += item.berat
       });
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
-      return res.status(200).json({ datas: restOfProduct, toko, nutrisi });
+      return res.status(200).json({ 
+        datas: { 
+          ...restOfProduct, 
+          total_terjual: terjual ? total_terjual : 0
+        }, 
+        toko, 
+        nutrisi
+      });
     } catch (error) {
       console.log(error);
       next(error)

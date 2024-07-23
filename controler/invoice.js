@@ -19,8 +19,9 @@ module.exports = {
             const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksiTambahan._id});
             const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
 
-            // const pengirimanSubsidi = await Pengiriman.find({invoice: invoiceSubsidi._id})
-            // const pengirimanTambahan = await Pengiriman.find({invoice: invoiceTambahan._id})
+            const pengirimanSubsidi = await Pengiriman.find({invoice: invoiceSubsidi._id})
+            const pengirimanTambahan = await Pengiriman.find({invoice: invoiceTambahan._id})
+
             const tambahan = []
             const subsidi = []
             const store = {}
@@ -40,27 +41,33 @@ module.exports = {
                     break;
                 }
 
-                if(invoiceTambahan && (invoiceTambahan.staus === "Belum Lunas" || invoiceTambahan.staus === "Lunas")){
-                    if(!store[storeId]){
-                        store[storeId] = {
-                            toko: { 
-                                userIdSeller: user._id,
-                                email: user.email.content, 
-                                phone: user.phone.content,  
-                                ...detailToko, 
-                                // status_pengiriman: [selectedPengiriman]
-                            },
-                            products: []
-                        }
+
+                if(!store[storeId]){
+                    store[storeId] = {
+                        toko: { 
+                            userIdSeller: user._id,
+                            email: user.email.content, 
+                            phone: user.phone.content,  
+                            ...detailToko, 
+                            // status_pengiriman: [selectedPengiriman]
+                        },
+                        products: []
                     }
-    
-                    store[storeId].products.push(prod)
-
                 }
-                
-            }
 
-            return res.status(200).json(Object.keys(store).map(key => { return store[key]}))
+                store[storeId].products.push(prod)
+                const selectedPengiriman = pengirimanSubsidi.find(pgr => {
+                    return pgr.productToDelivers.some(prd => prd.productId.toString() === prod._id)
+                })
+                console.log(selectedPengiriman)
+            }
+            console.log(subsidi);
+            console.log(tambahan)
+            return res.status(200).json({ 
+                invoiceSubsidi, 
+                invoiceTambahan: invoiceTambahan? invoiceTambahan : null,
+
+            })
             
         } catch (error) {
             console.log(error);
