@@ -87,9 +87,9 @@ module.exports = {
                     alasan_pinalti: "Tidak menerima pesanan sampai batas waktu habis",
                     poin_pinalti: nilai
                 })
-                const distributor = await Distributtor.findOne({ _id: order.distributorId })
-                const jumlahPinalti = distributor.nilai_pinalti + nilai
-                await Distributtor.findByIdAndUpdate({ _id: order.distributorId }, { nilai_pinalti: jumlahPinalti }, { new: true })
+                // const distributor = await Distributtor.findOne({ _id: order.distributorId })
+                // const jumlahPinalti = distributor.nilai_pinalti + nilai
+                // await Distributtor.findByIdAndUpdate({ _id: order.distributorId }, { nilai_pinalti: jumlahPinalti }, { new: true })
             }
 
             console.log(`${orders.length} orders updated to "Kadaluwarsa".`);
