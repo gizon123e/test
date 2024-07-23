@@ -576,6 +576,7 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
+            const { sellerId } = req.query
             const dataOrder = await Orders.aggregate([
                 {
                     $match: {
@@ -723,22 +724,22 @@ module.exports = {
             });
             const paymentMethod = await Promise.all(promises)
             const data = [] ;
+            const detailBiaya = {
+                total_harga_produk: 0,
+                total_ongkir: 0,
+                total_potongan_ongkir: 0,
+                total_asuransi: 0,
+                total_proteksi: 0
+            }
+            const addedPengiriman = new Set()
             if( dataOrder[0].status === "Belum Bayar" ){
                 const store = {};
                 const pembatalan = await Pembatalan.findOne({transaksiId: transaksi._id})
                 const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksi._id, status: "Belum Lunas" });
-                const detailBiaya = {
-                    total_harga_produk: 0,
-                    total_ongkir: 0,
-                    total_potongan_ongkir: 0,
-                    total_asuransi: 0,
-                    total_proteksi: 0
-                }
                 const pengiriman = await Pengiriman.find({
                     orderId: req.params.id,
                     invoice: invoiceTambahan._id
                 }).populate('distributorId').populate("jenis_pengiriman").populate("id_jenis_kendaraan").lean();
-                const addedPengiriman = new Set()
                 let jumlah_uang = biaya_layanan + biaya_jasa_aplikasi
                 for (const item of dataOrder[0].items){
                     const { product, ...restOfItem } = item
@@ -782,7 +783,7 @@ module.exports = {
                                 phone: user.phone.content,  
                                 ...detailToko, 
                                 ...restOfItem, 
-                                status_pengiriman: selectedPengiriman
+                                status_pengiriman: [selectedPengiriman]
                             },
                             products: []
                         }
@@ -813,55 +814,74 @@ module.exports = {
 
             }else if( dataOrder[0].status !== "Belum Bayar" ){
                 const store = {};
+                const transaksiOrder = await Transaksi.find({id_pesanan: req.params.id})
                 const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
-                
-                const pengiriman = await Pengiriman.findOne({
-                    orderId: req.params.id,
-                    invoice: invoiceSubsidi._id
-                });
-                
+                const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksi._id})
+                let jumlah_uang = (biaya_jasa_aplikasi + biaya_layanan) * transaksiOrder.length;
+                console.log('jumlah uang awal ', jumlah_uang)
+                const dataProduct = await DataProductOrder.findOne({ pesananId: req.params.id });
                 for(const item of items){
                     const { product, ...restOfItem } = item
                     let detailToko;
-                    const { productId, quantity , ...restOfItemProduct } = item.product
-                    const { userId, ...restOfProduct } = productId
+                    const { productId , ...restOfItemProduct } = item.product;
+                    const { userId, ...restOfProduct } = productId;
                     const user = await User.findById(userId._id).select('email phone').lean()
                     switch(userId.role){
                         case "vendor":
-                            detailToko = await TokoVendor.findOne({ userId: userId._id }).select('namaToko address').populate('address').lean();
+                            detailToko = await TokoVendor.findOne({ userId: sellerId }).select('namaToko address').populate('address').lean();
                             break;
                         case "supplier":
-                            detailToko = await Supplier.findOne({ userId: userId._id }).lean();
+                            detailToko = await Supplier.findOne({ userId: sellerId }).lean();
                             break;
                         case "produsen":
-                            detailToko = await Produsen.findOne({ userId: userId._id }).lean();
+                            detailToko = await Produsen.findOne({ userId: sellerId }).lean();
                         break;
-                    }
-                    const productToDeliver = pengiriman.productToDelivers.find( prod => prod.productId.toString() === productId._id )
-                    total_pesanan +=  productToDeliver.quantity * productId.total_price + pengiriman.total_ongkir
-                    if(!store[userId._id]){
-                        store[userId._id] = {
-                            toko: { 
-                                userIdSeller: user._id,
-                                email: user.email.content, 
-                                phone: user.phone.content,  
-                                ...detailToko, 
-                                ...restOfItem, 
-                                status_pengiriman: null
-                            },
-                            products: []
-                        }
-                    }
-                    store[userId._id].products.push({ ...restOfProduct, ...restOfItemProduct, quantity: productToDeliver.quantity })
-                };
+                    };
 
-                const newItem = Object.keys(store).map(key => { return store[key] })
-                const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });
-                // let potongan_ongkir = 0, total_ongkir = 0;
-    
+                    const pengiriman = await Pengiriman.find({
+                        orderId: req.params.id,
+                        id_toko: detailToko._id
+                    }).populate('distributorId').populate("jenis_pengiriman").populate("id_jenis_kendaraan").lean();
+
+                    const selectedPengiriman = pengiriman.find(pgr => {
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id)
+                    })
+                    detailBiaya.total_ongkir += selectedPengiriman ? selectedPengiriman.total_ongkir : 0
+                    detailBiaya.total_potongan_ongkir += selectedPengiriman ? selectedPengiriman.potongan_ongkir : 0
+                    jumlah_uang += selectedPengiriman ? selectedPengiriman.total_ongkir : 0
+                    const productSelected = dataProduct.dataProduct.find(prod => {
+                        const prodIdMatches = prod._id.toString() === item.product.productId._id.toString();
+                        const userIdMatches = prod.userId._id.toString() === sellerId.toString();
+                        return prodIdMatches && userIdMatches;
+                    });
+
+                    if(productSelected){
+                        const itemSelected = items.find(item => item.product.productId._id === productId._id)
+                        const totalHargaProduk = productSelected.total_price * itemSelected.product.quantity
+                        jumlah_uang += totalHargaProduk
+                        detailBiaya.total_harga_produk += totalHargaProduk
+                        
+                        if(!store[userId._id]){
+                            store[userId._id] = {
+                                toko: { 
+                                    userIdSeller: user._id,
+                                    email: user.email.content, 
+                                    phone: user.phone.content,  
+                                    ...detailToko, 
+                                    ...restOfItem, 
+                                    status_pengiriman: pengiriman.filter(pgr => pgr.id_toko.toString() === detailToko._id.toString())
+                                },
+                                products: []
+                            }
+                        }
+                        store[userId._id].products.push({ ...productSelected , ...restOfItemProduct })
+                    }
+                };
+                Object.keys(store).forEach(key => data.push(store[key]))
+                const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });    
                 const pay = paymentMethod.find(item =>{ return item !== null })
                 const paymentNumber = await VirtualAccountUser.findOne({userId: req.user.id, nama_bank: pay._id}).select("nomor_va").lean()
-                data = { 
+                const respon = { 
                     message: 'get detail data order success',
                     _id, 
                     paymentMethod: pay,
@@ -871,14 +891,17 @@ module.exports = {
                     total_pesanan: jumlah_uang, 
                     status: pembatalan? "Dibatalkan" : status,
                     dibatalkanOleh: pembatalan? pembatalan.canceledBy : null,
-                    invoice: invoiceTambahan , 
-                    ...restOfOrder,
-                    kode_transaksi: transaksi.kode_transaksi,
+                    invoice: invoiceSubsidi ,
+                    invoiceTambahan: invoiceTambahan?  invoiceTambahan : null,
                     biaya_layanan,
                     biaya_jasa_aplikasi,
+                    ...restOfOrder,
+                    kode_transaksi: transaksi.kode_transaksi,
                     ...detailBiaya,
                     data 
                 }
+
+                return res.status(200).json(respon)
             }
 
 
