@@ -28,9 +28,9 @@ module.exports = {
 
     createPelacakanDistributorKonsumen: async (req, res, next) => {
         try {
-            const { id_toko, id_address, latitude, longitude, id_distributor } = req.body
+            const { id_toko, id_address, latitude, longitude, id_distributor, id_pesanan } = req.body
 
-            const data = await PelacakanDistributorKonsumen.create({ id_toko, id_address, latitude, longitude, id_distributor })
+            const data = await PelacakanDistributorKonsumen.create({ id_toko, id_address, latitude, longitude, id_distributor, id_pesanan })
 
             res.status(201).json({
                 message: "create data success",

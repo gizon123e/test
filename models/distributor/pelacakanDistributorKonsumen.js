@@ -18,12 +18,17 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
     },
     latitude: {
         type: Number,
-        required: [true, "latitude harus di isi"]
+        required: false
     },
     longitude: {
         type: Number,
-        required: [true, "latitude harus di isi"]
+        required: false
     },
+    id_pesanan: {
+        type: String,
+        required: [true, "id_produk harus di isi"],
+        ref: "Pengiriman"
+    }
 }, { timestamps: true })
 
 const PelacakanDistributorKonsumen = mongoose.model('PelacakanDistributorDistributor', modulePelacakanDistributorKonsumen)
