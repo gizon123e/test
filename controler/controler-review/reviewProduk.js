@@ -72,7 +72,7 @@ module.exports = {
             await ReviewVendor.create({ id_toko, nilai_pengemasan: parseInt(nilai_pengemasan), nilai_kualitas: parseInt(nilai_kualitas), nilai_keberhasilan: parseInt(nilai_keberhasilan), userId: req.user.id });
 
             if (totalReviewVendor < 1) {
-                await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: 1 }, { new: true });
+                await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: 1, }, { new: true });
             } else {
                 await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: totalReviewVendor }, { new: true });
             }
@@ -86,6 +86,17 @@ module.exports = {
                 for (let review of reviews) {
                     nilaiPoin += review.nilai_review;
                 }
+            }
+
+            let poin_ulasan
+            if (komentar_review) {
+                const filteredReviews = reviews.filter(review => review.komentar_review && review.komentar_review.trim() !== "")
+                const indexUlasan = filteredReviews.map((review, index) => index);
+                poin_ulasan = parseInt(indexUlasan) + 1
+            } else {
+                const filteredReviews = reviews.filter(review => review.komentar_review && review.komentar_review.trim() !== "")
+                const indexUlasan = filteredReviews.map((review, index) => index);
+                poin_ulasan = parseInt(indexUlasan)
             }
 
             const totalReviewProduk = nilaiPoin / indexReviews;
@@ -107,12 +118,15 @@ module.exports = {
                 const totalReview = nilaiPoin / indexReviews;
                 await Product.findByIdAndUpdate({ _id: id_produk }, {
                     $push: { reviews: savedReview._id },
-                    poin_review: totalReview < 1 ? 1 : totalReview
+                    poin_review: totalReview < 1 ? 1 : totalReview,
+                    rating: indexReviews,
+                    poin_ulasan
                 }, { new: true, useFindAndModify: false });
             } else {
                 await Product.findByIdAndUpdate({ _id: id_produk }, {
                     $push: { reviews: savedReview._id },
-                    poin_review: totalReviewProduk < 1 ? 1 : totalReviewProduk
+                    poin_review: totalReviewProduk < 1 ? 1 : totalReviewProduk,
+                    rating: indexReviews
                 }, { new: true, useFindAndModify: false });
             }
 
