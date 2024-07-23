@@ -26,8 +26,20 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
     },
     id_pesanan: {
         type: String,
-        required: [true, "id_produk harus di isi"],
+        required: [true, "id_pesanan harus di isi"],
         ref: "Pengiriman"
+    },
+    ketersediaan: {
+        type: Boolean,
+        default: [true, "ketersediaan harus di isi"]
+    },
+    total_qty: {
+        type: Number,
+        required: [true, "total_qty harus di isi"]
+    },
+    image_pengiriman: {
+        type: String,
+        required: false
     }
 }, { timestamps: true })
 

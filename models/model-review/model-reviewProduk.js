@@ -13,7 +13,7 @@ const modelReviewProduk = new mongoose.Schema({
     },
     nilai_review: {
         type: Number,
-        required: [true, "nilai_review harus di isi"],
+        required: false,
     },
     images: [{
         type: String,

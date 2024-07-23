@@ -8,12 +8,12 @@ const modelReviewDistributor = new mongoose.Schema({
     },
     nilai_ketepatan: {
         type: Number,
-        required: [true, "nilai_review harus di isi"],
+        required: false,
         default: 0
     },
     nilai_komunikasi: {
         type: Number,
-        required: [true, "nilai_review harus di isi"],
+        required: false,
         default: 0
     },
     userId: {

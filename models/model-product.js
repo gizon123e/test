@@ -170,6 +170,10 @@ const productModels = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    poin_ulasan: {
+      type: Number,
+      default: 0
+    },
     reviews: [{ // Menambahkan array referensi ulasan
       type: mongoose.Types.ObjectId,
       ref: "ReviewProduk"
