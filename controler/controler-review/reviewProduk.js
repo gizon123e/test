@@ -99,7 +99,7 @@ module.exports = {
                 poin_ulasan = parseInt(indexUlasan)
             }
 
-            // const totalReviewProduk = nilaiPoin / indexReviews;
+            const totalReviewProduk = nilaiPoin / indexReviews;
 
             // Membuat ulasan baru
             const review = new ReviewProduk({
