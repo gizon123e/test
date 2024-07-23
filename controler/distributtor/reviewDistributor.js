@@ -38,24 +38,17 @@ module.exports = {
             if (reviewDistributor) {
                 for (let viewDistributor of reviewDistributor) {
                     const perhitunganPoinTotal = viewDistributor.nilai_ketepatan + viewDistributor.nilai_komunikasi
-                    console.log("perhitunganPoinTotal", perhitunganPoinTotal)
 
                     const bagiPerhitungan = perhitunganPoinTotal / 2
-                    console.log("bagiPerhitungan", bagiPerhitungan)
-
                     hitunganPoinReview += bagiPerhitungan
                 }
             }
 
             const perhitunganNilaiPoin = (nilai_ketepatan + nilai_komunikasi) / 2
-            console.log("perhitunganNilaiPoin", perhitunganNilaiPoin)
 
-            console.log("hitunganPoinReview tes ter", hitunganPoinReview)
             let totalPerhitunganPoin
             if (hitunganPoinReview) {
                 hitunganPoinReview += perhitunganNilaiPoin
-
-                console.log("hitunganPoinReview tes 5", hitunganPoinReview)
 
                 totalPerhitunganPoin = hitunganPoinReview / indexReview
             } else {
@@ -63,18 +56,16 @@ module.exports = {
             }
 
             if (totalPerhitunganPoin < 1) {
-                const data = await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: 1 }, { new: true })
+                await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: 1 }, { new: true })
             } else {
-                const data = await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: totalPerhitunganPoin }, { new: true })
+                await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: totalPerhitunganPoin }, { new: true })
             }
 
             const dataReview = await ReviewDistributor.create({ id_distributor, nilai_ketepatan, nilai_komunikasi, userId: req.user.id })
 
             res.status(201).json({
                 message: "create data success",
-                // data: dataReview,
-                reviewDistributor,
-                hitunganPoinReview
+                data: dataReview,
             })
         } catch (error) {
             console.log(error)
