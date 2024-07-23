@@ -576,7 +576,7 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const { sellerId } = req.query
+            const { sellerId, status_order } = req.query
             const dataOrder = await Orders.aggregate([
                 {
                     $match: {
@@ -732,7 +732,7 @@ module.exports = {
                 total_proteksi: 0
             }
             const addedPengiriman = new Set()
-            if( dataOrder[0].status === "Belum Bayar" ){
+            if( dataOrder[0].status === "Belum Bayar" && status_order === "Belum Bayar" ){
                 const store = {};
                 const pembatalan = await Pembatalan.findOne({transaksiId: transaksi._id})
                 const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksi._id, status: "Belum Lunas" });
@@ -812,13 +812,13 @@ module.exports = {
                     data 
                 });
 
-            }else if( dataOrder[0].status !== "Belum Bayar" ){
+            }else {
+                console.log('masuk sini')
                 const store = {};
                 const transaksiOrder = await Transaksi.find({id_pesanan: req.params.id})
-                const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
-                const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksi._id})
+                const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi?._id});
+                const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksi?._id})
                 let jumlah_uang = (biaya_jasa_aplikasi + biaya_layanan) * transaksiOrder.length;
-                console.log('jumlah uang awal ', jumlah_uang)
                 const dataProduct = await DataProductOrder.findOne({ pesananId: req.params.id });
                 for(const item of items){
                     const { product, ...restOfItem } = item
@@ -881,6 +881,15 @@ module.exports = {
                 const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });    
                 const pay = paymentMethod.find(item =>{ return item !== null })
                 const paymentNumber = await VirtualAccountUser.findOne({userId: req.user.id, nama_bank: pay._id}).select("nomor_va").lean()
+                const checkStatus = () => {
+                    if(pembatalan){
+                        return "Dibatalkan"
+                    }else if(transaksiOrder.length > 1 && status === "Belum Bayar"){
+                        return "Berlangsung"
+                    }else{
+                        return status
+                    }
+                }
                 const respon = { 
                     message: 'get detail data order success',
                     _id, 
@@ -889,7 +898,7 @@ module.exports = {
                     alamatUser: addressId,
                     order_detail,
                     total_pesanan: jumlah_uang, 
-                    status: pembatalan? "Dibatalkan" : status,
+                    status: checkStatus(),
                     dibatalkanOleh: pembatalan? pembatalan.canceledBy : null,
                     invoice: invoiceSubsidi ,
                     invoiceTambahan: invoiceTambahan?  invoiceTambahan : null,

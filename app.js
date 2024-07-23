@@ -115,6 +115,7 @@ app.use('/api/gratong', require('./routes/router-gratong'));
 app.use('/api/alamat', require('./routes/router-alamat'));
 app.use('/api/sekolah', require('./routes/router-simulasi-sekolah'));
 app.use('/api/pangan', require('./routes/router-pangan'));
+app.use('/api/invoice', require('./routes/router-invoice'));
 
 // Admin Panel
 app.use('/api/user-system', require('./routes/router-system-user'));
