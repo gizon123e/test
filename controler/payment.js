@@ -75,6 +75,27 @@ module.exports = {
                     user = await User.findById(pesanan.userId)
                 }
                 const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
+                const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id})
+                const pengiriman = await Pengiriman.find({invoice: invoiceTambahan._id})
+
+                for(const pgr of pengiriman){
+                    for(const prd of pgr.productToDelivers){
+                        promisesFunct.push(
+                            Product.findByIdAndUpdate(
+                                prd.productId,
+                                {
+                                    $inc:{
+                                        total_stok: -prd.quantity
+                                    } 
+                                }
+                            ),
+                            salesReport(prd.productId, {
+                                time: new Date(),
+                                soldAtMoment: prd.quantity
+                            })
+                        )
+                    }
+                }
                 const dataProd = await DataProductOrder.findOne({
                     pesananId: pesanan._id,
                 }).lean()
