@@ -160,7 +160,7 @@ module.exports = {
         const { id_produk } = req.params;
 
         try {
-            const reviews = await ReviewProduk.find({ id_produk })
+            const reviews = await ReviewProduk.find({ id_produk }).populate("id_konsumen")
 
             const toko = await ReviewVendor.find({ id_produk })
             const nilai_pengemasan = toko.filter(review => review.nilai_pengemasan && review.nilai_pengemasan !== 0)
