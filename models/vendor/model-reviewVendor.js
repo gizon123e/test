@@ -18,6 +18,11 @@ const modelReviewPengguna = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    id_produk: {
+        type: String,
+        ref: "Product",
+        required: [true, "id_produk harus di isi"]
+    },
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User",

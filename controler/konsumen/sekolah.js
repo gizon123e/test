@@ -81,7 +81,8 @@ module.exports = {
                         long: long_pin_alamat,
                         lat: lat_pin_alamat
                     },
-                    userId: req.user.id
+                    userId: req.user.id,
+                    isSchool: true
                 });
             }
 
