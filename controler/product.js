@@ -382,7 +382,7 @@ module.exports = {
         select: '-password -codeOtp -pin -saldo -poin'
       }).populate('id_main_category').populate('id_sub_category').populate("pangan.panganId").lean()
       const terjual = await SalesReport.findOne({productId: req.params.id}).lean()
-      const total_terjual = terjual.track.reduce((acc, val)=> { return acc + val.soldAtMoment }, 0) || 0
+      const total_terjual = terjual? terjual.track.reduce((acc, val)=> { return acc + val.soldAtMoment }, 0) : 0
       let toko;
       if(!dataProduct) return res.status(404).json({message: `Product Id dengan ${req.params.id} tidak ditemukan`})
       switch(dataProduct.userId.role){

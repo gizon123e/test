@@ -22,7 +22,7 @@ const Pesanan = require("../models/pesanan/model-orders");
 const VirtualAccountUser = require("../models/model-user-va");
 const Sekolah = require("../models/model-sekolah");
 const DataProductOrder = require("../models/pesanan/model-data-product-order");
-
+const salesReport = require('../utils/checkSalesReport')
 dotenv.config();
 
 const now = new Date();
@@ -39,6 +39,7 @@ const mn = String(today.getMinutes()).padStart(2, '0');
 const ss = String(today.getSeconds()).padStart(2, '0');
 const date = `${yyyy}${mm}${dd}`;
 const minutes = `${hh}${mn}${ss}`;
+
 
 module.exports = {
     getOrderPanel: async (req, res, next) => {
@@ -841,7 +842,7 @@ module.exports = {
 
                 for (const item of items) {
                     const { product, ...restOfItem } = item;
-                    const { productId, ...restOfItemProduct } = product;
+                    const { productId, quantity, ...restOfItemProduct } = product;
                     const { userId, ...restOfProduct } = productId;
                     const user = await User.findById(userId._id).select('email phone').lean();
 
@@ -868,32 +869,40 @@ module.exports = {
                     });
 
                     if (selectedPengiriman) {
-                        addedPengiriman.add(selectedPengiriman._id); // Add to the set to avoid duplicates
-                        detailBiaya.total_ongkir += selectedPengiriman.total_ongkir;
-                        detailBiaya.total_potongan_ongkir += selectedPengiriman.potongan_ongkir;
-                        jumlah_uang += selectedPengiriman.total_ongkir;
+                        addedPengiriman.add(selectedPengiriman._id);
 
                         const productSelected = dataProduct.dataProduct.find(prod => {
                             return prod._id.toString() === productId._id.toString() && prod.userId._id.toString() === userId._id.toString();
                         });
 
-                        if (productSelected) {
-                            const totalHargaProduk = productSelected.total_price * item.product.quantity;
-                            jumlah_uang += totalHargaProduk;
+                        let quantityProduct = 0;
 
+                        if (productSelected) {
                             if (selectedPengiriman.invoice.toString() === invoiceTambahan._id.toString()) {
                                 detailInvoiceTambahan.totalOngkir += selectedPengiriman.total_ongkir;
                                 const foundProd = selectedPengiriman.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
                                 detailInvoiceTambahan.totalHargaProduk += productSelected.total_price * foundProd.quantity
+                                jumlah_uang += productSelected.total_price * foundProd.quantity;
+                                detailBiaya.total_ongkir += selectedPengiriman.total_ongkir;
+                                detailBiaya.total_potongan_ongkir += selectedPengiriman.potongan_ongkir;
+                                jumlah_uang += selectedPengiriman.total_ongkir;
+                                detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
                                 detailInvoiceTambahan.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
+                                quantityProduct += foundProd.quantity
                             } else if (selectedPengiriman.invoice.toString() === invoiceSubsidi._id.toString()) {
                                 detailInvoiceSubsidi.totalOngkir += selectedPengiriman.total_ongkir;
                                 const foundProd = selectedPengiriman.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
                                 detailInvoiceSubsidi.totalHargaProduk += productSelected.total_price * foundProd.quantity
                                 detailInvoiceSubsidi.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
+                                jumlah_uang += productSelected.total_price * foundProd.quantity;
+                                detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
+                                detailBiaya.total_ongkir += selectedPengiriman.total_ongkir;
+                                detailBiaya.total_potongan_ongkir += selectedPengiriman.potongan_ongkir;
+                                jumlah_uang += selectedPengiriman.total_ongkir;
+                                quantityProduct += foundProd.quantity
                             }
 
-                            detailBiaya.total_harga_produk += totalHargaProduk;
+                            
 
                             if (!store[userId._id]) {
                                 store[userId._id] = {
@@ -908,7 +917,7 @@ module.exports = {
                                     products: []
                                 };
                             }
-                            store[userId._id].products.push({ ...productSelected, ...restOfItemProduct });
+                            store[userId._id].products.push({ ...productSelected, ...restOfItemProduct, quantity: quantityProduct });
                         }
                     }
                 }
@@ -1096,6 +1105,25 @@ module.exports = {
                     kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
                 });
 
+                items.map((item)=>{
+                    item.product.map(prd=>{
+                        promisesFunct.push(
+                            Product.findByIdAndUpdate(
+                                prd.productId,
+                                {
+                                    $inc:{
+                                        quantity: -prd.quantity
+                                    } 
+                                }
+                            ),
+                            salesReport(prd.productId, {
+                                time: new Date(),
+                                soldAtMoment: prd.quantity
+                            })
+                        )
+                    })
+                })
+
                 for (let i = 0; i < dataOrder.shipments.length; i++) {
                     promisesFunct.push(
                         Pengiriman.create({
@@ -1183,6 +1211,22 @@ module.exports = {
                         const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
                         const id_transaksi = new mongoose.Types.ObjectId()
                         const id_invoice = new mongoose.Types.ObjectId()
+                        dapatSubsidi.forEach(prd => {
+                            promisesFunct.push(
+                                Product.findByIdAndUpdate(
+                                    prd.productId,
+                                    {
+                                        $inc:{
+                                            quantity: -prd.quantity
+                                        } 
+                                    }
+                                ),
+                                salesReport(prd.productId, {
+                                    time: new Date(),
+                                    soldAtMoment: prd.quantity
+                                })
+                            )
+                        })
                         promisesFunct.push(
                             Transaksi.create({
                                 _id: id_transaksi,
@@ -1220,7 +1264,7 @@ module.exports = {
                                 transaksiId: id_transaksi._id,
                                 pesananId: dataOrder._id,
                                 dataProduct: arrayProducts
-                            })
+                            }),
                         )
                     }
 
