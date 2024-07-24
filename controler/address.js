@@ -1,4 +1,5 @@
-const Address = require('../models/model-address')
+const Address = require('../models/model-address');
+const mongoose = require("mongoose");
 
 module.exports = {
     getAddress: async (req, res, next) => {
@@ -90,6 +91,26 @@ module.exports = {
                 })
             }
             console.log(error)
+            next(error)
+        }
+    },
+
+    setUsedAdress: async (req, res, next) => {
+        try{
+            await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
+            const usedAddress = await Address.findOneAndUpdate({userId: req.user.id, _id: req.params.id}, {isUsed: true}, {new: true});
+
+            res.status(200).json(
+                usedAddress
+            );
+        }catch (error) {
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
             next(error)
         }
     },

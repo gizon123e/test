@@ -11,6 +11,7 @@ router.get('/list', authorization, controlerAddress.getAddress);
 router.get("/detail/:id", authorization, controlerAddress.getDetailAddress);
 router.post('/create', authorization, controlerAddress.createAddress)
 router.put('/update/:id', authorization, emptyData, controlerAddress.updateAddress)
+router.put('/set/isUsed/:id', authorization, controlerAddress.setUsedAdress);
 router.delete('/delete/:id', authorization, controlerAddress.deleteAddress)
 
 module.exports = router
