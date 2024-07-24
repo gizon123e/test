@@ -3,6 +3,6 @@ const authorization = require("../../midelware/authorization");
 const reviewProdukController = require('../../controler/controler-review/reviewProduk')
 
 router.post('/reviews', authorization, reviewProdukController.tambahUlasan);
-router.get('/reviews', reviewProdukController.getUlasanByProductId);
+router.get('/reviews/:id_produk', reviewProdukController.getUlasanByProductId);
 
 module.exports = router

@@ -2,12 +2,13 @@ const ReviewProduk = require('../../models/model-review/model-reviewProduk')
 const Product = require('../../models/model-product')
 const ReviewVendor = require('../../models/vendor/model-reviewVendor')
 const TokoVendor = require('../../models/vendor/model-toko')
+const ReviewDistributor = require('../../models/distributor/model-reviewDistributor')
 const path = require('path')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
         try {
-            const { komentar_review, nilai_review, id_toko, id_produk, nilai_pengemasan, nilai_kualitas, nilai_keberhasilan } = req.body;
+            const { komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0 } = req.body;
             const files = req.files;
             const images = files ? files.images : [];
             const video = files ? files.video : [];
@@ -69,7 +70,7 @@ module.exports = {
 
             const totalReviewVendor = (poinVendor - tokoDetail.nilai_pinalti) / indexReviewVendor;
 
-            await ReviewVendor.create({ id_toko, nilai_pengemasan: parseInt(nilai_pengemasan), nilai_kualitas: parseInt(nilai_kualitas), nilai_keberhasilan: parseInt(nilai_keberhasilan), userId: req.user.id });
+            await ReviewVendor.create({ id_toko, nilai_pengemasan: parseInt(nilai_pengemasan), nilai_kualitas: parseInt(nilai_kualitas), nilai_keberhasilan: parseInt(nilai_keberhasilan), userId: req.user.id, id_produk });
 
             if (totalReviewVendor < 1) {
                 await TokoVendor.findByIdAndUpdate({ _id: id_toko }, { nilai_review: 1, }, { new: true });
@@ -91,15 +92,22 @@ module.exports = {
             let poin_ulasan
             if (komentar_review) {
                 const filteredReviews = reviews.filter(review => review.komentar_review && review.komentar_review.trim() !== "")
-                const indexUlasan = filteredReviews.map((review, index) => index);
-                poin_ulasan = parseInt(indexUlasan) + 1
+
+                poin_ulasan = parseInt(filteredReviews.length) + 1
             } else {
                 const filteredReviews = reviews.filter(review => review.komentar_review && review.komentar_review.trim() !== "")
-                const indexUlasan = filteredReviews.map((review, index) => index);
-                poin_ulasan = parseInt(indexUlasan)
+
+                poin_ulasan = parseInt(filteredReviews.length)
             }
 
             const totalReviewProduk = nilaiPoin / indexReviews;
+
+            const jumlahKeseluruan = parseInt(nilai_pengemasan) + parseInt(nilai_kualitas) + parseInt(nilai_keberhasilan) + parseInt(nilai_review)
+            let nilai_keseluruan = jumlahKeseluruan / 4
+
+            if (nilai_keseluruan < 1) {
+                nilai_keseluruan = 1
+            }
 
             // Membuat ulasan baru
             const review = new ReviewProduk({
@@ -108,7 +116,8 @@ module.exports = {
                 komentar_review,
                 nilai_review: parseInt(nilai_review),
                 images: imagePaths,
-                video: videoPaths
+                video: videoPaths,
+                nilai_keseluruan
             });
 
             // Menyimpan ulasan ke database
@@ -151,10 +160,33 @@ module.exports = {
         const { id_produk } = req.params;
 
         try {
-            const reviews = await ReviewProduk.find({ id_produk }).populate('replies').populate("id_produk");
+            const reviews = await ReviewProduk.find({ id_produk })
+
+            const toko = await ReviewVendor.find({ id_produk })
+            const nilai_pengemasan = toko.filter(review => review.nilai_pengemasan && review.nilai_pengemasan !== 0)
+            const nilai_kualitas = toko.filter(review => review.nilai_kualitas && review.nilai_kualitas !== 0)
+            const nilai_keberhasilan = toko.filter(review => review.nilai_keberhasilan && review.nilai_keberhasilan !== 0)
+
+            const distributor = await ReviewDistributor.find({ id_produk })
+            const nilai_ketepatan = distributor.filter(review => review.nilai_ketepatan && review.nilai_ketepatan !== 0)
+            const nilai_komunikasi = distributor.filter(review => review.nilai_komunikasi && review.nilai_komunikasi !== 0)
+
+            const indexdata = {
+                nilai_pengemasan: parseInt(nilai_pengemasan.length),
+                nilai_kualitas: parseInt(nilai_kualitas.length),
+                nilai_kebersihan: parseInt(nilai_keberhasilan.length),
+                nilai_ketepatan: parseInt(nilai_ketepatan.length),
+                nilai_komunikasi: parseInt(nilai_komunikasi.length)
+            }
+
+            console.log()
+
             res.status(200).json({
                 message: "get all review",
-                data: reviews
+                data: {
+                    indexdata,
+                    reviews
+                }
             });
         } catch (error) {
             console.log(error)
