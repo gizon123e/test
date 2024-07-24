@@ -506,10 +506,10 @@ module.exports = {
     try {
       const data = await Product.find({ userId: req.user.id }).populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId").lean();
       const dataProds = [];
-      for (const produk of data) {
-        const namaVendor = await TokoVendor.findOne({ userId: produk.userId._id });
-        const terjual = await SalesReport.findOne({ productId: produk._id });
-        const totalTerjual = terjual ? terjual.track.reduce((accumulator, current) => accumulator + current.soldAtMoment) : 0;
+      for(const produk of data){
+        const namaVendor = await TokoVendor.findOne({userId: produk.userId._id});
+        const terjual = await SalesReport.findOne({productId: produk._id})
+        const totalTerjual = terjual? terjual.track.reduce((accumulator, current)=> { return accumulator + current.soldAtMoment }, 0) : 0
         dataProds.push({
           ...produk,
           nama: namaVendor?.namaToko,
@@ -529,16 +529,12 @@ module.exports = {
 
   productDetail: async (req, res, next) => {
     try {
-      const dataProduct = await Product.findById(req.params.id)
-        .populate("categoryId")
-        .populate({
-          path: "userId",
-          select: "-password -codeOtp -pin -saldo -poin",
-        })
-        .populate("id_main_category")
-        .populate("id_sub_category")
-        .populate("pangan.panganId")
-        .lean();
+      const dataProduct = await Product.findById(req.params.id).populate('categoryId').populate({
+        path: 'userId',
+        select: '-password -codeOtp -pin -saldo -poin'
+      }).populate('id_main_category').populate('id_sub_category').populate("pangan.panganId").lean()
+      const terjual = await SalesReport.findOne({productId: req.params.id}).lean()
+      const total_terjual = terjual? terjual.track.reduce((acc, val)=> { return acc + val.soldAtMoment }, 0) : 0
       let toko;
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
       switch (dataProduct.userId.role) {
@@ -554,7 +550,7 @@ module.exports = {
       }
       const { pangan, ...restOfProduct } = dataProduct;
       const nutrisi = {
-        air: 0,
+        takaran_saji: 0,
         energi: 0,
         protein: 0,
         lemak: 0,
@@ -570,25 +566,32 @@ module.exports = {
         riboflavin: 0,
         vitamin_c: 0,
       };
-      pangan?.forEach((item) => {
-        nutrisi.air += (parseFloat(item?.panganId?.air?.value) / 100) * item?.berat;
-        nutrisi.energi += (parseFloat(item?.panganId?.energi?.value) / 100) * item?.berat;
-        nutrisi.protein += (parseFloat(item?.panganId?.protein?.value) / 100) * item?.berat;
-        nutrisi.lemak += (parseFloat(item?.panganId?.lemak?.value) / 100) * item?.berat;
-        nutrisi.karbohidrat += (parseFloat(item?.panganId?.kh?.value) / 100) * item?.berat;
-        nutrisi.serat += (parseFloat(item?.panganId?.serat?.value) / 100) * item?.berat;
-        nutrisi.kalsium += (parseFloat(item?.panganId?.kalsium?.value) / 100) * item?.berat;
-        nutrisi.fosfor += (parseFloat(item?.panganId?.fosfor?.value) / 100) * item?.berat;
-        nutrisi.besi += (parseFloat(item?.panganId?.besi?.value) / 100) * item?.berat;
-        nutrisi.natrium += (parseFloat(item?.panganId?.natrium?.value) / 100) * item?.berat;
-        nutrisi.kalium += (parseFloat(item?.panganId?.kalium?.value) / 100) * item?.berat;
-        nutrisi.tembaga += (parseFloat(item?.panganId?.tembaga?.value) / 100) * item?.berat;
-        nutrisi.thiamin += (parseFloat(item?.panganId?.thiamin?.value) / 100) * item?.berat;
-        nutrisi.riboflavin += (parseFloat(item?.panganId?.riboflavin?.value) / 100) * item?.berat;
-        nutrisi.vitamin_c += (parseFloat(item?.panganId?.vitc?.value) / 100) * item.berat;
+      pangan?.forEach(item => {
+        nutrisi.energi += parseFloat(item?.panganId?.energi?.value) / 100 * item?.berat;
+        nutrisi.protein += parseFloat(item?.panganId?.protein?.value) / 100 * item?.berat;
+        nutrisi.lemak += parseFloat(item?.panganId?.lemak?.value) / 100 * item?.berat;
+        nutrisi.karbohidrat += parseFloat(item?.panganId?.kh?.value) / 100 * item?.berat;
+        nutrisi.serat += parseFloat(item?.panganId?.serat?.value) / 100 * item?.berat;
+        nutrisi.kalsium += parseFloat(item?.panganId?.kalsium?.value) / 100 * item?.berat;
+        nutrisi.fosfor += parseFloat(item?.panganId?.fosfor?.value) / 100 * item?.berat;
+        nutrisi.besi += parseFloat(item?.panganId?.besi?.value) / 100 * item?.berat;
+        nutrisi.natrium += parseFloat(item?.panganId?.natrium?.value) / 100 * item?.berat;
+        nutrisi.kalium += parseFloat(item?.panganId?.kalium?.value) / 100 * item?.berat;
+        nutrisi.tembaga += parseFloat(item?.panganId?.tembaga?.value) / 100 * item?.berat;
+        nutrisi.thiamin += parseFloat(item?.panganId?.thiamin?.value) / 100 * item?.berat;
+        nutrisi.riboflavin += parseFloat(item?.panganId?.riboflavin?.value) / 100 * item?.berat;
+        nutrisi.vitamin_c += parseFloat(item?.panganId?.vitc?.value) / 100 * item.berat;
+        nutrisi.takaran_saji += item.berat
       });
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
-      return res.status(200).json({ datas: restOfProduct, toko, nutrisi });
+      return res.status(200).json({ 
+        datas: { 
+          ...restOfProduct, 
+          total_terjual: terjual ? total_terjual : 0
+        }, 
+        toko, 
+        nutrisi
+      });
     } catch (error) {
       console.log(error);
       next(error);

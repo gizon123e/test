@@ -25,7 +25,8 @@ const modelDistributtor = mongoose.Schema({
     },
     tanggal_lahir: {
         type: String,
-        require: false
+        require: false,
+        default: null
     },
     jenisKelamin: {
         type: String,

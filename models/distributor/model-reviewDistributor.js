@@ -8,19 +8,24 @@ const modelReviewDistributor = new mongoose.Schema({
     },
     nilai_ketepatan: {
         type: Number,
-        required: [true, "nilai_review harus di isi"],
+        required: false,
         default: 0
     },
     nilai_komunikasi: {
         type: Number,
-        required: [true, "nilai_review harus di isi"],
+        required: false,
         default: 0
     },
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User",
         required: [true, "userId harus di isi"]
-    }
+    },
+    id_produk: {
+        type: String,
+        ref: "Product",
+        required: [true, "id_produk harus di isi"]
+    },
 }, { timestamps: true })
 
 const ReviewDistributor = mongoose.model("ReviewDistributor", modelReviewDistributor)
