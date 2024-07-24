@@ -851,7 +851,7 @@ module.exports = {
                 };
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi?._id, status: "Lunas" });
-                let jumlah_uang = (biaya_jasa_aplikasi + biaya_layanan) * (invoiceTambahan? transaksiOrder.length : 1);
+                let jumlah_uang = (biaya_jasa_aplikasi + biaya_layanan) * (invoiceTambahan ? transaksiOrder.length : 1);
                 const dataProduct = await DataProductOrder.findOne({ pesananId: req.params.id });
 
                 const addedPengiriman = new Set(); // To keep track of processed pengiriman
@@ -880,73 +880,75 @@ module.exports = {
                         id_toko: detailToko._id
                     }).populate('distributorId').populate("jenis_pengiriman").populate("id_jenis_kendaraan").lean();
                     console.log(detailToko._id, detailToko.namaToko)
-                    const selectedPengiriman = pengiriman.find(pgr => {
-                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id)
+                    const selectedPengirimanSubsidi = pengiriman.find(pgr => {
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceSubsidi._id.toString()
                     });
-                    if (selectedPengiriman) {
-                        const productSelected = dataProduct.dataProduct.find(prod => {
-                            return prod._id.toString() === productId._id.toString() && prod.userId._id.toString() === sellerId.toString();
-                        });
-                        console.log(selectedPengiriman, selectedPengiriman.invoice.toString() === invoiceTambahan?._id.toString())
-                        let quantityProduct = 0;
-                        if (productSelected) {
-                            if (selectedPengiriman.invoice.toString() === invoiceTambahan?._id.toString()) {
-                                console.log('masuk non subsidi')
-                                const foundProd = selectedPengiriman.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
-                                if(!addedPengiriman.has(selectedPengiriman._id.toString())){
-                                    detailInvoiceTambahan.totalOngkir += selectedPengiriman.total_ongkir;
-                                    detailInvoiceTambahan.totalPotonganOngkir += selectedPengiriman.potongan_ongkir;
-                                    detailBiaya.total_potongan_ongkir += selectedPengiriman.potongan_ongkir
-                                    detailBiaya.total_ongkir += selectedPengiriman.total_ongkir
-                                    jumlah_uang += selectedPengiriman.total_ongkir
-                                }
-                                detailInvoiceTambahan.totalHargaProduk += productSelected.total_price * foundProd.quantity
-                                detailInvoiceTambahan.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
-                                jumlah_uang += productSelected.total_price * foundProd.quantity;
-                                detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
-                                quantityProduct += foundProd.quantity
-                                
-                            } else if (selectedPengiriman.invoice.toString() === invoiceSubsidi._id.toString()) {
-                                console.log('masuk subsidi')
-                                const foundProd = selectedPengiriman.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
-                                if(!addedPengiriman.has(selectedPengiriman._id.toString())){
-                                    detailInvoiceSubsidi.totalOngkir += selectedPengiriman.total_ongkir;
-                                    detailInvoiceSubsidi.totalPotonganOngkir += selectedPengiriman.potongan_ongkir;
-                                    detailBiaya.total_potongan_ongkir += selectedPengiriman.potongan_ongkir
-                                    detailBiaya.total_ongkir += selectedPengiriman.total_ongkir
-                                    jumlah_uang += selectedPengiriman.total_ongkir
-                                }
-                                detailInvoiceSubsidi.totalHargaProduk += productSelected.total_price * foundProd.quantity
-                                detailInvoiceSubsidi.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
-                                jumlah_uang += productSelected.total_price * foundProd.quantity;
-                                detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
-                                quantityProduct += foundProd.quantity
-                            }
-                            addedPengiriman.add(selectedPengiriman._id.toString())
-                            if(biaya_asuransi){
-                                jumlah_uang += dataOrder[0].biaya_awal_asuransi * quantityProduct
-                                detailBiaya.total_asuransi += dataOrder[0].biaya_awal_asuransi * quantityProduct
-                            }
 
-                            
+                    const selectedPengirimanTambahan = pengiriman.find(pgr => {
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceTambahan._id.toString()
+                    });
 
-                            if (!store[userId._id]) {
-                                store[userId._id] = {
-                                    toko: {
-                                        userIdSeller: user._id,
-                                        email: user.email.content,
-                                        phone: user.phone.content,
-                                        ...detailToko,
-                                        ...restOfItem,
-                                        status_pengiriman: pengiriman.filter(pgr => pgr.id_toko.toString() === detailToko._id.toString())
-                                    },
-                                    products: []
-                                };
-                            }
-                            store[userId._id].products.push({ ...productSelected, ...restOfItemProduct, quantity: quantityProduct });
+                    let quantityProduct = 0;
+                    const productSelected = dataProduct.dataProduct.find(prod => {
+                        return prod._id.toString() === productId._id.toString() && prod.userId._id.toString() === sellerId.toString();
+                    });
+
+                    if(selectedPengirimanSubsidi){
+                        const foundProd = selectedPengirimanSubsidi.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
+                        if (!addedPengiriman.has(selectedPengirimanSubsidi._id.toString())) {
+                            detailInvoiceSubsidi.totalOngkir += selectedPengirimanSubsidi.total_ongkir;
+                            detailInvoiceSubsidi.totalPotonganOngkir += selectedPengirimanSubsidi.potongan_ongkir;
+                            detailBiaya.total_potongan_ongkir += selectedPengirimanSubsidi.potongan_ongkir;
+                            detailBiaya.total_ongkir += selectedPengirimanSubsidi.total_ongkir;
+                            jumlah_uang += selectedPengirimanSubsidi.total_ongkir;
                         }
+                        detailInvoiceSubsidi.totalHargaProduk += productSelected.total_price * foundProd.quantity;
+                        detailInvoiceSubsidi.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
+                        jumlah_uang += productSelected.total_price * foundProd.quantity;
+                        detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
+                        quantityProduct += foundProd.quantity;
+                        addedPengiriman.add(selectedPengirimanSubsidi._id.toString());                        
                     }
+
+                    if(selectedPengirimanTambahan){
+                        const foundProd = selectedPengirimanTambahan.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
+                        if (!addedPengiriman.has(selectedPengirimanTambahan._id.toString())) {
+                            detailInvoiceTambahan.totalOngkir += selectedPengirimanTambahan.total_ongkir;
+                            detailInvoiceTambahan.totalPotonganOngkir += selectedPengirimanTambahan.potongan_ongkir;
+                            detailBiaya.total_potongan_ongkir += selectedPengirimanTambahan.potongan_ongkir;
+                            detailBiaya.total_ongkir += selectedPengirimanTambahan.total_ongkir;
+                            jumlah_uang += selectedPengirimanTambahan.total_ongkir;            
+                        }
+                        detailInvoiceTambahan.totalHargaProduk += productSelected.total_price * foundProd.quantity;
+                        detailInvoiceTambahan.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
+                        jumlah_uang += productSelected.total_price * foundProd.quantity;
+                        detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
+                        quantityProduct += foundProd.quantity;                       
+                        addedPengiriman.add(selectedPengirimanTambahan._id.toString());                        
+                    }
+
+                    if (biaya_asuransi) {
+                        jumlah_uang += dataOrder[0].biaya_awal_asuransi * quantityProduct;
+                        detailBiaya.total_asuransi += dataOrder[0].biaya_awal_asuransi * quantityProduct;
+                    };
+
+
+                    if (!store[userId._id]) {
+                        store[userId._id] = {
+                            toko: {
+                                userIdSeller: user._id,
+                                email: user.email.content,
+                                phone: user.phone.content,
+                                ...detailToko,
+                                ...restOfItem,
+                                status_pengiriman: pengiriman.filter(pgr => pgr.id_toko.toString() === detailToko._id.toString())
+                            },
+                            products: []
+                        };
+                    }
+                    store[userId._id].products.push({ ...productSelected, ...restOfItemProduct, quantity: quantityProduct });                    
                 }
+
 
                 Object.keys(store).forEach(key => data.push(store[key]))
                 const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });    
@@ -961,7 +963,6 @@ module.exports = {
                         return status
                     }
                 }
-                console.log(jumlah_uang)
                 const respon = { 
                     message: 'get detail data order success',
                     _id, 
