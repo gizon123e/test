@@ -336,12 +336,15 @@ module.exports = {
                     }
                     else {
                         let jumlah_uang = 0
-                        const store = {} 
+                        const store = {}
+                        const invoiceSubsidi = await Invoice.exists({id_transaksi: transaksiSubsidi._id})
+                        const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id})
                         const pengiriman = await Pengiriman.find({ orderId: order._id }).populate('distributorId').populate('id_jenis_kendaraan').lean();
                         for (const item of order.items){
                             const { productId, quantity, ...restOfProduct } = item.product;
                             const productSelected = dataProduct.dataProduct.find(prod => prod._id.toString() === item.product.productId._id);
-                            if (productSelected && sisaSubsidi > 0) {
+                            console.log(productSelected.name_product, productSelected._id)
+                            if (productSelected) {
                                 processed = true;
                     
                                 let detailToko;
@@ -361,32 +364,21 @@ module.exports = {
                                 const selectedPengiriman = pengiriman.filter(pgr =>{
                                     return pgr.productToDelivers.some(prd => productSelected._id.toString() === prd.productId.toString())
                                 });
-
-                                if (!selectedPengiriman) {
-                                    continue;
-                                }
-
-                                let itemTotal = 0
+                                
                                 let totalQuantity = 0
+
                                 selectedPengiriman.map(pgr => {
                                     pgr.productToDelivers.map(prd => {
-                                       if(prd.productId.toString() === productSelected._id.toString()){
-                                            itemTotal += productSelected.total_price * prd.quantity
+                                        if(prd.productId.toString() === productSelected._id.toString()){
                                             totalQuantity += prd.quantity
-                                       }
-
-                                       if (!addedPengiriman.has(pgr._id.toString())) {
-                                            jumlah_uang += pgr.total_ongkir;
-                                            addedPengiriman.add(pgr._id.toString());
+                                            jumlah_uang += productSelected.total_price * prd.quantity
                                         }
-                                    })
-                                })
-
-                                // const totalQuantity = selectedPengiriman.productToDelivers.find(ship => ship.productId.toString() === productSelected._id.toString());
-                    
-                                // let itemTotal = productSelected.total_price * totalQuantity.quantity;
-                                totalPriceVendor += itemTotal
-                                jumlah_uang += itemTotal;
+                                    });
+                                    if(!addedPengiriman.has(pgr._id.toString)){
+                                        jumlah_uang += pgr.total_ongkir;
+                                        addedPengiriman.add(pgr._id.toString())
+                                    }
+                                });
 
                                 if(order.biaya_asuransi){
                                     jumlah_uang += biaya_awal_asuransi * totalQuantity
@@ -405,20 +397,19 @@ module.exports = {
                                         arrayProduct: []
                                     };
                                 }
-                                store[storeId].totalHargaProduk += itemTotal
+                                totalPriceVendor += productSelected.total_price * totalQuantity
+                                store[storeId].totalHargaProduk += productSelected.total_price * totalQuantity
                                 store[storeId].total_pesanan = jumlah_uang;
                                 store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct, quantity: totalQuantity });
                                 jumlah_uang = 0
                             }
                         };
-
                         Object.keys(store).forEach(key => {
-                            const {totalHargaProduk, total_pesanan, ...restOfStore} = store[key]
+                            const {totalHargaProduk, ...restOfStore} = store[key]
                             const rasioJasaAplikasi = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_jasa_aplikasi);
                             const rasioBiayaLayanan = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_layanan);
-                            const jumlah = total_pesanan + rasioJasaAplikasi + rasioBiayaLayanan
-                            console.log(totalHargaProduk)
-                            data.push({...rest, status , total_pesanan: jumlah, ...restOfStore})
+                            console.log(rasioBiayaLayanan, rasioJasaAplikasi, totalPriceVendor, totalHargaProduk)
+                            data.push({...rest, status , ...restOfStore})
                         });
                     }
                 }
