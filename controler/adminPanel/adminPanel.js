@@ -288,6 +288,21 @@ module.exports = {
         }
     },
 
+    getByIdPesanan: async (req, res, next) => {
+        try {
+            const data = await Pesanan.findOne({ _id: req.params.id }).populate('items.product.productId').populate('shipments.id_distributor')
+            if (!data) return res.status(404).json({ message: "data Not Found" })
+
+            res.status(200).json({
+                message: 'get by Id success',
+                data
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     getAllPengiriman: async (req, res, next) => {
         try {
             const data = await Pengiriman.find()
