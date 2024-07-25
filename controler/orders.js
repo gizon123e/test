@@ -879,13 +879,13 @@ module.exports = {
                         orderId: req.params.id,
                         id_toko: detailToko._id
                     }).populate('distributorId').populate("jenis_pengiriman").populate("id_jenis_kendaraan").lean();
-                    console.log(detailToko._id, detailToko.namaToko)
+
                     const selectedPengirimanSubsidi = pengiriman.find(pgr => {
-                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceSubsidi._id.toString()
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceSubsidi?._id.toString()
                     });
 
                     const selectedPengirimanTambahan = pengiriman.find(pgr => {
-                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceTambahan._id.toString()
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceTambahan?._id.toString()
                     });
 
                     let quantityProduct = 0;
@@ -932,21 +932,23 @@ module.exports = {
                         detailBiaya.total_asuransi += dataOrder[0].biaya_awal_asuransi * quantityProduct;
                     };
 
-
-                    if (!store[userId._id]) {
-                        store[userId._id] = {
-                            toko: {
-                                userIdSeller: user._id,
-                                email: user.email.content,
-                                phone: user.phone.content,
-                                ...detailToko,
-                                ...restOfItem,
-                                status_pengiriman: pengiriman.filter(pgr => pgr.id_toko.toString() === detailToko._id.toString())
-                            },
-                            products: []
-                        };
+                    
+                    if(productSelected){
+                        if (!store[userId._id]) {
+                            store[userId._id] = {
+                                toko: {
+                                    userIdSeller: user._id,
+                                    email: user.email.content,
+                                    phone: user.phone.content,
+                                    ...detailToko,
+                                    ...restOfItem,
+                                    status_pengiriman: pengiriman.filter(pgr => pgr.id_toko.toString() === detailToko._id.toString())
+                                },
+                                products: []
+                            };
+                        }
+                        store[userId._id].products.push({ ...productSelected, ...restOfItemProduct, quantity: quantityProduct });                    
                     }
-                    store[userId._id].products.push({ ...productSelected, ...restOfItemProduct, quantity: quantityProduct });                    
                 }
 
 

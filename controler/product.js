@@ -567,22 +567,23 @@ module.exports = {
         vitamin_c:``,
       };
       pangan?.forEach(item => {
-        nutrisi.energi = `${parseFloat(item?.panganId?.energi?.value) / 100 * item?.berat} kkal`;
-        nutrisi.protein = `${parseFloat(item?.panganId?.protein?.value) / 100 * item?.berat} gr`;
-        nutrisi.lemak = `${parseFloat(item?.panganId?.lemak?.value) / 100 * item?.berat} gr`;
-        nutrisi.karbohidrat = `${parseFloat(item?.panganId?.kh?.value) / 100 * item?.berat} gr`;
-        nutrisi.serat = `${parseFloat(item?.panganId?.serat?.value) / 100 * item?.berat} mg`;
-        nutrisi.kalsium = `${parseFloat(item?.panganId?.kalsium?.value) / 100 * item?.berat} mg`;
-        nutrisi.fosfor = `${parseFloat(item?.panganId?.fosfor?.value) / 100 * item?.berat} mg`;
-        nutrisi.besi = `${parseFloat(item?.panganId?.besi?.value) / 100 * item?.berat} mg`;
-        nutrisi.natrium = `${parseFloat(item?.panganId?.natrium?.value) / 100 * item?.berat} mg`;
-        nutrisi.kalium = `${parseFloat(item?.panganId?.kalium?.value) / 100 * item?.berat} mg`;
-        nutrisi.tembaga = `${parseFloat(item?.panganId?.tembaga?.value) / 100 * item?.berat} mg`;
-        nutrisi.thiamin = `${parseFloat(item?.panganId?.thiamin?.value) / 100 * item?.berat} mg`;
-        nutrisi.riboflavin = `${parseFloat(item?.panganId?.riboflavin?.value) / 100 * item?.berat} mg`;
-        nutrisi.vitamin_c = `${parseFloat(item?.panganId?.vitc?.value) / 100 * item.berat} mg`;
-        nutrisi.takaran_saji = `${item.berat} gr`
-      });
+        nutrisi.energi = `${(parseFloat(item?.panganId?.energi?.value) / 100 * item?.berat).toFixed(2)} kkal`;
+        nutrisi.protein = `${(parseFloat(item?.panganId?.protein?.value) / 100 * item?.berat).toFixed(2)} gr`;
+        nutrisi.lemak = `${(parseFloat(item?.panganId?.lemak?.value) / 100 * item?.berat).toFixed(2)} gr`;
+        nutrisi.karbohidrat = `${(parseFloat(item?.panganId?.kh?.value) / 100 * item?.berat).toFixed(2)} gr`;
+        nutrisi.serat = `${(parseFloat(item?.panganId?.serat?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.kalsium = `${(parseFloat(item?.panganId?.kalsium?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.fosfor = `${(parseFloat(item?.panganId?.fosfor?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.besi = `${(parseFloat(item?.panganId?.besi?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.natrium = `${(parseFloat(item?.panganId?.natrium?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.kalium = `${(parseFloat(item?.panganId?.kalium?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.tembaga = `${(parseFloat(item?.panganId?.tembaga?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.thiamin = `${(parseFloat(item?.panganId?.thiamin?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.riboflavin = `${(parseFloat(item?.panganId?.riboflavin?.value) / 100 * item?.berat).toFixed(2)} mg`;
+        nutrisi.vitamin_c = `${(parseFloat(item?.panganId?.vitc?.value) / 100 * item.berat).toFixed(2)} mg`;
+        nutrisi.takaran_saji = `${item.berat} gr`;
+    });
+    
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
       return res.status(200).json({ 
         datas: { 
