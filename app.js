@@ -15,6 +15,7 @@ const path = require('path');
 const websocket = require("./websocket/index-ws");
 const socketIo = require('socket.io')
 const initSocketIo = require('./utils/pelacakanDistributor')
+const initializeChatSocket = require('./controler/message/vendor-distributor/vendor-distributor');
 
 const dotenv = require('dotenv')
 dotenv.config()
@@ -38,6 +39,7 @@ const io = socketIo(httpServer, {
 });
 
 initSocketIo(io);
+initializeChatSocket(io)
 
 app.use(cors());
 app.use(logger("dev"));
@@ -62,6 +64,7 @@ app.use((req, res, next) => {
 app.get('/failed', (req, res) => {
   res.send("Failed");
 });
+
 app.use("/api/temporary", require('./routes/router-temporary'));
 // app.use("/api/temporary/seller", require('./routes/router-temporary-seller'));
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
@@ -123,6 +126,8 @@ app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
 
+// message
+app.use('/contak', require('./routes/router-message/router-message'))
 
 app.use('/api/tarif', require('./routes/router-tarif'))
 
