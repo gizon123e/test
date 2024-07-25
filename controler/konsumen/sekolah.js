@@ -68,6 +68,29 @@ module.exports = {
             await logoSekolah.mv(imagePath);
             const numberNPSN = parseInt(NPSN)
 
+            const sudahAdaSekolah = await Address.findOne({userId: req.user.id, isSchool: true, isUsed: true});
+            if(sudahAdaSekolah){
+                let alamat
+                if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
+                    alamat = await Address.create({
+                        province,
+                        regency,
+                        district,
+                        village,
+                        code_pos,
+                        address_description,
+                        pinAlamat: {
+                            long: long_pin_alamat,
+                            lat: lat_pin_alamat
+                        },
+                        userId: req.user.id,
+                        isSchool: true,
+                    });
+                }
+            }
+
+            await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
+
             let alamat
             if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
                 alamat = await Address.create({
@@ -82,7 +105,8 @@ module.exports = {
                         lat: lat_pin_alamat
                     },
                     userId: req.user.id,
-                    isSchool: true
+                    isSchool: true,
+                    isUsed: true,
                 });
             }
 
