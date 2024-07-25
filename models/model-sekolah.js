@@ -102,7 +102,7 @@ const modelSekolah = new mongoose.Schema({
         type: String,
         required: [true, "Harus memiliki logoSekolah"]
     }
-})
+}, { timestamps: true })
 
 const Sekolah = mongoose.model("Sekolah", modelSekolah);
 

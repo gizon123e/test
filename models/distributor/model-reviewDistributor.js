@@ -25,7 +25,7 @@ const modelReviewDistributor = new mongoose.Schema({
         type: String,
         ref: "Product",
         required: [true, "id_produk harus di isi"]
-    },
+    }
 }, { timestamps: true })
 
 const ReviewDistributor = mongoose.model("ReviewDistributor", modelReviewDistributor)

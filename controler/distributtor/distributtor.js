@@ -46,7 +46,6 @@ module.exports = {
 
             // const dataProduct = await Product.findOne({ _id: req.params.id }).populate('userId')
             const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
-            const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
 
             let ukuranVolumeProduct = 0

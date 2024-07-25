@@ -14,7 +14,12 @@ const contactSchema = new mongoose.Schema({
     id_toko: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'TokoVendor',
-        required: [true, 'contact harus di isi']
+        required: false
+    },
+    id_pengemudi: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Pengemudi',
+        required: false
     }
 });
 
