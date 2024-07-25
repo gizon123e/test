@@ -367,16 +367,17 @@ module.exports = {
                                 }
 
                                 let itemTotal = 0
-
+                                let totalQuantity = 0
                                 selectedPengiriman.map(pgr => {
                                     pgr.productToDelivers.map(prd => {
                                        if(prd.productId.toString() === productSelected._id.toString()){
                                             itemTotal += productSelected.total_price * prd.quantity
+                                            totalQuantity += prd.quantity
                                        }
 
-                                       if (!addedPengiriman.has(selectedPengiriman._id.toString())) {
-                                            jumlah_uang += selectedPengiriman.total_ongkir;
-                                            addedPengiriman.add(selectedPengiriman._id.toString());
+                                       if (!addedPengiriman.has(pgr._id.toString())) {
+                                            jumlah_uang += pgr.total_ongkir;
+                                            addedPengiriman.add(pgr._id.toString());
                                         }
                                     })
                                 })
@@ -388,7 +389,7 @@ module.exports = {
                                 jumlah_uang += itemTotal;
 
                                 if(order.biaya_asuransi){
-                                    jumlah_uang += biaya_awal_asuransi * totalQuantity.quantity
+                                    jumlah_uang += biaya_awal_asuransi * totalQuantity
                                 }
                     
                                 if (!store[storeId]) {
@@ -406,21 +407,18 @@ module.exports = {
                                 }
                                 store[storeId].totalHargaProduk += itemTotal
                                 store[storeId].total_pesanan = jumlah_uang;
-                                store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct, quantity: totalQuantity.quantity });
+                                store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct, quantity: totalQuantity });
                                 jumlah_uang = 0
                             }
                         };
 
-                        // Object.keys(store).forEach(key => {
-                        //     const { total_pesanan , ...restOfStore } = store[key]
-                        //     data.push({...rest, status: order.status , total_pesanan: jumlah_uang, ...restOfStore})
-                        // })
                         Object.keys(store).forEach(key => {
                             const {totalHargaProduk, total_pesanan, ...restOfStore} = store[key]
                             const rasioJasaAplikasi = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_jasa_aplikasi);
                             const rasioBiayaLayanan = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_layanan);
                             const jumlah = total_pesanan + rasioJasaAplikasi + rasioBiayaLayanan
-                            data.push({...rest, status: "Berlangsung" , total_pesanan: jumlah, ...restOfStore})
+                            console.log(totalHargaProduk)
+                            data.push({...rest, status , total_pesanan: jumlah, ...restOfStore})
                         });
                     }
                 }
