@@ -23,7 +23,6 @@ const Pesanan = require("../models/pesanan/model-orders");
 const { pipeline } = require("stream");
 const { vendor } = require("../midelware/user-role-clasification");
 // const BahanBaku = require("../models/model-bahan-baku");
-// const SalesReport = require("../models/model-laporan-penjualan");
 
 module.exports = {
   getProductWithSpecific: async (req, res, next) => {
@@ -379,6 +378,30 @@ module.exports = {
           $addFields: {
             "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] },
           },
+        },
+        {
+          $lookup:{
+            from: "salesreports",
+            localField: "_id",
+            foreignField: "productId",
+            as: "terjual"
+          }
+        },
+        {
+          $unwind:"$terjual"
+        },
+        {
+          $addFields: {
+            terjual: {
+              $reduce:{
+                input: "$terjual.track",
+                initialValue: 0,
+                in: {
+                  $add: ["$$value", "$$this.soldAtMoment"]
+                }
+              }
+            }
+          }
         },
         {
           $project: { alamatToko: 0 },
