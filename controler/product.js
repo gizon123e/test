@@ -110,24 +110,22 @@ module.exports = {
           select: "_id role",
         })
         .lean();
-      console.log(datas.length);
       for (const produk of datas) {
-        console.log(produk._id, produk.userId);
         switch (produk.userId.role) {
           case "vendor":
-            produk.namaToko = await Vendor.findOne({ userId: produk.userId._id }).select("nama namaBadanUsaha").populate({
+            produk.namaToko = await TokoVendor.findOne({ userId: produk.userId._id }).select("namaToko").populate({
               path: "address",
               select: "regency",
             });
             break;
           case "supplier":
-            produk.namaToko = await Supplier.findOne({ userId: produk.userId._id }).select("nama namaBadanUsaha").populate({
+            produk.namaToko = await Supplier.findOne({ userId: produk.userId._id }).select("namaToko").populate({
               path: "address",
               select: "regency",
             });
             break;
           case "produsen":
-            produk.namaToko = await Produsen.findOne({ userId: produk.userId._id }).select("nama namaBadanUsaha").populate({
+            produk.namaToko = await Produsen.findOne({ userId: produk.userId._id }).select("namaToko").populate({
               path: "address",
               select: "regency",
             });
@@ -229,6 +227,30 @@ module.exports = {
           $addFields: {
             "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] },
           },
+        },
+        {
+          $lookup:{
+            from: "salesreports",
+            localField: "_id",
+            foreignField: "productId",
+            as: "terjual"
+          }
+        },
+        {
+          $unwind:"$terjual"
+        },
+        {
+          $addFields: {
+            terjual: {
+              $reduce:{
+                input: "$terjual.track",
+                initialValue: 0,
+                in: {
+                  $add: ["$$value", "$$this.soldAtMoment"]
+                }
+              }
+            }
+          }
         },
         {
           $project: { alamatToko: 0 },
