@@ -204,14 +204,14 @@ module.exports = {
       };
       newUser.codeOtp = codeOtp;
       await newUser.save();
-
+      let hasilOtp;
       if(email && !phone){ 
-        sendOTP(email, kode_random, "login")
+        hasilOtp = await sendOTP(email, kode_random, "login")
       }else if(!email && phone) {
         console.log('masuk')
-        sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
+        hasilOtp = await sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
       }
-      
+      console.log(hasilOtp)
 
       return res.status(200).json({
         error: false,
