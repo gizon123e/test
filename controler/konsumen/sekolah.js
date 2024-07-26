@@ -22,6 +22,17 @@ module.exports = {
         }
     },
 
+    getDetailSekolah: async (req, res, next) => {
+        try {
+            const data = await Sekolah.findOne({_id: req.params.id, userId: req.user.id});
+            if(!data) return res.status(404).json({message: `Data sekolah dengan id: ${req.params.id} tidak ditemukan`})
+            return res.status(200).json({message: "Berhasil Mendapatkan Data", data})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     getByNPSNSekolahSimulasi: async (req, res, next) => {
         try {
             const data = await SimulasiSekolah.findOne({ NPSN: req.params.id })

@@ -268,7 +268,6 @@ module.exports = {
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
       const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true});
-
       const vendors = await TokoVendor.aggregate([
         {
           $lookup: {
@@ -433,7 +432,6 @@ module.exports = {
       let handlerFilter = {};
 
       if (name) {
-        console.log(name);
         handlerFilter = {
           ...handlerFilter,
           name_product: { $regex: new RegExp(name, "i") },
@@ -449,6 +447,7 @@ module.exports = {
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
       }
 
+      const nama_toko = await TokoVendor.find({namaToko: { $regex: new RegExp(name, "i") }}).select("namaToko");
       const list_product = await Product.find(handlerFilter).populate("userId", "-password").populate("categoryId");
 
       req.user = auth();
@@ -459,6 +458,7 @@ module.exports = {
         });
       } else {
         datas = list_product.filter((data) => {
+          if(!data.userId) return false;
           switch (req.user.role) {
             case "konsumen":
               return data.userId.role === "vendor";
@@ -470,10 +470,10 @@ module.exports = {
         });
       }
 
-      if (!list_product || list_product.length === 0) return res.status(404).json({ message: `Product dengan nama ${search} serta dengan kategori ${category} tidak ditemukan` });
+      if (!list_product || list_product.length === 0) return res.status(404).json({ message: `Product dengan nama ${name} serta dengan kategori ${category} tidak ditemukan` });
       if ((!datas || datas.length === 0) && (list_product || list_product.length > 0)) return res.status(403).json({ message: "Produk yang dicari tidak boleh untuk user " + req.user.role });
-
-      return res.status(200).json({ datas });
+      console.log({ datas, toko: nama_toko })
+      return res.status(200).json({ datas, toko: nama_toko });
     } catch (error) {
       console.log(error);
       next(error);
