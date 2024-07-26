@@ -48,7 +48,7 @@ const createOrUpdateContact = async (req, res) => {
 // Fetch contacts for a user
 const getContacts = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const { userId, id_toko } = req.params;
 
         if (!userId) {
             return res.status(400).json({ message: 'userId is required' });

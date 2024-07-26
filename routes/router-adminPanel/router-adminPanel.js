@@ -1,5 +1,6 @@
 // controler distributtor
 const controlerAdminPanel = require('../../controler/adminPanel/adminPanel')
+const controlerPenelInvoice = require('../../controler/adminPanel/invoicePanel')
 
 const router = require('express').Router()
 
@@ -12,6 +13,7 @@ router.get('/pesanan/:id', controlerAdminPanel.getByIdPesanan)
 router.get('/pengiriman', controlerAdminPanel.getAllPengiriman)
 router.get('/pembatalan', controlerAdminPanel.getAllPembatalan)
 router.get('/transaksi', controlerAdminPanel.getAllTransaksi)
+router.get('/invoice', controlerPenelInvoice.getAllInvoice)
 router.post('/register-panel', controlerAdminPanel.register)
 router.post('/login-panel', controlerAdminPanel.login)
 router.put("/tolak-document/:id", controlerAdminPanel.tolakVerivikasiDocument)
