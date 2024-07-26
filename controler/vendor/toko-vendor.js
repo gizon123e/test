@@ -2,6 +2,7 @@ const Toko = require('../../models/vendor/model-toko');
 const Address = require('../../models/model-address');
 const path = require('path');
 const Product = require('../../models/model-product');
+const {Pangan} = require('../../models/model-pangan');
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -62,6 +63,24 @@ module.exports = {
             if(!updatedToko) return res.status(404).json({message: "Kamu tidak mempunyai Toko"});
             return res.status(201).json({message: "Berhasil Memperbarui Data Toko", data: updatedToko})
         } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
+    getNotifUpload: async(req, res, next) => {
+        try{
+            const dataToko = await Toko.findOne({userId: req.user.id}).populate('address');
+            const province = "Sulawesi Utara";
+            const provinceRegex = new RegExp(province, 'i');
+            
+            const rekomendasiMakanan = await Pangan.find({
+                 mayoritas_daerah_lokal: { $regex: provinceRegex },
+                 jenis_makanan: "makanan utama"
+                }).select("_id jenis_makanan kode_bahan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan");
+
+res.status(200).json(rekomendasiMakanan);
+        }catch (error) {
             console.log(error);
             next(error);
         }

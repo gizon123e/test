@@ -15,6 +15,10 @@ const modelPangan = new mongoose.Schema({
     jenis_pangan:{
         type: String
     },
+    jenis_makanan: {
+      type: String,
+      default: null
+    },
     nama_makanan_lokal: {
         type: String
     },
