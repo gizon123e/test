@@ -426,7 +426,7 @@ module.exports = {
                                 const rasio = totalHargaSubsidi / totalProductSubsidi
                                 jumlah +=  Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan)
                             }
-                            data.push({...rest, status , total_pesanan: total_pesanan + jumlah , ...restOfStore})
+                            data.push({...rest, status , total_pesanan: total_pesanan + jumlah, status_pengiriman , ...restOfStore})
                         });
                     }
                 }
