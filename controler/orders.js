@@ -337,8 +337,8 @@ module.exports = {
                     else {
                         let jumlah_uang = 0
                         const store = {}
-                        const invoiceSubsidi = await Invoice.exists({id_transaksi: transaksiSubsidi._id})
-                        const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id})
+                        const invoiceSubsidi = await Invoice.exists({id_transaksi: transaksiSubsidi?._id})
+                        const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi?._id})
                         const pengiriman = await Pengiriman.find({ orderId: order._id }).populate('distributorId').populate('id_jenis_kendaraan').lean();
                         let totalProductTambahan = 0
                         let totalProductSubsidi = 0  
@@ -391,11 +391,11 @@ module.exports = {
                                             jumlah_uang += totalHargaProduk
                                         }
 
-                                        if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
+                                        if(pgr.invoice.toString() === invoiceSubsidi?._id.toString()){
                                             totalProductSubsidi += totalHargaProduk
                                             store[storeId].totalHargaSubsidi += totalHargaProduk
                                         }
-                                        if(pgr.invoice.toString() === invoiceTambahan._id.toString()){
+                                        if(pgr.invoice.toString() === invoiceTambahan?._id.toString()){
                                             totalProductTambahan += totalHargaProduk
                                             store[storeId].totalHargaTambahan += totalHargaProduk
                                         }
@@ -1089,6 +1089,7 @@ module.exports = {
                 sekolahId,
                 biaya_awal_asuransi
             } = req.body
+            console.log(JSON.stringify(req.body))
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if(!sekolahId) return res.status(400).json({message: "Kirimkan Id Sekolah"})
             if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" })
