@@ -164,101 +164,103 @@ module.exports = {
             as: "userData",
           },
         },
-        {
-          $unwind: "$userData",
-        },
-        {
-          $lookup: {
-            from: "tokovendors",
-            let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
-            as: "vendorData",
-          },
-        },
-        {
-          $lookup: {
-            from: "suppliers",
-            let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
-            as: "supplierData",
-          },
-        },
-        {
-          $lookup: {
-            from: "produsens",
-            let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
-            as: "produsenDatas",
-          },
-        },
-        {
-          $addFields: {
-            dataToko: {
-              $cond: {
-                if: { $gt: [{ $size: "$vendorData" }, 0] },
-                then: { $arrayElemAt: ["$vendorData", 0] },
-                else: {
-                  $cond: {
-                    if: { $gt: [{ $size: "$supplierData" }, 0] },
-                    then: { $arrayElemAt: ["$supplierData", 0] },
-                    else: { $arrayElemAt: ["$produsenDatas", 0] },
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          $project: {
-            vendorData: 0,
-            supplierData: 0,
-            produsenDatas: 0,
-          },
-        },
-        {
-          $lookup: {
-            from: "addresses",
-            localField: "dataToko.address",
-            foreignField: "_id",
-            as: "alamatToko",
-          },
-        },
-        {
-          $addFields: {
-            "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] },
-          },
-        },
-        {
-          $lookup:{
-            from: "salesreports",
-            localField: "_id",
-            foreignField: "productId",
-            as: "terjual"
-          }
-        },
-        {
-          $unwind:"$terjual"
-        },
-        {
-          $addFields: {
-            terjual: {
-              $reduce:{
-                input: "$terjual.track",
-                initialValue: 0,
-                in: {
-                  $add: ["$$value", "$$this.soldAtMoment"]
-                }
-              }
-            }
-          }
-        },
-        {
-          $project: { alamatToko: 0 },
-        },
-        {
-          $project: { userData: 0 },
-        },
+        // {
+        //   $unwind: "$userData",
+        // },
+        // {
+        //   $lookup: {
+        //     from: "tokovendors",
+        //     let: { userId: "$userId" },
+        //     pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
+        //     as: "vendorData",
+        //   },
+        // },
+        // {
+        //   $lookup: {
+        //     from: "suppliers",
+        //     let: { userId: "$userId" },
+        //     pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+        //     as: "supplierData",
+        //   },
+        // },
+        // {
+        //   $lookup: {
+        //     from: "produsens",
+        //     let: { userId: "$userId" },
+        //     pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+        //     as: "produsenDatas",
+        //   },
+        // },
+        // {
+        //   $addFields: {
+        //     dataToko: {
+        //       $cond: {
+        //         if: { $gt: [{ $size: "$vendorData" }, 0] },
+        //         then: { $arrayElemAt: ["$vendorData", 0] },
+        //         else: {
+        //           $cond: {
+        //             if: { $gt: [{ $size: "$supplierData" }, 0] },
+        //             then: { $arrayElemAt: ["$supplierData", 0] },
+        //             else: { $arrayElemAt: ["$produsenDatas", 0] },
+        //           },
+        //         },
+        //       },
+        //     },
+        //   },
+        // },
+        // {
+        //   $project: {
+        //     vendorData: 0,
+        //     supplierData: 0,
+        //     produsenDatas: 0,
+        //   },
+        // },
+        // {
+        //   $lookup: {
+        //     from: "addresses",
+        //     localField: "dataToko.address",
+        //     foreignField: "_id",
+        //     as: "alamatToko",
+        //   },
+        // },
+        // {
+        //   $addFields: {
+        //     "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] },
+        //   },
+        // },
+        // {
+        //   $lookup:{
+        //     from: "salesreports",
+        //     localField: "_id",
+        //     foreignField: "productId",
+        //     as: "terjual"
+        //   }
+        // },
+        // {
+        //   $unwind:"$terjual"
+        // },
+        // {
+        //   $addFields: {
+        //     terjual: {
+        //       $reduce:{
+        //         input: "$terjual.track",
+        //         initialValue: 0,
+        //         in: {
+        //           $add: ["$$value", "$$this.soldAtMoment"]
+        //         }
+        //       }
+        //     }
+        //   }
+        // },
+        // {
+        //   $project: { alamatToko: 0 },
+        // },
+        // {
+        //   $project: { userData: 0 },
+        // },
       ]);
+
+      return res.status(200).json({dataProds})
       const productIds = dataProds.map((item) => {
         return item._id;
       });
