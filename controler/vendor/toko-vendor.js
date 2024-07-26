@@ -78,8 +78,11 @@ module.exports = {
                  mayoritas_daerah_lokal: { $regex: provinceRegex },
                  jenis_makanan: "makanan utama"
                 }).select("_id jenis_makanan kode_bahan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan");
-
-res.status(200).json(rekomendasiMakanan);
+                
+            res.status(200).json({
+                message: `Rekomendasi kebutuhan makanan di provinsi ${province}`,
+                rekomendasiMakanan
+            });
         }catch (error) {
             console.log(error);
             next(error);
