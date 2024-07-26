@@ -71,7 +71,7 @@ module.exports = {
     getNotifUpload: async(req, res, next) => {
         try{
             const dataToko = await Toko.findOne({userId: req.user.id}).populate('address');
-            const province = "Sulawesi Utara";
+            const province = dataToko.address.province;
             const provinceRegex = new RegExp(province, 'i');
             
             const rekomendasiMakanan = await Pangan.find({
