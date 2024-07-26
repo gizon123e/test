@@ -184,21 +184,21 @@ module.exports = {
                 let totalPriceVendor = 0
                 
                 for (const order of dataOrders) {
-                    let { items, status, total_pesanan , ...rest } = order
+                    let { items, status, total_pesanan , biaya_asuransi, biaya_awal_asuransi, ...rest } = order
                     const transaksi = await Transaksi.exists({id_pesanan: order._id, subsidi: false})
                     const transaksiSubsidi = await Transaksi.exists({id_pesanan: order._id, subsidi: true})
                     const sekolah = await Sekolah.findOne({_id: order.sekolahId, userId: req.user.id}).select("jumlahMurid").lean()
                     if(!sekolah) return res.status(404).json({message: "Sekolah tidak ditemukan, akan segera diperbaiki"})
                     let sisaSubsidi = sekolah.jumlahMurid
+                    const addedPengiriman = new Set();
+                    const dataProduct = await DataProductOrder.findOne({ pesananId: order._id });
                     if (order.status === "Belum Bayar" || order.status === "Dibatalkan") {
                         if(transaksi && transaksiSubsidi){
-                            const addedPengiriman = new Set();
                             if (transaksiSubsidi) {
                                 const store = {};
                                 const invoice = await Invoice.findOne({ id_transaksi: transaksiSubsidi._id }).lean();
-                                let jumlah_uang = order.biaya_layanan + order.biaya_jasa_aplikasi;
+                                let jumlah_uang = 0;
                                 const pengiriman = await Pengiriman.find({ invoice: invoice._id }).populate('distributorId').populate('id_jenis_kendaraan').lean();
-                                const dataProduct = await DataProductOrder.findOne({ pesananId: order._id });
                                 for (const item of order.items){
                                     const { productId, quantity, ...restOfProduct } = item.product;
                                     const productSelected = dataProduct.dataProduct.find(prod => prod._id.toString() === item.product.productId._id);
@@ -219,8 +219,10 @@ module.exports = {
                                                 break;
                                         }
                             
-                                        const selectedPengiriman = pengiriman.find(pgr => pgr.productToDelivers.some(prd => productSelected._id.toString() === prd.productId));
-                                        
+                                        const selectedPengiriman = pengiriman.find(pgr =>{
+                                            return pgr.productToDelivers.some(prd => productSelected._id.toString() === prd.productId.toString())
+                                        });
+
                                         if (!selectedPengiriman) {
                                             continue;
                                         }
@@ -228,8 +230,12 @@ module.exports = {
                                         const totalQuantity = selectedPengiriman.productToDelivers.find(ship => ship.productId.toString() === productSelected._id.toString());
                             
                                         let itemTotal = productSelected.total_price * totalQuantity.quantity;
-                                        if(order.biaya_asuransi) jumlah_uang += order.biaya_awal_asuransi * totalQuantity.quantity
+                                        totalPriceVendor += itemTotal
                                         jumlah_uang += itemTotal;
+
+                                        if(order.biaya_asuransi){
+                                            jumlah_uang += biaya_awal_asuransi * totalQuantity.quantity
+                                        }
                             
                                         if (!addedPengiriman.has(selectedPengiriman._id.toString())) {
                                             jumlah_uang += selectedPengiriman.total_ongkir;
@@ -245,18 +251,23 @@ module.exports = {
                                                     namaToko: detailToko.namaToko
                                                 },
                                                 status_pengiriman: [selectedPengiriman],
+                                                totalHargaProduk: 0,
                                                 arrayProduct: []
                                             };
                                         }
-                            
-                                        store[storeId].total_pesanan += itemTotal;
+                                        store[storeId].totalHargaProduk += itemTotal
+                                        store[storeId].total_pesanan = jumlah_uang;
                                         store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct, quantity: totalQuantity.quantity });
                                         sisaSubsidi -= totalQuantity.quantity
+                                        jumlah_uang = 0
                                     }
                                 }
                                 Object.keys(store).forEach(key => {
-                                    const { total_pesanan , ...restOfStore } = store[key]
-                                    data.push({...rest, status: "Berlangsung" , total_pesanan: jumlah_uang, ...restOfStore})
+                                    const {totalHargaProduk, total_pesanan, ...restOfStore} = store[key]
+                                    const rasioJasaAplikasi = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_jasa_aplikasi);
+                                    const rasioBiayaLayanan = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_layanan);
+                                    const jumlah = total_pesanan + rasioJasaAplikasi + rasioBiayaLayanan
+                                    data.push({...rest, status: "Berlangsung" , total_pesanan: jumlah, ...restOfStore})
                                 });
                             }
 
@@ -326,56 +337,38 @@ module.exports = {
                     else {
                         let jumlah_uang = 0
                         const store = {}
-                        
-
-                        for (const item of order.items) {
-                            const storeId = item.product.productId.userId._id.toString();
-                            let invoice;
-                        
-                            if (sisaSubsidi > 0) {
-                                console.log('masuk sini')
-                                invoice = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
-                            } else {
-                                invoice = await Invoice.findOne({ id_transaksi: transaksi?._id });
-                            }
-                        
-                            const pengiriman = await Pengiriman.find({
-                                orderId: order._id,
-                                invoice: invoice._id
-                            }).populate('distributorId').populate('id_jenis_kendaraan').lean();
-                                                    
-                            let detailToko;
-                            switch (item.product.productId.userId.role) {
-                                case "vendor":
-                                    detailToko = await TokoVendor.findOne({ userId: storeId }).select('namaToko');
-                                    break;
-                                case "supplier":
-                                    detailToko = await Supplier.findOne({ userId: storeId });
-                                    break;
-                                case "produsen":
-                                    detailToko = await Produsen.findOne({ userId: storeId });
-                                    break;
-                            }
-                        
-                            const dataProduct = await DataProductOrder.findOne({ pesananId: order._id });
-                            const productSelected = dataProduct.dataProduct.find(prod => prod._id.toString() === item.product.productId._id.toString());
-                        
+                        const invoiceSubsidi = await Invoice.exists({id_transaksi: transaksiSubsidi._id})
+                        const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id})
+                        const pengiriman = await Pengiriman.find({ orderId: order._id }).populate('distributorId').populate('id_jenis_kendaraan').lean();
+                        let totalProductTambahan = 0
+                        let totalProductSubsidi = 0  
+                        for (const item of order.items){
+                            const { productId, quantity, ...restOfProduct } = item.product;
+                            const productSelected = dataProduct.dataProduct.find(prod => prod._id.toString() === item.product.productId._id);
+                            console.log(productSelected.name_product, productSelected._id)
                             if (productSelected) {
-                                const selectedPengiriman = pengiriman.find(pgr => 
-                                    pgr.productToDelivers.some(prd => item.product.productId._id.toString() === prd.productId.toString())
-                                );
-                        
-                                const totalQuantity = selectedPengiriman.productToDelivers.find((prd) => {
-                                    return prd.productId.toString() === productSelected._id;
-                                }, 0);
-
-                                sisaSubsidi -= totalQuantity.quantity;
-                                const itemTotal = productSelected.total_price * totalQuantity.quantity;
-                                if(order.biaya_asuransi) jumlah_uang += order.biaya_awal_asuransi * totalQuantity.quantity
-                                jumlah_uang += itemTotal;
-                        
+                                processed = true;
+                    
+                                let detailToko;
+                                const storeId = item.product.productId.userId._id.toString();
+                                switch (item.product.productId.userId.role) {
+                                    case "vendor":
+                                        detailToko = await TokoVendor.findOne({ userId: storeId }).select('namaToko');
+                                        break;
+                                    case "supplier":
+                                        detailToko = await Supplier.findOne({ userId: storeId });
+                                        break;
+                                    case "produsen":
+                                        detailToko = await Produsen.findOne({ userId: storeId });
+                                        break;
+                                }
+                    
+                                const selectedPengiriman = pengiriman.filter(pgr =>{
+                                    return pgr.productToDelivers.some(prd => productSelected._id.toString() === prd.productId.toString())
+                                });
+                                let totalQuantity = 0
+                    
                                 if (!store[storeId]) {
-                                    totalPriceVendor += productSelected.total_price * totalQuantity.quantity;
                                     store[storeId] = {
                                         total_pesanan: 0,
                                         seller: {
@@ -383,28 +376,58 @@ module.exports = {
                                             idToko: detailToko._id,
                                             namaToko: detailToko.namaToko
                                         },
-                                        status_pengiriman: [],
+                                        status_pengiriman: selectedPengiriman,
+                                        totalHargaSubsidi: 0,
+                                        totalHargaTambahan: 0,
                                         arrayProduct: []
                                     };
                                 }
-                        
-                                // Ensure no duplicate pengiriman IDs
-                                if (!store[storeId].status_pengiriman.some(pgr => pgr._id.toString() === selectedPengiriman._id.toString())) {
-                                    store[storeId].status_pengiriman.push(selectedPengiriman);
+                                
+                                selectedPengiriman.map(pgr => {
+                                    pgr.productToDelivers.map(prd => {
+                                        const totalHargaProduk = productSelected.total_price * prd.quantity
+                                        if(prd.productId.toString() === productSelected._id.toString()){
+                                            totalQuantity += prd.quantity
+                                            jumlah_uang += totalHargaProduk
+                                        }
+
+                                        if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
+                                            totalProductSubsidi += totalHargaProduk
+                                            store[storeId].totalHargaSubsidi += totalHargaProduk
+                                        }
+                                        if(pgr.invoice.toString() === invoiceTambahan._id.toString()){
+                                            totalProductTambahan += totalHargaProduk
+                                            store[storeId].totalHargaTambahan += totalHargaProduk
+                                        }
+                                    });
+
+                                    if(!addedPengiriman.has(pgr._id.toString)){
+                                        jumlah_uang += pgr.total_ongkir;
+                                        addedPengiriman.add(pgr._id.toString())
+                                    }
+                                });
+                                if(order.biaya_asuransi){
+                                    jumlah_uang += biaya_awal_asuransi * totalQuantity
                                 }
-                        
-                                const { productId, ...restOfProduct } = item.product;
+                                totalPriceVendor += productSelected.total_price * totalQuantity
                                 store[storeId].total_pesanan = jumlah_uang;
-                                store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct });
-                            } else {
-                                console.log(`Product with ID ${item.product.productId._id} not found in dataProduct`);
+                                store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct, quantity: totalQuantity });
+                                jumlah_uang = 0
                             }
-                        }
-                        
+                        };  
                         Object.keys(store).forEach(key => {
-                            const { total_pesanan , ...restOfStore } = store[key]
-                            data.push({...rest, status: order.status , total_pesanan: jumlah_uang, ...restOfStore})
-                        })
+                            let jumlah = 0
+                            const {totalHargaSubsidi, totalHargaTambahan, status_pengiriman, total_pesanan, ...restOfStore} = store[key]
+                            if(totalHargaTambahan > 0){
+                                const rasio = totalHargaTambahan / totalProductTambahan
+                                jumlah +=  Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan)
+                            }
+                            if(totalHargaSubsidi > 0){
+                                const rasio = totalHargaSubsidi / totalProductSubsidi
+                                jumlah +=  Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan)
+                            }
+                            data.push({...rest, status , total_pesanan: total_pesanan + jumlah, status_pengiriman , ...restOfStore})
+                        });
                     }
                 }
                 const filteredData = data.filter(ord => {
@@ -839,7 +862,9 @@ module.exports = {
                     totalOngkir: 0,
                     totalDiskon: 0,
                     asuransiPengiriman: 0,
-                    totalPotonganOngkir: 0
+                    totalPotonganOngkir: 0,
+                    biaya_layanan: 0,
+                    biaya_jasa_aplikasi: 0
                 };
                 const detailInvoiceSubsidi = {
                     product: [],
@@ -847,21 +872,31 @@ module.exports = {
                     totalOngkir: 0,
                     totalDiskon: 0,
                     asuransiPengiriman: 0,
-                    totalPotonganOngkir: 0
+                    totalPotonganOngkir: 0,
+                    biaya_layanan: 0,
+                    biaya_jasa_aplikasi: 0
                 };
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi?._id, status: "Lunas" });
-                let jumlah_uang = (biaya_jasa_aplikasi + biaya_layanan) * (invoiceTambahan ? transaksiOrder.length : 1);
+                let jumlah_uang = 0
                 const dataProduct = await DataProductOrder.findOne({ pesananId: req.params.id });
 
-                const addedPengiriman = new Set(); // To keep track of processed pengiriman
-
+                const addedPengiriman = new Set();
+                let totalPriceVendorSubsidi = 0
+                let totalPriceVendorTambahan = 0
+                let total_biaya_layanan = 0
+                let total_biaya_jasa_aplikasi = 0
                 for (const item of items) {
                     const { product, ...restOfItem } = item;
                     const { productId, quantity, ...restOfItemProduct } = product;
                     const { userId, ...restOfProduct } = productId;
                     const user = await User.findById(userId._id).select('email phone').lean();
 
+                    const productSummary = dataProduct.dataProduct.find(prod => {
+                        return prod._id.toString() === productId._id.toString();
+                    });
+
+                    
                     let detailToko;
                     switch (userId.role) {
                         case "vendor":
@@ -877,15 +912,36 @@ module.exports = {
 
                     const pengiriman = await Pengiriman.find({
                         orderId: req.params.id,
-                        id_toko: detailToko._id
                     }).populate('distributorId').populate("jenis_pengiriman").populate("id_jenis_kendaraan").lean();
 
+                    pengiriman.filter(pgr => {
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productSummary?._id.toString()) && pgr.invoice.toString() === invoiceTambahan?._id.toString()
+                    }).forEach(pgr =>{
+                        console.log(pgr.id_toko)
+                        pgr.productToDelivers.forEach(prd => { 
+                            if(prd.productId.toString() === productSummary._id.toString()){
+                                totalPriceVendorTambahan += prd.quantity * productSummary.total_price
+                            }
+                        })
+                    })
+
+                    pengiriman.filter(pgr => {
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productSummary?._id.toString()) && pgr.invoice.toString() === invoiceSubsidi?._id.toString()
+                    }).forEach(pgr =>{
+                        console.log(pgr.id_toko)
+                        pgr.productToDelivers.forEach(prd => { 
+                            if(prd.productId.toString() === productSummary._id.toString()){
+                                totalPriceVendorSubsidi += prd.quantity * productSummary.total_price
+                            }
+                        })
+                    })
+                    
                     const selectedPengirimanSubsidi = pengiriman.find(pgr => {
-                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceSubsidi?._id.toString()
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceSubsidi?._id.toString() && pgr.id_toko.toString() === detailToko._id.toString();
                     });
 
                     const selectedPengirimanTambahan = pengiriman.find(pgr => {
-                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceTambahan?._id.toString()
+                        return pgr.productToDelivers.some(prd => prd.productId.toString() === productId._id.toString()) && pgr.invoice.toString() === invoiceTambahan?._id.toString() && pgr.id_toko.toString() === detailToko._id.toString();
                     });
 
                     let quantityProduct = 0;
@@ -896,35 +952,43 @@ module.exports = {
                     if(selectedPengirimanSubsidi){
                         const foundProd = selectedPengirimanSubsidi.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
                         if (!addedPengiriman.has(selectedPengirimanSubsidi._id.toString())) {
-                            detailInvoiceSubsidi.totalOngkir += selectedPengirimanSubsidi.total_ongkir;
+                            detailInvoiceSubsidi.totalOngkir += selectedPengirimanSubsidi.ongkir;
                             detailInvoiceSubsidi.totalPotonganOngkir += selectedPengirimanSubsidi.potongan_ongkir;
                             detailBiaya.total_potongan_ongkir += selectedPengirimanSubsidi.potongan_ongkir;
                             detailBiaya.total_ongkir += selectedPengirimanSubsidi.total_ongkir;
                             jumlah_uang += selectedPengirimanSubsidi.total_ongkir;
                         }
+                        if (biaya_asuransi) {
+                            detailInvoiceSubsidi.asuransiPengiriman +=  dataOrder[0].biaya_awal_asuransi * foundProd.quantity;
+                        };
                         detailInvoiceSubsidi.totalHargaProduk += productSelected.total_price * foundProd.quantity;
                         detailInvoiceSubsidi.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
                         jumlah_uang += productSelected.total_price * foundProd.quantity;
-                        detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
+                        const total_produk = productSelected.total_price * foundProd.quantity
+                        detailBiaya.total_harga_produk += total_produk;
                         quantityProduct += foundProd.quantity;
-                        addedPengiriman.add(selectedPengirimanSubsidi._id.toString());                        
+                        addedPengiriman.add(selectedPengirimanSubsidi._id.toString());
                     }
 
                     if(selectedPengirimanTambahan){
                         const foundProd = selectedPengirimanTambahan.productToDelivers.find(prd => productSelected._id.toString() === prd.productId.toString());
                         if (!addedPengiriman.has(selectedPengirimanTambahan._id.toString())) {
-                            detailInvoiceTambahan.totalOngkir += selectedPengirimanTambahan.total_ongkir;
+                            detailInvoiceTambahan.totalOngkir += selectedPengirimanTambahan.ongkir;
                             detailInvoiceTambahan.totalPotonganOngkir += selectedPengirimanTambahan.potongan_ongkir;
                             detailBiaya.total_potongan_ongkir += selectedPengirimanTambahan.potongan_ongkir;
                             detailBiaya.total_ongkir += selectedPengirimanTambahan.total_ongkir;
                             jumlah_uang += selectedPengirimanTambahan.total_ongkir;            
                         }
+                        if (biaya_asuransi) {
+                            detailInvoiceTambahan.asuransiPengiriman +=  dataOrder[0].biaya_awal_asuransi * foundProd.quantity;
+                        };
                         detailInvoiceTambahan.totalHargaProduk += productSelected.total_price * foundProd.quantity;
                         detailInvoiceTambahan.product.push({ name_product: productSelected.name_product, harga: productSelected.total_price, quantity: foundProd.quantity });
                         jumlah_uang += productSelected.total_price * foundProd.quantity;
-                        detailBiaya.total_harga_produk += productSelected.total_price * foundProd.quantity;
+                        const total_produk = productSelected.total_price * foundProd.quantity
+                        detailBiaya.total_harga_produk += total_produk;
                         quantityProduct += foundProd.quantity;                       
-                        addedPengiriman.add(selectedPengirimanTambahan._id.toString());                        
+                        addedPengiriman.add(selectedPengirimanTambahan._id.toString());
                     }
 
                     if (biaya_asuransi) {
@@ -932,7 +996,6 @@ module.exports = {
                         detailBiaya.total_asuransi += dataOrder[0].biaya_awal_asuransi * quantityProduct;
                     };
 
-                    
                     if(productSelected){
                         if (!store[userId._id]) {
                             store[userId._id] = {
@@ -951,8 +1014,24 @@ module.exports = {
                     }
                 }
 
-
-                Object.keys(store).forEach(key => data.push(store[key]))
+                Object.keys(store).forEach(key =>{
+                    const total_produk_tambahan = detailInvoiceTambahan.totalHargaProduk
+                    const total_produk_subsidi = detailInvoiceSubsidi.totalHargaProduk
+                    const rasioJasaAplikasiSubsidi = totalPriceVendorSubsidi > 0 ? Math.round(total_produk_subsidi / totalPriceVendorSubsidi * biaya_jasa_aplikasi) : 0;
+                    const rasioBiayaLayananSubsidi = totalPriceVendorSubsidi > 0 ? Math.round(total_produk_subsidi / totalPriceVendorSubsidi * biaya_layanan) : 0;
+                    const rasioJasaAplikasiTambahan = totalPriceVendorTambahan > 0 ? Math.round(total_produk_tambahan / totalPriceVendorTambahan * biaya_jasa_aplikasi) : 0;
+                    const rasioBiayaLayananTambahan = totalPriceVendorTambahan > 0 ? Math.round(total_produk_tambahan / totalPriceVendorTambahan * biaya_layanan) : 0;
+                    detailInvoiceTambahan.biaya_jasa_aplikasi += rasioJasaAplikasiTambahan
+                    detailInvoiceTambahan.biaya_layanan += rasioBiayaLayananTambahan
+                    detailInvoiceSubsidi.biaya_jasa_aplikasi += rasioJasaAplikasiSubsidi
+                    detailInvoiceSubsidi.biaya_layanan += rasioBiayaLayananSubsidi
+                    total_biaya_jasa_aplikasi += rasioJasaAplikasiTambahan
+                    total_biaya_layanan += rasioBiayaLayananTambahan    
+                    total_biaya_jasa_aplikasi += rasioJasaAplikasiSubsidi
+                    total_biaya_layanan += rasioBiayaLayananSubsidi
+                    data.push(store[key])
+                })
+                jumlah_uang += total_biaya_layanan + total_biaya_jasa_aplikasi
                 const pembatalan = await Pembatalan.findOne({pesananId: _id, userId: req.user.id });    
                 const pay = paymentMethod.find(item =>{ return item !== null })
                 const paymentNumber = await VirtualAccountUser.findOne({userId: req.user.id, nama_bank: pay._id}).select("nomor_va").lean()
@@ -979,8 +1058,8 @@ module.exports = {
                     invoiceTambahan: invoiceTambahan?  invoiceTambahan : null,
                     detailInvoiceSubsidi,
                     detailInvoiceTambahan,
-                    biaya_layanan,
-                    biaya_jasa_aplikasi,
+                    biaya_layanan: Math.round(total_biaya_layanan),
+                    biaya_jasa_aplikasi: Math.round(total_biaya_jasa_aplikasi),
                     ...restOfOrder,
                     kode_transaksi: transaksi?.kode_transaksi || transaksiSubsidi?.kode_transaksi,
                     ...detailBiaya,
@@ -1190,7 +1269,10 @@ module.exports = {
             } else if (totalQuantity > sekolah.jumlahMurid) {
                 const id_transaksi_subsidi = new mongoose.Types.ObjectId();
                 const id_invoice_subsidi = new mongoose.Types.ObjectId()
-                let sisaSubsidi = sekolah.jumlahMurid;                
+                const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
+                const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
+                let sisaSubsidi = sekolah.jumlahMurid;
+                const ids=[]            
                 for (const item of items) {
                     const dapatSubsidi = [];
                     const tidakDapatSubsidi = [];
@@ -1236,7 +1318,6 @@ module.exports = {
                         const totalProduk = pengirimanSubsidi.products.reduce((accumulator, currentValue)=>{
                             return accumulator + currentValue.quantity
                         }, 0)
-                        const ids = []
                         const totalProdukSubsidi = dapatSubsidi.reduce((acc, val)=>{
                             ids.push(val.productId)
                             return acc + val.quantity
@@ -1246,9 +1327,6 @@ module.exports = {
                         const potongan_ongkir = Math.round(basePotonganOngkir * totalProdukSubsidi)
                         const ongkir = Math.round(baseOngkir * totalProdukSubsidi)
                         const total_ongkir = ongkir - potongan_ongkir
-                        const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
-                        const id_transaksi = new mongoose.Types.ObjectId()
-                        const id_invoice = new mongoose.Types.ObjectId()
                         dapatSubsidi.forEach(prd => {
                             promisesFunct.push(
                                 Product.findByIdAndUpdate(
@@ -1266,23 +1344,6 @@ module.exports = {
                             )
                         });
                         promisesFunct.push(
-                            Transaksi.create({
-                                _id: id_transaksi,
-                                id_pesanan: dataOrder._id,
-                                jenis_transaksi: "keluar",
-                                status: "Menunggu Pembayaran",
-                                subsidi: true,
-                                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
-                            }),
-    
-                            Invoice.create({
-                                _id: id_invoice,
-                                id_transaksi,
-                                userId: req.user.id,
-                                status: "Piutang",
-                                kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
-                            }),
-
                             Pengiriman.create({
                                 orderId: dataOrder._id,
                                 distributorId: pengirimanSubsidi.id_distributor,
@@ -1295,13 +1356,7 @@ module.exports = {
                                 id_jenis_kendaraan: pengirimanSubsidi.id_jenis_kendaraan,
                                 id_toko: pengirimanSubsidi.id_toko_vendor,
                                 kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-                                invoice: id_invoice._id
-                            }),
-
-                            DataProductOrder.create({
-                                transaksiId: id_transaksi._id,
-                                pesananId: dataOrder._id,
-                                dataProduct: arrayProducts
+                                invoice: id_invoice_subsidi
                             }),
                         )
                     }
@@ -1338,29 +1393,53 @@ module.exports = {
                                 id_jenis_kendaraan: pengirimanNonSubsidi.id_jenis_kendaraan,
                                 id_toko: pengirimanNonSubsidi.id_toko_vendor,
                                 kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-                                invoice: id_invoice_subsidi._id
+                                invoice: id_invoice_non_subsidi
                             }),
                         );
                 
                         total_tagihan += total_ongkir;
                     }
                 }
+                const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
                 promisesFunct.push(
                     Transaksi.create({
                         _id: id_transaksi_subsidi,
                         id_pesanan: dataOrder._id,
                         jenis_transaksi: "keluar",
                         status: "Menunggu Pembayaran",
+                        subsidi: true,
+                        kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                    }),
+
+                    Transaksi.create({
+                        _id: id_transaksi_non_subsidi,
+                        id_pesanan: dataOrder._id,
+                        jenis_transaksi: "keluar",
+                        status: "Menunggu Pembayaran",
                         subsidi: false,
                         kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
                     }),
-        
+
                     Invoice.create({
                         _id: id_invoice_subsidi,
                         id_transaksi: id_transaksi_subsidi,
                         userId: req.user.id,
+                        status: "Piutang",
+                        kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                    }),
+
+        
+                    Invoice.create({
+                        _id: id_invoice_non_subsidi,
+                        id_transaksi: id_transaksi_non_subsidi,
+                        userId: req.user.id,
                         status: "Belum Lunas",
                         kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                    }),
+
+                    DataProductOrder.create({
+                        pesananId: dataOrder._id,
+                        dataProduct: arrayProducts
                     })
                 )
                 const grossAmount = () => {

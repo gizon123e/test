@@ -39,7 +39,7 @@ module.exports = {
     getPanganByKelompok: async (req, res, next) => {
         try {
             const { kelompok_pangan, jenis_pangan } = req.query
-            if(!kelompok_pangan || !jenis_pangan) return res.status(400).json({message: "Body yang diperlukan tidak dikirim!"})
+            if(!kelompok_pangan || !jenis_pangan) return res.status(400).json({message: "Query yang diperlukan tidak dikirim!"})
             const dataPangan = await Pangan.aggregate([
                 {
                     $match: {

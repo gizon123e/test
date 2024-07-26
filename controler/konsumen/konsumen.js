@@ -2,10 +2,12 @@ const Konsumen = require('../../models/konsumen/model-konsumen');
 const PicKonsumen = require('../../models/konsumen/model-penanggung-jawab')
 const User = require('../../models/model-auth-user')
 const Address = require("../../models/model-address")
+const Sekolah = require("../../models/model-sekolah")
 const path = require('path');
 const dotenv = require('dotenv')
 dotenv.config()
 const fs = require('fs')
+const mongoose = require('mongoose')
 
 module.exports = {
 
@@ -31,7 +33,38 @@ module.exports = {
 
     getDetailKonsumen: async (req, res, next) => {
         try {
-            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
+            const dataKonsumen = await Konsumen.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean();
+            const defaultAddress = await Sekolah.aggregate([
+                {
+                    $match: {
+                        userId: new mongoose.Types.ObjectId(req.user.id)
+                    }
+                },
+                {
+                    $project: {namaSekolah: 1, address: 1}
+                },
+                {
+                    $lookup: {
+                        from: "addresses",
+                        let: {address: "$address"},
+                        pipeline: [
+                            {   $match: {
+                                    $expr: {$eq: [ "$_id", "$$address"]}, 
+                                    isUsed: true
+                                }
+                            },
+                            {
+                                $project: {isPic: 0, isMain: 0, isSchool: 0, userId: 0}
+                            }
+                        ],
+                        as: "defaultAddress"
+                    }
+                },
+                {
+                    $unwind: "$defaultAddress"
+                }
+            ]);
+            // res.status(200).json(defaultAddress);
             let pic;
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
             let modifiedDataKonsumen = dataKonsumen
@@ -52,7 +85,7 @@ module.exports = {
                     pic
                 };
             }
-            return res.status(200).json({ message: 'success', datas: modifiedDataKonsumen, isIndividu })
+            return res.status(200).json({ message: 'success', datas: modifiedDataKonsumen, defaultAddress: defaultAddress, isIndividu})
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
