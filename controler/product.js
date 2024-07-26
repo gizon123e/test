@@ -469,9 +469,8 @@ module.exports = {
           }
         });
       }
-
+      console.log(list_product, nama_toko)
       if ((!list_product || list_product.length === 0) && (!nama_toko || nama_toko.length === 0)) return res.status(404).json({ message: `Product dengan nama ${name} serta dengan kategori ${category} tidak ditemukan` });
-      if ((!datas || datas.length === 0) && (list_product || list_product.length > 0)) return res.status(403).json({ message: "Produk yang dicari tidak boleh untuk user " + req.user.role });
       console.log({ datas, toko: nama_toko })
       return res.status(200).json({ datas, toko: nama_toko });
     } catch (error) {

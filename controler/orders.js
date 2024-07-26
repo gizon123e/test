@@ -1076,7 +1076,6 @@ module.exports = {
 
     createOrder: async (req, res, next) => {
         try {
-            console.log(JSON.stringify(req.body))
             const {
                 metode_pembayaran,
                 total,
@@ -1109,14 +1108,19 @@ module.exports = {
                 total_pesanan += 1
             });
 
-            const productIds = items.flatMap(item =>
-                item.product.map(prod => prod.productId)
+            const productIds = items.flatMap(item => 
+                item.product.map(prod => ({
+                    productId: prod.productId,
+                    quantity: prod.quantity
+                }))
             );
 
-            const products = await Product.find({ _id: { $in: productIds } }).select('_id')
+            const products = await Product.find({ _id: { $in: productIds.map(prd => prd.productId) } }).select('_id name_product total_stok minimalOrder')
             for (const prod of productIds) {
-                const found = products.some(item => item._id === prod);
-                if (!found) return res.status(404).json({ message: `Produk dengan id ${prod} tidak ditemukan` })
+                const found = products.find(item => item._id === prod.productId.toString());
+                if (!found) return res.status(404).json({ message: `Produk dengan id ${prod.productId} tidak ditemukan` })
+                if(found.total_stok < prod.quantity) return res.status(400).json({message: `Produk ${found.name_product} dipesan melebihi stok tersedia`})
+                if(found.minimalOrder > prod.quantity) return res.status(400).json({message: `Produk ${found.name_product} tidak bisa dipesan kurang dari minimal pemesanan`})
             }
 
             if (items.length !== shipments.length) return res.status(400).json({ message: "Data Toko tidak sama dengan dengan data pengiriman" })
