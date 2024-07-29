@@ -447,7 +447,6 @@ module.exports = {
                 const products = await Product.find({userId: req.user.id});
                 const productIds = products.map(item => { return item._id });
                 console.log(productIds)
-                console.log(req.user)
                 const filter = {
                     items: {
                         $elemMatch: {
@@ -476,13 +475,31 @@ module.exports = {
                     },
                     { $match: { "items.product": { $not: { $size: 0 } } } },
                     { $project: { shipments: 0}},
-                    { $unwind: "$items.product"},
+                    { $unwind: "$items.product" },
+                    {
+                        $lookup:{
+                            from: "addresses",
+                            foreignField: "_id",
+                            localField: "addressId",
+                            as: "alamat"
+                        }
+                    },
+                    { $unwind: "$alamat" },
+                    {
+                        $lookup:{
+                            from: "sekolahs",
+                            foreignField: "_id",
+                            localField: "sekolahId",
+                            as: "sekolah"
+                        }
+                    },
+                    { $unwind: "$sekolah" },
                     {
                         $group: {
                             _id: "$_id",
                             items: { $push: "$items" },
-                            userId: { $first: "$userId" },
-                            addressId: { $first: "$addressId" },
+                            sekolah: { $first: "$sekolah" },
+                            alamat: { $first: "$alamat" },
                             date_order: { $first: "$date_order" },
                             status: { $first: "$status" },
                             biaya_layanan: { $first: "$biaya_layanan" },
@@ -493,154 +510,95 @@ module.exports = {
                             biaya_awal_proteksi: { $first: "$biaya_awal_proteksi" },
                             dp: { $first: "$dp" },
                             expire: { $first: "$expire" },
-                            sekolahId: { $first: "$sekolahId" },
                             createdAt: { $first: "$createdAt" },
                             updatedAt: { $first: "$updatedAt" },
                         }
                     },
-                    // { $unwind: "$shipments" },
-                    // { $unwind: "$items.product" },
-                    // {
-                    //     $lookup:{
-                    //         from: "distributtors",
-                    //         foreignField: '_id',
-                    //         localField: "shipments.id_distributor",
-                    //         as: 'dataDistributor'
-                    //     }
-                    // },
-                    // { $unwind: "$dataDistributor" },
-                    // {
-                    //     $addFields:{
-                    //         dataPengiriman: "$dataDistributor"
-                    //     }
-                    // },
-                    // {
-                    //     $lookup: {
-                    //         from: 'products',
-                    //         let: { productIds: '$items.product.productId' },
-                    //         pipeline: [
-                    //             { $match: { $expr: { $eq: ['$_id', '$$productIds'] } } },
-                    //             { $project: { _id: 1, name_product: 1, image_product: 1, categoryId: 1, userId: 1, total_price: 1 } }
-                    //         ],
-                    //         as: 'productInfo'
-                    //     }
-                    // },
-                    // { $unwind: "$productInfo" },
-                    // {
-                    //     $addFields: { 'items.product.productId': "$productInfo" }
-                    // },
-                    // {
-                    //     $project: { productInfo: 0 }
-                    // },
-                    // {
-                    //     $lookup:{
-                    //         from: "konsumens",
-                    //         foreignField: "userId",
-                    //         localField: "userId",
-                    //         as: "konsumens_detail"
-                    //     },
-                    // },
-                    // {
-                    //     $lookup:{
-                    //         from: "vendors",
-                    //         foreignField: "userId",
-                    //         localField: "userId",
-                    //         as: "vendors_detail"
-                    //     },
-                    // },
-                    // {
-                    //     $lookup:{
-                    //         from: "suppliers",
-                    //         foreignField: "userId",
-                    //         localField: "userId",
-                    //         as: "suppliers_detail"
-                    //     },
-                    // },
-                    // {
-                    //     $lookup:{
-                    //         from: "produsens",
-                    //         foreignField: "userId",
-                    //         localField: "userId",
-                    //         as: "produsens_detail"
-                    //     },
-                    // },
-                    // {
-                    //     $addFields: {
-                    //         userId: {
-                    //             $arrayElemAt: [
-                    //                 {
-                    //                     $filter: {
-                    //                         input: ["$konsumens_detail", "$vendors_detail", "$suppliers_detail", "$produsens_detail"],
-                    //                         as: "detail",
-                    //                         cond: { $gt: [{ $size: "$$detail" }, 0] }
-                    //                     }
-                    //                 },
-                    //                 0
-                    //             ]
-                    //         }
-                    //     }
-                    // },
-                    // {
-                    //     $lookup:{
-                    //         from: "addresses",
-                    //         foreignField: "_id",
-                    //         localField: "addressId",
-                    //         as: "detailAlamat"
-                    //     },
-                    // },
-                    // {
-                    //     $unwind: "$detailAlamat"
-                    // },
-                    // {
-                    //     $addFields:{
-                    //         addressId: "$detailAlamat"
-                    //     }
-                    // },
-                    // {
-                    //     $project: {
-                    //         konsumens_detail: 0,
-                    //         vendors_detail: 0,
-                    //         suppliers_detail: 0,
-                    //         produsens_detail: 0,
-                    //         detailAlamat: 0,
-                    //         dataDistributor: 0
-                    //     }
-                    // },
-                    
-                    // {
-                    //     $unwind:"$userId"
-                    // },
-                    // {
-                    //     $group: {
-                    //       _id: {
-                    //         orderId: "$_id",
-                    //         sellerId: "$items.product.productId.userId",
-                    //         distributorId: "$dataPengiriman._id"
-                    //       },
-                    //       items: {
-                    //         $push: "$items"
-                    //       },
-                    //       addressId: { $first: "$addressId" },
-                    //       dataPengiriman: { $first: "$dataPengiriman" },
-                    //       userId: { $first: "$userId" },
-                    //       date_order: { $first: "$date_order" },
-                    //       status: { $first: "$status" },
-                    //       poinTerpakai: { $first: "$poinTerpakai" },
-                    //       biaya_asuransi: { $first: "$biaya_asuransi" },
-                    //       dp: { $first: "$dp" },
-                    //       expire: { $first: "$expire" },
-                    //       createdAt: { $first: "$createdAt" },
-                    //       updatedAt: { $first: "$updatedAt" },
-                    //     }
-                    // },
                     {
                         $sort: {
                             createdAt: -1
                         }
                     }
                 ]);
+                const data = []
+                for(const order of dataOrders){
+                    const { status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order
+                    const orderId = order._id
+                    const dataProd = await DataProductOrder.findOne({pesananId: order._id});
+                    const transaksiSubsidi = await Transaksi.findOne({id_pesanan: order._id, subsidi: true});
+                    const transaksiTambahan = await Transaksi.findOne({id_pesanan: order._id, subsidi: false});
+                    const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
+                    const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksiTambahan?._id, status:"Lunas"});
+                    const pengiriman = await Pengiriman.find({orderId: order._id}).populate("distributorId");
+                    let detailToko;
 
-                return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
+                    switch(req.user.role){
+                        case "vendor":
+                            detailToko = await TokoVendor.findOne({userId: req.user.id});
+                            break;
+                        default:
+                            detailToko = await TokoVendor.findOne({userId: req.user.id});
+                            break;
+                    };
+                    const pesanan = {}
+                    const kode_pesanan = new Set()
+                    let isDistributtorApproved;
+                    for(const item of order.items){
+                        isDistributtorApproved = item.isDistributtorApproved
+                        const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
+                        if(!kode_pesanan.has(item.kode_pesanan)){
+                            kode_pesanan.add(item.kode_pesanan)
+                        }
+                        if(productSelected){
+                            const selectedPengiriman = pengiriman.filter(pgr => {
+                                return pgr.productToDelivers.some(prd => prd.productId.toString() === productSelected._id.toString())
+                            })
+                            
+                            selectedPengiriman.map(pgr => {
+                                const pgrId = pgr._id.toString()
+                                if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
+                                    if(!pesanan[pgrId]){
+                                        pesanan[pgrId] = {
+                                            pengiriman: pgr,
+                                            product: []
+                                        }
+                                    }
+                                    const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
+                                    pesanan[pgrId].product.push({ 
+                                        product: productSelected, 
+                                        quantity: found.quantity, 
+                                        totalHargaProduk: productSelected.total_price * found.quantity 
+                                    })
+                                }
+
+                                if(pgr.invoice.toString() === invoiceTambahan?._id.toString()){
+                                    if(!pesanan[pgrId]){
+                                        pesanan[pgrId] = {
+                                            pengiriman: pgr,
+                                            product: []
+                                        }
+                                    }
+                                    const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
+                                    pesanan[pgrId].product.push({ 
+                                        product: productSelected, 
+                                        quantity: found.quantity, 
+                                        totalHargaProduk: productSelected.total_price * found.quantity 
+                                    })
+                                }
+                            })
+                        }
+                    }
+                    Object.keys(pesanan).forEach(key => {
+                        data.push({
+                            ...restOfOrder,
+                            id_pesanan: Array.from(kode_pesanan)[0],
+                            isDistributtorApproved,
+                            ...pesanan[key]
+                        })
+                    })
+                }
+
+                return res.status(200).json({ message: 'get data all Order success', data })
             }
         } catch (error) {
             if (error && error.name === 'ValidationError') {
