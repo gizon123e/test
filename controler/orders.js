@@ -202,7 +202,7 @@ module.exports = {
                                 for (const item of order.items){
                                     const { productId, quantity, ...restOfProduct } = item.product;
                                     const productSelected = dataProduct.dataProduct.find(prod => prod._id.toString() === item.product.productId._id);
-                                    if (productSelected && sisaSubsidi > 0) {
+                                    if (productSelected && sisaSubsidi >= 0) {
                                         processed = true; // Mark as processed
                             
                                         let detailToko;
@@ -228,7 +228,6 @@ module.exports = {
                                         }
                             
                                         const totalQuantity = selectedPengiriman.productToDelivers.find(ship => ship.productId.toString() === productSelected._id.toString());
-                            
                                         let itemTotal = productSelected.total_price * totalQuantity.quantity;
                                         totalPriceVendor += itemTotal
                                         jumlah_uang += itemTotal;
@@ -256,7 +255,7 @@ module.exports = {
                                             };
                                         }
                                         store[storeId].totalHargaProduk += itemTotal
-                                        store[storeId].total_pesanan = jumlah_uang;
+                                        store[storeId].total_pesanan += jumlah_uang;
                                         store[storeId].arrayProduct.push({ productId: productSelected, ...restOfProduct, quantity: totalQuantity.quantity });
                                         sisaSubsidi -= totalQuantity.quantity
                                         jumlah_uang = 0
