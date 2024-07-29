@@ -100,25 +100,42 @@ module.exports = {
 
     ubahStatus: async (req, res, next) => {
         try {
-            const { status } = req.body
+            const { status, tokoId } = req.body
             if (!status) return res.status(400).json({ message: "Tolong kirimkan status" });
 
             const statusAllowed = ['dikirim', 'pesanan selesai', 'dibatalkan']
             if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
 
-            const pengiriman = await Pengiriman.findById(req.params.id).populate('orderId')
-            if (!pengiriman) return res.status(404).json({ message: `Tidak ada pengiriman dengan id: ${req.params.id}` });
+            const pengiriman = await Pengiriman.find(
+                { 
+                    _id: req.params.id,
+                    id_toko: tokoId,
+                }
+            )
+                .populate({
+                    path: "orderId",
+                    populate: "addressId"
+                })
+                .populate({
+                    path: "id_toko",
+                    populate: "address"
+                });
+            
+            if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Tidak ada pengiriman dengan id: ${req.params.id}` });
+            
+            const pengirimanIds = pengiriman.map(pgr => pgr._id)
+            const distriIds = pengiriman.map(pgr => pgr.distributorId)
 
             const distri = await Distributtor.findById(pengiriman.distributorId)
             if (distri.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak Bisa Mengubah Pengiriman Orang Lain!" });
 
             if (status === "dibatalkan") {
-                await Pengiriman.updateOne({ _id: req.params.id }, { rejected: true, status_distributor: "Ditolak" });
+                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { rejected: true, status_distributor: "Ditolak" });
 
                 const currentDate = new Date();
-                await Distributtor.findByIdAndUpdate({ _id: distri._id }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+                await Distributtor.updateMany({ _id: { $in: distriIds }}, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
-                await Pengiriman.updateOne({ _id: req.params.id }, {
+                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, {
                     status_pengiriman: status
                 });
             }
@@ -128,10 +145,10 @@ module.exports = {
                     fromServer: true
                 }
             })
-            const prodIds = pengiriman.productToDelivers.map(item => {
-                return item.productId
-            })
-
+            const prodIds = pengiriman.flatMap(pgr => {
+                return pgr.productToDelivers.map(item => item.productId);
+            });
+            
             const products = await Product.find({ _id: { $in: prodIds } })
             for (const product of products) {
                 socket.emit('notif_order', {
@@ -142,7 +159,6 @@ module.exports = {
                     status: "Pesanan dalam Pengiriman"
                 })
             }
-            // socket.disconnect()
             return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
         } catch (error) {
             console.log(error);
