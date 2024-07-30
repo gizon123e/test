@@ -542,9 +542,8 @@ module.exports = {
                     };
                     const pesanan = {}
                     const kode_pesanan = new Set()
-                    let isDistributtorApproved;
                     for(const item of order.items){
-                        isDistributtorApproved = item.isDistributtorApproved;
+                        
                         let isApproved = item.isApproved
                         const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
                         if(!kode_pesanan.has(item.kode_pesanan)){
@@ -557,11 +556,21 @@ module.exports = {
                             
                             selectedPengiriman.map(pgr => {
                                 const pgrId = pgr._id.toString()
+                                const isDistributtorApprovedCheck = () => {
+                                    if(item.isDistributtorApproved){
+                                        return true
+                                    }else if(!item.isDistributtorApproved){
+                                        return null
+                                    }else if(pgr.rejected){
+                                        return false
+                                    }
+                                }
                                 if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
                                     if(!pesanan[pgrId]){
                                         pesanan[pgrId] = {
                                             pengiriman: pgr,
                                             isApproved,
+                                            isDistributtorApproved: isDistributtorApprovedCheck(),
                                             product: []
                                         }
                                     }
@@ -578,6 +587,7 @@ module.exports = {
                                         pesanan[pgrId] = {
                                             pengiriman: pgr,
                                             isApproved,
+                                            isDistributtorApproved: isDistributtorApprovedCheck(),
                                             product: []
                                         }
                                     }
