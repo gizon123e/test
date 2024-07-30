@@ -1511,7 +1511,7 @@ module.exports = {
             }
             await Promise.all(promisesFunct)
 
-            const socket = io('https://probable-subtly-crawdad.ngrok-free.app', {
+            const socket = io('https://staging-backend.superdigitalapps.my.id', {
                 auth: {
                     fromServer: true
                 }

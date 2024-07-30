@@ -106,7 +106,7 @@ module.exports = {
             const rekomendasiMakanan = await Pangan.find({
                  mayoritas_daerah_lokal: { $regex: provinceRegex },
                  jenis_makanan: "makanan utama"
-                }).select("_id jenis_makanan kode_bahan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan");
+                }).select("_id jenis_makanan kode_bahan image_pangan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan");
                 
             res.status(200).json({
                 jenis: 'info',
