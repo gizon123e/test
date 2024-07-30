@@ -103,7 +103,7 @@ module.exports = {
             const { status } = req.body
             if (!status) return res.status(400).json({ message: "Tolong kirimkan status" });
 
-            const statusAllowed = ['dikirim', 'pesanan selesai', 'dibatalkan']
+            const statusAllowed = ['dikirim', 'pesanan diterima', 'dibatalkan']
             if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
 
             const pengiriman = await Pengiriman.findById(req.params.id).populate('orderId')
@@ -131,24 +131,43 @@ module.exports = {
             const prodIds = pengiriman.productToDelivers.map(item => {
                 return item.productId
             })
-
-            const products = await Product.find({ _id: { $in: prodIds } })
-            for (const product of products) {
-                socket.emit('notif_order', {
-                    jenis: 'pesanan',
-                    userId: pengiriman.orderId.userId,
-                    message: `Pesanan ${product.name_product} telah dikirim`,
-                    image: product.image_product[0],
-                    status: "Pesanan dalam Pengiriman"
-                })
+            
+            if(status == "dikirim"){
+                const products = await Product.find({ _id: { $in: prodIds } })
+                
+                for (const product of products) {
+                    socket.emit('notif_order', {
+                        jenis: 'pesanan',
+                        userId: pengiriman.orderId.userId,
+                        message: `Pesanan ${product.name_product} telah dikirim`,
+                        image: product.image_product[0],
+                        status: "Pesanan dalam Pengiriman",
+                        waktu: `${new Date().toLocaleTimeString('en-GB')}`
+                    })
+                }
+                // socket.disconnect()
             }
-            // socket.disconnect()
+            
+            if(status == "pesanan diterima"){
+                const products = await Product.find({_id: {$in: prodIds}})
+                
+                for (const product of products){
+                    socket.emit("notif_pesanan_diterima", {
+                        jenis: 'pesanan',
+                        userId: pengiriman.orderId.userId,
+                        message: `Pesanan ${product.name_product} telah diterima oleh konsumen`,
+                        image: product.image_product[0],
+                        status: 'Pesanan diterima konsumen',
+                        waktu: `${new Date().toLocaleTimeString('en-GB')}` 
+                    })
+                }
+            }
             return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
         } catch (error) {
             console.log(error);
             next(error)
         }
-    },
+    },  
 
     updateDiTerimaDistributor: async (req, res, next) => {
         try {

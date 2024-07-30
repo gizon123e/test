@@ -1,5 +1,6 @@
 const Toko = require('../../models/vendor/model-toko');
 const Address = require('../../models/model-address');
+const BiayaTetap = require("../../models/model-biaya-tetap");
 const path = require('path');
 const Product = require('../../models/model-product');
 const {Pangan} = require('../../models/model-pangan');
@@ -73,15 +74,30 @@ module.exports = {
             const dataToko = await Toko.findOne({userId: req.user.id}).populate('address');
             const province = dataToko.address.province;
             const provinceRegex = new RegExp(province, 'i');
-            
+
+            const message = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("notif_rekomen_vendor");
+
+            // const date = new Date();
+
+            // const today = `${date.getDate().padStart(2, '0')}-${date.getMonth().padStart(2, '0')}-${date.getFullYear()}`
+            const timestamp = new Date();
+            const day = String(timestamp.getDate()).padStart(2, '0');
+            const month = String(timestamp.getMonth() + 1).padStart(2, '0'); // Bulan dimulai dari 0
+            const year = timestamp.getFullYear();
+
+            const today = `${day}-${month}-${year}`
+
             const rekomendasiMakanan = await Pangan.find({
                  mayoritas_daerah_lokal: { $regex: provinceRegex },
                  jenis_makanan: "makanan utama"
                 }).select("_id jenis_makanan kode_bahan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan");
                 
             res.status(200).json({
-                message: `Rekomendasi kebutuhan makanan di provinsi ${province}`,
-                rekomendasiMakanan
+                jenis: 'info',
+                title: `Rekomendasi kebutuhan makanan di provinsi ${province}`,
+                message: message.notif_rekomen_vendor,
+                rekomendasiMakanan,
+                waktu: today,
             });
         }catch (error) {
             console.log(error);

@@ -35,6 +35,9 @@ const modelBiayaTetap = mongoose.Schema({
   radius: {
     type: Number,
   },
+  notif_rekomen_vendor: {
+    type: String,
+  }
 });
 
 const BiayaTetap = mongoose.model("BiayaTetap", modelBiayaTetap);
