@@ -529,7 +529,7 @@ module.exports = {
                     const transaksiTambahan = await Transaksi.findOne({id_pesanan: order._id, subsidi: false});
                     const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
                     const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksiTambahan?._id, status:"Lunas"});
-                    const pengiriman = await Pengiriman.find({orderId: order._id}).populate("distributorId");
+                    const pengiriman = await Pengiriman.find({orderId: order._id}).populate("distributorId").lean();
                     let detailToko;
 
                     switch(req.user.role){
@@ -556,7 +556,6 @@ module.exports = {
                             
                             selectedPengiriman.map(pgr => {
                                 const pgrId = pgr._id.toString()
-                                console.log(pgr)
                                 const isDistributtorApprovedCheck = () => {
                                     if(item.isDistributtorApproved){
                                         return true
@@ -614,11 +613,17 @@ module.exports = {
                             }
                             
                         }
+                        const { pengiriman, ...restOfPesanan } = pesanan[key]
+                        const { waktu_pengiriman, ...restOfPengiriman } = pengiriman
                         data.push({
                             ...restOfOrder,
                             status: checkStatus(),
                             id_pesanan: Array.from(kode_pesanan)[0],
-                            ...pesanan[key]
+                            pengiriman: {
+                                ...restOfPengiriman,
+                                waktu_pengiriman: new Date(waktu_pengiriman)
+                            },
+                            ...restOfPesanan[key]
                         })
                     })
                 }
