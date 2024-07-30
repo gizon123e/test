@@ -171,6 +171,16 @@ module.exports = {
         }
     },
 
+    getAllSubCategory: async (req, res, next) => {
+        try {
+            const sub_cats = await SubCategory.find().select("_id name").lean();
+            return res.status(200).json({data: sub_cats})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     createCategory: async (req, res, next) => {
         try {
             const { main, sub, specific, showAt, forShow } = req.body;

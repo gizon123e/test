@@ -538,6 +538,91 @@ module.exports = {
     }
   },
 
+  filterProduk: async(req, res, next) => {
+    try {
+      const { minPrice, maxPrice, penilaian, main_cat, sub_cat } = req.query
+      const filter = {
+        "status.value": "terpublish",
+        total_stok: { $gt: 0 },
+        $expr: { $gte: ["$total_stok", "$minimalOrder"] },
+      }
+
+      if(minPrice){
+        filter.total__price = {
+          $gte: minPrice
+        }
+      }
+
+      if(maxPrice){
+        filter.total_price = {
+          $lte: maxPrice
+        }
+      }
+
+      if(penilaian){
+        filter.poin_ulasan = {
+          $gte: penilaian
+        }
+      }
+
+      if(main_cat){
+        filter.id_main_category = new mongoose.Types.ObjectId(main_cat)
+      }
+
+      if(sub_cat){
+        filter.id_sub_category = new mongoose.Types.ObjectId(sub_cat)
+      }
+
+      const data = []
+      
+      const products = await Product.aggregate([
+        {
+          $match: filter
+        },
+        {
+          $lookup:{
+            from: "users",
+            let: { userId: "$userId" },
+            pipeline:[
+              {
+                $match: {
+                  $expr:{
+                    $eq: ["$_id", "$$userId"]
+                  }
+                },
+                $project: {
+                  _id: 1,
+                  role: 1
+                }
+              }
+            ]
+          }
+        }
+      ])
+
+      for(const prod of products){
+        let dataToko
+        switch(prod.user.role){
+          case "vendor":
+            dataToko = await TokoVendor.findOne({userId: prod.userId._id}).populate("address");
+            break;
+          default:
+            dataToko = await TokoVendor.findOne({userId: prod.userId._id}).populate("address");
+            break;
+        }
+        data.push({
+          ...prod,
+          dataToko
+        })
+      }
+
+      return res.status(200).json({data})
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+ 
   list_product_adminPanel: async (req, res, next) => {
     try {
       const data = await Product.find().populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId");

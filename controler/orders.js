@@ -523,7 +523,6 @@ module.exports = {
                 const data = []
                 for(const order of dataOrders){
                     const { status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order
-                    const orderId = order._id
                     const dataProd = await DataProductOrder.findOne({pesananId: order._id});
                     const transaksiSubsidi = await Transaksi.findOne({id_pesanan: order._id, subsidi: true});
                     const transaksiTambahan = await Transaksi.findOne({id_pesanan: order._id, subsidi: false});
@@ -564,7 +563,8 @@ module.exports = {
                                     }else if(pgr.rejected){
                                         return false
                                     }
-                                }
+                                };
+                                
                                 if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
                                     if(!pesanan[pgrId]){
                                         pesanan[pgrId] = {
@@ -578,7 +578,8 @@ module.exports = {
                                     pesanan[pgrId].product.push({ 
                                         product: productSelected, 
                                         quantity: found.quantity, 
-                                        totalHargaProduk: productSelected.total_price * found.quantity 
+                                        totalHargaProduk: productSelected.total_price * found.quantity,
+                                        total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
                                     })
                                 }
 
@@ -595,7 +596,8 @@ module.exports = {
                                     pesanan[pgrId].product.push({ 
                                         product: productSelected, 
                                         quantity: found.quantity, 
-                                        totalHargaProduk: productSelected.total_price * found.quantity 
+                                        totalHargaProduk: productSelected.total_price * found.quantity,
+                                        total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
                                     })
                                 }
                             })
