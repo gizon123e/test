@@ -49,13 +49,13 @@ module.exports = {
             }
             if(bintang) query.poin_ulasan = bintang
             const products = await Product.find(query)
-            .select("_id image_product total_stok name_product total_price poin_ulasan")
+            .select("_id image_product total_stok name_product total_price poin_review")
             .sort({ total_stok: -1 })
             .lean();
             
             for (const product of products) {
                 const record = await SalesReport.findOne({ productId: product._id });
-                const terjual = record.track.reduce((acc, val) => acc + val.soldAtMoment, 0);
+                const terjual = record ? record.track.reduce((acc, val) => acc + val.soldAtMoment, 0) : 0;
                 product.terjual = terjual;
             }
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});

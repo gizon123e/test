@@ -11,7 +11,7 @@ module.exports = {
 
             const toko = await TokoVendor.find({
                 namaToko: { $regex: new RegExp(name, "i") }
-            }).select("namaToko profile_pict").limit(10);
+            }).select("namaToko profile_pict userId").limit(10);
 
             return res.status(200).json({ datas, toko })
         } catch (error) {

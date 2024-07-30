@@ -10,6 +10,7 @@ router.get('/list', authorization, controlerCategory.getCategory);
 router.get('/all-main-category', authorization, controlerCategory.getAllMainCategory);
 router.get('/detail-main/:id', controlerCategory.getDetailMainCategory);
 router.get('/detail-sub-category/:id', controlerCategory.getCategorySub);
+router.get('/list/sub-category', controlerCategory.getAllSubCategory)
 router.get('/specific-category', controlerCategory.getAllSpecificCategory);
 router.post('/create', controlerCategory.createCategory);
 router.put('/specific-category/:id', authorization, controlerCategory.editShowSpecificCategory);
