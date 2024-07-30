@@ -547,34 +547,27 @@ module.exports = {
         $expr: { $gte: ["$total_stok", "$minimalOrder"] },
       }
 
-      if(minPrice){
-        filter.total__price = {
-          $gte: minPrice
-        }
+      if (minPrice) {
+        filter.total_price = { ...filter.total_price, $gte: Number(minPrice) };
       }
-
-      if(maxPrice){
-        filter.total_price = {
-          $lte: maxPrice
-        }
+    
+      if (maxPrice) {
+        filter.total_price = { ...filter.total_price, $lte: Number(maxPrice) };
       }
-
-      if(penilaian){
-        filter.poin_ulasan = {
-          $gte: penilaian
-        }
+    
+      if (penilaian) {
+        filter.poin_ulasan = { ...filter.poin_ulasan, $gte: Number(penilaian) };
       }
-
-      if(main_cat){
-        filter.id_main_category = new mongoose.Types.ObjectId(main_cat)
+    
+      if (main_cat) {
+        filter.id_main_category = new mongoose.Types.ObjectId(main_cat);
       }
-
-      if(sub_cat){
-        filter.id_sub_category = new mongoose.Types.ObjectId(sub_cat)
+    
+      if (sub_cat) {
+        filter.id_sub_category = new mongoose.Types.ObjectId(sub_cat);
       }
 
       const data = []
-      
       const products = await Product.aggregate([
         {
           $match: filter
@@ -590,19 +583,30 @@ module.exports = {
                     $eq: ["$_id", "$$userId"]
                   }
                 },
+              },
+              {
                 $project: {
                   _id: 1,
                   role: 1
                 }
               }
-            ]
+            ],
+            as: "detailUser"
+          }
+        },
+        {
+          $unwind: "$detailUser"
+        },
+        {
+          $addFields: {
+            userId: "$detailUser"
           }
         }
       ])
 
       for(const prod of products){
         let dataToko
-        switch(prod.user.role){
+        switch(prod.userId.role){
           case "vendor":
             dataToko = await TokoVendor.findOne({userId: prod.userId._id}).populate("address");
             break;
