@@ -40,10 +40,14 @@ module.exports = {
 
     getDetailToko: async(req, res, next) => {
         try {
+            const { bintang } = req.query
             const dataToko = await Toko.findOne({userId: req.params.id}).populate('address');
-            const products = await Product.find(
-                { userId: req.params.id, 'status.value': "terpublish" }
-            )
+            const query = { 
+                userId: req.params.id, 
+                'status.value': "terpublish",
+            }
+            if(bintang) query.poin_ulasan = bintang
+            const products = await Product.find(query)
             .select("_id image_product total_stok name_product total_price poin_ulasan")
             .sort({ total_stok: -1 })
             .lean();
