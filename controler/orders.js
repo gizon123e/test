@@ -556,6 +556,7 @@ module.exports = {
                             
                             selectedPengiriman.map(pgr => {
                                 const pgrId = pgr._id.toString()
+                                console.log(pgr)
                                 const isDistributtorApprovedCheck = () => {
                                     if(item.isDistributtorApproved){
                                         return true

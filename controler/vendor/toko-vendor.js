@@ -54,7 +54,7 @@ module.exports = {
             
             for (const product of products) {
                 const record = await SalesReport.findOne({ productId: product._id });
-                const terjual = record.track.reduce((acc, val) => acc + val.soldAtMoment, 0);
+                const terjual = record ? record.track.reduce((acc, val) => acc + val.soldAtMoment, 0) : 0;
                 product.terjual = terjual;
             }
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
