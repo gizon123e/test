@@ -1,3 +1,4 @@
+const { io } = require("socket.io-client");
 const Orders = require("../models/pesanan/model-orders")
 const Product = require('../models/model-product');
 const axios = require("axios")
@@ -564,7 +565,7 @@ module.exports = {
                                         return false
                                     }
                                 };
-                                
+
                                 if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
                                     if(!pesanan[pgrId]){
                                         pesanan[pgrId] = {
@@ -606,9 +607,9 @@ module.exports = {
                     
                     Object.keys(pesanan).forEach(key => {
                         const checkStatus = () => {
-                            if(pesanan[key].isApproved){
+                            if(pesanan[key].pengiriman.sellerApproved){
                                 return "Dikemas"
-                            }else if(!pesanan[key].isApproved){
+                            }else if(!pesanan[key].pengiriman.sellerApproved){
                                 return "Pesanan Terbaru"
                             }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim"){
                                 return "Sedang Penjemputan"
@@ -1526,7 +1527,20 @@ module.exports = {
                 )
             }
             await Promise.all(promisesFunct)
-            
+
+            const socket = io('https://staging-backend.superdigitalapps.my.id', {
+                auth: {
+                    fromServer: true
+                }
+            })
+            socket.emit('notif_pembayaran_pesanan', {
+                jenis: 'info',
+                userId: req.user.id,
+                message: `Pesanan kamu dengan ID ${dataOrder._id} senilai Rp. ${total_tagihan} belum di bayar. Segera selesaikan pembayaranmu sebelum ${a_day_later}`,
+                status: 'Selesaikan pembayaranmu',
+                waktu: `${new Date().toLocaleTimeString('en-GB')}`
+            });
+
             return res.status(201).json({
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
                 datas: dataOrder,
@@ -1642,29 +1656,30 @@ module.exports = {
             const writeDb = [
                 Orders.updateOne({ _id: pesanan._id }, { status: req.body.status }),
             ]
-            const finalProduct = productIds.map(item => {
-                return item[0].productId
-            })
-            for (const item of finalProduct) {
-                const product = await Product.findById(item);
-                const user_seller = await User.findById(product.userId);
-                if (user_seller) {
-                    writeDb.push(
-                        Transaksi.create({
-                            id_pesanan: pesanan._id,
-                            jenis_transaksi: "masuk",
-                            status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_${user_seller.kode_role}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
-                        }),
-                        Transaksi.create({
-                            id_pesanan: pesanan._id,
-                            jenis_transaksi: "keluar",
-                            status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_SYS_OUT_${user_seller.kode_role}_${date}_${minutes}_${total_transaksi + 1}`
-                        }),
-                    );
-                }
-            }
+
+            // const finalProduct = productIds.map(item => {
+            //     return item[0].productId
+            // })
+            // for (const item of finalProduct) {
+            //     const product = await Product.findById(item);
+            //     const user_seller = await User.findById(product.userId);
+            //     if (user_seller) {
+            //         writeDb.push(
+            //             Transaksi.create({
+            //                 id_pesanan: pesanan._id,
+            //                 jenis_transaksi: "masuk",
+            //                 status: "Pembayaran Berhasil",
+            //                 kode_transaksi: `TRX_${user_seller.kode_role}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
+            //             }),
+            //             Transaksi.create({
+            //                 id_pesanan: pesanan._id,
+            //                 jenis_transaksi: "keluar",
+            //                 status: "Pembayaran Berhasil",
+            //                 kode_transaksi: `TRX_SYS_OUT_${user_seller.kode_role}_${date}_${minutes}_${total_transaksi + 1}`
+            //             }),
+            //         );
+            //     }
+            // }
 
             for (const item of ships) {
                 const user_distributor = await User.findById(item.id_distributor);
@@ -1701,6 +1716,24 @@ module.exports = {
                 }),
             )
 
+            const socket = io('https://probable-subtly-crawdad.ngrok-free.app', {
+                auth: {
+                    fromServer: true
+                }
+            })
+
+            for (const item of productIds){
+                const product = await Product.findById(item);
+                socket.emit('notif_pesanan_selesai', {
+                    jenis: 'pesanan',
+                    userId: pesanan.userId,
+                    message: `Pesanan ${product.name_product} telah selesai`,
+                    image: product.image_product[0],
+                    status: 'pesanan telah selesai',
+                    waktu: `${new Date().toLocaleTimeString('en-GB')}`
+                });
+            }
+
             await Promise.all(writeDb)
             return res.status(200).json({ message: "Berhasil Merubah Status" })
         } catch (err) {
@@ -1708,6 +1741,20 @@ module.exports = {
             next(err)
         }
     },
+
+    confirmOrder: async(req, res, next) => {
+        try {
+            if(req.user.role === 'konsumen') return res.status(403).json({message: "Invalid Request"})
+            const { pengirimanId } = req.body
+            const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true }, {new :true}).lean();
+            if(!pengiriman) return res.status(404).json({message: `Tidak ada pengiriman dengan id ${pengirimanId}`});
+            return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan"})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    
     cancelOrder: async (req, res, next) => {
         try {
             const { pesananId, reason } = req.body
@@ -1730,6 +1777,7 @@ module.exports = {
             next(error)
         }
     },
+
     deleteOrder: async (req, res, next) => {
         try {
             const dataOrder = await Orders.findOne({ _id: req.params.id })

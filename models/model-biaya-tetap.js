@@ -36,7 +36,7 @@ const modelBiayaTetap = mongoose.Schema({
     type: Number,
   },
   notif_rekomen_vendor: {
-    type: String
+    type: String,
   }
 });
 

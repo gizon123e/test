@@ -51,6 +51,10 @@ const modelPengiriman = new mongoose.Schema({
     kode_pengiriman: {
         type: String
     },
+    sellerApproved: {
+        type: Boolean,
+        default: false
+    },
     rejected: {
         type: Boolean,
         default: false
