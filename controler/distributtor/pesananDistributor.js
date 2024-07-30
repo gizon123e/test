@@ -103,7 +103,13 @@ module.exports = {
             const data = await Pengiriman.findOne({ _id: req.params.id })
                 .populate({
                     path: "orderId",
-                    populate: "addressId"
+                    populate: [
+                        { path: "addressId" },
+                        {
+                            path: "sekolahId",
+                            populate: "address"
+                        }
+                    ]
                 })
                 .populate({
                     path: "distributorId",
