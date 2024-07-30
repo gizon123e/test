@@ -85,6 +85,17 @@ module.exports = {
         }
     },
 
+    myStore: async(req, res, next) => {
+        try {
+            const store = await Toko.findOne({userId: req.user.id});
+            return res.status(200).json({data: store})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+
     getNotifUpload: async(req, res, next) => {
         try{
             const dataToko = await Toko.findOne({userId: req.user.id}).populate('address');

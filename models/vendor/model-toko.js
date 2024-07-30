@@ -19,16 +19,35 @@ const modelTokoVendor = new mongoose.Schema({
         ref: "Vendor"
     },
     pengikut: {
-        type: Number
+        type: Number,
+        default: 0
     },
     penilaian_produk: {
-        type: Number
+        type: Number,
+        default: null
+
     },
-    waktu_operasional: {
-        type: String
-    },
+    waktu_operasional: [
+        {
+            hari: {
+                type: String
+            },
+            buka: {
+                type: Boolean,
+            },
+            jam_operasional:{
+                mulai: {
+                    type: String
+                },
+                tutup: {
+                    type: String
+                }
+            }
+        }
+    ],
     store_description: {
-        type: String
+        type: String,
+        default: null
     },
     profile_pict: {
         type: String,
