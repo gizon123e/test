@@ -1,3 +1,4 @@
+const { io } = require("socket.io-client");
 const Orders = require("../models/pesanan/model-orders")
 const Product = require('../models/model-product');
 const axios = require("axios")
@@ -1526,7 +1527,20 @@ module.exports = {
                 )
             }
             await Promise.all(promisesFunct)
-            
+
+            const socket = io('https://staging-backend.superdigitalapps.my.id', {
+                auth: {
+                    fromServer: true
+                }
+            })
+            socket.emit('notif_pembayaran_pesanan', {
+                jenis: 'info',
+                userId: req.user.id,
+                message: `Pesanan kamu dengan ID ${dataOrder._id} senilai Rp. ${total_tagihan} belum di bayar. Segera selesaikan pembayaranmu sebelum ${a_day_later}`,
+                status: 'Selesaikan pembayaranmu',
+                waktu: `${new Date().toLocaleTimeString('en-GB')}`
+            });
+
             return res.status(201).json({
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
                 datas: dataOrder,
@@ -1642,29 +1656,30 @@ module.exports = {
             const writeDb = [
                 Orders.updateOne({ _id: pesanan._id }, { status: req.body.status }),
             ]
-            const finalProduct = productIds.map(item => {
-                return item[0].productId
-            })
-            for (const item of finalProduct) {
-                const product = await Product.findById(item);
-                const user_seller = await User.findById(product.userId);
-                if (user_seller) {
-                    writeDb.push(
-                        Transaksi.create({
-                            id_pesanan: pesanan._id,
-                            jenis_transaksi: "masuk",
-                            status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_${user_seller.kode_role}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
-                        }),
-                        Transaksi.create({
-                            id_pesanan: pesanan._id,
-                            jenis_transaksi: "keluar",
-                            status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_SYS_OUT_${user_seller.kode_role}_${date}_${minutes}_${total_transaksi + 1}`
-                        }),
-                    );
-                }
-            }
+
+            // const finalProduct = productIds.map(item => {
+            //     return item[0].productId
+            // })
+            // for (const item of finalProduct) {
+            //     const product = await Product.findById(item);
+            //     const user_seller = await User.findById(product.userId);
+            //     if (user_seller) {
+            //         writeDb.push(
+            //             Transaksi.create({
+            //                 id_pesanan: pesanan._id,
+            //                 jenis_transaksi: "masuk",
+            //                 status: "Pembayaran Berhasil",
+            //                 kode_transaksi: `TRX_${user_seller.kode_role}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
+            //             }),
+            //             Transaksi.create({
+            //                 id_pesanan: pesanan._id,
+            //                 jenis_transaksi: "keluar",
+            //                 status: "Pembayaran Berhasil",
+            //                 kode_transaksi: `TRX_SYS_OUT_${user_seller.kode_role}_${date}_${minutes}_${total_transaksi + 1}`
+            //             }),
+            //         );
+            //     }
+            // }
 
             for (const item of ships) {
                 const user_distributor = await User.findById(item.id_distributor);
@@ -1700,6 +1715,24 @@ module.exports = {
                     kode_transaksi: `TRX_PRH_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`
                 }),
             )
+
+            const socket = io('https://probable-subtly-crawdad.ngrok-free.app', {
+                auth: {
+                    fromServer: true
+                }
+            })
+
+            for (const item of productIds){
+                const product = await Product.findById(item);
+                socket.emit('notif_pesanan_selesai', {
+                    jenis: 'pesanan',
+                    userId: pesanan.userId,
+                    message: `Pesanan ${product.name_product} telah selesai`,
+                    image: product.image_product[0],
+                    status: 'pesanan telah selesai',
+                    waktu: `${new Date().toLocaleTimeString('en-GB')}`
+                });
+            }
 
             await Promise.all(writeDb)
             return res.status(200).json({ message: "Berhasil Merubah Status" })

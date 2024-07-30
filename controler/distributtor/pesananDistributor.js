@@ -56,7 +56,7 @@ module.exports = {
                 payload.push({ data, konsumen: dataKonsumen })
             }
 
-            if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
+            if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor kosong" })
 
             res.status(200).json({ message: "get data All success", datas: payload })
         } catch (error) {
@@ -149,7 +149,7 @@ module.exports = {
             const { status, tokoId } = req.body
             if (!status) return res.status(400).json({ message: "Tolong kirimkan status" });
 
-            const statusAllowed = ['dikirim', 'pesanan selesai', 'dibatalkan']
+            const statusAllowed = ['dikirim', 'pesanan diterima', 'dibatalkan']
             if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
 
             const pengiriman = await Pengiriman.find(
@@ -186,13 +186,13 @@ module.exports = {
                 });
             }
 
-            
+
             return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
         } catch (error) {
             console.log(error);
             next(error)
         }
-    },
+    },  
 
     updateDiTerimaDistributor: async (req, res, next) => {
         try {
@@ -244,7 +244,7 @@ module.exports = {
                 jenisKendaraan: dataPengiriman.id_jenis_kendaraan
             })
 
-            const socket = io('https://probable-subtly-crawdad.ngrok-free.app', {
+            const socket = io('https://staging-backend.superdigitalapps.my.id', {
                 auth: {
                     fromServer: true
                 }
