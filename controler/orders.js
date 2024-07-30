@@ -1744,6 +1744,7 @@ module.exports = {
 
     confirmOrder: async(req, res, next) => {
         try {
+            if(req.user.role === 'konsumen') return res.status(403).json({message: "Invalid Request"})
             const { pengirimanId } = req.body
             const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true }, {new :true}).lean();
             if(!pengiriman) return res.status(404).json({message: `Tidak ada pengiriman dengan id ${pengirimanId}`});
