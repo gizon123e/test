@@ -543,10 +543,9 @@ module.exports = {
                     const pesanan = {}
                     const kode_pesanan = new Set()
                     let isDistributtorApproved;
-                    let isApproved
                     for(const item of order.items){
                         isDistributtorApproved = item.isDistributtorApproved;
-                        isApproved = item.isApproved
+                        let isApproved = item.isApproved
                         const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
                         if(!kode_pesanan.has(item.kode_pesanan)){
                             kode_pesanan.add(item.kode_pesanan)
@@ -562,6 +561,7 @@ module.exports = {
                                     if(!pesanan[pgrId]){
                                         pesanan[pgrId] = {
                                             pengiriman: pgr,
+                                            isApproved,
                                             product: []
                                         }
                                     }
@@ -577,6 +577,7 @@ module.exports = {
                                     if(!pesanan[pgrId]){
                                         pesanan[pgrId] = {
                                             pengiriman: pgr,
+                                            isApproved,
                                             product: []
                                         }
                                     }
@@ -593,9 +594,9 @@ module.exports = {
                     
                     Object.keys(pesanan).forEach(key => {
                         const checkStatus = () => {
-                            if(isApproved){
+                            if(pesanan[key].isApproved){
                                 return "Dikemas"
-                            }else if(!isApproved){
+                            }else if(!pesanan[key].isApproved){
                                 return "Pesanan Terbaru"
                             }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim"){
                                 return "Sedang Penjemputan"
