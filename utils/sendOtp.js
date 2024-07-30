@@ -6,12 +6,14 @@ module.exports = {
     sendOtp: (email, kode, status) => {
         const subject = status === "login" ? "Login Otp Code" : status === "register" ? "Register Otp Code" : "Resend Otp Code";
         const transporter = nodemailer.createTransport({
-            host: "s1315.sgp1.mysecurecloudhost.com",
+            host: "smtp.gmail.com",
             port: 465,
             secure: true,
             auth: {
+                type: "OAuth2",
                 user: process.env.EMAIL_SENDER,
-                pass: process.env.EMAIL_PASS
+                clientId: process.env.CLIENT_ID,
+                clientSecret: process.env.CLIENT_SECRET,
             },
         });
 
@@ -20,6 +22,13 @@ module.exports = {
             to: email,
             subject: subject,
             text: `KODE OTP :  ${kode} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`,
+            auth: {
+                user: process.env.EMAIL_SENDER,
+                refreshToken: process.env.REFRESH_TOKEN,
+                accessToken: process.env.ACCESS_TOKEN,
+                expires: 1484314697598,
+            },
+
         })
     },
 

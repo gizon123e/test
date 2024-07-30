@@ -4,6 +4,7 @@ const BiayaTetap = require("../../models/model-biaya-tetap");
 const path = require('path');
 const Product = require('../../models/model-product');
 const {Pangan} = require('../../models/model-pangan');
+const SalesReport = require('../../models/model-laporan-penjualan');
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -40,8 +41,23 @@ module.exports = {
 
     getDetailToko: async(req, res, next) => {
         try {
+            const { bintang } = req.query
             const dataToko = await Toko.findOne({userId: req.params.id}).populate('address');
-            const products = await Product.find({userId: req.params.id, 'status.value': "terpublish"}).select("_id image_product total_stok name_product total_price").sort({total_stok: -1})
+            const query = { 
+                userId: req.params.id, 
+                'status.value': "terpublish",
+            }
+            if(bintang) query.poin_ulasan = bintang
+            const products = await Product.find(query)
+            .select("_id image_product total_stok name_product total_price poin_ulasan")
+            .sort({ total_stok: -1 })
+            .lean();
+            
+            for (const product of products) {
+                const record = await SalesReport.findOne({ productId: product._id });
+                const terjual = record.track.reduce((acc, val) => acc + val.soldAtMoment, 0);
+                product.terjual = terjual;
+            }
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
             return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: dataToko, dataProduct: products})
         } catch (error) {

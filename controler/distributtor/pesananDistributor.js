@@ -98,70 +98,95 @@ module.exports = {
         }
     },
 
+    getByIdPengirimanDistributor: async (req, res, next) => {
+        try {
+            const data = await Pengiriman.findOne({ _id: req.params.id })
+                .populate({
+                    path: "orderId",
+                    populate: "addressId"
+                })
+                .populate({
+                    path: "distributorId",
+                    populate: "alamat_id"
+                })
+                .populate({
+                    path: "id_toko",
+                    populate: "address"
+                })
+                .populate("id_jenis_kendaraan")
+                .populate("jenis_pengiriman")
+                .populate({
+                    path: "productToDelivers.productId",
+                    model: "Product",
+                    populate: {
+                        path: "categoryId"
+                    }
+                })
+
+            if (!data) return res.status(404).json({ message: "data Not Found" })
+
+            res.status(200).json({
+                message: 'get data by id success',
+                data
+            })
+
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+
+            next(error);
+        }
+    },
+
     ubahStatus: async (req, res, next) => {
         try {
-            const { status } = req.body
+            const { status, tokoId } = req.body
             if (!status) return res.status(400).json({ message: "Tolong kirimkan status" });
 
             const statusAllowed = ['dikirim', 'pesanan diterima', 'dibatalkan']
             if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
 
-            const pengiriman = await Pengiriman.findById(req.params.id).populate('orderId')
-            if (!pengiriman) return res.status(404).json({ message: `Tidak ada pengiriman dengan id: ${req.params.id}` });
+            const pengiriman = await Pengiriman.find(
+                {
+                    _id: req.params.id,
+                    id_toko: tokoId,
+                }
+            )
+                .populate({
+                    path: "orderId",
+                    populate: "addressId"
+                })
+                .populate({
+                    path: "id_toko",
+                    populate: "address"
+                });
+
+            if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Tidak ada pengiriman dengan id: ${req.params.id}` });
+
+            const pengirimanIds = pengiriman.map(pgr => pgr._id)
+            const distriIds = pengiriman.map(pgr => pgr.distributorId)
 
             const distri = await Distributtor.findById(pengiriman.distributorId)
             if (distri.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak Bisa Mengubah Pengiriman Orang Lain!" });
 
             if (status === "dibatalkan") {
-                await Pengiriman.updateOne({ _id: req.params.id }, { rejected: true, status_distributor: "Ditolak" });
+                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { rejected: true, status_distributor: "Ditolak" });
 
                 const currentDate = new Date();
-                await Distributtor.findByIdAndUpdate({ _id: distri._id }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+                await Distributtor.updateMany({ _id: { $in: distriIds } }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
-                await Pengiriman.updateOne({ _id: req.params.id }, {
+                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, {
                     status_pengiriman: status
                 });
             }
 
-            const socket = io('https://probable-subtly-crawdad.ngrok-free.app', {
-                auth: {
-                    fromServer: true
-                }
-            })
-            const prodIds = pengiriman.productToDelivers.map(item => {
-                return item.productId
-            })
             
-            if(status == "dikirim"){
-                const products = await Product.find({ _id: { $in: prodIds } })
-                
-                for (const product of products) {
-                    socket.emit('notif_order', {
-                        jenis: 'pesanan',
-                        userId: pengiriman.orderId.userId,
-                        message: `Pesanan ${product.name_product} telah dikirim`,
-                        image: product.image_product[0],
-                        status: "Pesanan dalam Pengiriman",
-                        waktu: `${new Date().toLocaleTimeString('en-GB')}`
-                    })
-                }
-                // socket.disconnect()
-            }
-            
-            if(status == "pesanan diterima"){
-                const products = await Product.find({_id: {$in: prodIds}})
-                
-                for (const product of products){
-                    socket.emit("notif_pesanan_diterima", {
-                        jenis: 'pesanan',
-                        userId: pengiriman.orderId.userId,
-                        message: `Pesanan ${product.name_product} telah diterima oleh konsumen`,
-                        image: product.image_product[0],
-                        status: 'Pesanan diterima konsumen',
-                        waktu: `${new Date().toLocaleTimeString('en-GB')}` 
-                    })
-                }
-            }
             return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
         } catch (error) {
             console.log(error);
@@ -219,7 +244,38 @@ module.exports = {
                 jenisKendaraan: dataPengiriman.id_jenis_kendaraan
             })
 
-            const updateStatusDistributor = await Pengiriman.findByIdAndUpdate({ _id: req.params.id }, { status_distributor: "Diterima" })
+            const socket = io('https://probable-subtly-crawdad.ngrok-free.app', {
+                auth: {
+                    fromServer: true
+                }
+            })
+            const prodIds = dataPengiriman.flatMap(pgr => {
+                return pgr.productToDelivers.map(item => item.productId);
+            });
+
+            if (status === "dibatalkan") {
+                await Pengiriman.updateMany({ _id: req.params.id }, { rejected: true, status_distributor: "Ditolak" });
+
+                const currentDate = new Date();
+                await Distributtor.updateMany({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+            } else {
+                await Pengiriman.updateMany({ _id: req.params.id }, {
+                    status_pengiriman: status
+                });
+            }
+
+            const products = await Product.find({ _id: { $in: prodIds } })
+            for (const product of products) {
+                socket.emit('notif_order', {
+                    jenis: 'pesanan',
+                    userId: dataPengiriman.orderId.userId,
+                    message: `Pesanan ${product.name_product} telah dikirim`,
+                    image: product.image_product[0],
+                    status: "Pesanan dalam Pengiriman"
+                })
+            }
+
+            const updateStatusDistributor = await Pengiriman.findByIdAndUpdate({ _id: req.params.id }, { status_distributor: "Dikirim" })
 
             res.status(201).json({
                 message: "update data success",
