@@ -543,8 +543,10 @@ module.exports = {
                     const pesanan = {}
                     const kode_pesanan = new Set()
                     let isDistributtorApproved;
+                    let isApproved
                     for(const item of order.items){
-                        isDistributtorApproved = item.isDistributtorApproved
+                        isDistributtorApproved = item.isDistributtorApproved;
+                        isApproved = item.isApproved
                         const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
                         if(!kode_pesanan.has(item.kode_pesanan)){
                             kode_pesanan.add(item.kode_pesanan)
@@ -588,9 +590,21 @@ module.exports = {
                             })
                         }
                     }
+                    
                     Object.keys(pesanan).forEach(key => {
+                        const checkStatus = () => {
+                            if(isApproved){
+                                return "Dikemas"
+                            }else if(!isApproved){
+                                return "Pesanan Terbaru"
+                            }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim"){
+                                return "Sedang Penjemputan"
+                            }
+                            
+                        }
                         data.push({
                             ...restOfOrder,
+                            status: checkStatus(),
                             id_pesanan: Array.from(kode_pesanan)[0],
                             isDistributtorApproved,
                             ...pesanan[key]
