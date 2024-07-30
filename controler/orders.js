@@ -564,7 +564,7 @@ module.exports = {
                                         return false
                                     }
                                 };
-                                
+
                                 if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
                                     if(!pesanan[pgrId]){
                                         pesanan[pgrId] = {
@@ -606,9 +606,9 @@ module.exports = {
                     
                     Object.keys(pesanan).forEach(key => {
                         const checkStatus = () => {
-                            if(pesanan[key].isApproved){
+                            if(pesanan[key].pengiriman.sellerApproved){
                                 return "Dikemas"
-                            }else if(!pesanan[key].isApproved){
+                            }else if(!pesanan[key].pengiriman.sellerApproved){
                                 return "Pesanan Terbaru"
                             }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim"){
                                 return "Sedang Penjemputan"
@@ -1708,6 +1708,19 @@ module.exports = {
             next(err)
         }
     },
+
+    confirmOrder: async(req, res, next) => {
+        try {
+            const { pengirimanId } = req.body
+            const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true }, {new :true}).lean();
+            if(!pengiriman) return res.status(404).json({message: `Tidak ada pengiriman dengan id ${pengirimanId}`});
+            return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan"})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    
     cancelOrder: async (req, res, next) => {
         try {
             const { pesananId, reason } = req.body
@@ -1730,6 +1743,7 @@ module.exports = {
             next(error)
         }
     },
+
     deleteOrder: async (req, res, next) => {
         try {
             const dataOrder = await Orders.findOne({ _id: req.params.id })
