@@ -617,7 +617,6 @@ module.exports = {
                             ...restOfOrder,
                             status: checkStatus(),
                             id_pesanan: Array.from(kode_pesanan)[0],
-                            isDistributtorApproved,
                             ...pesanan[key]
                         })
                     })
