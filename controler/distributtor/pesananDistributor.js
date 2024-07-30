@@ -98,6 +98,52 @@ module.exports = {
         }
     },
 
+    getByIdPengirimanDistributor: async (req, res, next) => {
+        try {
+            const data = await Pengiriman.findOne({ _id: req.params.id })
+                .populate({
+                    path: "orderId",
+                    populate: "addressId"
+                })
+                .populate({
+                    path: "distributorId",
+                    populate: "alamat_id"
+                })
+                .populate({
+                    path: "id_toko",
+                    populate: "address"
+                })
+                .populate("id_jenis_kendaraan")
+                .populate("jenis_pengiriman")
+                .populate({
+                    path: "productToDelivers.productId",
+                    model: "Product",
+                    populate: {
+                        path: "categoryId"
+                    }
+                })
+
+            if (!data) return res.status(404).json({ message: "data Not Found" })
+
+            res.status(200).json({
+                message: 'get data by id success',
+                data
+            })
+
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+
+            next(error);
+        }
+    },
+
     ubahStatus: async (req, res, next) => {
         try {
             const { status, tokoId } = req.body
@@ -107,7 +153,7 @@ module.exports = {
             if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
 
             const pengiriman = await Pengiriman.find(
-                { 
+                {
                     _id: req.params.id,
                     id_toko: tokoId,
                 }
@@ -120,9 +166,9 @@ module.exports = {
                     path: "id_toko",
                     populate: "address"
                 });
-            
+
             if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Tidak ada pengiriman dengan id: ${req.params.id}` });
-            
+
             const pengirimanIds = pengiriman.map(pgr => pgr._id)
             const distriIds = pengiriman.map(pgr => pgr.distributorId)
 
@@ -133,7 +179,7 @@ module.exports = {
                 await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { rejected: true, status_distributor: "Ditolak" });
 
                 const currentDate = new Date();
-                await Distributtor.updateMany({ _id: { $in: distriIds }}, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+                await Distributtor.updateMany({ _id: { $in: distriIds } }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
                 await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, {
                     status_pengiriman: status
@@ -148,7 +194,7 @@ module.exports = {
             const prodIds = pengiriman.flatMap(pgr => {
                 return pgr.productToDelivers.map(item => item.productId);
             });
-            
+
             const products = await Product.find({ _id: { $in: prodIds } })
             for (const product of products) {
                 socket.emit('notif_order', {
