@@ -56,7 +56,7 @@ module.exports = {
                 payload.push({ data, konsumen: dataKonsumen })
             }
 
-            if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor" })
+            if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor kosong" })
 
             res.status(200).json({ message: "get data All success", datas: payload })
         } catch (error) {
@@ -186,7 +186,7 @@ module.exports = {
                 });
             }
 
-            
+
             return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
         } catch (error) {
             console.log(error);
