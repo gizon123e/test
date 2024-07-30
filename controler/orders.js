@@ -623,7 +623,7 @@ module.exports = {
                                 ...restOfPengiriman,
                                 waktu_pengiriman: new Date(waktu_pengiriman)
                             },
-                            ...restOfPesanan[key]
+                            ...restOfPesanan
                         })
                     })
                 }

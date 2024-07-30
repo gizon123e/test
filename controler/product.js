@@ -493,29 +493,44 @@ module.exports = {
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
       }
 
-      const nama_toko = await TokoVendor.find({namaToko: { $regex: new RegExp(name, "i") }}).populate('address');
-      const list_product = await Product.find(handlerFilter).populate("userId", "-password").populate("categoryId");
+      const nama_toko = await TokoVendor.find().populate('address').lean();
+      const list_product = await Product.find(handlerFilter)
+          .populate("userId", "-password")
+          .populate("categoryId")
+          .lean();
 
       req.user = auth();
       let datas = [];
+
       if (!req.user) {
-        datas = list_product.filter((data) => {
-          return data.userId.role === "vendor";
-        });
+          datas = list_product.filter(data => data.userId && data.userId.role === "vendor");
       } else {
-        datas = list_product.filter((data) => {
-          if(!data.userId) return false;
-          switch (req.user.role) {
-            case "konsumen":
-              return data.userId.role === "vendor";
-            case "vendor":
-              return data.userId.role === "supplier";
-            case "supplier":
-              return data.userId.role === "produsen";
-          }
-        });
+          datas = list_product.filter(data => {
+              if (!data.userId) return false;
+
+              switch (req.user.role) {
+                  case "konsumen":
+                      return data.userId.role === "vendor";
+                  case "vendor":
+                      return data.userId.role === "supplier";
+                  case "supplier":
+                      return data.userId.role === "produsen";
+                  default:
+                      return false;
+              }
+          }).map(product => {
+              const toko = nama_toko.find(toko => toko.userId.toString() === product.userId._id.toString());
+              return {
+                  ...product,
+                  toko
+              };
+          });
       }
-      if ((!list_product || list_product.length === 0) && (!nama_toko || nama_toko.length === 0)) return res.status(404).json({ message: `Product dengan nama ${name} serta dengan kategori ${category} tidak ditemukan` });
+
+      if ((!list_product || list_product.length === 0) && (!nama_toko || nama_toko.length === 0)) {
+          return res.status(404).json({ message: `Product dengan nama ${name} serta dengan kategori ${category} tidak ditemukan` });
+      }
+
       return res.status(200).json({ datas });
     } catch (error) {
       console.log(error);
