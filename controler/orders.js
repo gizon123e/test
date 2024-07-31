@@ -604,7 +604,8 @@ module.exports = {
                         }
                     }
                     
-                    Object.keys(pesanan).forEach(key => {
+                    for(const key of Object.keys(pesanan)){
+                        const pembatalan = await Pembatalan.findOne({pengirimanId: pesanan[key].pengiriman._id});
                         const checkStatus = () => {
                             if(pesanan[key].pengiriman.sellerApproved){
                                 return "Dikemas"
@@ -612,6 +613,8 @@ module.exports = {
                                 return "Pesanan Terbaru"
                             }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim"){
                                 return "Sedang Penjemputan"
+                            }else if(pembatalan){
+                                return "kadaluarsa"
                             }
                             
                         }
@@ -635,7 +638,7 @@ module.exports = {
                             },
                             ...restOfPesanan
                         })
-                    })
+                    }
                 }
 
                 return res.status(200).json({ message: 'get data all Order success', data })
