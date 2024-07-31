@@ -1631,6 +1631,7 @@ module.exports = {
                 
                         total_tagihan += total_ongkir;
                     }
+                    total_pengiriman += 1
                 }
                 const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
                 promisesFunct.push(
