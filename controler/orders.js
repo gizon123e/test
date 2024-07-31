@@ -640,8 +640,13 @@ module.exports = {
                         })
                     }
                 }
+                let filteredData = data.filter((dt)=>{
+                    if(!status) return true
+                    return dt.status === status
+                })
+                
 
-                return res.status(200).json({ message: 'get data all Order success', data })
+                return res.status(200).json({ message: 'get data all Order success', data: filteredData })
             }
         } catch (error) {
             if (error && error.name === 'ValidationError') {
