@@ -624,7 +624,6 @@ module.exports = {
                         }
                         const { pengiriman, ...restOfPesanan } = pesanan[key]
                         const { waktu_pengiriman, ...restOfPengiriman } = pengiriman
-                        console.log(restOfOrder)
                         data.push({
                             ...restOfOrder,
                             createdAt: checkCreatedAt(),
@@ -649,6 +648,185 @@ module.exports = {
                     fields: error.fields
                 })
             }
+            next(error)
+        }
+    },
+
+    automaticVendorOrderCancel: async(req, res, next) => {
+        try {
+            const products = await Product.find();
+            const productIds = products.map(item => item._id);
+
+            const filter = {
+                items: {
+                    $elemMatch: {
+                        product: {
+                            $elemMatch: {
+                                productId: { $in: productIds }
+                            }
+                        }
+                    }
+                },
+            }
+            
+            const dataOrders = await Pesanan.aggregate([
+                { $match: filter },
+                { $unwind: "$items" },
+                {
+                    $addFields: {
+                        "items.product": {
+                            $filter: {
+                                input: "$items.product",
+                                as: "product",
+                                cond: { $in: ["$$product.productId", productIds] }
+                            }
+                        }
+                    }
+                },
+                { $match: { "items.product": { $not: { $size: 0 } } } },
+                { $project: { shipments: 0}},
+                { $unwind: "$items.product" },
+                {
+                    $lookup:{
+                        from: "addresses",
+                        foreignField: "_id",
+                        localField: "addressId",
+                        as: "alamat"
+                    }
+                },
+                { $unwind: "$alamat" },
+                {
+                    $lookup:{
+                        from: "sekolahs",
+                        foreignField: "_id",
+                        localField: "sekolahId",
+                        as: "sekolah"
+                    }
+                },
+                { $unwind: "$sekolah" },
+                {
+                    $group: {
+                        _id: "$_id",
+                        items: { $push: "$items" },
+                        sekolah: { $first: "$sekolah" },
+                        alamat: { $first: "$alamat" },
+                        date_order: { $first: "$date_order" },
+                        status: { $first: "$status" },
+                        biaya_layanan: { $first: "$biaya_layanan" },
+                        biaya_jasa_aplikasi: { $first: "$biaya_jasa_aplikasi" },
+                        poinTerpakai: { $first: "$poinTerpakai" },
+                        biaya_asuransi: { $first: "$biaya_asuransi" },
+                        biaya_awal_asuransi: { $first: "$biaya_awal_asuransi" },
+                        biaya_awal_proteksi: { $first: "$biaya_awal_proteksi" },
+                        dp: { $first: "$dp" },
+                        expire: { $first: "$expire" },
+                        createdAt: { $first: "$createdAt" },
+                        updatedAt: { $first: "$updatedAt" },
+                    }
+                },
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                }
+            ]);
+            for(const order of dataOrders){
+                const { userId, createdAt, updatedAt, status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order
+                const dataProd = await DataProductOrder.findOne({pesananId: order._id});
+                const transaksiSubsidi = await Transaksi.findOne({id_pesanan: order._id, subsidi: true});
+                const transaksiTambahan = await Transaksi.findOne({id_pesanan: order._id, subsidi: false});
+                const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
+                const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksiTambahan?._id, status:"Lunas"});
+                const pengiriman = await Pengiriman.find({orderId: order._id, sellerApproved: false}).populate("distributorId").lean();
+                let detailToko;
+
+                const pesanan = {}
+                const kode_pesanan = new Set()
+                for(const item of order.items){
+                    
+                    let isApproved = item.isApproved
+                    const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
+                    if(!kode_pesanan.has(item.kode_pesanan)){
+                        kode_pesanan.add(item.kode_pesanan)
+                    }
+                    if(productSelected){
+                        const selectedPengiriman = pengiriman.filter(pgr => {
+                            return pgr.productToDelivers.some(prd => prd.productId.toString() === productSelected._id.toString())
+                        })
+                        
+                        selectedPengiriman.map(pgr => {
+                            const pgrId = pgr._id.toString()
+                            const isDistributtorApprovedCheck = () => {
+                                if(item.isDistributtorApproved){
+                                    return true
+                                }else if(!item.isDistributtorApproved){
+                                    return null
+                                }else if(pgr.rejected){
+                                    return false
+                                }
+                            };
+
+                            if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
+                                if(!pesanan[pgrId]){
+                                    pesanan[pgrId] = {
+                                        pengiriman: pgr,
+                                        isApproved,
+                                        isDistributtorApproved: isDistributtorApprovedCheck(),
+                                        product: []
+                                    }
+                                }
+                                const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
+                                pesanan[pgrId].product.push({ 
+                                    product: productSelected, 
+                                    quantity: found.quantity, 
+                                    totalHargaProduk: productSelected.total_price * found.quantity,
+                                    total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
+                                })
+                            }
+
+                            if(pgr.invoice.toString() === invoiceTambahan?._id.toString()){
+                                if(!pesanan[pgrId]){
+                                    pesanan[pgrId] = {
+                                        pengiriman: pgr,
+                                        isApproved,
+                                        isDistributtorApproved: isDistributtorApprovedCheck(),
+                                        product: []
+                                    }
+                                }
+                                const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
+                                pesanan[pgrId].product.push({ 
+                                    product: productSelected, 
+                                    quantity: found.quantity, 
+                                    totalHargaProduk: productSelected.total_price * found.quantity,
+                                    total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
+                                })
+                            }
+                        })
+                    }
+                }
+                
+                for(const key of Object.keys(pesanan)){
+                    const checkCreatedAt = () => {
+                        if(pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi._id.toString()){
+                            return createdAt
+                        }else if(pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan._id.toString()){
+                            return updatedAt
+                        }
+                    }
+
+                    const created = checkCreatedAt()
+                    const sixHoursAgo = new Date(new Date().getTime() - 6 * 60 * 60 * 1000)
+                    if(created < sixHoursAgo){
+                        await Pengiriman.findByIdAndUpdate(pesanan[key].pengiriman._id, {
+                            canceled: true,
+                            canceledBy: "sistem",
+                            userId                    
+                        })
+                    }
+                }
+            }
+        } catch (error) {
+            console.log(error);
             next(error)
         }
     },
@@ -1780,15 +1958,6 @@ module.exports = {
             await VA_Used.deleteOne({orderId: pesananId, userId: req.user.id})
             if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${pesananId}`})
             return res.status(200).json({message: "Berhasil Membatalkan Order", data: order})
-        } catch (error) {
-            console.log(error);
-            next(error)
-        }
-    },
-
-    automaticVendorOrderCancel: async(req, res, next) => {
-        try {
-            
         } catch (error) {
             console.log(error);
             next(error)

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-
+const Pembatalan = require('./model-pembatalan')
 const modelPengiriman = new mongoose.Schema({
     orderId: {
         type: mongoose.Types.ObjectId,
@@ -48,6 +48,10 @@ const modelPengiriman = new mongoose.Schema({
         enum: ["diproses", "dikirim", "pesanan selesai"],
         default: "diproses"
     },
+    canceled:{
+        type: Boolean,
+        default: false
+    },
     kode_pengiriman: {
         type: String
     },
@@ -68,7 +72,22 @@ const modelPengiriman = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: "Invoice"
     }
-}, { timestamps: true })
+}, { timestamps: true });
+
+modelPengiriman.pre(["findOneAndUpdate"],  async ()=> {
+    if(this.getUpdate().canceled === true){
+        const ships = await this.model.find(this.getQuery()).exec();
+  
+        for (const ship of ships) {
+            await Pembatalan.create({
+                pesananId: ship._id,
+                userId: this.getUpdate().userId,
+                canceledBy: this.getUpdate().canceledBy,
+                reason: this.getUpdate().reason
+            });
+        }
+    }
+})
 
 const Pengiriman = mongoose.model("Pengiriman", modelPengiriman);
 module.exports = Pengiriman
