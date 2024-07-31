@@ -200,8 +200,10 @@ module.exports = {
                 const transaksi = await Transaksi.find({ id_pesanan: { $in: orderIds } });
 
                 // Find invoices based on subsisi and tambahan status
-                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
-                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
+                // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+                console.log(invoiceTambahan)
 
                 if (invoiceSubsidi) {
                     if (invoiceTambahan) {
