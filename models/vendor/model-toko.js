@@ -29,6 +29,7 @@ const modelTokoVendor = new mongoose.Schema({
     },
     waktu_operasional: [
         {
+            _id: false,
             hari: {
                 type: String
             },
