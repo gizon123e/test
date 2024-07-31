@@ -1,23 +1,7 @@
 const cron = require('node-cron')
-const Pesanan = require('../models/pesanan/model-orders');
 const FlashSale = require('../models/model-flashsale');
 const Product = require('../models/model-product');
-
-async function cancelExpiredOrders() {
-    try {
-      const now = new Date();
-  
-      const result = await Pesanan.updateMany(
-        { expire: { $lt: now }, status: "Belum Bayar" },
-        { status: "Dibatalkan", canceledBy: "sistem", reason: "order expired" }
-      );
-  
-      console.log(`Orders updated: ${JSON.stringify(result)}`);
-    } catch (error) {
-      console.error('Error updating orders:', error);
-    }
-};
-
+const orderVendorAutoCancel = require('../controler/orders').automaticVendorOrderCancel
 async function flash_sale_checker(){
     try {
         const flashSale = await FlashSale.find({
@@ -49,7 +33,7 @@ module.exports = async () => {
         // Jadwalkan cron job untuk menjalankan setiap menit
         cron.schedule('* * * * *', () => {
           console.log('Running scheduled task: cancelExpiredOrders');
-          cancelExpiredOrders();
+          orderVendorAutoCancel()
           flash_sale_checker();
         });
     } catch (error) {

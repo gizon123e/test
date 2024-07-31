@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const modelPembatalan = new mongoose.Schema({
-    transaksiId:{
+    pengirimanId:{
         type: mongoose.Types.ObjectId,
-        ref: "Transaksi"
+        ref: "Pengiriman"
     },
     userId:{
         type: mongoose.Types.ObjectId,
