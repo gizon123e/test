@@ -79,30 +79,18 @@ module.exports = {
                     .select('-nilai_review -file_ktp -nik -namaBadanUsaha -nomorAktaPerusahaan -npwpFile -nomorNpwpPerusahaan -nomorNpwp -profile_pict -jenis_kelamin -legalitasBadanUsaha -tanggal_lahir');
                 const uniqueKey = `${data.orderId._id}_${data.kode_pengiriman}_${data.id_toko}`;
                 const transaksi = await Transaksi.find({ id_pesanan: { $in: orderIds } });
-                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id })
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" })
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" })
 
-                if (invoiceSubsidi) {
-                    if (invoiceTambahan) {
-                        if (uniqueOrders.has(uniqueKey)) {
-                            let existingOrder = uniqueOrders.get(uniqueKey);
-                            // Merge productToDelivers
-                            existingOrder.data.productToDelivers = existingOrder.data.productToDelivers.concat(data.productToDelivers);
-                        } else {
-                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                        }
+                if (invoiceTambahan && invoiceSubsidi) {
+                    if (uniqueOrders.has(uniqueKey)) {
+                        let existingOrder = uniqueOrders.get(uniqueKey);
+
+                        existingOrder.data.productToDelivers = existingOrder.data.productToDelivers.concat(data.productToDelivers);
                     } else {
-                        if (uniqueOrders.has(uniqueKey)) {
-                            let existingOrder = uniqueOrders.get(uniqueKey);
-                            // Merge productToDelivers
-                            existingOrder.data.productToDelivers = existingOrder.data.productToDelivers.concat(data.productToDelivers);
-                        } else {
-                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                        }
+                        uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
                     }
                 }
-
-
             }
 
             const payload = Array.from(uniqueOrders.values());
