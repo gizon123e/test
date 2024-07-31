@@ -66,7 +66,7 @@ const modelDistributtor = mongoose.Schema({
     },
     date_tolak: {
         type: Date,
-        default: Date.now
+        default: Date.now()
     },
     tolak_pesanan: {
         type: Number,
