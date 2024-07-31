@@ -26,20 +26,37 @@ module.exports = {
             const datas = await Pengiriman.find(query)
                 .populate({
                     path: "orderId",
-                    populate: "addressId"
+                    select: ['-items', '-dp', '-shipments'],
+                    populate: [
+                        { path: "addressId" },
+                        {
+                            path: "sekolahId",
+                            select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
+                            populate: "address"
+                        }
+                    ]
                 })
                 .populate({
                     path: "distributorId",
+                    select: ['-npwp', '-file_npwp', '-imageProfile', '-jenisPerusahaan', '-tanggal_lahir', '-tolak_pesanan', '-nilai_review', '-nilai_pinalti'],
                     populate: "alamat_id"
                 })
                 .populate({
                     path: "id_toko",
+                    select: ['-penilaian_produk', '-store_description', '-nilai_pinalti', '-waktu_operasional', '-profile_pict', '-pengikut'],
                     populate: "address"
                 })
-                .populate("id_jenis_kendaraan")
-                .populate("jenis_pengiriman")
+                .populate({
+                    path: "id_jenis_kendaraan",
+                    select: ['-description', '-ukuran', '-icon_aktif', '-icon_disable', '-icon_distributor', '-umurKendaraan'],
+                })
+                .populate({
+                    path: "jenis_pengiriman",
+                    select: ['-icon', '-description', '-__v'],
+                })
                 .populate({
                     path: "productToDelivers.productId",
+                    select: ['-status', '-description', '-long_description', '-pangan', '-reviews'],
                     model: "Product",
                     populate: {
                         path: "categoryId"
@@ -49,14 +66,27 @@ module.exports = {
                 .skip(skip) // Lewati dokumen sesuai dengan nilai skip
                 .limit(parseInt(limit));
 
-            const payload = []
-            for (let data of datas) {
-                const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
-
-                payload.push({ data, konsumen: dataKonsumen })
-            }
 
             if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor kosong" })
+
+            const uniqueOrders = new Map();
+
+            for (let data of datas) {
+                const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
+                    .select('-nilai_review -file_ktp -nik -namaBadanUsaha -nomorAktaPerusahaan -npwpFile -nomorNpwpPerusahaan -nomorNpwp -profile_pict -jenis_kelamin -legalitasBadanUsaha -tanggal_lahir');
+
+                const uniqueKey = `${data.orderId._id}_${data.kode_pengiriman}`;
+
+                if (uniqueOrders.has(uniqueKey)) {
+                    let existingOrder = uniqueOrders.get(uniqueKey);
+                    // Merge productToDelivers
+                    existingOrder.data.productToDelivers = existingOrder.data.productToDelivers.concat(data.productToDelivers);
+                } else {
+                    uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
+                }
+            }
+
+            const payload = Array.from(uniqueOrders.values());
 
             res.status(200).json({ message: "get data All success", datas: payload })
         } catch (error) {
@@ -198,7 +228,7 @@ module.exports = {
             console.log(error);
             next(error)
         }
-    },  
+    },
 
     updateDiTerimaDistributor: async (req, res, next) => {
         try {
