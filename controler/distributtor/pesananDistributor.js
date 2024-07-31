@@ -182,18 +182,20 @@ module.exports = {
 
     ubahStatus: async (req, res, next) => {
         try {
-            const { status, tokoId } = req.body
+            const { status, tokoId, kode_pengiriman, distributorId } = req.body
             if (!status) return res.status(400).json({ message: "Tolong kirimkan status" });
 
             const statusAllowed = ['dikirim', 'pesanan diterima', 'dibatalkan']
             if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
 
-            const pengiriman = await Pengiriman.find(
-                {
-                    _id: req.params.id,
-                    id_toko: tokoId,
-                }
-            )
+            let query = {
+                orderId: req.params.id,
+                id_toko: tokoId,
+                kode_pengiriman,
+                distributorId
+            }
+
+            const pengiriman = await Pengiriman.find(query)
                 .populate({
                     path: "orderId",
                     populate: "addressId"
@@ -203,12 +205,13 @@ module.exports = {
                     populate: "address"
                 });
 
-            if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Tidak ada pengiriman dengan id: ${req.params.id}` });
+            if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Tidak ada pengiriman` });
 
             const pengirimanIds = pengiriman.map(pgr => pgr._id)
             const distriIds = pengiriman.map(pgr => pgr.distributorId)
+            console.log(distriIds)
 
-            const distri = await Distributtor.findById(pengiriman.distributorId)
+            const distri = await Distributtor.findById(distributorId)
             if (distri.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak Bisa Mengubah Pengiriman Orang Lain!" });
 
             if (status === "dibatalkan") {
@@ -222,8 +225,7 @@ module.exports = {
                 });
             }
 
-
-            return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman" })
+            return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman", pengirimanIds })
         } catch (error) {
             console.log(error);
             next(error)
