@@ -36,8 +36,8 @@ const modelOrder = new mongoose.Schema({
             validate: {
                 validator: (date) => {
                     const currentDate = new Date();
-                    const minDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
-                    return date >= minDate
+                    const minDate = new Date(currentDate.setDate(currentDate.getDate() + 7));
+                    return date.getTime() >= minDate.getTime()
                 },
                 message: "Deadline minimal 7 hari ke depan"
             },

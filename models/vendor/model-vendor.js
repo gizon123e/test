@@ -96,6 +96,10 @@ const vendorModel = new mongoose.Schema({
         type: String,
         default: null
     },
+    nilai_pinalti:{
+        type: Number,
+        default: 0
+    }
 })
 
 vendorModel.pre('save', function (next) {

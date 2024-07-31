@@ -447,7 +447,6 @@ module.exports = {
             } else if (req.user.role === 'produsen' || req.user.role === 'supplier' || req.user.role === 'vendor') {
                 const products = await Product.find({userId: req.user.id});
                 const productIds = products.map(item => { return item._id });
-                console.log(productIds)
                 const filter = {
                     items: {
                         $elemMatch: {
@@ -523,7 +522,7 @@ module.exports = {
                 ]);
                 const data = []
                 for(const order of dataOrders){
-                    const { status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order
+                    const { createdAt, updatedAt, status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order
                     const dataProd = await DataProductOrder.findOne({pesananId: order._id});
                     const transaksiSubsidi = await Transaksi.findOne({id_pesanan: order._id, subsidi: true});
                     const transaksiTambahan = await Transaksi.findOne({id_pesanan: order._id, subsidi: false});
@@ -616,10 +615,19 @@ module.exports = {
                             }
                             
                         }
+                        const checkCreatedAt = () => {
+                            if(pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi._id.toString()){
+                                return createdAt
+                            }else if(pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan._id.toString()){
+                                return updatedAt
+                            }
+                        }
                         const { pengiriman, ...restOfPesanan } = pesanan[key]
                         const { waktu_pengiriman, ...restOfPengiriman } = pengiriman
+                        console.log(restOfOrder)
                         data.push({
                             ...restOfOrder,
+                            createdAt: checkCreatedAt(),
                             status: checkStatus(),
                             id_pesanan: Array.from(kode_pesanan)[0],
                             pengiriman: {
@@ -1772,6 +1780,15 @@ module.exports = {
             await VA_Used.deleteOne({orderId: pesananId, userId: req.user.id})
             if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${pesananId}`})
             return res.status(200).json({message: "Berhasil Membatalkan Order", data: order})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    automaticVendorOrderCancel: async(req, res, next) => {
+        try {
+            
         } catch (error) {
             console.log(error);
             next(error)
