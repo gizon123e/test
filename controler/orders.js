@@ -607,14 +607,14 @@ module.exports = {
                     for(const key of Object.keys(pesanan)){
                         const pembatalan = await Pembatalan.findOne({pengirimanId: pesanan[key].pengiriman._id});
                         const checkStatus = () => {
-                            if(pesanan[key].pengiriman.sellerApproved){
+                            if(pesanan[key].pengiriman.sellerApproved && !pembatalan){
                                 return "Dikemas"
-                            }else if(!pesanan[key].pengiriman.sellerApproved){
+                            }else if(!pesanan[key].pengiriman.sellerApproved && !pembatalan){
                                 return "Pesanan Terbaru"
-                            }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim"){
+                            }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim" && !pembatalan){
                                 return "Sedang Penjemputan"
                             }else if(pembatalan){
-                                return "kadaluarsa"
+                                return "Kadaluarsa"
                             }
                             
                         }
