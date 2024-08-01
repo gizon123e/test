@@ -1,23 +1,27 @@
 const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
 const Pengiriman = require('../../models/model-pengiriman')
 const PelacakanDistributorKonsumen = require('../../models/distributor/pelacakanDistributorKonsumen')
+const Distributtor = require('../../models/distributor/model-distributor')
 
 module.exports = {
     getAllProsesPengiriman: async (req, res, next) => {
         try {
-            const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find()
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            if (!distributor) return res.status(404).json({ message: 'data not FOund' })
+
+            const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ distributorId: distributor._id })
                 .populate({
                     path: "tokoId",
                     populate: "address"
                 })
                 .populate({
-                    path: "konsumenId",
+                    path: "sekolahId",
                     populate: "address"
                 })
                 .populate("jenisPengiriman")
                 .populate("jenisKendaraan")
 
-            if (!dataProsesPengirimanDistributor) return res.status(400).json({ message: "data saat ini masi kosong" })
+            if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
 
             res.status(200).json({
                 message: "data get All success",

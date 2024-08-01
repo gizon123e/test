@@ -11,128 +11,7 @@ const { Transaksi } = require('../../models/model-transaksi')
 const { calculateDistance } = require('../../utils/menghitungJarak');
 const Invoice = require("../../models/model-invoice");
 
-const mergeProductToDelivers = (existingProducts, newProducts) => {
-    // Merge products based on productId
-    const productMap = new Map();
-
-    existingProducts.forEach(product => {
-        productMap.set(product.productId.toString(), product);
-    });
-
-    newProducts.forEach(product => {
-        if (productMap.has(product.productId.toString())) {
-            // Merge if product already exists
-            let existingProduct = productMap.get(product.productId.toString());
-            existingProduct.quantity += product.quantity;
-        } else {
-            productMap.set(product.productId.toString(), product);
-        }
-    });
-
-    return Array.from(productMap.values());
-}
-
 module.exports = {
-    // getAllPesananDistributor: async (req, res, next) => {
-    //     try {
-    //         const { status, page = 1, limit = 5 } = req.query
-    //         const skip = (page - 1) * limit;
-
-    //         let query = {
-    //             distributorId: req.params.id
-    //         }
-
-    //         if (status) {
-    //             query.status_distributor = { $regex: status, $options: 'i' }
-    //         }
-
-    //         const datas = await Pengiriman.find(query)
-    //             .populate({
-    //                 path: "orderId",
-    //                 select: ['-items', '-dp', '-shipments'],
-    //                 populate: [
-    //                     { path: "addressId" },
-    //                     {
-    //                         path: "sekolahId",
-    //                         select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
-    //                         populate: "address"
-    //                     }
-    //                 ]
-    //             })
-    //             .populate({
-    //                 path: "distributorId",
-    //                 select: ['-npwp', '-file_npwp', '-imageProfile', '-jenisPerusahaan', '-tanggal_lahir', '-tolak_pesanan', '-nilai_review', '-nilai_pinalti'],
-    //                 populate: "alamat_id"
-    //             })
-    //             .populate({
-    //                 path: "id_toko",
-    //                 select: ['-penilaian_produk', '-store_description', '-nilai_pinalti', '-waktu_operasional', '-profile_pict', '-pengikut'],
-    //                 populate: "address"
-    //             })
-    //             .populate({
-    //                 path: "id_jenis_kendaraan",
-    //                 select: ['-description', '-ukuran', '-icon_aktif', '-icon_disable', '-icon_distributor', '-umurKendaraan'],
-    //             })
-    //             .populate({
-    //                 path: "jenis_pengiriman",
-    //                 select: ['-icon', '-description', '-__v'],
-    //             })
-    //             .populate({
-    //                 path: "productToDelivers.productId",
-    //                 select: ['-status', '-description', '-long_description', '-pangan', '-reviews'],
-    //                 model: "Product",
-    //                 populate: {
-    //                     path: "categoryId"
-    //                 }
-    //             })
-    //             .sort({ createdAt: -1 }) // Urutkan berdasarkan createdAt descending
-    //             .skip(skip) // Lewati dokumen sesuai dengan nilai skip
-    //             .limit(parseInt(limit));
-
-
-    //         if (!datas) return res.status(404).json({ message: "saat ini data pesanan distributor kosong" })
-
-    //         const uniqueOrders = new Map();
-
-    //         const orderIds = datas.map(pgr => pgr.orderId)
-    //         for (let data of datas) {
-    //             const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
-    //                 .select('-nilai_review -file_ktp -nik -namaBadanUsaha -nomorAktaPerusahaan -npwpFile -nomorNpwpPerusahaan -nomorNpwp -profile_pict -jenis_kelamin -legalitasBadanUsaha -tanggal_lahir');
-    //             const uniqueKey = `${data.orderId._id}_${data.kode_pengiriman}_${data.id_toko}`;
-    //             const transaksi = await Transaksi.find({ id_pesanan: { $in: orderIds } });
-    //             const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" })
-    //             const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" })
-
-    //             if (invoiceSubsidi) {
-    //                 if (invoiceTambahan) {
-    //                     if (uniqueOrders.has(uniqueKey)) {
-    //                         let existingOrder = uniqueOrders.get(uniqueKey);
-    //                         // Merge productToDelivers
-    //                         existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-    //                     } else {
-    //                         uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-    //                     }
-    //                 } else {
-    //                     if (uniqueOrders.has(uniqueKey)) {
-    //                         let existingOrder = uniqueOrders.get(uniqueKey);
-    //                         // Merge productToDelivers
-    //                         existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-    //                     } else {
-    //                         uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         const payload = Array.from(uniqueOrders.values());
-
-    //         res.status(200).json({ message: "get data All success", datas: payload })
-    //     } catch (error) {
-    //         console.log(error)
-    //         next(error)
-    //     }
-    // },
-
     getAllPesananDistributor: async (req, res, next) => {
         try {
             const { status, page = 1, limit = 5 } = req.query;
@@ -184,8 +63,8 @@ module.exports = {
                 })
                 .lean()
                 .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(parseInt(limit));
+            // .skip(skip)
+            // .limit(parseInt(limit));
 
             if (!datas || datas.length === 0) return res.status(404).json({ message: "Saat ini data pesanan distributor kosong" });
 
@@ -286,39 +165,86 @@ module.exports = {
     getByIdPengirimanDistributor: async (req, res, next) => {
         try {
             const data = await Pengiriman.findOne({ _id: req.params.id })
+
+            if (!data) return res.status(404).json({ message: "data Not Found" })
+
+            const dataPengiriman = await Pengiriman.find({
+                orderId: data.orderId,
+                kode_pengiriman: data.kode_pengiriman,
+                id_toko: data.id_toko
+            })
                 .populate({
                     path: "orderId",
+                    select: ['-items', '-dp', '-shipments'],
                     populate: [
                         { path: "addressId" },
                         {
                             path: "sekolahId",
+                            select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
                             populate: "address"
                         }
                     ]
                 })
                 .populate({
                     path: "distributorId",
+                    select: ['-npwp', '-file_npwp', '-imageProfile', '-jenisPerusahaan', '-tanggal_lahir', '-tolak_pesanan', '-nilai_review', '-nilai_pinalti'],
                     populate: "alamat_id"
                 })
                 .populate({
                     path: "id_toko",
+                    select: ['-penilaian_produk', '-store_description', '-nilai_pinalti', '-waktu_operasional', '-profile_pict', '-pengikut'],
                     populate: "address"
                 })
-                .populate("id_jenis_kendaraan")
-                .populate("jenis_pengiriman")
+                .populate({
+                    path: "id_jenis_kendaraan",
+                    select: ['-description', '-ukuran', '-icon_aktif', '-icon_disable', '-icon_distributor', '-umurKendaraan']
+                })
+                .populate({
+                    path: "jenis_pengiriman",
+                    select: ['-icon', '-description', '-__v']
+                })
                 .populate({
                     path: "productToDelivers.productId",
+                    select: ['-status', '-description', '-long_description', '-pangan', '-reviews'],
                     model: "Product",
                     populate: {
                         path: "categoryId"
                     }
                 })
 
-            if (!data) return res.status(404).json({ message: "data Not Found" })
+            let payloadRespon = {}
+            let productToDelivers = []
+
+            for (const data of dataPengiriman) {
+                const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
+
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
+                // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+
+                if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                    for (const item of data.productToDelivers) {
+                        productToDelivers.push(item)
+                    }
+                }
+                payloadRespon = {
+                    orderId: data.orderId,
+                    id_toko: data.id_toko,
+                    waktu_pengiriman: data.waktu_pengiriman,
+                    jenis_pengiriman: data.jenis_pengiriman,
+                    total_ongkir: data.total_ongkir,
+                    id_jenis_kendaraan: data.id_jenis_kendaraan,
+                    status_pengiriman: data.status_pengiriman,
+                    kode_pengiriman: data.kode_pengiriman,
+                    status_distributor: data.status_distributor,
+                    productToDelivers
+
+                }
+            }
 
             res.status(200).json({
                 message: 'get data by id success',
-                data
+                data: payloadRespon
             })
 
         } catch (error) {
