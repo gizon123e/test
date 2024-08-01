@@ -24,6 +24,8 @@ const VirtualAccountUser = require("../models/model-user-va");
 const Sekolah = require("../models/model-sekolah");
 const DataProductOrder = require("../models/pesanan/model-data-product-order");
 const salesReport = require('../utils/checkSalesReport')
+const Notifikasi = require('../models/notifikasi/notifikasi');
+const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi');
 dotenv.config();
 
 const now = new Date();
@@ -31,6 +33,7 @@ now.setHours(0, 0, 0, 0);
 const tomorrow = new Date(now);
 tomorrow.setDate(now.getDate() + 1);
 const today = new Date();
+
 const dd = String(today.getDate()).padStart(2, '0');
 const mm = String(today.getMonth() + 1).padStart(2, '0');
 const yyyy = today.getFullYear();
@@ -41,6 +44,25 @@ const ss = String(today.getSeconds()).padStart(2, '0');
 const date = `${yyyy}${mm}${dd}`;
 const minutes = `${hh}${mn}${ss}`;
 
+function formatTanggal(tanggal){
+    const dd = String(tanggal.getDate()).padStart(2, '0');
+    const mm = String(tanggal.getMonth() + 1).padStart(2, '0');
+    const yyyy = tanggal.getFullYear();
+    return `${yyyy}-${mm}-${dd}`
+}
+
+function formatWaktu(waktu){
+    const hh = String(waktu.getHours()).padStart(2, '0');
+    const mn = String(waktu.getMinutes()).padStart(2, '0');
+    const ss = String(waktu.getSeconds()).padStart(2, '0');
+    return `${hh}:${mn}:${ss}`
+}
+
+const socket = io('http://localhost:5000', {
+    auth: {
+        fromServer: true
+    }
+})
 
 module.exports = {
     getOrderPanel: async (req, res, next) => {
@@ -1348,7 +1370,8 @@ module.exports = {
                 }))
             );
 
-            const products = await Product.find({ _id: { $in: productIds.map(prd => prd.productId) } }).select('_id name_product total_stok minimalOrder')
+            const products = await Product.find({ _id: { $in: productIds.map(prd => prd.productId) } }).select('_id name_product total_stok minimalOrder image_product')
+
             for (const prod of productIds) {
                 const found = products.find(item => item._id === prod.productId.toString());
                 if (!found) return res.status(404).json({ message: `Produk dengan id ${prod.productId} tidak ditemukan` })
@@ -1356,7 +1379,7 @@ module.exports = {
                 if(found.minimalOrder > prod.quantity) return res.status(400).json({message: `Produk ${found.name_product} tidak bisa dipesan kurang dari minimal pemesanan`})
             }
 
-            if (items.length !== shipments.length) return res.status(400).json({ message: "Data Toko tidak sama dengan dengan data pengiriman" })
+            if (items.length !== shipments.length) return res.status(400).json({ message: "ama dengan dengan data pengiriman" })
 
             let va_user;
             let VirtualAccount;
@@ -1452,7 +1475,7 @@ module.exports = {
                     status: "Piutang",
                     kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
                 });
-
+                
                 items.map((item)=>{
                     item.product.map(prd=>{
                         if(biaya_asuransi){
@@ -1503,13 +1526,47 @@ module.exports = {
                     Orders.findByIdAndUpdate(dataOrder._id, { status: "Berlangsung" })
                 )
 
+                const formatHarga = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+
+                const notifikasi = await Notifikasi.create({
+                    userId: user._id,
+                    invoiceId: invoice._id,
+                    jenis_invoice: "Subsidi",
+                    createdAt: new Date(),
+                })
+                
+
+                const detailInvoice = await DetailNotifikasi.create({
+                    notifikasiId: notifikasi._id,
+                    jenis: "Info",
+                    status: "Pesanan Makanan Bergizi Gratis telah berhasil",
+                    message: `${invoice.kode_invoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                    image_product: products[0].image_product[0], 
+                    createdAt: new Date()
+                })
+                    
+                socket.emit('notif_pesanan_berhasil', {
+                    jenis: detailInvoice.jenis,
+                    userId: user._id,
+                    message: detailInvoice.message,
+                    status: detailInvoice.status,
+                    image: detailInvoice.image_product,
+                    tanggal: `${formatTanggal(detailInvoice.createdAt)}`,
+                });
+
             } else if (totalQuantity > sekolah.jumlahMurid) {
+                function generateKodeInovoice(){
+                    return `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                }
+
                 const id_transaksi_subsidi = new mongoose.Types.ObjectId();
                 const id_invoice_subsidi = new mongoose.Types.ObjectId()
                 const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
                 const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
                 let sisaSubsidi = sekolah.jumlahMurid;
-                const ids=[]            
+                let productNotif
+                const kodeInvoice = `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                const ids=[]
                 for (const item of items) {
                     const dapatSubsidi = [];
                     const tidakDapatSubsidi = [];
@@ -1564,7 +1621,10 @@ module.exports = {
                         const potongan_ongkir = Math.round(basePotonganOngkir * totalProdukSubsidi)
                         const ongkir = Math.round(baseOngkir * totalProdukSubsidi)
                         const total_ongkir = ongkir - potongan_ongkir
+                        let productIds = [];
+                        
                         dapatSubsidi.forEach(prd => {
+                            productIds.push(prd.productId)
                             promisesFunct.push(
                                 Product.findByIdAndUpdate(
                                     prd.productId,
@@ -1596,9 +1656,40 @@ module.exports = {
                                 invoice: id_invoice_subsidi
                             }),
                         )
+
+                        const products = await Product.find({_id: {$in: productIds}})
+                        .select("_id total_price name_product image_product")
+
+                        const formatHarga = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                        
+                        const notifikasiSubdisi = await Notifikasi.create({
+                            userId: user._id,
+                            invoiceId: id_invoice_subsidi,
+                            jenis_invoice: "Subsidi",
+                            createdAt: new Date(),
+                        })
+
+                        const detailNotifSubsidi = await DetailNotifikasi.create({
+                            notifikasiId: notifikasiSubdisi._id,
+                            jenis: "Info",
+                            status: "Pesanan Makanan Bergizi Gratis telah berhasil",
+                            message: `${kodeInvoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                            image_product: products[0].image_product[0], 
+                            createdAt: new Date()
+                        })
+
+                        socket.emit('notif_pesanan_berhasil', {
+                            jenis: detailNotifSubsidi.jenis,
+                            userId: user._id,
+                            status: detailNotifSubsidi.status,
+                            message: detailNotifSubsidi.message,
+                            image: detailNotifSubsidi.image_product,
+                            tanggal: `${formatTanggal(detailNotifSubsidi.createdAt)}`,
+                        })
                     }
 
                     if (tidakDapatSubsidi.length > 0) {
+                        productNotif = await Product.findById(tidakDapatSubsidi[0].productId).select("_id name_product image_product");
                         const totalProdukSubsidi = tidakDapatSubsidi.reduce((acc, val) => acc + val.quantity, 0);
                         const totalProduk = pengirimanNonSubsidi.products.reduce((acc, prod) => acc + prod.quantity, 0);
                         const baseOngkir = pengirimanNonSubsidi.ongkir / totalProduk;
@@ -1639,6 +1730,7 @@ module.exports = {
                     total_pengiriman += 1
                 }
                 const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
+                
                 promisesFunct.push(
                     Transaksi.create({
                         _id: id_transaksi_subsidi,
@@ -1710,6 +1802,8 @@ module.exports = {
                     })
                 };
 
+                
+
                 const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
                 transaksiMidtrans = await respon.json();
 
@@ -1720,21 +1814,33 @@ module.exports = {
                         userId: req.user.id
                     })
                 )
+                const formatHarga = total_tagihan.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                const notifikasiNonSubsidi = await Notifikasi.create({
+                    userId: user._id,
+                    invoiceId: id_invoice_non_subsidi,
+                    jenis_invoice: "Non Subsidi",
+                    createdAt: new Date(),
+                })
+
+                const detailNotifNonSubsidi = await DetailNotifikasi.create({
+                    notifikasiId: notifikasiNonSubsidi._id,
+                    jenis: "Info",
+                    status: "Selesaikan pembayaranmu",
+                    message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera seleasikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`, 
+                    image_product: productNotif.image_product[0],
+                    createdAt: new Date() 
+                })
+                
+                socket.emit("notif_selesaikan_pembayaran", {
+                    userId: user._id,
+                    jenis: detailNotifNonSubsidi.jenis,
+                    status: detailNotifNonSubsidi.status,
+                    message: detailNotifNonSubsidi.message,
+                    image: detailNotifNonSubsidi.image_product,
+                    tanggal: `${formatTanggal(detailNotifNonSubsidi.createdAt)}`,
+                })
             }
             await Promise.all(promisesFunct)
-
-            const socket = io('https://staging-backend.superdigitalapps.my.id', {
-                auth: {
-                    fromServer: true
-                }
-            })
-            socket.emit('notif_pembayaran_pesanan', {
-                jenis: 'info',
-                userId: req.user.id,
-                message: `Pesanan kamu dengan ID ${dataOrder._id} senilai Rp. ${total_tagihan} belum di bayar. Segera selesaikan pembayaranmu sebelum ${a_day_later}`,
-                status: 'Selesaikan pembayaranmu',
-                waktu: `${new Date().toLocaleTimeString('en-GB')}`
-            });
 
             return res.status(201).json({
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,

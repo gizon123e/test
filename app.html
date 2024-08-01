@@ -203,7 +203,7 @@
       }
 
       function initializeSocket(token) {
-        socket = io("https://probable-subtly-crawdad.ngrok-free.app/",{
+        socket = io("http://localhost:5000",{
           transports: ['websocket'],
           auth: {
             token,
@@ -254,6 +254,13 @@
         const text = document.createElement("p");
         text.innerHTML = `${JSON.stringify(data)}`;
         document.body.appendChild(text);
+      })
+
+      socket.on('notifikasi_pesanan_berhasil', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);  
       })
     </script>
   </body>
