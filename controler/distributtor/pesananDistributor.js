@@ -189,35 +189,27 @@ module.exports = {
             if (!datas || datas.length === 0) return res.status(404).json({ message: "Saat ini data pesanan distributor kosong" });
 
             const uniqueOrders = new Map();
-
+                console.log(datas.length)
             // Gather all order IDs
-            const orderIds = datas.map(pgr => pgr.orderId._id);
             const dataPengiriman = []
+            const pengiriman = {}
             for (let data of datas) {
                 const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
                     .select('-nilai_review -file_ktp -nik -namaBadanUsaha -nomorAktaPerusahaan -npwpFile -nomorNpwpPerusahaan -nomorNpwp -profile_pict -jenis_kelamin -legalitasBadanUsaha -tanggal_lahir');
-                const uniqueKey = `${data.orderId._id}_${data.kode_pengiriman}_${data.id_toko}`;
-                const transaksi = await Transaksi.find({ id_pesanan: { $in: orderIds } });
+                const uniqueKey = `${data.orderId._id}_${data.id_toko}`;
+                const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 // Find invoices based on subsisi and tambahan status
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
                 // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
-                console.log(invoiceTambahan)
+                // console.log(invoiceSubsidi)
 
-                console.log('pengiriman subsidi ',data.invoice.toString() === invoiceSubsidi?._id.toString())
-                console.log('pengiriman tambahan ',data.invoice.toString() === invoiceTambahan?._id.toString())
+                // console.log('pengiriman subsidi ',data.invoice.toString(), invoiceSubsidi?._id.toString())
+                // console.log('pengiriman tambahan ',data.invoice.toString() === invoiceTambahan?._id.toString())
 
-                // if(data.invoice.toString() === invoiceSubsidi?._id.toString()){
-                //     dataPengiriman.push(data)
-                // }
-
-                // if(data.invoice.toString() === invoiceTambahan?._id.toString()){
-                //     dataPengiriman.push(data)
-                // }
-
-                if (invoiceSubsidi) {
-                    if (invoiceTambahan) {
+                if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
+                    if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
                         // Merge if the uniqueKey is already present
                         if (uniqueOrders.has(uniqueKey)) {
                             let existingOrder = uniqueOrders.get(uniqueKey);
@@ -228,6 +220,7 @@ module.exports = {
                         }
                     } else {
                         // Merge if the uniqueKey is already present
+                        console.log('masuk sini')
                         if (uniqueOrders.has(uniqueKey)) {
                             let existingOrder = uniqueOrders.get(uniqueKey);
                             // Merge productToDelivers
