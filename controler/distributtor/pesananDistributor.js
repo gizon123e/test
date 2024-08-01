@@ -51,7 +51,7 @@ module.exports = {
                 })
                 .populate({
                     path: "jenis_pengiriman",
-                    select: ['-icon', '-description', '-__v']
+                    select: ['-description', '-__v']
                 })
                 .populate({
                     path: "productToDelivers.productId",
@@ -71,7 +71,7 @@ module.exports = {
             const pengiriman = {}
             const foundedProduct = {}
             for (let data of datas) {
-                const { productToDelivers, total_ongkir, potongan_ongkir,  ...restOfShipment } = data
+                const { productToDelivers, total_ongkir, potongan_ongkir, ...restOfShipment } = data
                 const storeId = `${data.id_toko._id.toString()}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
@@ -80,7 +80,7 @@ module.exports = {
 
                 productToDelivers.forEach(prod => {
                     const productId = prod.productId._id.toString();
-                    if(!foundedProduct[productId]){
+                    if (!foundedProduct[productId]) {
                         foundedProduct[productId] = {
                             storeId,
                             productId: prod.productId,
@@ -91,7 +91,7 @@ module.exports = {
                 })
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
-                    if(!pengiriman[storeId]){
+                    if (!pengiriman[storeId]) {
                         pengiriman[storeId] = {
                             ...restOfShipment,
                             total_ongkir: 0,
@@ -104,7 +104,7 @@ module.exports = {
                 }
 
                 if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                    if(!pengiriman[storeId]){
+                    if (!pengiriman[storeId]) {
                         pengiriman[storeId] = {
                             ...restOfShipment,
                             total_ongkir: 0,
@@ -115,8 +115,8 @@ module.exports = {
                     pengiriman[storeId].total_ongkir += total_ongkir
                 }
             }
-            const mergedProduct = Object.keys(foundedProduct).map( key => foundedProduct[key] )
-            const finalData = Object.keys(pengiriman).map(key =>{
+            const mergedProduct = Object.keys(foundedProduct).map(key => foundedProduct[key])
+            const finalData = Object.keys(pengiriman).map(key => {
                 return {
                     ...pengiriman[key],
                     products: mergedProduct.filter(prod => prod.storeId === key)
@@ -219,14 +219,22 @@ module.exports = {
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
-                // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
 
+                console.log('tes 1')
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                    console.log('tes 2')
                     for (const item of data.productToDelivers) {
+                        console.log('tes 3')
+                        if (item) {
+                            console.log(item.productId._id)
+                        }
                         productToDelivers.push(item)
                     }
+                } else {
+
                 }
+
                 payloadRespon = {
                     orderId: data.orderId,
                     id_toko: data.id_toko,
@@ -244,7 +252,7 @@ module.exports = {
 
             res.status(200).json({
                 message: 'get data by id success',
-                data: payloadRespon
+                data: dataPengiriman
             })
 
         } catch (error) {
