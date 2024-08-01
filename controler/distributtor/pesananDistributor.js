@@ -206,29 +206,12 @@ module.exports = {
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
                 // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
-                // console.log('invoice subsidi', invoiceSubsidi)
-                console.log('invoice tidak subsidi', invoiceTambahan)
-
-                // if (data.invoice.toString() === invoiceSubsidi?._id.toString() ) {
-                //     if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                //         console.log('invoice tambahan')
-                //         console.log('pesanan id invoice', data.invoice.toString())
-                //         productToDelivers = data.productToDelivers
-
-                //     } else {
-                //         console.log('invoice subsidi')
-                //         console.log('pesanan id invoice', data.invoice.toString())
-                //         productToDelivers = data.productToDelivers
-                //     }
-                // }
-
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
                     for (const item of data.productToDelivers) {
                         productToDelivers.push(item)
                     }
                 }
-
                 payloadRespon = {
                     orderId: data.orderId,
                     id_toko: data.id_toko,
@@ -238,13 +221,15 @@ module.exports = {
                     id_jenis_kendaraan: data.id_jenis_kendaraan,
                     status_pengiriman: data.status_pengiriman,
                     kode_pengiriman: data.kode_pengiriman,
-                    status_distributor: data.status_distributor
+                    status_distributor: data.status_distributor,
+                    productToDelivers
+
                 }
             }
 
             res.status(200).json({
                 message: 'get data by id success',
-                data: productToDelivers
+                data: payloadRespon
             })
 
         } catch (error) {
