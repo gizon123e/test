@@ -63,8 +63,8 @@ module.exports = {
                 })
                 .lean()
                 .sort({ createdAt: -1 })
-            // .skip(skip)
-            // .limit(parseInt(limit));
+                .skip(skip)
+                .limit(parseInt(limit));
 
             if (!datas || datas.length === 0) return res.status(404).json({ message: "Saat ini data pesanan distributor kosong" });
 
