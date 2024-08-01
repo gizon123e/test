@@ -201,33 +201,34 @@ module.exports = {
 
                 // Find invoices based on subsisi and tambahan status
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
-                // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
-                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
-                // console.log(invoiceSubsidi)
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
+                // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+                console.log(invoiceTambahan)
 
-                // console.log('pengiriman subsidi ',data.invoice.toString(), invoiceSubsidi?._id.toString())
-                // console.log('pengiriman tambahan ',data.invoice.toString() === invoiceTambahan?._id.toString())
+                console.log('pengiriman subsidi ',data.invoice.toString(), invoiceSubsidi?._id.toString())
+                console.log('pengiriman tambahan ',data.invoice.toString() === invoiceTambahan?._id.toString())
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
-                    if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                        // Merge if the uniqueKey is already present
-                        if (uniqueOrders.has(uniqueKey)) {
-                            let existingOrder = uniqueOrders.get(uniqueKey);
-                            // Merge productToDelivers
-                            existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-                        } else {
-                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                        }
+                    console.log('masuk subsidi')
+                    if (uniqueOrders.has(uniqueKey)) {
+                        let existingOrder = uniqueOrders.get(uniqueKey);
+                        // Merge productToDelivers
+                        existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
                     } else {
-                        // Merge if the uniqueKey is already present
-                        console.log('masuk sini')
-                        if (uniqueOrders.has(uniqueKey)) {
-                            let existingOrder = uniqueOrders.get(uniqueKey);
-                            // Merge productToDelivers
-                            existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-                        } else {
-                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                        }
+                        uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
+                    }        
+                }
+
+                if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                    // Merge if the uniqueKey is already present
+                    console.log('masuk tambahan')
+
+                    if (uniqueOrders.has(uniqueKey)) {
+                        let existingOrder = uniqueOrders.get(uniqueKey);
+                        // Merge productToDelivers
+                        existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
+                    } else {
+                        uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
                     }
                 }
             }
