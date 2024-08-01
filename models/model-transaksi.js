@@ -32,6 +32,12 @@ const modelTransaksi = new mongoose.Schema({
         },
         jumlahOngkir:{
             type: Number
+        },
+        biaya_layanan: {
+            type: Number
+        },
+        biaya_jasa_aplikasi: {
+            type: Number
         }
     },
     subsidi: {

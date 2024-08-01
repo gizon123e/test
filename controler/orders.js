@@ -1460,16 +1460,17 @@ module.exports = {
             const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
             let transaksiMidtrans;
             let total_tagihan = biaya_jasa_aplikasi + biaya_layanan;
+            const detailBiaya = {
+                totalHargaProduk: 0,
+                totalOngkir: 0,
+                totalPotonganOngkir: 0,
+                jumlahOngkir: 0,
+                asuransiPengiriman: 0,
+                biaya_jasa_aplikasi,
+                biaya_layanan
+            };
             if ((sekolah.jumlahMurid === totalQuantity) || (sekolah.jumlahMurid > totalQuantity)) {
                 const idInvoiceSubsidi = new mongoose.Types.ObjectId()
-                const detailBiaya = {
-                    totalHargaProduk: 0,
-                    totalOngkir: 0,
-                    totalPotonganOngkir: 0,
-                    jumlahOngkir: 0,
-                    asuransiPengiriman: 0
-                };
-
                 
                 items.map((item)=>{
                     item.product.map(prd=>{
