@@ -182,51 +182,68 @@ module.exports = {
                         path: "categoryId"
                     }
                 })
+                .lean()
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit));
 
             if (!datas || datas.length === 0) return res.status(404).json({ message: "Saat ini data pesanan distributor kosong" });
 
-            const uniqueOrders = new Map();
-                console.log(datas.length)
-            // Gather all order IDs
-            const dataPengiriman = []
             const pengiriman = {}
+            const foundedProduct = {}
             for (let data of datas) {
-                const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
-                    .select('-nilai_review -file_ktp -nik -namaBadanUsaha -nomorAktaPerusahaan -npwpFile -nomorNpwpPerusahaan -nomorNpwp -profile_pict -jenis_kelamin -legalitasBadanUsaha -tanggal_lahir');
-                const uniqueKey = `${data.orderId._id}_${data.id_toko}_${data._id}`;
+                const { productToDelivers, total_ongkir, potongan_ongkir,  ...restOfShipment } = data
+                const storeId = `${data.id_toko._id.toString()}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
-                console.log(data.id_toko)
+
+                productToDelivers.forEach(prod => {
+                    const productId = prod.productId._id.toString();
+                    if(!foundedProduct[productId]){
+                        foundedProduct[productId] = {
+                            storeId,
+                            productId: prod.productId,
+                            quantity: 0
+                        }
+                    }
+                    foundedProduct[productId].quantity += prod.quantity
+                })
+
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
-                    if (uniqueOrders.has(uniqueKey)) {
-                        let existingOrder = uniqueOrders.get(uniqueKey);
-                        existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-                    } else {
-                        uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                    }        
+                    if(!pengiriman[storeId]){
+                        pengiriman[storeId] = {
+                            ...restOfShipment,
+                            total_ongkir: 0,
+                            potongan_ongkir: 0,
+                        }
+                    }
+
+                    pengiriman[storeId].potongan_ongkir += potongan_ongkir
+                    pengiriman[storeId].total_ongkir += total_ongkir
                 }
 
                 if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                    console.log('masuk tambahan')
-
-                    if (uniqueOrders.has(uniqueKey)) {
-                        let existingOrder = uniqueOrders.get(uniqueKey);
-                        // Merge productToDelivers
-                        existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-                    } else {
-                        uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
+                    if(!pengiriman[storeId]){
+                        pengiriman[storeId] = {
+                            ...restOfShipment,
+                            total_ongkir: 0,
+                            potongan_ongkir: 0,
+                        }
                     }
+                    pengiriman[storeId].potongan_ongkir += potongan_ongkir
+                    pengiriman[storeId].total_ongkir += total_ongkir
                 }
             }
-
-            const payload = Array.from(uniqueOrders.values());
-
-            return res.status(200).json({ message: "Get data All success", datas: payload });
+            const mergedProduct = Object.keys(foundedProduct).map( key => foundedProduct[key] )
+            const finalData = Object.keys(pengiriman).map(key =>{
+                return {
+                    ...pengiriman[key],
+                    products: mergedProduct.filter(prod => prod.storeId === key)
+                }
+            })
+            return res.status(200).json({ message: "Get data All success", data: finalData });
         } catch (error) {
             console.log(error);
             next(error);
