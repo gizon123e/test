@@ -99,10 +99,15 @@ io.on("connection", (socket) => {
     console.log(data)
     io.to(userId).emit('notifikasi_pesanan_selesai', JSON.stringify({...rest}));
   })
-  socket.on('notif_pembayaran_pesanan', async(data) => {
+  socket.on('notif_pesanan_berhasil', async(data) => {
     const {userId, ...rest} = data
     console.log(data)
-    io.to(userId).emit('notifikasi_pembayaran_pesanan', JSON.stringify({...rest})); 
+    io.to(userId).emit('notifikasi_pesanan_berhasil', JSON.stringify({...rest})); 
+  })
+  socket.on('notif_selesaikan_pembayaran', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_selesaikan_pembayaran', JSON.stringify({...rest}));
   })
 });
 

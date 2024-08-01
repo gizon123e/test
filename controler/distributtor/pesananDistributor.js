@@ -70,25 +70,52 @@ module.exports = {
             const dataPayload = []
             const productArray = []
             const uniqueOrders = new Map();
-
+            console.log(datas.length)
+            // Gather all order IDs
+            const dataPengiriman = []
+            const pengiriman = {}
             for (let data of datas) {
                 const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
                     .select('-nilai_review -file_ktp -nik -namaBadanUsaha -nomorAktaPerusahaan -npwpFile -nomorNpwpPerusahaan -nomorNpwp -profile_pict -jenis_kelamin -legalitasBadanUsaha -tanggal_lahir');
+                const uniqueKey = `${data.orderId._id}_${data.id_toko}`;
+                const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
-                const uniqueKey = `${data.orderId._id}_${data.kode_pengiriman}_${data.id_toko}`;
-                // const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
-                // const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
+                // Find invoices based on subsisi and tambahan status
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
                 // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+                // console.log(invoiceSubsidi)
 
+                // console.log('pengiriman subsidi ',data.invoice.toString(), invoiceSubsidi?._id.toString())
+                // console.log('pengiriman tambahan ',data.invoice.toString() === invoiceTambahan?._id.toString())
 
-                uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-
+                if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
+                    if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                        // Merge if the uniqueKey is already present
+                        if (uniqueOrders.has(uniqueKey)) {
+                            let existingOrder = uniqueOrders.get(uniqueKey);
+                            // Merge productToDelivers
+                            existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
+                        } else {
+                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
+                        }
+                    } else {
+                        // Merge if the uniqueKey is already present
+                        console.log('masuk sini')
+                        if (uniqueOrders.has(uniqueKey)) {
+                            let existingOrder = uniqueOrders.get(uniqueKey);
+                            // Merge productToDelivers
+                            existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
+                        } else {
+                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
+                        }
+                    }
+                }
             }
 
+            const payload = Array.from(uniqueOrders.values());
 
-            console.log(uniqueOrders)
-
-            res.status(200).json({ message: "Get data All success" });
+            return res.status(200).json({ message: "Get data All success", datas: payload });
         } catch (error) {
             console.log(error);
             next(error);

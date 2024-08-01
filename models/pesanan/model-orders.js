@@ -159,19 +159,19 @@ const modelOrder = new mongoose.Schema({
 }, { timestamps: true }
 )
 
-modelOrder.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate", "updateMany"], async function (next){
-    if(this.getUpdate().status === "Dibatalkan"){
-        const orders = await this.model.find(this.getQuery()).exec();
+// modelOrder.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate", "updateMany"], async function (next){
+    // if(this.getUpdate().status === "Dibatalkan"){
+    //     const orders = await this.model.find(this.getQuery()).exec();
   
-        for (const order of orders) {
-            await Pembatalan.create({
-                pesananId: order._id,
-                userId: order.userId,
-                canceledBy: this.getUpdate().canceledBy,
-                reason: this.getUpdate().reason
-            });
-        }
-    }
+    //     for (const order of orders) {
+    //         await Pembatalan.create({
+    //             pesananId: order._id,
+    //             userId: order.userId,
+    //             canceledBy: this.getUpdate().canceledBy,
+    //             reason: this.getUpdate().reason
+    //         });
+    //     }
+    // }
     // else if(this.getUpdate().status === "Berlangsung"){
     //     const orders = await this.model.find(this.getQuery()).lean();
     //     for (const order of orders) {
@@ -192,8 +192,8 @@ modelOrder.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate", "updateMan
     //         Object.assign(this.getUpdate(), order);
     //     }
     // }
-    next()
-})
+    // next()
+// })
 // const updateExpiredOrderStatus = async (order) => {
 //     if (order.expire && order.expire < new Date() && order.status !== "Dibatalkan") {
 //         order.status = "Dibatalkan";
