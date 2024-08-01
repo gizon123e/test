@@ -225,14 +225,27 @@ module.exports = {
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
                     console.log('tes 2')
                     for (const item of data.productToDelivers) {
-                        console.log('tes 3')
-                        if (item) {
-                            console.log(item.productId._id)
+                        const existingItemIndex = productToDelivers.findIndex(ptd => ptd.productId._id.toString() === item.productId._id.toString());
+                        if (existingItemIndex > -1) {
+                            // Update quantity if productId already exists
+                            productToDelivers[existingItemIndex].quantity += item.quantity;
+                        } else {
+                            // Add new item if productId doesn't exist
+                            productToDelivers.push(item);
                         }
-                        productToDelivers.push(item)
                     }
                 } else {
-
+                    console.log('tes 2')
+                    for (const item of data.productToDelivers) {
+                        const existingItemIndex = productToDelivers.findIndex(ptd => ptd.productId._id.toString() === item.productId._id.toString());
+                        if (existingItemIndex > -1) {
+                            // Update quantity if productId already exists
+                            productToDelivers[existingItemIndex].quantity += item.quantity;
+                        } else {
+                            // Add new item if productId doesn't exist
+                            productToDelivers.push(item);
+                        }
+                    }
                 }
 
                 payloadRespon = {
@@ -252,7 +265,7 @@ module.exports = {
 
             res.status(200).json({
                 message: 'get data by id success',
-                data: dataPengiriman
+                data: payloadRespon
             })
 
         } catch (error) {
