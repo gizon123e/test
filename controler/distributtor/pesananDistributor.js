@@ -89,7 +89,7 @@ module.exports = {
                         existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
                     } else {
                         uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                    }        
+                    }
                 }
 
                 if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
@@ -198,25 +198,34 @@ module.exports = {
                 })
 
             let payloadRespon = {}
-            let productToDelivers
+            let productToDelivers = []
 
             for (const data of dataPengiriman) {
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
-                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
                 // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
                 // console.log('invoice subsidi', invoiceSubsidi)
                 console.log('invoice tidak subsidi', invoiceTambahan)
 
-                if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
-                    if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                        console.log('invoice tambahan')
-                        productToDelivers = data.productToDelivers
+                // if (data.invoice.toString() === invoiceSubsidi?._id.toString() ) {
+                //     if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                //         console.log('invoice tambahan')
+                //         console.log('pesanan id invoice', data.invoice.toString())
+                //         productToDelivers = data.productToDelivers
 
-                    } else {
-                        console.log('invoice subsidi')
-                        productToDelivers = data.productToDelivers
+                //     } else {
+                //         console.log('invoice subsidi')
+                //         console.log('pesanan id invoice', data.invoice.toString())
+                //         productToDelivers = data.productToDelivers
+                //     }
+                // }
+
+
+                if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                    for (const item of data.productToDelivers) {
+                        productToDelivers.push(item)
                     }
                 }
 

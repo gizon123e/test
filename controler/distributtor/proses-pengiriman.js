@@ -8,8 +8,6 @@ module.exports = {
         try {
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: 'data not FOund' })
-            console.log(distributor._id)
-            console.log(req.user.id)
 
             const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ distributorId: distributor._id })
                 .populate({
@@ -17,7 +15,7 @@ module.exports = {
                     populate: "address"
                 })
                 .populate({
-                    path: "konsumenId",
+                    path: "sekolahId",
                     populate: "address"
                 })
                 .populate("jenisPengiriman")
