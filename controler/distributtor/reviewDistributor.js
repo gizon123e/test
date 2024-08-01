@@ -1,5 +1,6 @@
 const ReviewDistributor = require('../../models/distributor/model-reviewDistributor')
 const Distributtor = require('../../models/distributor/model-distributor')
+const PinaltiDistributor = require('../../models/distributor/model-pinaltiDistributor')
 
 module.exports = {
     getAllReviewDistributor: async (req, res, next) => {
@@ -34,6 +35,14 @@ module.exports = {
             const reviewDistributor = await ReviewDistributor.find({ id_distributor: id_distributor })
             const indexReview = reviewDistributor.length + 1
 
+            const getAllPinaltiDistributor = await PinaltiDistributor.find({})
+            let hitunganTotalPinalti = 0
+            if (getAllPinaltiDistributor) {
+                for (let data of getAllPinaltiDistributor) {
+                    hitunganTotalPinalti += data.poin_pinalti
+                }
+            }
+
             let hitunganPoinReview = 0
             if (reviewDistributor) {
                 for (let viewDistributor of reviewDistributor) {
@@ -50,7 +59,7 @@ module.exports = {
             if (hitunganPoinReview) {
                 hitunganPoinReview += perhitunganNilaiPoin
 
-                totalPerhitunganPoin = hitunganPoinReview / indexReview
+                totalPerhitunganPoin = (hitunganPoinReview - hitunganTotalPinalti) / indexReview
             } else {
                 totalPerhitunganPoin = perhitunganNilaiPoin / indexReview
             }

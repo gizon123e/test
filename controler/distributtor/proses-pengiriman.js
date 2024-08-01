@@ -20,6 +20,7 @@ module.exports = {
                 })
                 .populate("jenisPengiriman")
                 .populate("jenisKendaraan")
+                .populate('produk_pengiriman.produkId')
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
 

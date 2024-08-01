@@ -300,6 +300,8 @@ module.exports = {
 
     updateDiTerimaDistributor: async (req, res, next) => {
         try {
+            const { id_toko, distributorId, orderId, kode_pengiriman } = req.body
+
             const dataPengiriman = await Pengiriman.findOne({ _id: req.params.id })
                 .populate({
                     path: "orderId",
