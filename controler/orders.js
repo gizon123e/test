@@ -1461,26 +1461,25 @@ module.exports = {
             let transaksiMidtrans;
             let total_tagihan = biaya_jasa_aplikasi + biaya_layanan;
             if ((sekolah.jumlahMurid === totalQuantity) || (sekolah.jumlahMurid > totalQuantity)) {
-                const kode_transaksi = await Transaksi.create({
-                    id_pesanan: dataOrder._id,
-                    jenis_transaksi: "keluar",
-                    status: "Menunggu Pembayaran",
-                    subsidi: true,
-                    kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
-                });
+                const idInvoiceSubsidi = new mongoose.Types.ObjectId()
+                const detailBiaya = {
+                    totalHargaProduk: 0,
+                    totalOngkir: 0,
+                    totalPotonganOngkir: 0,
+                    jumlahOngkir: 0,
+                    asuransiPengiriman: 0
+                };
 
-                const invoice = await Invoice.create({
-                    id_transaksi: kode_transaksi,
-                    userId: req.user.id,
-                    status: "Piutang",
-                    kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
-                });
                 
                 items.map((item)=>{
                     item.product.map(prd=>{
+                        const foundedProd = arrayProducts.find(prod => prod._id.toString() === prd.productId.toString());
+                        detailBiaya.totalHargaProduk += foundedProd.total_price * prd.quantity;
                         if(biaya_asuransi){
                             total_tagihan += prd.quantity * biaya_awal_asuransi
-                        }
+                            detailBiaya.asuransiPengiriman += prd.quantity * biaya_awal_asuransi
+                        };
+
                         promisesFunct.push(
                             Product.findOneAndUpdate(
                                 { _id: prd.productId},
@@ -1496,9 +1495,14 @@ module.exports = {
                             })
                         )
                     })
-                })
+                });
 
                 for (let i = 0; i < dataOrder.shipments.length; i++) {
+
+                    detailBiaya.totalOngkir += dataOrder.shipments[i].ongkir
+                    detailBiaya.totalPotonganOngkir += dataOrder.shipments[i].potongan_ongkir
+                    detailBiaya.jumlahOngkir += dataOrder.shipments[i].total_ongkir
+
                     promisesFunct.push(
                         Pengiriman.create({
                             orderId: dataOrder._id,
@@ -1512,11 +1516,28 @@ module.exports = {
                             id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
                             id_toko: dataOrder.shipments[i].id_toko_vendor,
                             kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-                            invoice: invoice._id
+                            invoice: idInvoiceSubsidi
                         })
                     );
                     total_pengiriman += 1;
-                }
+                };
+
+                const kode_transaksi = await Transaksi.create({
+                    id_pesanan: dataOrder._id,
+                    jenis_transaksi: "keluar",
+                    status: "Menunggu Pembayaran",
+                    subsidi: true,
+                    detailBiaya,
+                    kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                });
+
+                const invoice = await Invoice.create({
+                    _id: idInvoiceSubsidi,
+                    id_transaksi: kode_transaksi,
+                    userId: req.user.id,
+                    status: "Piutang",
+                    kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                });
 
                 promisesFunct.push(
                     DataProductOrder.create({
