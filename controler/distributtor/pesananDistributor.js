@@ -221,7 +221,9 @@ module.exports = {
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
 
-                console.log('tes 1')
+                console.log("NON SUBSIDI", invoiceTambahan)
+
+
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
                     console.log('tes 2')
                     for (const item of data.productToDelivers) {
@@ -234,20 +236,7 @@ module.exports = {
                             productToDelivers.push(item);
                         }
                     }
-                } else {
-                    console.log('tes 2')
-                    for (const item of data.productToDelivers) {
-                        const existingItemIndex = productToDelivers.findIndex(ptd => ptd.productId._id.toString() === item.productId._id.toString());
-                        if (existingItemIndex > -1) {
-                            // Update quantity if productId already exists
-                            productToDelivers[existingItemIndex].quantity += item.quantity;
-                        } else {
-                            // Add new item if productId doesn't exist
-                            productToDelivers.push(item);
-                        }
-                    }
                 }
-
                 payloadRespon = {
                     orderId: data.orderId,
                     id_toko: data.id_toko,
