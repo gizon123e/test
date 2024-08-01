@@ -192,11 +192,11 @@ module.exports = {
 
             // Gather all order IDs
             const orderIds = datas.map(pgr => pgr.orderId._id);
-
+            const dataPengiriman = []
             for (let data of datas) {
                 const dataKonsumen = await Konsumen.findOne({ userId: data.orderId.userId })
                     .select('-nilai_review -file_ktp -nik -namaBadanUsaha -nomorAktaPerusahaan -npwpFile -nomorNpwpPerusahaan -nomorNpwp -profile_pict -jenis_kelamin -legalitasBadanUsaha -tanggal_lahir');
-                const uniqueKey = `${data.orderId._id}_${data.kode_pengiriman}_${data.id_toko}`;
+                // const uniqueKey = `${data.orderId._id}_${data.kode_pengiriman}_${data.id_toko}`;
                 const transaksi = await Transaksi.find({ id_pesanan: { $in: orderIds } });
 
                 // Find invoices based on subsisi and tambahan status
@@ -205,32 +205,43 @@ module.exports = {
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
                 console.log(invoiceTambahan)
 
-                if (invoiceSubsidi) {
-                    if (invoiceTambahan) {
-                        // Merge if the uniqueKey is already present
-                        if (uniqueOrders.has(uniqueKey)) {
-                            let existingOrder = uniqueOrders.get(uniqueKey);
-                            // Merge productToDelivers
-                            existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-                        } else {
-                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                        }
-                    } else {
-                        // Merge if the uniqueKey is already present
-                        if (uniqueOrders.has(uniqueKey)) {
-                            let existingOrder = uniqueOrders.get(uniqueKey);
-                            // Merge productToDelivers
-                            existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
-                        } else {
-                            uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
-                        }
-                    }
+                console.log('pengiriman subsidi ',data.invoice.toString() === invoiceSubsidi?._id.toString())
+                console.log('pengiriman tambahan ',data.invoice.toString() === invoiceTambahan?._id.toString())
+
+                if(data.invoice.toString() === invoiceSubsidi?._id.toString()){
+                    dataPengiriman.push(data)
                 }
+
+                if(data.invoice.toString() === invoiceTambahan?._id.toString()){
+                    dataPengiriman.push(data)
+                }
+
+                // if (invoiceSubsidi) {
+                //     if (invoiceTambahan) {
+                //         // Merge if the uniqueKey is already present
+                //         if (uniqueOrders.has(uniqueKey)) {
+                //             let existingOrder = uniqueOrders.get(uniqueKey);
+                //             // Merge productToDelivers
+                //             existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
+                //         } else {
+                //             uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
+                //         }
+                //     } else {
+                //         // Merge if the uniqueKey is already present
+                //         if (uniqueOrders.has(uniqueKey)) {
+                //             let existingOrder = uniqueOrders.get(uniqueKey);
+                //             // Merge productToDelivers
+                //             existingOrder.data.productToDelivers = mergeProductToDelivers(existingOrder.data.productToDelivers, data.productToDelivers);
+                //         } else {
+                //             uniqueOrders.set(uniqueKey, { data, konsumen: dataKonsumen });
+                //         }
+                //     }
+                // }
             }
 
-            const payload = Array.from(uniqueOrders.values());
+            // const payload = Array.from(uniqueOrders.values());
 
-            res.status(200).json({ message: "Get data All success", datas: payload });
+            return res.status(200).json({ message: "Get data All success", datas: dataPengiriman });
         } catch (error) {
             console.log(error);
             next(error);
