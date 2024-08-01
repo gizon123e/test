@@ -158,39 +158,92 @@ module.exports = {
     getByIdPengirimanDistributor: async (req, res, next) => {
         try {
             const data = await Pengiriman.findOne({ _id: req.params.id })
+
+            if (!data) return res.status(404).json({ message: "data Not Found" })
+
+            const dataPengiriman = await Pengiriman.find({
+                orderId: data.orderId,
+                kode_pengiriman: data.kode_pengiriman,
+                id_toko: data.id_toko
+            })
                 .populate({
                     path: "orderId",
+                    select: ['-items', '-dp', '-shipments'],
                     populate: [
                         { path: "addressId" },
                         {
                             path: "sekolahId",
+                            select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
                             populate: "address"
                         }
                     ]
                 })
                 .populate({
                     path: "distributorId",
+                    select: ['-npwp', '-file_npwp', '-imageProfile', '-jenisPerusahaan', '-tanggal_lahir', '-tolak_pesanan', '-nilai_review', '-nilai_pinalti'],
                     populate: "alamat_id"
                 })
                 .populate({
                     path: "id_toko",
+                    select: ['-penilaian_produk', '-store_description', '-nilai_pinalti', '-waktu_operasional', '-profile_pict', '-pengikut'],
                     populate: "address"
                 })
-                .populate("id_jenis_kendaraan")
-                .populate("jenis_pengiriman")
+                .populate({
+                    path: "id_jenis_kendaraan",
+                    select: ['-description', '-ukuran', '-icon_aktif', '-icon_disable', '-icon_distributor', '-umurKendaraan']
+                })
+                .populate({
+                    path: "jenis_pengiriman",
+                    select: ['-icon', '-description', '-__v']
+                })
                 .populate({
                     path: "productToDelivers.productId",
+                    select: ['-status', '-description', '-long_description', '-pangan', '-reviews'],
                     model: "Product",
                     populate: {
                         path: "categoryId"
                     }
                 })
 
-            if (!data) return res.status(404).json({ message: "data Not Found" })
+            let payloadRespon = {}
+            let productToDelivers
+
+            for (const data of dataPengiriman) {
+                const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
+
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
+                // const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+                // console.log('invoice subsidi', invoiceSubsidi)
+                console.log('invoice tidak subsidi', invoiceTambahan)
+
+                if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
+                    if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                        console.log('invoice tambahan')
+                        productToDelivers = data.productToDelivers
+
+                    } else {
+                        console.log('invoice subsidi')
+                        productToDelivers = data.productToDelivers
+                    }
+                }
+
+                payloadRespon = {
+                    orderId: data.orderId,
+                    id_toko: data.id_toko,
+                    waktu_pengiriman: data.waktu_pengiriman,
+                    jenis_pengiriman: data.jenis_pengiriman,
+                    total_ongkir: data.total_ongkir,
+                    id_jenis_kendaraan: data.id_jenis_kendaraan,
+                    status_pengiriman: data.status_pengiriman,
+                    kode_pengiriman: data.kode_pengiriman,
+                    status_distributor: data.status_distributor
+                }
+            }
 
             res.status(200).json({
                 message: 'get data by id success',
-                data
+                data: productToDelivers
             })
 
         } catch (error) {
