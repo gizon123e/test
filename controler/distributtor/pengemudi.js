@@ -21,7 +21,7 @@ module.exports = {
                 const dataPengemudi = await Pengemudi.find(query).populate("id_distributor")
                 if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
 
-                res.status(200).json({
+                return res.status(200).json({
                     message: "get data success",
                     data: dataPengemudi
                 })
@@ -29,7 +29,7 @@ module.exports = {
                 const dataPengemudi = await Pengemudi.find().populate("id_distributor")
                 if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
 
-                res.status(200).json({
+                return res.status(200).json({
                     message: "get data success",
                     data: dataPengemudi
                 })
