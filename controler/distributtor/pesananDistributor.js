@@ -221,11 +221,7 @@ module.exports = {
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
 
-                console.log("NON SUBSIDI", invoiceTambahan)
-
-
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                    console.log('tes 2')
                     for (const item of data.productToDelivers) {
                         const existingItemIndex = productToDelivers.findIndex(ptd => ptd.productId._id.toString() === item.productId._id.toString());
                         if (existingItemIndex > -1) {
@@ -237,7 +233,10 @@ module.exports = {
                         }
                     }
                 }
+
                 payloadRespon = {
+                    id: data._id,
+                    distributorId: data.distributorId._id,
                     orderId: data.orderId,
                     id_toko: data.id_toko,
                     waktu_pengiriman: data.waktu_pengiriman,
@@ -385,7 +384,7 @@ module.exports = {
                 const currentDate = new Date();
                 await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
-                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { status_distributor: status });
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { status_distributor: status, });
 
                 await ProsesPengirimanDistributor.create({
                     distributorId: dataPengiriman.distributorId,
