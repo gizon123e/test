@@ -20,6 +20,7 @@ dotenv.config()
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
+            const { status } = req.query
             if (req.user.role === "administrator") {
                 const data = await KendaraanDistributor.find().populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
@@ -30,12 +31,19 @@ module.exports = {
                     data
                 })
             }
-
             const userId = req.user.id;
 
             const distributors = await Distributtor.findOne({ userId: userId });
 
-            const data = await KendaraanDistributor.find({ id_distributor: distributors._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+            let query = {
+                id_distributor: distributors._id
+            };
+
+            if (status) {
+                query.status = status;
+            }
+
+            const data = await KendaraanDistributor.find(query).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
             if (!data || data.length === 0) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 
@@ -147,7 +155,7 @@ module.exports = {
             const jarakTempu = Math.round(distance)
 
             let data = []
-            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, is_Active: true })
+            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, status: 'Aktif' })
                 .populate({
                     path: "id_distributor",
                     populate: "alamat_id"

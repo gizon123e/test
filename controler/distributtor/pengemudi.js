@@ -5,14 +5,35 @@ const path = require('path')
 module.exports = {
     getPengemudiList: async (req, res, next) => {
         try {
-            const distributor = await Distributtor.findOne({ userId: req.user.id })
-            const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id }).populate("id_distributor")
-            if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
+            const { status } = req.query
 
-            res.status(200).json({
-                message: "get data success",
-                data: dataPengemudi
-            })
+            if (req.user.role === 'distributor') {
+                const distributor = await Distributtor.findOne({ userId: req.user.id })
+
+                let query = {
+                    id_distributor: distributor._id
+                };
+
+                if (status) {
+                    query.status = status;
+                }
+
+                const dataPengemudi = await Pengemudi.find(query).populate("id_distributor")
+                if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
+
+                res.status(200).json({
+                    message: "get data success",
+                    data: dataPengemudi
+                })
+            } else if (req.user.role === 'administrator') {
+                const dataPengemudi = await Pengemudi.find().populate("id_distributor")
+                if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
+
+                res.status(200).json({
+                    message: "get data success",
+                    data: dataPengemudi
+                })
+            }
         } catch (error) {
             console.log(error)
             next(error)
