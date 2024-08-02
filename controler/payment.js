@@ -154,6 +154,12 @@ module.exports = {
                     await Promise.all(promisesFunct)
                 }
             }else if(pembayaranInvoice){
+                const invoices = await Invoice.find({_id: {$in: pembayaranInvoice.invoiceIds}}).lean();
+                const transaksiIds = invoices.map(inv => inv.id_transaksi);
+                await Transaksi.updateMany(
+                    { _id: { $in: transaksiIds }},
+                    { status: "Pembayaran Berhasil" }
+                )
                 await Invoice.updateMany(
                     { _id: { $in: pembayaranInvoice.invoiceIds } },
                     { status: "Lunas" }

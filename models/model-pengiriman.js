@@ -71,6 +71,10 @@ const modelPengiriman = new mongoose.Schema({
     invoice: {
         type: mongoose.Types.ObjectId,
         ref: "Invoice"
+    },
+    isRequestedToPickUp: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

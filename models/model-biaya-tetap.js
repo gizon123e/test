@@ -37,6 +37,12 @@ const modelBiayaTetap = mongoose.Schema({
   },
   notif_rekomen_vendor: {
     type: String,
+  },
+  fee_payment_gateway: {
+    type: Number
+  },
+  fee_udinpay: {
+    type: Number
   }
 });
 
