@@ -48,7 +48,7 @@ const modelPengiriman = new mongoose.Schema({
         enum: ["diproses", "dikirim", "pesanan selesai"],
         default: "diproses"
     },
-    canceled:{
+    canceled: {
         type: Boolean,
         default: false
     },
@@ -60,8 +60,8 @@ const modelPengiriman = new mongoose.Schema({
         default: false
     },
     rejected: {
-        type: Boolean,
-        default: false
+        type: Number,
+        default: 0
     },
     status_distributor: {
         type: String,
@@ -75,9 +75,9 @@ const modelPengiriman = new mongoose.Schema({
 }, { timestamps: true });
 
 modelPengiriman.pre(["findOneAndUpdate"], async function (next) {
-    if(this.getUpdate().canceled === true){
+    if (this.getUpdate().canceled === true) {
         const ships = await this.model.find(this.getQuery()).exec();
-  
+
         for (const ship of ships) {
             console.log(ship._id)
             await Pembatalan.create({

@@ -23,22 +23,22 @@ module.exports = {
             if (req.user.role === "administrator") {
                 const data = await KendaraanDistributor.find().populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
-                if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
+                if (!data || data.length === 0) return res.status(400).json({ message: "saat ini data masi kosong" })
 
                 return res.status(200).json({
-                    message: "get data success",
+                    message: "get data success kendaraan",
                     data
                 })
             }
 
             const userId = req.user.id;
 
-            const distributors = await Distributtor.find({ userId: userId });
-            const distributorIds = distributors.map(distributor => distributor._id);
+            const distributors = await Distributtor.findOne({ userId: userId });
+            console.log("id distributor", distributors._id)
 
-            const data = await KendaraanDistributor.find({ id_distributor: { $in: distributorIds } }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan").populate('tarifId')
+            const data = await KendaraanDistributor.find({ id_distributor: distributors._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
-            if (!data) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
+            if (!data || data.length === 0) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 
             res.status(200).json({
                 message: "get data success",
