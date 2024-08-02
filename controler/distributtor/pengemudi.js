@@ -1,11 +1,13 @@
+const Distributtor = require('../../models/distributor/model-distributor')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
 const path = require('path')
 
 module.exports = {
     getPengemudiList: async (req, res, next) => {
         try {
-            const dataPengemudi = await Pengemudi.find().populate("id_distributor")
-            if (!dataPengemudi) return res.status(400).json({ message: "saat ini data kosong" })
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id }).populate("id_distributor")
+            if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
 
             res.status(200).json({
                 message: "get data success",
