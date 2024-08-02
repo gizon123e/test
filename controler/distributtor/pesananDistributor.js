@@ -76,7 +76,7 @@ module.exports = {
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
-                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)._id, status: "Lunas" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
 
                 productToDelivers.forEach(prod => {
                     const productId = prod.productId._id.toString();
@@ -271,63 +271,12 @@ module.exports = {
         }
     },
 
-    ubahStatus: async (req, res, next) => {
-        try {
-            const { status, tokoId, kode_pengiriman, distributorId } = req.body
-            if (!status) return res.status(400).json({ message: "Tolong kirimkan status" });
-
-            const statusAllowed = ['dikirim', 'pesanan diterima', 'dibatalkan']
-            if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
-
-            let query = {
-                orderId: req.params.id,
-                id_toko: tokoId,
-                kode_pengiriman,
-                distributorId
-            }
-
-            const pengiriman = await Pengiriman.find(query)
-                .populate({
-                    path: "orderId",
-                    populate: "addressId"
-                })
-                .populate({
-                    path: "id_toko",
-                    populate: "address"
-                });
-
-            if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Tidak ada pengiriman` });
-
-            const pengirimanIds = pengiriman.map(pgr => pgr._id)
-            const distriIds = pengiriman.map(pgr => pgr.distributorId)
-            console.log(distriIds)
-
-            const distri = await Distributtor.findById(distributorId)
-            if (distri.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak Bisa Mengubah Pengiriman Orang Lain!" });
-
-            if (status === "dibatalkan") {
-                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { rejected: true, status_distributor: "Ditolak" });
-
-                const currentDate = new Date();
-                await Distributtor.updateMany({ _id: { $in: distriIds } }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
-            } else {
-                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, {
-                    status_pengiriman: status
-                });
-            }
-
-            return res.status(200).json({ message: "Berhasil Mengubah Status Pengiriman", pengirimanIds })
-        } catch (error) {
-            console.log(error);
-            next(error)
-        }
-    },
-
     updateDiTerimaDistributor: async (req, res, next) => {
         try {
-            const { id_toko, distributorId, orderId, kode_pengiriman } = req.body
+            const { id_toko, distributorId, orderId, kode_pengiriman, status, id_pengiriman } = req.body
+            if (!status) return res.status(400).json({ message: 'status harus di isi' })
 
-            const dataPengiriman = await Pengiriman.findOne({ _id: req.params.id })
+            const dataPengiriman = await Pengiriman.findOne({ _id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
                 .populate({
                     path: "orderId",
                     populate: "addressId"
@@ -351,48 +300,112 @@ module.exports = {
             const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
             const timeInSeconds = (jarakOngkir / biayaTetap.rerata_kecepatan) * 3600; // cari hitungan detik
 
-            const dataKonsumen = await Konsumen.findOne({ userId: dataPengiriman.orderId.userId })
-
-            const payloadProduk = []
-            for (const id of dataPengiriman.productToDelivers) {
-                payloadProduk.push({
-                    produkId: id.productId,
-                    quantity: id.quantity
+            const payLoadDataPengiriman = await Pengiriman.find({ id_toko, distributorId, orderId, kode_pengiriman })
+                .populate({
+                    path: "orderId",
+                    select: ['-items', '-dp', '-shipments'],
+                    populate: [
+                        { path: "addressId" },
+                        {
+                            path: "sekolahId",
+                            select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
+                            populate: "address"
+                        }
+                    ]
                 })
+                .populate({
+                    path: "distributorId",
+                    select: ['-npwp', '-file_npwp', '-imageProfile', '-jenisPerusahaan', '-tanggal_lahir', '-tolak_pesanan', '-nilai_review', '-nilai_pinalti'],
+                    populate: "alamat_id"
+                })
+                .populate({
+                    path: "id_toko",
+                    select: ['-penilaian_produk', '-store_description', '-nilai_pinalti', '-waktu_operasional', '-profile_pict', '-pengikut'],
+                    populate: "address"
+                })
+                .populate({
+                    path: "id_jenis_kendaraan",
+                    select: ['-description', '-ukuran', '-icon_aktif', '-icon_disable', '-icon_distributor', '-umurKendaraan']
+                })
+                .populate({
+                    path: "jenis_pengiriman",
+                    select: ['-icon', '-description', '-__v']
+                })
+                .populate({
+                    path: "productToDelivers.productId",
+                    select: ['-status', '-description', '-long_description', '-pangan', '-reviews'],
+                    model: "Product",
+                    populate: {
+                        path: "categoryId"
+                    }
+                })
+
+            let productToDelivers = []
+            let tarif_pengiriman = 0
+            for (const data of payLoadDataPengiriman) {
+                const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
+
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+
+                if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                    tarif_pengiriman += data.total_ongkir
+                    for (const item of data.productToDelivers) {
+                        const existingItemIndex = productToDelivers.findIndex(ptd => ptd.productId._id.toString() === item.productId._id.toString());
+                        if (existingItemIndex > -1) {
+                            // Update quantity if productId already exists
+                            productToDelivers[existingItemIndex].quantity += item.quantity;
+                        } else {
+                            // Add new item if productId doesn't exist
+                            productToDelivers.push(item);
+                        }
+                    }
+                }
             }
 
-            const createProsesPengiriman = await ProsesPengirimanDistributor.create({
-                distributorId: dataPengiriman.distributorId,
-                konsumenId: dataKonsumen._id,
-                tokoId: dataPengiriman.id_toko._id,
-                jarakPengiriman: jarakOngkir,
-                jenisPengiriman: dataPengiriman.jenis_pengiriman,
-                optimasi_pengiriman: timeInSeconds,
-                kode_pengiriman: dataPengiriman.kode_pengiriman,
-                tarif_pengiriman: dataPengiriman.total_ongkir,
-                produk_pengiriman: payloadProduk,
-                waktu_pesanan: dataPengiriman.orderId.items[0].deadline,
-                jenisKendaraan: dataPengiriman.id_jenis_kendaraan
-            })
+            let total_berat = 0
+            for (const data of productToDelivers) {
+                const hitunganKg = data.productId.berat / 1000
+                const totalBeratProduct = hitunganKg * data.quantity
+                total_berat += totalBeratProduct
+            }
 
             const socket = io('https://staging-backend.superdigitalapps.my.id', {
                 auth: {
                     fromServer: true
                 }
             })
-            const prodIds = dataPengiriman.flatMap(pgr => {
+            const prodIds = payLoadDataPengiriman.flatMap(pgr => {
                 return pgr.productToDelivers.map(item => item.productId);
             });
 
             if (status === "dibatalkan") {
-                await Pengiriman.updateMany({ _id: req.params.id }, { rejected: true, status_distributor: "Ditolak" });
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: 2, status_distributor: "Ditolak" });
 
                 const currentDate = new Date();
-                await Distributtor.updateMany({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+                await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
-                await Pengiriman.updateMany({ _id: req.params.id }, {
-                    status_pengiriman: status
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, {
+                    status_pengiriman: status,
+                    status_distributor: "Diterima"
                 });
+
+                await ProsesPengirimanDistributor.create({
+                    distributorId: dataPengiriman.distributorId,
+                    sekolahId: dataPengiriman.orderId.sekolahId,
+                    tokoId: dataPengiriman.id_toko._id,
+                    jarakPengiriman: jarakOngkir,
+                    jenisPengiriman: dataPengiriman.jenis_pengiriman,
+                    optimasi_pengiriman: timeInSeconds,
+                    kode_pengiriman: dataPengiriman.kode_pengiriman,
+                    tarif_pengiriman: tarif_pengiriman,
+                    produk_pengiriman: productToDelivers,
+                    waktu_pesanan: dataPengiriman.orderId.createdAt,
+                    jenisKendaraan: dataPengiriman.id_jenis_kendaraan,
+                    potongan_ongkir: dataPengiriman.potongan_ongkir,
+                    waktu_pengiriman: dataPengiriman.waktu_pengiriman,
+                    total_berat: total_berat
+                })
             }
 
             const products = await Product.find({ _id: { $in: prodIds } })
@@ -406,13 +419,7 @@ module.exports = {
                 })
             }
 
-            const updateStatusDistributor = await Pengiriman.findByIdAndUpdate({ _id: req.params.id }, { status_distributor: "Dikirim" })
-
-            res.status(201).json({
-                message: "update data success",
-                dataConfirmasiDistributor: updateStatusDistributor,
-                dataProsesPengirimanDistributor: createProsesPengiriman
-            })
+            res.status(201).json({ message: "update data success" })
         } catch (error) {
             console.log(error);
             next(error)

@@ -1,16 +1,39 @@
+const Distributtor = require('../../models/distributor/model-distributor')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
 const path = require('path')
 
 module.exports = {
     getPengemudiList: async (req, res, next) => {
         try {
-            const dataPengemudi = await Pengemudi.find().populate("id_distributor")
-            if (!dataPengemudi) return res.status(400).json({ message: "saat ini data kosong" })
+            const { status } = req.query
 
-            res.status(200).json({
-                message: "get data success",
-                data: dataPengemudi
-            })
+            if (req.user.role === 'distributor') {
+                const distributor = await Distributtor.findOne({ userId: req.user.id })
+
+                let query = {
+                    id_distributor: distributor._id
+                };
+
+                if (status) {
+                    query.status = status;
+                }
+
+                const dataPengemudi = await Pengemudi.find(query).populate("id_distributor")
+                if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
+
+                res.status(200).json({
+                    message: "get data success",
+                    data: dataPengemudi
+                })
+            } else if (req.user.role === 'administrator') {
+                const dataPengemudi = await Pengemudi.find().populate("id_distributor")
+                if (!dataPengemudi || dataPengemudi.length === 0) return res.status(400).json({ message: "saat ini data kosong" })
+
+                res.status(200).json({
+                    message: "get data success",
+                    data: dataPengemudi
+                })
+            }
         } catch (error) {
             console.log(error)
             next(error)
@@ -88,7 +111,7 @@ module.exports = {
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { is_Active: true }, { new: true })
+            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
@@ -105,7 +128,7 @@ module.exports = {
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, is_Active: false }, { new: true })
+            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, status: 'Ditolak' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",

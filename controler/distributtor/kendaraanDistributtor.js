@@ -20,25 +20,32 @@ dotenv.config()
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
+            const { status } = req.query
             if (req.user.role === "administrator") {
                 const data = await KendaraanDistributor.find().populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
-                if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
+                if (!data || data.length === 0) return res.status(400).json({ message: "saat ini data masi kosong" })
 
                 return res.status(200).json({
-                    message: "get data success",
+                    message: "get data success kendaraan",
                     data
                 })
             }
-
             const userId = req.user.id;
 
-            const distributors = await Distributtor.find({ userId: userId });
-            const distributorIds = distributors.map(distributor => distributor._id);
+            const distributors = await Distributtor.findOne({ userId: userId });
 
-            const data = await KendaraanDistributor.find({ id_distributor: { $in: distributorIds } }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan").populate('tarifId')
+            let query = {
+                id_distributor: distributors._id
+            };
 
-            if (!data) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
+            if (status) {
+                query.status = status;
+            }
+
+            const data = await KendaraanDistributor.find(query).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+
+            if (!data || data.length === 0) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 
             res.status(200).json({
                 message: "get data success",
@@ -148,7 +155,7 @@ module.exports = {
             const jarakTempu = Math.round(distance)
 
             let data = []
-            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, is_Active: true })
+            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, status: 'Aktif' })
                 .populate({
                     path: "id_distributor",
                     populate: "alamat_id"
@@ -620,7 +627,7 @@ module.exports = {
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { is_Active: true }, { new: true })
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
@@ -644,7 +651,7 @@ module.exports = {
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, is_Active: false }, { new: true })
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, status: 'Ditolak' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
