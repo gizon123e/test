@@ -34,7 +34,6 @@ module.exports = {
             const userId = req.user.id;
 
             const distributors = await Distributtor.findOne({ userId: userId });
-            console.log("id distributor", distributors._id)
 
             const data = await KendaraanDistributor.find({ id_distributor: distributors._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
@@ -620,7 +619,7 @@ module.exports = {
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { is_Active: true }, { new: true })
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
@@ -644,7 +643,7 @@ module.exports = {
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, is_Active: false }, { new: true })
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, status: 'Ditolak' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",

@@ -271,65 +271,10 @@ module.exports = {
         }
     },
 
-    ubahStatus: async (req, res, next) => {
-        try {
-            const { status, tokoId, kode_pengiriman, distributorId } = req.body
-            if (!status) return res.status(400).json({ message: "Tolong kirimkan status" });
-
-            const statusAllowed = ['dikirim', 'pesanan diterima', 'dibatalkan']
-            if (!statusAllowed.includes(status)) return res.status(400).json({ message: `Status tidak valid` });
-
-            let query = {
-                orderId: req.params.id,
-                id_toko: tokoId,
-                kode_pengiriman,
-                distributorId
-            }
-
-            const pengiriman = await Pengiriman.find(query)
-                .populate({
-                    path: "orderId",
-                    populate: "addressId"
-                })
-                .populate({
-                    path: "id_toko",
-                    populate: "address"
-                });
-
-            if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Tidak ada pengiriman` });
-
-            const pengirimanIds = pengiriman.map(pgr => pgr._id)
-            const distriIds = pengiriman.map(pgr => pgr.distributorId)
-            console.log(distriIds)
-
-            const distri = await Distributtor.findById(distributorId)
-            if (distri.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak Bisa Mengubah Pengiriman Orang Lain!" });
-
-            if (status === "dibatalkan") {
-                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { rejected: 2, status_distributor: "Ditolak" });
-
-                const currentDate = new Date();
-                await Distributtor.updateMany({ _id: { $in: distriIds } }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
-            } else {
-                await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, {
-                    status_pengiriman: status
-                });
-            }
-
-            return res.status(200).json({
-                message: "Berhasil Mengubah Status Pengiriman",
-                pengirimanIds
-            })
-        } catch (error) {
-            console.log(error);
-            next(error)
-        }
-    },
-
     updateDiTerimaDistributor: async (req, res, next) => {
         try {
             const { id_toko, distributorId, orderId, kode_pengiriman, status, id_pengiriman } = req.body
-            console.log(id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman)
+            if (!status) return res.status(400).json({ message: 'status harus di isi' })
 
             const dataPengiriman = await Pengiriman.findOne({ _id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
                 .populate({
@@ -396,6 +341,7 @@ module.exports = {
                 })
 
             let productToDelivers = []
+            let tarif_pengiriman = 0
             for (const data of payLoadDataPengiriman) {
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
@@ -403,7 +349,7 @@ module.exports = {
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                    console.log('tes 2')
+                    tarif_pengiriman += data.total_ongkir
                     for (const item of data.productToDelivers) {
                         const existingItemIndex = productToDelivers.findIndex(ptd => ptd.productId._id.toString() === item.productId._id.toString());
                         if (existingItemIndex > -1) {
@@ -417,62 +363,63 @@ module.exports = {
                 }
             }
 
-            // const createProsesPengiriman = await ProsesPengirimanDistributor.create({
-            //     distributorId: dataPengiriman.distributorId,
-            //     konsuenId: dataPengiriman.orderId.sekolahId,
-            //     tokoId: dataPengiriman.id_toko._id,
-            //     jarakPengiriman: jarakOngkir,
-            //     jenisPengiriman: dataPengiriman.jenis_pengiriman,
-            //     optimasi_pengiriman: timeInSeconds,
-            //     kode_pengiriman: dataPengiriman.kode_pengiriman,
-            //     tarif_pengiriman: dataPengiriman.total_ongkir,
-            //     produk_pengiriman: payloadProduk,
-            //     waktu_pesanan: dataPengiriman.orderId.items[0].deadline,
-            //     jenisKendaraan: dataPengiriman.id_jenis_kendaraan,
-            //     potongan_ongkir:dataPengiriman.potongan_ongkir
-            // })
+            let total_berat = 0
+            for (const data of productToDelivers) {
+                const hitunganKg = data.productId.berat / 1000
+                const totalBeratProduct = hitunganKg * data.quantity
+                total_berat += totalBeratProduct
+            }
 
-            console.log(dataPengiriman.potongan_ongkir)
-
-            // const socket = io('https://staging-backend.superdigitalapps.my.id', {
-            //     auth: {
-            //         fromServer: true
-            //     }
-            // })
-            // const prodIds = dataPengiriman.flatMap(pgr => {
-            //     return pgr.productToDelivers.map(item => item.productId);
-            // });
-
-            // if (status === "dibatalkan") {
-            //     await Pengiriman.updateMany({ _id: req.params.id }, { rejected: true, status_distributor: "Ditolak" });
-
-            //     const currentDate = new Date();
-            //     await Distributtor.updateMany({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
-            // } else {
-            //     await Pengiriman.updateMany({ _id: req.params.id }, {
-            //         status_pengiriman: status
-            //     });
-            // }
-
-            // const products = await Product.find({ _id: { $in: prodIds } })
-            // for (const product of products) {
-            //     socket.emit('notif_order', {
-            //         jenis: 'pesanan',
-            //         userId: dataPengiriman.orderId.userId,
-            //         message: `Pesanan ${product.name_product} telah dikirim`,
-            //         image: product.image_product[0],
-            //         status: "Pesanan dalam Pengiriman"
-            //     })
-            // }
-
-            // const updateStatusDistributor = await Pengiriman.findByIdAndUpdate({ _id: req.params.id }, { status_distributor: "Dikirim" })
-
-            res.status(201).json({
-                message: "update data success",
-                // dataConfirmasiDistributor: updateStatusDistributor,
-                // dataProsesPengirimanDistributor: createProsesPengiriman
-                tes: productToDelivers
+            const socket = io('https://staging-backend.superdigitalapps.my.id', {
+                auth: {
+                    fromServer: true
+                }
             })
+            const prodIds = payLoadDataPengiriman.flatMap(pgr => {
+                return pgr.productToDelivers.map(item => item.productId);
+            });
+
+            if (status === "dibatalkan") {
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: 2, status_distributor: "Ditolak" });
+
+                const currentDate = new Date();
+                await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+            } else {
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, {
+                    status_pengiriman: status,
+                    status_distributor: "Diterima"
+                });
+
+                await ProsesPengirimanDistributor.create({
+                    distributorId: dataPengiriman.distributorId,
+                    sekolahId: dataPengiriman.orderId.sekolahId,
+                    tokoId: dataPengiriman.id_toko._id,
+                    jarakPengiriman: jarakOngkir,
+                    jenisPengiriman: dataPengiriman.jenis_pengiriman,
+                    optimasi_pengiriman: timeInSeconds,
+                    kode_pengiriman: dataPengiriman.kode_pengiriman,
+                    tarif_pengiriman: tarif_pengiriman,
+                    produk_pengiriman: productToDelivers,
+                    waktu_pesanan: dataPengiriman.orderId.createdAt,
+                    jenisKendaraan: dataPengiriman.id_jenis_kendaraan,
+                    potongan_ongkir: dataPengiriman.potongan_ongkir,
+                    waktu_pengiriman: dataPengiriman.waktu_pengiriman,
+                    total_berat: total_berat
+                })
+            }
+
+            const products = await Product.find({ _id: { $in: prodIds } })
+            for (const product of products) {
+                socket.emit('notif_order', {
+                    jenis: 'pesanan',
+                    userId: dataPengiriman.orderId.userId,
+                    message: `Pesanan ${product.name_product} telah dikirim`,
+                    image: product.image_product[0],
+                    status: "Pesanan dalam Pengiriman"
+                })
+            }
+
+            res.status(201).json({ message: "update data success" })
         } catch (error) {
             console.log(error);
             next(error)

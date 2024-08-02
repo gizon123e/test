@@ -90,7 +90,7 @@ module.exports = {
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { is_Active: true }, { new: true })
+            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
@@ -107,7 +107,7 @@ module.exports = {
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, is_Active: false }, { new: true })
+            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, status: 'Ditolak' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",

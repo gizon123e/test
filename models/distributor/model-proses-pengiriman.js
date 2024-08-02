@@ -63,6 +63,18 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: "JenisKendaraan",
         required: [true, "jenisKendaraan harus di isi"]
+    },
+    potongan_ongkir: {
+        type: Number,
+        required: [true, "potongan_ongkir harus di isi"]
+    },
+    waktu_pengiriman: {
+        type: String,
+        required: [true, "waktu_pengiriman harus di isi"]
+    },
+    total_berat: {
+        type: Number,
+        required: [true, "total_berat harus di isi"]
     }
 }, { timestamps: true })
 
