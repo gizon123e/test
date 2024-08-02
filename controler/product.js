@@ -567,60 +567,121 @@ module.exports = {
         filter.id_sub_category = new mongoose.Types.ObjectId(sub_cat);
       }
 
-      const data = []
       const products = await Product.aggregate([
         {
           $match: filter
         },
         {
-          $lookup:{
-            from: "users",
-            let: { userId: "$userId" },
-            pipeline:[
-              {
-                $match: {
-                  $expr:{
-                    $eq: ["$_id", "$$userId"]
-                  }
-                },
-              },
-              {
-                $project: {
-                  _id: 1,
-                  role: 1
-                }
-              }
-            ],
-            as: "detailUser"
-          }
+          $project: { description: 0, id_main_category: 0, id_sub_category: 0, categoryId: 0, pemasok: 0 },
         },
         {
-          $unwind: "$detailUser"
+          $lookup: {
+            from: "users",
+            let: { userId: "$userId" },
+            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, { $project: { _id: 1, role: 1 } }],
+            as: "userData",
+          },
+        },
+        {
+          $unwind: "$userData",
+        },
+        {
+          $lookup: {
+            from: "tokovendors",
+            let: { userId: "$userId" },
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
+            as: "vendorData",
+          },
+        },
+        {
+          $lookup: {
+            from: "suppliers",
+            let: { userId: "$userId" },
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            as: "supplierData",
+          },
+        },
+        {
+          $lookup: {
+            from: "produsens",
+            let: { userId: "$userId" },
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            as: "produsenDatas",
+          },
         },
         {
           $addFields: {
-            userId: "$detailUser"
+            dataToko: {
+              $cond: {
+                if: { $gt: [{ $size: "$vendorData" }, 0] },
+                then: { $arrayElemAt: ["$vendorData", 0] },
+                else: {
+                  $cond: {
+                    if: { $gt: [{ $size: "$supplierData" }, 0] },
+                    then: { $arrayElemAt: ["$supplierData", 0] },
+                    else: { $arrayElemAt: ["$produsenDatas", 0] },
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            vendorData: 0,
+            supplierData: 0,
+            produsenDatas: 0,
+          },
+        },
+        {
+          $lookup: {
+            from: "addresses",
+            localField: "dataToko.address",
+            foreignField: "_id",
+            as: "alamatToko",
+          },
+        },
+        {
+          $addFields: {
+            "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] },
+          },
+        },
+        {
+          $lookup:{
+            from: "salesreports",
+            localField: "_id",
+            foreignField: "productId",
+            as: "terjual"
           }
-        }
+        },
+        {
+          $unwind: { path: "$terjual", preserveNullAndEmptyArrays: true }
+        },
+        {
+          $addFields: {
+            terjual: {
+              $ifNull: [{
+                $reduce: {
+                  input: { $ifNull: ["$terjual.track", []] },
+                  initialValue: 0,
+                  in: { $add: ["$$value", "$$this.soldAtMoment"] }
+                }
+              }, 0]
+            }
+          }
+        },
+        {
+          $project: { alamatToko: 0 },
+        },
+        {
+          $project: { userData: 0 },
+        },
       ])
 
-      for(const prod of products){
-        let dataToko
-        switch(prod.userId.role){
-          case "vendor":
-            dataToko = await TokoVendor.findOne({userId: prod.userId._id}).populate("address");
-            break;
-          default:
-            dataToko = await TokoVendor.findOne({userId: prod.userId._id}).populate("address");
-            break;
-        }
-        data.push({
-          ...prod,
-          dataToko
-        })
-      }
+      const productNotFlashSale = products.filter(prod => !prod.isFlashSale)
+      const productFlashSale = products.filter(prod => prod.isFlashSale)
 
-      return res.status(200).json({data})
+      return res.status(200).json({productFlashSale, productNotFlashSale})
     } catch (error) {
       console.log(error);
       next(error)
