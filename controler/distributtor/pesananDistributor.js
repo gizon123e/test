@@ -385,10 +385,7 @@ module.exports = {
                 const currentDate = new Date();
                 await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
-                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, {
-                    status_pengiriman: status,
-                    status_distributor: "Diterima"
-                });
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { status_distributor: status });
 
                 await ProsesPengirimanDistributor.create({
                     distributorId: dataPengiriman.distributorId,
