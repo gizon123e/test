@@ -60,8 +60,8 @@ const modelPengiriman = new mongoose.Schema({
         default: false
     },
     rejected: {
-        type: Number,
-        default: 0
+        type: Boolean,
+        default: false
     },
     status_distributor: {
         type: String,
