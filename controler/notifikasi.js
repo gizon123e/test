@@ -1,5 +1,6 @@
 const Pesanan  = require('../models/pesanan/model-orders');
 const Notifikasi = require('../models/notifikasi/notifikasi');
+const Product = require('../models/model-product');
 const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi');
 const Pengemasan = require('../models/model-pengemasan');
 const { io } = require("socket.io-client");
@@ -75,41 +76,46 @@ module.exports = {
      sendNotifikasi: async(req, res, next) => {
         try{
           const orders = await Pesanan.find({status: "Berlangsung"}).lean();
-          //   res.status(200).json(orders)
           for (const data of orders){
+               // console.log(data);
                for( const item of data.items){
                     const deadline = item.deadline;
-                    
+
+                    const product = await Product.findOne({_id: item.product[0].productId});
                     const pengemasan = await Pengemasan.findOne({orderId: data._id}).lean()
                     const total_pengemasan_pengiriman = pengemasan.total_pengemasan_pengiriman * 1000;
                     
                     const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
                     var today = new Date();
-                    today.setHours(today.getHours() + 1);
+                    // today.setDate(today.getDate() + 7);
+                    today.setHours(today.getHours() + 7)
+                    today.setMinutes(today.getMinutes() + 20)
                     console.log(today);
                     
                     const now = new Date()
+                    const notifikasi = await Notifikasi.findOne({userId: data.userId}).populate('invoiceId');
+                    console.log(notifikasi);
 
                     if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                         console.log("HAPPY NEW YEAR");
-                         // const notifikasi = await Notifikasi.findOne({userId: data.userId}).populate('invoiceId');
-                         // const detailNotifikasi = await DetailNotifikasi.create({
-                         //      notifikasiId: notifikasi._id,
-                         //      status: "Pesanan sedang dikemas",
-                         //      message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
-                         //      jenis: "Pesanan",
-                         //      image_product: item.image_product,
-                         //      createdAt: new Date(),
-                         // })
+                         // console.log("HAPPY NEW YEAR");
+                         const detailNotifikasi = await DetailNotifikasi.create({
+                              notifikasiId: notifikasi._id,
+                              status: "Pesanan sedang dikemas",
+                              message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
+                              jenis: "Pesanan",
+                              image_product: product.image_product[0],
+                              createdAt: new Date(),
+                         })
+                         console.log(detailNotifikasi);
 
-                         // socket.emit('notif_pesanan_dikemas', {
-                         //      userId: notifikasi.userId,
-                         //      jenis: detailNotifikasi.jenis,
-                         //      status: detailNotifikasi.status,
-                         //      message: detailNotifikasi.message,
-                         //      image: detailNotifikasi.image_product,
-                         //      waktu: formatWaktu(detailNotifikasi.createdAt),
-                         // })
+                         socket.emit('notif_pesanan_dikemas', {
+                              userId: notifikasi.userId,
+                              jenis: detailNotifikasi.jenis,
+                              status: detailNotifikasi.status,
+                              message: detailNotifikasi.message,
+                              image: detailNotifikasi.image_product,
+                              waktu: formatWaktu(detailNotifikasi.createdAt),
+                         })
                     }else {   
                          console.log(`waktu sekarang: ${new Date(now.setSeconds(0))}`);   
                          console.log(`waktu sekarang: ${now.setSeconds(0,0)}`);   
