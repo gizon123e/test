@@ -21,7 +21,7 @@ module.exports = {
                 .populate("jenisPengiriman")
                 .populate("jenisKendaraan")
                 .populate({
-                    path: "produk_pengiriman.produkId",
+                    path: "produk_pengiriman.productId",
                     populate: "categoryId"
                 })
 
