@@ -71,14 +71,13 @@ module.exports = {
                 aplikasiDescription,
                 titelVisiDanMisi
             } = req.body
+
             const files = req.files
             const video = files ? files.video : null;
             const logo = files ? files.logo : null;
 
             const menu = navbarMenu.split('/');
-            const statusGizi = peningkatanStatusGiziDescription.split('/')
-            const pertumbuhan = mendukungPertumbuhanDescription.split('/')
-            const perekonomian = meningkatkanPerekonomianDescription.split('/')
+
 
             if (!video || !logo) {
                 return res.status(400).json({ message: "kamu gagal masukan file logo dan video" });
@@ -101,11 +100,11 @@ module.exports = {
                 contenBenefitTitel,
                 contenBenefitDescription,
                 peningkatanStatusGiziTitel,
-                peningkatanStatusGiziDescription: statusGizi,
+                peningkatanStatusGiziDescription: JSON.parse(peningkatanStatusGiziDescription),
                 mendukungPertumbuhanTitel,
-                mendukungPertumbuhanDescription: pertumbuhan,
+                mendukungPertumbuhanDescription: JSON.parse(mendukungPertumbuhanDescription),
                 meningkatkanPerekonomianTitel,
-                meningkatkanPerekonomianDescription: perekonomian,
+                meningkatkanPerekonomianDescription: JSON.parse(meningkatkanPerekonomianDescription),
                 produkKamiTitel,
                 produkKamiDescription,
                 aplikasiTitel,
@@ -159,9 +158,6 @@ module.exports = {
             const logo = files ? files.logo : null;
 
             const menu = navbarMenu.split('/');
-            const statusGizi = peningkatanStatusGiziDescription.split('/')
-            const pertumbuhan = mendukungPertumbuhanDescription.split('/')
-            const perekonomian = meningkatkanPerekonomianDescription.split('/')
 
             if (!video || !logo) {
                 return res.status(400).json({ message: "kamu gagal masukan file logo dan video" });
@@ -201,11 +197,11 @@ module.exports = {
                 contenBenefitTitel,
                 contenBenefitDescription,
                 peningkatanStatusGiziTitel,
-                peningkatanStatusGiziDescription: statusGizi,
+                peningkatanStatusGiziDescription: JSON.parse(peningkatanStatusGiziDescription),
                 mendukungPertumbuhanTitel,
-                mendukungPertumbuhanDescription: pertumbuhan,
+                mendukungPertumbuhanDescription: JSON.parse(mendukungPertumbuhanDescription),
                 meningkatkanPerekonomianTitel,
-                meningkatkanPerekonomianDescription: perekonomian,
+                meningkatkanPerekonomianDescription: JSON.parse(meningkatkanPerekonomianDescription),
                 produkKamiTitel,
                 produkKamiDescription,
                 aplikasiTitel,

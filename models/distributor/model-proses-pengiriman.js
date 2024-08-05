@@ -45,7 +45,8 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         require: [true, "tarif_pengiriman harus di isi"]
     },
     produk_pengiriman: [{
-        produkId: {
+        _id: false,
+        productId: {
             type: String,
             ref: "Product",
             require: [true, "produk_pengiriman harus di isi"]

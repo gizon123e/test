@@ -19,10 +19,6 @@ const modelReviewProduk = new mongoose.Schema({
         type: String,
         required: false,
     }],
-    video: [{
-        type: String,
-        required: false,
-    }],
     nilai_keseluruan: {
         type: Number,
         default: 0
@@ -37,7 +33,7 @@ const modelReviewProduk = new mongoose.Schema({
         ref: "Reply"
     }],
     id_konsumen: {
-        type: String,
+        type: mongoose.Types.ObjectId,
         ref: "Konsumen",
         required: [true, "id_konsumen harus di isi"]
     }

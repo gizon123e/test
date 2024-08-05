@@ -72,7 +72,7 @@ module.exports = {
             const foundedProduct = {}
             for (let data of datas) {
                 const { productToDelivers, total_ongkir, potongan_ongkir, ...restOfShipment } = data
-                const storeId = `${data.id_toko._id.toString()}-${data._id}`
+                const storeId = `${data.id_toko._id.toString()}-${data.orderId}-${data._id}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
@@ -345,7 +345,7 @@ module.exports = {
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
-                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
                     tarif_pengiriman += data.total_ongkir
@@ -378,7 +378,7 @@ module.exports = {
                 return pgr.productToDelivers.map(item => item.productId);
             });
 
-            if (status === "dibatalkan") {
+            if (status === "Ditolak") {
                 await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: 2, status_distributor: "Ditolak" });
 
                 const currentDate = new Date();

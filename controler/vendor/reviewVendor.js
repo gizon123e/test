@@ -5,7 +5,7 @@ const Vendor = require('../../models/vendor/model-vendor')
 module.exports = {
     getReviewUlasanVendor: async (req, res, next) => {
         try {
-            const { nilai_review, komentar_review } = req.query
+            const { nilai_review, komentar_review, foto_video, replies } = req.query
 
             const vendor = await Vendor.findOne({ userId: req.user.id })
             if (!vendor) return res.status(404).json({ message: 'data Vendor not found' })
@@ -16,22 +16,33 @@ module.exports = {
             for (const data of product) {
                 const query = { id_produk: data._id }
 
-                if (komentar_review) {
-                    query.komentar_review = komentar_review;
-                }
-
                 if (nilai_review) {
                     query.nilai_review = nilai_review
                 }
-                const reviewVendor = await ReviewProduk.findOne(query)
-                if (reviewVendor) {
-                    dataPayload.push(reviewVendor)
+                const reviewVendor = await ReviewProduk.find(query).populate('id_konsumen').populate('id_produk').populate('replies')
+                for (const item of reviewVendor) {
+                    dataPayload.push(item)
                 }
+            }
+            dataPayload.length
+            let reviews = dataPayload
+            if (komentar_review === 'true') {
+                reviews = dataPayload.filter(review => review.komentar_review || review.komentar_review.trim() !== '');
+            }
+
+            if (foto_video === 'true') {
+                reviews = dataPayload.filter(review => review.images.length > 0);
+            }
+
+            if (replies === 'true') {
+                reviews = dataPayload.filter(review => review.replies.length > 0 || review.replies.length > 0);
+            } else if (replies === 'false') {
+                reviews = dataPayload.filter(review => review.replies.length === 0 || review.replies.length === 0);
             }
 
             res.status(200).json({
                 message: "get All review success",
-                data: dataPayload
+                data: reviews
             })
         } catch (error) {
             console.log(error)

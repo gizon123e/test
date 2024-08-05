@@ -43,24 +43,42 @@ const ModelCampeniprofileMBG = new mongoose.Schema({
         required: [true, "peningkatanStatusGizi titel harus di isi"]
     },
     peningkatanStatusGiziDescription: [{
-        type: String,
-        required: [true, "peningkatanStatusGizi description harus di isi"]
+        title: {
+            type: String,
+            required: [true, " title peningkatanStatusGizi description harus di isi"]
+        },
+        description: {
+            type: String,
+            required: [true, " description peningkatanStatusGizi description harus di isi"]
+        }
     }],
     mendukungPertumbuhanTitel: {
         type: String,
         required: [true, "mendukungPertumbuhan titel harus di isi"]
     },
     mendukungPertumbuhanDescription: [{
-        type: String,
-        required: [true, "mendukungPertumbuhan description harus di isi"]
+        title: {
+            type: String,
+            required: [true, "title mendukungPertumbuhan description harus di isi"]
+        },
+        description: {
+            type: String,
+            required: [true, "description mendukungPertumbuhan description harus di isi"]
+        }
     }],
     meningkatkanPerekonomianTitel: {
         type: String,
         required: [true, "meningkatkanPerekonomian titel harus di isi"]
     },
     meningkatkanPerekonomianDescription: [{
-        type: String,
-        required: [true, "meningkatkanPerekonomian description harus di isi"]
+        title: {
+            type: String,
+            required: [true, "title meningkatkanPerekonomian description harus di isi"]
+        },
+        description: {
+            type: String,
+            required: [true, "description meningkatkanPerekonomian description harus di isi"]
+        }
     }],
     produkKamiTitel: {
         type: String,
