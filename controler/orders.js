@@ -206,7 +206,7 @@ module.exports = {
 
                 let data = []
                 let totalPriceVendor = 0
-                
+
                 for (const order of dataOrders) {
                     let { items, status, total_pesanan , biaya_asuransi, biaya_awal_asuransi, ...rest } = order
                     const transaksi = await Transaksi.exists({id_pesanan: order._id, subsidi: false})
@@ -552,7 +552,7 @@ module.exports = {
                     const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
                     const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksiTambahan?._id, status:"Lunas"});
                     const pengiriman = await Pengiriman.find({orderId: order._id}).populate("distributorId").lean();
-                    const proses = await ProsesPengirimanDistributor.exists({pengirimanId: pengiriman._id, status_distributor: { $ne: 'Belum dijemput' }});
+                    const proses = await ProsesPengirimanDistributor.exists({pengirimanId: { $in: pengiriman.map(pgr => pgr._id )}, status_distributor: { $ne: 'Belum dijemput' }});
                     if(!proses){
                         let detailToko;
                         switch(req.user.role){
