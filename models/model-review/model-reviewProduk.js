@@ -37,7 +37,7 @@ const modelReviewProduk = new mongoose.Schema({
         ref: "Reply"
     }],
     id_konsumen: {
-        type: String,
+        type: mongoose.Types.ObjectId,
         ref: "Konsumen",
         required: [true, "id_konsumen harus di isi"]
     }
