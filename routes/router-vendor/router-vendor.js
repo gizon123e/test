@@ -14,6 +14,7 @@ router.get('/listAll', authorization, controllerVendor.getAllVendor);
 router.get('/detail', authorization, controllerVendor.getDetailVendor)
 router.get('/detail/my-store', authorization, controllerToko.myStore)
 router.get('/detail/toko/:id', authorization, controllerToko.getDetailToko);
+router.get('/toko/proses-pengiriman', authorization, controllerToko.getAllProsesPengiriman)
 router.get('/notifikasi/rekomendasi', authorization, controllerToko.getNotifUpload);
 router.post("/create", controllerVendor.createVendor);
 router.post("/create/toko", controllerToko.createToko);

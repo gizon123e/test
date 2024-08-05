@@ -5,6 +5,9 @@ const path = require('path');
 const Product = require('../../models/model-product');
 const {Pangan} = require('../../models/model-pangan');
 const SalesReport = require('../../models/model-laporan-penjualan');
+const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman');
+const TokoVendor = require('../../models/vendor/model-toko');
+
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -95,6 +98,37 @@ module.exports = {
         }
     },
 
+    getAllProsesPengiriman: async (req, res, next) => {
+        try {   
+            console.log(req.user)
+            const toko = await TokoVendor.findOne({userId: req.user.id})
+            const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ tokoId: toko._id })
+                .populate({
+                    path: "tokoId",
+                    populate: "address"
+                })
+                .populate({
+                    path: "sekolahId",
+                    populate: "address"
+                })
+                .populate("jenisPengiriman")
+                .populate("jenisKendaraan")
+                .populate({
+                    path: "produk_pengiriman.produkId",
+                    populate: "categoryId"
+                })
+
+            if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
+
+            res.status(200).json({
+                message: "data get All success",
+                datas: dataProsesPengirimanDistributor
+            })
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
 
     getNotifUpload: async(req, res, next) => {
         try{
