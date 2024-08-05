@@ -89,13 +89,12 @@ module.exports = {
                     var today = new Date();
                     // today.setDate(today.getDate() + 7);
                     today.setHours(today.getHours() + 7)
-                    today.setMinutes(today.getMinutes() + 20)
+                    today.setMinutes(today.getMinutes() + 15)
                     console.log(today);
                     
                     const now = new Date()
-                    const notifikasi = await Notifikasi.findOne({userId: data.userId}).populate('invoiceId');
-                    console.log(notifikasi);
-
+                    const notifikasi = await Notifikasi.findOne({userId: data.userId}).sort({createdAt: -1}).populate('invoiceId');
+                    // console.log(notifikasi)
                     if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
                          // console.log("HAPPY NEW YEAR");
                          const detailNotifikasi = await DetailNotifikasi.create({
@@ -106,7 +105,6 @@ module.exports = {
                               image_product: product.image_product[0],
                               createdAt: new Date(),
                          })
-                         console.log(detailNotifikasi);
 
                          socket.emit('notif_pesanan_dikemas', {
                               userId: notifikasi.userId,
