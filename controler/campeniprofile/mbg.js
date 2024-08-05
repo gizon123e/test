@@ -159,10 +159,6 @@ module.exports = {
 
             const menu = navbarMenu.split('/');
 
-            if (!video || !logo) {
-                return res.status(400).json({ message: "kamu gagal masukan file logo dan video" });
-            }
-
             const namaLogo = `${Date.now()}${path.extname(logo.name)}`;
             const fileLogo = path.join(__dirname, '../../public/campeni-profile', namaLogo);
             await logo.mv(fileLogo);
