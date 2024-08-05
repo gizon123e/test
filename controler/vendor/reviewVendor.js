@@ -13,6 +13,21 @@ module.exports = {
             const dataPayload = []
             const product = await Product.find({ userId: req.user.id })
 
+            let rating_dari_pembeli = 0
+            let index_user = 0
+            for (const data of product) {
+                const reviewVendor = await ReviewProduk.find({ id_produk: data._id }).populate('id_konsumen').populate('id_produk')
+                    .populate({
+                        path: 'replies',
+                        populate: 'vendor'
+                    })
+
+                index_user += reviewVendor.length
+                for (const item of reviewVendor) {
+                    rating_dari_pembeli += item.nilai_review
+                }
+            }
+
             for (const data of product) {
                 const query = { id_produk: data._id }
 
@@ -24,11 +39,12 @@ module.exports = {
                         path: 'replies',
                         populate: 'vendor'
                     })
+
                 for (const item of reviewVendor) {
                     dataPayload.push(item)
                 }
             }
-            dataPayload.length
+
             let reviews = dataPayload
             if (komentar_review === 'true') {
                 reviews = dataPayload.filter(review => review.komentar_review || review.komentar_review.trim() !== '');
@@ -44,9 +60,12 @@ module.exports = {
                 reviews = dataPayload.filter(review => review.replies.length === 0 || review.replies.length === 0);
             }
 
+            const totalRatingPembeli = parseInt(rating_dari_pembeli) / parseInt(index_user)
+
             res.status(200).json({
                 message: "get All review success",
-                data: reviews
+                data: reviews,
+                totalRatingPembeli
             })
         } catch (error) {
             console.log(error)
