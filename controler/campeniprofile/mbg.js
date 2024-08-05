@@ -117,7 +117,7 @@ module.exports = {
 
             res.status(201).json({
                 message: "create data success",
-                data
+                // data
             })
         } catch (error) {
             console.error(error);
@@ -159,9 +159,6 @@ module.exports = {
             const logo = files ? files.logo : null;
 
             const menu = navbarMenu.split('/');
-            const statusGizi = peningkatanStatusGiziDescription.split('/')
-            const pertumbuhan = mendukungPertumbuhanDescription.split('/')
-            const perekonomian = meningkatkanPerekonomianDescription.split('/')
 
             if (!video || !logo) {
                 return res.status(400).json({ message: "kamu gagal masukan file logo dan video" });
@@ -192,32 +189,32 @@ module.exports = {
                 fs.unlinkSync(deleteVideo);
             }
 
-            const data = await CampeniProfileMBG.findByIdAndUpdate({ _id: req.params.id }, {
-                navbarMenu: menu,
-                herosectionTitel,
-                herosectionDescription,
-                about,
-                visiDanMisi,
-                contenBenefitTitel,
-                contenBenefitDescription,
-                peningkatanStatusGiziTitel,
-                peningkatanStatusGiziDescription: statusGizi,
-                mendukungPertumbuhanTitel,
-                mendukungPertumbuhanDescription: pertumbuhan,
-                meningkatkanPerekonomianTitel,
-                meningkatkanPerekonomianDescription: perekonomian,
-                produkKamiTitel,
-                produkKamiDescription,
-                aplikasiTitel,
-                aplikasiDescription,
-                titelVisiDanMisi,
-                logo: `${process.env.HOST}public/campeni-profile/${namaLogo}`,
-                video: `${process.env.HOST}public/campeni-profile/${namaVideo}`
-            }, { new: true })
+            // const data = await CampeniProfileMBG.findByIdAndUpdate({ _id: req.params.id }, {
+            //     navbarMenu: menu,
+            //     herosectionTitel,
+            //     herosectionDescription,
+            //     about,
+            //     visiDanMisi,
+            //     contenBenefitTitel,
+            //     contenBenefitDescription,
+            //     peningkatanStatusGiziTitel,
+            //     // peningkatanStatusGiziDescription: statusGizi,
+            //     mendukungPertumbuhanTitel,
+            //     // mendukungPertumbuhanDescription: pertumbuhan,
+            //     meningkatkanPerekonomianTitel,
+            //     // meningkatkanPerekonomianDescription: perekonomian,
+            //     produkKamiTitel,
+            //     produkKamiDescription,
+            //     aplikasiTitel,
+            //     aplikasiDescription,
+            //     titelVisiDanMisi,
+            //     logo: `${process.env.HOST}public/campeni-profile/${namaLogo}`,
+            //     video: `${process.env.HOST}public/campeni-profile/${namaVideo}`
+            // }, { new: true })
 
             res.status(201).json({
                 message: 'update not found',
-                data
+                // data
             })
         } catch (error) {
             console.error(error);

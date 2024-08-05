@@ -378,7 +378,7 @@ module.exports = {
                 return pgr.productToDelivers.map(item => item.productId);
             });
 
-            if (status === "dibatalkan") {
+            if (status === "Ditolak") {
                 await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: 2, status_distributor: "Ditolak" });
 
                 const currentDate = new Date();
