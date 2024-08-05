@@ -64,33 +64,4 @@ module.exports = {
             next(error)
         }
     },
-
-    updateStatusProsesPengiriman: async (req, res, next) => {
-        try {
-            const pengiriman = await Pengiriman.findOne({ _id: req.params.pengirimanId })
-            if (!pengiriman) return res.status(404).json({ message: "data pengiriman not found" })
-
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOne({ _id: req.params.prosesPengirimanId })
-            if (!prosesPengiriman) return res.status(404).json({ message: "data prosesPengiriman not found" })
-
-            await Pengiriman.findByIdAndUpdate({ _id: req.params.pengirimanId }, { status_pengiriman: "dikirim" })
-
-            const data = await ProsesPengirimanDistributor.findByIdAndUpdate({ _id: req.params.prosesPengirimanId }, { status_distributor: "Sedang dijemput" })
-            await PelacakanDistributorKonsumen.create({
-                id_toko: prosesPengiriman.tokoId,
-                id_kosumen: prosesPengiriman.konsumenId,
-                id_distributor: prosesPengiriman.distributorId,
-                id_pesanan: prosesPengiriman._id,
-                pesanan_diserahkan_konsumen: 'Pesanan diserahkan ke distributor'
-            })
-
-            res.status(201).json({
-                message: "update data success",
-                data
-            })
-        } catch (error) {
-            console.log(error)
-            next(error)
-        }
-    }
 }
