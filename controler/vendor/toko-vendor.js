@@ -128,6 +128,7 @@ module.exports = {
                 }
                 return {
                     ...restOfPgr,
+                    status_distributor: generateStatus(),
                     waktu_pengiriman: new Date(waktu_pengiriman)
                 }
             })
