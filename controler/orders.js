@@ -250,7 +250,6 @@ module.exports = {
                                         if (!selectedPengiriman) {
                                             continue;
                                         }
-                            
                                         const totalQuantity = selectedPengiriman.productToDelivers.find(ship => ship.productId.toString() === productSelected._id.toString());
                                         let itemTotal = productSelected.total_price * totalQuantity.quantity;
                                         totalPriceVendor += itemTotal
@@ -388,8 +387,9 @@ module.exports = {
                                 const selectedPengiriman = pengiriman.filter(pgr =>{
                                     return pgr.productToDelivers.some(prd => productSelected._id.toString() === prd.productId.toString())
                                 });
+                                                        
                                 let totalQuantity = 0
-                    
+
                                 if (!store[storeId]) {
                                     store[storeId] = {
                                         total_pesanan: 0,
