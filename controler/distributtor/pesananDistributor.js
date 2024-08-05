@@ -72,7 +72,7 @@ module.exports = {
             const foundedProduct = {}
             for (let data of datas) {
                 const { productToDelivers, total_ongkir, potongan_ongkir, ...restOfShipment } = data
-                const storeId = `${data.id_toko._id.toString()}`
+                const storeId = `${data.id_toko._id.toString()}-${data._id}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
