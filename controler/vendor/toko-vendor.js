@@ -101,7 +101,7 @@ module.exports = {
     getAllProsesPengiriman: async (req, res, next) => {
         try {   
             const toko = await TokoVendor.findOne({userId: req.user.id})
-            const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ tokoId: toko._id })
+            const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ tokoId: toko._id, status_distributor: { $ne: "Belum dijemput"} })
                 .populate({
                     path: "tokoId",
                     populate: "address"
