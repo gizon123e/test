@@ -19,7 +19,7 @@ module.exports = {
                 if (nilai_review) {
                     query.nilai_review = nilai_review
                 }
-                const reviewVendor = await ReviewProduk.find(query).populate('id_konsumen').populate('id_produk')
+                const reviewVendor = await ReviewProduk.find(query).populate('id_konsumen').populate('id_produk').populate('replies')
                 for (const item of reviewVendor) {
                     dataPayload.push(item)
                 }
@@ -31,7 +31,7 @@ module.exports = {
             }
 
             if (foto_video === 'true') {
-                reviews = dataPayload.filter(review => review.images.length > 0 || review.video.length > 0);
+                reviews = dataPayload.filter(review => review.images.length > 0);
             }
 
             if (replies === 'true') {
