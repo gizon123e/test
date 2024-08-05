@@ -19,7 +19,11 @@ module.exports = {
                 if (nilai_review) {
                     query.nilai_review = nilai_review
                 }
-                const reviewVendor = await ReviewProduk.find(query).populate('id_konsumen').populate('id_produk').populate('replies')
+                const reviewVendor = await ReviewProduk.find(query).populate('id_konsumen').populate('id_produk')
+                    .populate({
+                        path: 'replies',
+                        populate: 'vendor'
+                    })
                 for (const item of reviewVendor) {
                     dataPayload.push(item)
                 }

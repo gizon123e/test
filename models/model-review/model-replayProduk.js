@@ -10,9 +10,9 @@ const modelReply = new mongoose.Schema({
         type: String,
         required: [true, "komentar_reply harus di isi"]
     },
-    userId: {
+    vendor: {
         type: mongoose.Types.ObjectId,
-        ref: "User",
+        ref: "Vendor",
         required: [true, "userId harus di isi"]
     }
 }, { timestamps: true });
