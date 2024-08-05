@@ -83,6 +83,7 @@ app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
+app.use('/api/review-vendor', require('./routes/router-vendor/router-reviewVendor'))
 
 // router distributtor
 app.use("/api/distributor", require('./routes/router-distributtor/router-distributtor'));
