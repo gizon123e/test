@@ -26,6 +26,7 @@ const DataProductOrder = require("../models/pesanan/model-data-product-order");
 const salesReport = require('../utils/checkSalesReport')
 const Notifikasi = require('../models/notifikasi/notifikasi');
 const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi');
+const ProsesPengirimanDistributor = require("../models/distributor/model-proses-pengiriman");
 dotenv.config();
 
 const now = new Date();
@@ -551,118 +552,120 @@ module.exports = {
                     const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
                     const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksiTambahan?._id, status:"Lunas"});
                     const pengiriman = await Pengiriman.find({orderId: order._id}).populate("distributorId").lean();
-                    let detailToko;
+                    const proses = await ProsesPengirimanDistributor.exists({pengirimanId: pengiriman._id, status_distributor: { $ne: 'Belum dijemput' }});
+                    if(!proses){
+                        let detailToko;
+                        switch(req.user.role){
+                            case "vendor":
+                                detailToko = await TokoVendor.findOne({userId: req.user.id});
+                                break;
+                            default:
+                                detailToko = await TokoVendor.findOne({userId: req.user.id});
+                                break;
+                        };
+                        const pesanan = {}
+                        const kode_pesanan = new Set()
+                        for(const item of order.items){
+                            
+                            let isApproved = item.isApproved
+                            const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
+                            if(!kode_pesanan.has(item.kode_pesanan)){
+                                kode_pesanan.add(item.kode_pesanan)
+                            }
+                            if(productSelected){
+                                const selectedPengiriman = pengiriman.filter(pgr => {
+                                    return pgr.productToDelivers.some(prd => prd.productId.toString() === productSelected._id.toString())
+                                })
+                                
+                                selectedPengiriman.map(pgr => {
+                                    const pgrId = pgr._id.toString()
+                                    const isDistributtorApprovedCheck = () => {
+                                        if(item.isDistributtorApproved){
+                                            return true
+                                        }else if(!item.isDistributtorApproved){
+                                            return null
+                                        }else if(pgr.rejected){
+                                            return false
+                                        }
+                                    };
 
-                    switch(req.user.role){
-                        case "vendor":
-                            detailToko = await TokoVendor.findOne({userId: req.user.id});
-                            break;
-                        default:
-                            detailToko = await TokoVendor.findOne({userId: req.user.id});
-                            break;
-                    };
-                    const pesanan = {}
-                    const kode_pesanan = new Set()
-                    for(const item of order.items){
+                                    if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
+                                        if(!pesanan[pgrId]){
+                                            pesanan[pgrId] = {
+                                                pengiriman: pgr,
+                                                isApproved,
+                                                isDistributtorApproved: isDistributtorApprovedCheck(),
+                                                product: []
+                                            }
+                                        }
+                                        const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
+                                        pesanan[pgrId].product.push({ 
+                                            product: productSelected, 
+                                            quantity: found.quantity, 
+                                            totalHargaProduk: productSelected.total_price * found.quantity,
+                                            total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
+                                        })
+                                    }
+
+                                    if(pgr.invoice.toString() === invoiceTambahan?._id.toString()){
+                                        if(!pesanan[pgrId]){
+                                            pesanan[pgrId] = {
+                                                pengiriman: pgr,
+                                                isApproved,
+                                                isDistributtorApproved: isDistributtorApprovedCheck(),
+                                                product: []
+                                            }
+                                        }
+                                        const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
+                                        pesanan[pgrId].product.push({ 
+                                            product: productSelected, 
+                                            quantity: found.quantity, 
+                                            totalHargaProduk: productSelected.total_price * found.quantity,
+                                            total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
+                                        })
+                                    }
+                                })
+                            }
+                        }
                         
-                        let isApproved = item.isApproved
-                        const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
-                        if(!kode_pesanan.has(item.kode_pesanan)){
-                            kode_pesanan.add(item.kode_pesanan)
-                        }
-                        if(productSelected){
-                            const selectedPengiriman = pengiriman.filter(pgr => {
-                                return pgr.productToDelivers.some(prd => prd.productId.toString() === productSelected._id.toString())
-                            })
-                            
-                            selectedPengiriman.map(pgr => {
-                                const pgrId = pgr._id.toString()
-                                const isDistributtorApprovedCheck = () => {
-                                    if(item.isDistributtorApproved){
-                                        return true
-                                    }else if(!item.isDistributtorApproved){
-                                        return null
-                                    }else if(pgr.rejected){
-                                        return false
-                                    }
-                                };
-
-                                if(pgr.invoice.toString() === invoiceSubsidi._id.toString()){
-                                    if(!pesanan[pgrId]){
-                                        pesanan[pgrId] = {
-                                            pengiriman: pgr,
-                                            isApproved,
-                                            isDistributtorApproved: isDistributtorApprovedCheck(),
-                                            product: []
-                                        }
-                                    }
-                                    const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
-                                    pesanan[pgrId].product.push({ 
-                                        product: productSelected, 
-                                        quantity: found.quantity, 
-                                        totalHargaProduk: productSelected.total_price * found.quantity,
-                                        total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
-                                    })
+                        for(const key of Object.keys(pesanan)){
+                            const pembatalan = await Pembatalan.findOne({pengirimanId: pesanan[key].pengiriman._id});
+                            const checkStatus = () => {
+                                if(pesanan[key].pengiriman.isRequestedToPickUp && !pembatalan){
+                                    return "Menunggu Distributor"
+                                }else if(pesanan[key].pengiriman.sellerApproved && !pembatalan){
+                                    return "Dikemas"
+                                }else if(!pesanan[key].pengiriman.sellerApproved && !pembatalan){
+                                    return "Pesanan Terbaru"
+                                }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim" && !pembatalan){
+                                    return "Sedang Penjemputan"
                                 }
-
-                                if(pgr.invoice.toString() === invoiceTambahan?._id.toString()){
-                                    if(!pesanan[pgrId]){
-                                        pesanan[pgrId] = {
-                                            pengiriman: pgr,
-                                            isApproved,
-                                            isDistributtorApproved: isDistributtorApprovedCheck(),
-                                            product: []
-                                        }
-                                    }
-                                    const found = pgr.productToDelivers.find(prd => prd.productId.toString() === productSelected._id.toString())
-                                    pesanan[pgrId].product.push({ 
-                                        product: productSelected, 
-                                        quantity: found.quantity, 
-                                        totalHargaProduk: productSelected.total_price * found.quantity,
-                                        total_biaya_asuransi: biaya_asuransi ? biaya_awal_asuransi * found.quantity : 0
-                                    })
+                                else if(pembatalan){
+                                    return "Kadaluarsa"
                                 }
+                                
+                            }
+                            const checkCreatedAt = () => {
+                                if(pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi._id.toString()){
+                                    return createdAt
+                                }else if(pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan._id.toString()){
+                                    return updatedAt
+                                }
+                            }
+                            const { pengiriman, ...restOfPesanan } = pesanan[key]
+                            const { waktu_pengiriman, ...restOfPengiriman } = pengiriman
+                            data.push({
+                                ...restOfOrder,
+                                createdAt: checkCreatedAt(),
+                                status: checkStatus(),
+                                id_pesanan: Array.from(kode_pesanan)[0],
+                                pengiriman: {
+                                    ...restOfPengiriman,
+                                    waktu_pengiriman: new Date(waktu_pengiriman)
+                                },
+                                ...restOfPesanan
                             })
                         }
-                    }
-                    
-                    for(const key of Object.keys(pesanan)){
-                        const pembatalan = await Pembatalan.findOne({pengirimanId: pesanan[key].pengiriman._id});
-                        const checkStatus = () => {
-                            if(pesanan[key].pengiriman.isRequestedToPickUp && !pembatalan){
-                                return "Menunggu Distributor"
-                            }else if(pesanan[key].pengiriman.sellerApproved && !pembatalan){
-                                return "Dikemas"
-                            }else if(!pesanan[key].pengiriman.sellerApproved && !pembatalan){
-                                return "Pesanan Terbaru"
-                            }else if(pesanan[key].pengiriman.status_pengiriman === "dikirim" && !pembatalan){
-                                return "Sedang Penjemputan"
-                            }
-                            else if(pembatalan){
-                                return "Kadaluarsa"
-                            }
-                            
-                        }
-                        const checkCreatedAt = () => {
-                            if(pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi._id.toString()){
-                                return createdAt
-                            }else if(pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan._id.toString()){
-                                return updatedAt
-                            }
-                        }
-                        const { pengiriman, ...restOfPesanan } = pesanan[key]
-                        const { waktu_pengiriman, ...restOfPengiriman } = pengiriman
-                        data.push({
-                            ...restOfOrder,
-                            createdAt: checkCreatedAt(),
-                            status: checkStatus(),
-                            id_pesanan: Array.from(kode_pesanan)[0],
-                            pengiriman: {
-                                ...restOfPengiriman,
-                                waktu_pengiriman: new Date(waktu_pengiriman)
-                            },
-                            ...restOfPesanan
-                        })
                     }
                 }
                 let filteredData = data.filter((dt)=>{
