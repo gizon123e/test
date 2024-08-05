@@ -1,6 +1,24 @@
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 
+const operasional = new mongoose.Schema({
+    _id: false,
+    hari: {
+        type: String
+    },
+    buka: {
+        type: Boolean,
+    },
+    jam_operasional:{
+        mulai: {
+            type: String
+        },
+        tutup: {
+            type: String
+        }
+    }
+})
+
 const modelTokoVendor = new mongoose.Schema({
     namaToko: {
         type: String,
@@ -27,25 +45,10 @@ const modelTokoVendor = new mongoose.Schema({
         default: null
 
     },
-    waktu_operasional: [
-        {
-            _id: false,
-            hari: {
-                type: String
-            },
-            buka: {
-                type: Boolean,
-            },
-            jam_operasional:{
-                mulai: {
-                    type: String
-                },
-                tutup: {
-                    type: String
-                }
-            }
-        }
-    ],
+    waktu_operasional: {
+        type: [operasional],
+        default: null
+    },
     store_description: {
         type: String,
         default: null
