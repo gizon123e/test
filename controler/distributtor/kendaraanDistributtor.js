@@ -716,5 +716,28 @@ module.exports = {
             }
             next(error);
         }
+    },
+
+    detailKendaraan: async (req, res, next) => {
+        try {
+            const kendaran = await KendaraanDistributor.findById(req.params.id).populate('id_distributor').populate('jenisKendaraan').populate('merekKendaraan')
+            if (!kendaran) return res.status(404).json({ message: 'data Kendaraan Not Found' })
+
+            res.status(200).json({
+                message: 'get data detail kendaraan success',
+                data: kendaran
+            })
+
+        } catch (error) {
+            console.error(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
     }
 }

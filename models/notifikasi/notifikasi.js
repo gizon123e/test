@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const notifikasiSchema = new mongoose.Schema({
-     userId: {
+    userId: {
       type: mongoose.Types.ObjectId,
       ref: "User",
       required: [true, "userId harus di isi"],
