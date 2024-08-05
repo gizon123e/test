@@ -100,7 +100,6 @@ module.exports = {
 
     getAllProsesPengiriman: async (req, res, next) => {
         try {   
-            console.log(req.user)
             const toko = await TokoVendor.findOne({userId: req.user.id})
             const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ tokoId: toko._id })
                 .populate({
@@ -114,15 +113,22 @@ module.exports = {
                 .populate("jenisPengiriman")
                 .populate("jenisKendaraan")
                 .populate({
-                    path: "produk_pengiriman.produkId",
+                    path: "produk_pengiriman.productId",
                     populate: "categoryId"
                 })
+                .lean()
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
-
+            const data = dataProsesPengirimanDistributor.map(pgr => {
+                const { waktu_pengiriman, ...restOfPgr } = pgr
+                return {
+                    ...restOfPgr,
+                    waktu_pengiriman: new Date(waktu_pengiriman)
+                }
+            })
             res.status(200).json({
                 message: "data get All success",
-                datas: dataProsesPengirimanDistributor
+                datas: data
             })
         } catch (error) {
             console.log(error)
