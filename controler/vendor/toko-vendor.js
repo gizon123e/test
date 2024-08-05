@@ -120,7 +120,12 @@ module.exports = {
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
             const data = dataProsesPengirimanDistributor.map(pgr => {
-                const { waktu_pengiriman, ...restOfPgr } = pgr
+                const { waktu_pengiriman, status_distributor, ...restOfPgr } = pgr
+                const generateStatus = () => {
+                    if(status_distributor === "Sedang dijemput"){
+                        return "Menunggu penjemputan"
+                    }
+                }
                 return {
                     ...restOfPgr,
                     waktu_pengiriman: new Date(waktu_pengiriman)
