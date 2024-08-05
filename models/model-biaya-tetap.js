@@ -41,6 +41,12 @@ const modelBiayaTetap = mongoose.Schema({
   max_pengemasan_pengiriman: {
     type: Number
   },
+  fee_payment_gateway: {
+    type: Number
+  },
+  fee_udinpay: {
+    type: Number
+  }
 });
 
 const BiayaTetap = mongoose.model("BiayaTetap", modelBiayaTetap);

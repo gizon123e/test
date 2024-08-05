@@ -20,6 +20,26 @@ const modelTransaksi = new mongoose.Schema({
         type: String,
         required: true
     },
+    detailBiaya:{
+        totalHargaProduk: {
+            type: Number
+        },
+        totalOngkir: {
+            type: Number
+        },
+        totalPotonganOngkir: {
+            type: Number
+        },
+        jumlahOngkir:{
+            type: Number
+        },
+        biaya_layanan: {
+            type: Number
+        },
+        biaya_jasa_aplikasi: {
+            type: Number
+        }
+    },
     subsidi: {
         type: Boolean
     }

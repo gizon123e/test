@@ -137,26 +137,66 @@ userModels.pre('findOneAndUpdate', function (next) {
 
 userModels.post("findOneAndDelete", async function (doc) {
   try {
-    await Cart.deleteMany({ userId: doc._id })
-    await Conversation.deleteMany({ participants: { $in: doc._id } })
-    await Invoice.deleteMany({ userId: doc._id })
-    await Comment.deleteMany({ userId: doc._id })
-    await Minat.deleteMany({ userId: doc._id })
-    await Pembatalan.deleteMany({ userId: doc._id })
-    await Product.deleteMany({ userId: doc._id })
-    await Produksi.deleteMany({ userId: doc._id })
-    await VirtualAccountUser.deleteMany({ userId: doc._id })
-    await Address.deleteMany({ userId: doc._id })
-    await BahanBaku.deleteMany({ userId: doc._id })
-    await Pesanan.deleteMany({ userId: doc._id })
-    await Vendor.deleteMany({ userId: doc._id })
-    await Distributor.deleteMany({ userId: doc._id })
-    await Supplier.deleteMany({ userId: doc._id })
-    await Produsen.deleteMany({ userId: doc._id })
-    await Konsumen.deleteMany({ userId: doc._id })
-    await TokoVendor.deleteMany({userId: doc._id})
-    await ModelPenanggungJawabKonsumen.deleteMany({userId: doc._id})
-    await Sekolah.deleteMany({userId: doc._id})
+    await Cart.deleteMany({ userId: doc._id });
+    console.log('Deleted all Cart documents for user:', doc._id);
+
+    await Conversation.deleteMany({ participants: { $in: doc._id } });
+    console.log('Deleted all Conversation documents for user:', doc._id);
+
+    await Invoice.deleteMany({ userId: doc._id });
+    console.log('Deleted all Invoice documents for user:', doc._id);
+
+    await Comment.deleteMany({ userId: doc._id });
+    console.log('Deleted all Comment documents for user:', doc._id);
+
+    await Minat.deleteMany({ userId: doc._id });
+    console.log('Deleted all Minat documents for user:', doc._id);
+
+    await Pembatalan.deleteMany({ userId: doc._id });
+    console.log('Deleted all Pembatalan documents for user:', doc._id);
+
+    await Product.deleteMany({ userId: doc._id });
+    console.log('Deleted all Product documents for user:', doc._id);
+
+    await Produksi.deleteMany({ userId: doc._id });
+    console.log('Deleted all Produksi documents for user:', doc._id);
+
+    await VirtualAccountUser.deleteMany({ userId: doc._id });
+    console.log('Deleted all VirtualAccountUser documents for user:', doc._id);
+
+    await Address.deleteMany({ userId: doc._id });
+    console.log('Deleted all Address documents for user:', doc._id);
+
+    await BahanBaku.deleteMany({ userId: doc._id });
+    console.log('Deleted all BahanBaku documents for user:', doc._id);
+
+    await Pesanan.deleteMany({ userId: doc._id });
+    console.log('Deleted all Pesanan documents for user:', doc._id);
+
+    await Vendor.deleteMany({ userId: doc._id });
+    console.log('Deleted all Vendor documents for user:', doc._id);
+
+    await Distributor.deleteMany({ userId: doc._id });
+    console.log('Deleted all Distributor documents for user:', doc._id);
+
+    await Supplier.deleteMany({ userId: doc._id });
+    console.log('Deleted all Supplier documents for user:', doc._id);
+
+    await Produsen.deleteMany({ userId: doc._id });
+    console.log('Deleted all Produsen documents for user:', doc._id);
+
+    await Konsumen.deleteMany({ userId: doc._id });
+    console.log('Deleted all Konsumen documents for user:', doc._id);
+
+    await TokoVendor.deleteMany({ userId: doc._id });
+    console.log('Deleted all TokoVendor documents for user:', doc._id);
+
+    await ModelPenanggungJawabKonsumen.deleteMany({ userId: doc._id });
+    console.log('Deleted all ModelPenanggungJawabKonsumen documents for user:', doc._id);
+
+    await Sekolah.deleteMany({ userId: doc._id });
+    console.log('Deleted all Sekolah documents for user:', doc._id);
+
   } catch (error) {
     console.log(error)
   }

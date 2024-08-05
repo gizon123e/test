@@ -220,20 +220,10 @@ module.exports = {
             const validate = dataAllDistributtor.filter(data =>
                 data.distributor.id_distributor.userId.isDetailVerified && data.distributor.id_distributor.userId.isVerifikasiDocument);
 
-            // let dataKendaraanData
-            // let dataPengemudiData
-            // for (let id of validate) {
-            //     const validateKendaraan = await KendaraanDistributor.find({ id_distributor: id.distributor.id_distributor._id })
-            //     dataKendaraanData = validateKendaraan.filter((item) => item.is_Active === true)
-
-            //     const validatePengemudi = await Pengemudi.find({ id_distributor: id.distributor.id_distributor._id })
-            //     dataPengemudiData = validatePengemudi.filter((item) => item.is_Active === true)
-            // }
-
             let validDistributors = []
             for (let distributor of validate) {
-                const activeKendaraan = await KendaraanDistributor.find({ id_distributor: distributor.distributor.id_distributor._id, is_Active: true })
-                const activePengemudi = await Pengemudi.find({ id_distributor: distributor.distributor.id_distributor._id, is_Active: true })
+                const activeKendaraan = await KendaraanDistributor.find({ id_distributor: distributor.distributor.id_distributor._id, status: 'Aktif' })
+                const activePengemudi = await Pengemudi.find({ id_distributor: distributor.distributor.id_distributor._id, status: 'Aktif' })
 
                 if (activeKendaraan.length > 0 && activePengemudi.length > 0) {
                     validDistributors.push(distributor)
@@ -335,7 +325,7 @@ module.exports = {
                 const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, is_Active: true })
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
                         .populate({
                             path: "id_distributor",
                             populate: "alamat_id"
@@ -343,7 +333,7 @@ module.exports = {
                         .populate("jenisKendaraan")
                         .lean()
 
-                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, is_Active: true })
+                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, status: 'Aktif' })
 
                     let filteredDataKendaraan = dataKendaraan
                     if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
