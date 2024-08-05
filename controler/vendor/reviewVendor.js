@@ -31,7 +31,7 @@ module.exports = {
             }
 
             if (foto_video === 'true') {
-                reviews = dataPayload.filter(review => review.images.length > 0 || review.video.length > 0);
+                reviews = dataPayload.filter(review => review.images.length > 0);
             }
 
             if (replies === 'true') {

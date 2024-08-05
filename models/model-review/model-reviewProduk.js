@@ -19,10 +19,6 @@ const modelReviewProduk = new mongoose.Schema({
         type: String,
         required: false,
     }],
-    video: [{
-        type: String,
-        required: false,
-    }],
     nilai_keseluruan: {
         type: Number,
         default: 0

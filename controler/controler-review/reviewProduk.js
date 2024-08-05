@@ -11,7 +11,6 @@ module.exports = {
             const { komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen } = req.body;
             const files = req.files;
             const images = files ? files.images : [];
-            const video = files ? files.video : [];
 
             // Memproses image files
             const imagePaths = [];
@@ -29,24 +28,6 @@ module.exports = {
                 await images.mv(imagePath);
                 const urlImage = `${process.env.HOST}/public/ulasan-produk/${namaImage}`;
                 imagePaths.push(urlImage);
-            }
-
-            // Memproses video files
-            const videoPaths = [];
-            if (Array.isArray(video)) {
-                for (const vid of video) {
-                    const namaVideo = `${Date.now()}-${vid.name}`;
-                    const videoPath = path.join(__dirname, '../../public/ulasan-produk', namaVideo);
-                    await vid.mv(videoPath);
-                    const urlVideo = `${process.env.HOST}/public/ulasan-produk/${namaVideo}`;
-                    videoPaths.push(urlVideo);
-                }
-            } else if (video) {
-                const namaVideo = `${Date.now()}-${video.name}`;
-                const videoPath = path.join(__dirname, '../../public/ulasan-produk', namaVideo);
-                await video.mv(videoPath);
-                const urlVideo = `${process.env.HOST}/public/ulasan-produk/${namaVideo}`;
-                videoPaths.push(urlVideo);
             }
 
             // Menghitung total review vendor
@@ -116,7 +97,6 @@ module.exports = {
                 komentar_review,
                 nilai_review: parseInt(nilai_review),
                 images: imagePaths,
-                video: videoPaths,
                 nilai_keseluruan,
                 id_konsumen
             });
