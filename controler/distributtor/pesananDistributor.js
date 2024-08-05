@@ -478,6 +478,7 @@ module.exports = {
                 await ProsesPengirimanDistributor.create({
                     distributorId: dataPengiriman.distributorId,
                     sekolahId: dataPengiriman.orderId.sekolahId,
+                    pengirimanId: dataPengiriman._id,
                     tokoId: dataPengiriman.id_toko._id,
                     jarakPengiriman: jarakOngkir,
                     jenisPengiriman: dataPengiriman.jenis_pengiriman,

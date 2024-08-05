@@ -64,4 +64,20 @@ module.exports = {
             next(error)
         }
     },
+
+    mulaiPenjemputan: async(req, res, next) => {
+        try {
+            const distri = await Distributtor.exists({userId: req.user.id})
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Sedang dijemput"}, {new: true});
+            await Pengiriman.updateOne(
+                { _id: prosesPengiriman.pengirimanId },
+                { status_pengiriman: "dikirim" }
+            )
+            if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            return res.status(200).json({message: "Berhasil Memulai Penjemputan"});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    }
 }
