@@ -1,6 +1,7 @@
 require("./database/database");
 const flash_sale_checker = require('./utils/flash-sale-checker');
 const checker_order = require("./utils/cancel-order")
+const send_notif = require("./utils/send-notif");
 const http = require('http');
 const https = require('https')
 const fs = require('fs');
@@ -107,6 +108,9 @@ app.use('/api/replay-produk', require('./routes/router-review/router-replayProdu
 app.use('/api/instansi', require('./routes/router-controler-sekolah/router-instansi'))
 app.use("/api/konsumen/sekolah", require("./routes/router-konsumen/router-sekolah"))
 
+// router notifikasi
+app.use('/api/notifikasi', require('./routes/router-notifikasi'))
+
 app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));
 app.use('/api/login/google-oauth', require('./routes/router-login-google-oauth'));
@@ -141,6 +145,7 @@ app.use(require("./midelware/error-midelware"));
 app.listen(4000, () => {
   // flash_sale_checker.start()
   checker_order()
+  send_notif()
   batalPesanan()
   console.log("connection express success");
   websocket.listen(5000, () => {

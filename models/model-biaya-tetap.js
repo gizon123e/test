@@ -37,7 +37,10 @@ const modelBiayaTetap = mongoose.Schema({
   },
   notif_rekomen_vendor: {
     type: String,
-  }
+  },
+  max_pengemasan_pengiriman: {
+    type: Number
+  },
 });
 
 const BiayaTetap = mongoose.model("BiayaTetap", modelBiayaTetap);
