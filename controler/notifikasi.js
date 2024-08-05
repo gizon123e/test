@@ -83,7 +83,7 @@ module.exports = {
 
                     const product = await Product.findOne({_id: item.product[0].productId});
                     const pengemasan = await Pengemasan.findOne({orderId: data._id}).lean()
-                    const total_pengemasan_pengiriman = pengemasan.total_pengemasan_pengiriman * 1000;
+                    const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
                     
                     const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
                     var today = new Date();
