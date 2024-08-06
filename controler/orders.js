@@ -2229,7 +2229,7 @@ module.exports = {
             const addedInv = new Set()
             for(const shp of shipments){
                 const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
-                const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"});
+                const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"}).populate('id_transaksi');
                 for(prd of shp.productToDelivers){
                     const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId)
                     const user = await User.findById(selectedProduct.userId)
@@ -2284,7 +2284,8 @@ module.exports = {
                                 kode_transaksi: `TRX_SYS_OUT_PRH_${date}_${minutes}_${total_transaksi + 1}`,
                                 userId: user._id,
                                 jumlah: inv.id_transaksi.detailBiaya.biaya_layanan + inv.id_transaksi.detailBiaya.biaya_jasa_aplikasi
-                            })
+                            });
+                            addedInv.add(inv._id.toString())
                         }
                     }
                 };
