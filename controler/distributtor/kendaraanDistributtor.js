@@ -446,7 +446,7 @@ module.exports = {
                 warna,
                 typeKendaraan,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
                 tahun
             })
 
