@@ -2215,14 +2215,58 @@ module.exports = {
     orderSuccess: async(req, res, next) => {
         try {
             const { pengirimanIds } = req.body;
+            const biayaTetap = await BiayaTetap.findOne({})
             const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).lean();
+            const promisesFunction = []
+            let total_transaksi = await Transaksi.countDocuments({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
+            })
             for(const shp of shipments){
                 const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
+                const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"});
                 for(prd of shp.productToDelivers){
                     const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId)
-                    const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"});
+                    const user = await User.findById(selectedProduct.userId)
                     if(inv){
-                        
+                        promisesFunction.push(
+                            Transaksi.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "masuk",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: selectedProduct.total_price * prd.quantity
+                            }),
+                            Transaksi.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "keluar",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: biayaTetap.fee_vendor
+                            }),
+
+                            Transaksi2.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "keluar",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: selectedProduct.total_price * prd.quantity
+                            }),
+
+                            Transaksi2.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "masuk",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: biayaTetap.fee_vendor
+                            }),
+                        )
                     }
                 }
             }
