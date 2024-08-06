@@ -100,6 +100,7 @@ module.exports = {
 
     getAllProsesPengiriman: async (req, res, next) => {
         try {   
+            const { status } = req.query
             const toko = await TokoVendor.findOne({userId: req.user.id})
             const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ tokoId: toko._id, status_distributor: { $ne: "Belum dijemput"} })
                 .populate({
@@ -122,14 +123,24 @@ module.exports = {
             const data = dataProsesPengirimanDistributor.map(pgr => {
                 const { waktu_pengiriman, status_distributor, ...restOfPgr } = pgr
                 const generateStatus = () => {
+                    
                     if(status_distributor === "Sedang dijemput"){
-                        return "Menunggu penjemputan"
+                        return "menunggu penjemputan"
+                    }
+
+                    if(status_distributor === 'Sudah dijemput'){
+                        return 'diserahkan ke distributor'
                     }
 
                     if(status_distributor === 'Selesai'){
                         return 'telah diterima konsumen'
                     }
+
+                    if(status_distributor === 'Sedang dikirim'){
+                        return 'sedang dalam perjalanan'
+                    }
                 }
+                
                 return {
                     ...restOfPgr,
                     status_distributor: generateStatus(),
@@ -138,7 +149,11 @@ module.exports = {
             })
             res.status(200).json({
                 message: "data get All success",
-                datas: data
+                datas: data.filter(pgr => {
+                    if(!status) return true;
+
+                    return pgr.status_distributor === status
+                })
             })
         } catch (error) {
             console.log(error)

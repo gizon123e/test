@@ -32,7 +32,7 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
     },
     status_distributor: {
         type: String,
-        enum: ["Belum dijemput", "Sedang dijemput", "Sedang dikirim", "Selesai"],
+        enum: ["Belum dijemput", "Sedang dijemput", "Sudah dijemput", "Sedang dikirim", "Selesai"],
         message: "{VALUE} is not supported",
         required: [true, "status_distributor harus di isi"],
         default: "Belum dijemput"
