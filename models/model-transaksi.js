@@ -42,6 +42,13 @@ const modelTransaksi = new mongoose.Schema({
     },
     subsidi: {
         type: Boolean
+    },
+    jumlah: {
+        type: Number
+    },
+    userId:{
+        type: mongoose.Types.ObjectId,
+        ref: "User"
     }
 }, {timestamps: true});
 
@@ -60,6 +67,10 @@ const modelTransaksi2 = new mongoose.Schema({
     kode_transaksi:{
         type: String,
         required: true
+    },
+    userId:{
+        type: mongoose.Types.ObjectId,
+        ref: "User"
     }
 }, {timestamps: true});
 

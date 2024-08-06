@@ -117,6 +117,7 @@ module.exports = {
                     path: "produk_pengiriman.productId",
                     populate: "categoryId"
                 })
+                .populate("pengirimanId")
                 .populate('distributorId')
                 .lean()
 
