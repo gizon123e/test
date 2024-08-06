@@ -160,8 +160,6 @@ module.exports = {
                 nilai_komunikasi: parseInt(nilai_komunikasi.length)
             }
 
-            console.log()
-
             res.status(200).json({
                 message: "get all review",
                 data: {
