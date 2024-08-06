@@ -130,7 +130,7 @@ io.on("connection", (socket) => {
   socket.on('notif_pembayaran_berhasil', async(data) => {
     const {userId, ...rest} = data
     console.log(data)
-    to.io(userId).emit('notifikasi_pembayaran_berhasil', JSON.stringify({...rest}));
+    io.to(userId).emit('notifikasi_pembayaran_berhasil', JSON.stringify({...rest}));
   })
 });
 

@@ -30,6 +30,7 @@ const BiayaTetap = require('../models/model-biaya-tetap');
 const Pengemasan = require('../models/model-pengemasan');
 const { calculateDistance } = require('../utils/menghitungJarak');
 const ProsesPengirimanDistributor = require("../models/distributor/model-proses-pengiriman");
+const Distributtor = require("../models/distributor/model-distributor");
 dotenv.config();
 
 const now = new Date();
@@ -292,7 +293,12 @@ module.exports = {
                                     const rasioJasaAplikasi = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_jasa_aplikasi);
                                     const rasioBiayaLayanan = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_layanan);
                                     const jumlah = total_pesanan + rasioJasaAplikasi + rasioBiayaLayanan
-                                    data.push({...rest, status: "Berlangsung" , total_pesanan: jumlah, ...restOfStore})
+                                    data.push({
+                                        ...rest, 
+                                        status: store[key].status_pengiriman[0].isBuyerAccepted ? "Berhasil" : "Berlangsung" , 
+                                        total_pesanan: jumlah, 
+                                        ...restOfStore
+                                    })
                                 });
                             }
 
@@ -454,7 +460,17 @@ module.exports = {
                                 const rasio = totalHargaSubsidi / totalProductSubsidi
                                 jumlah +=  Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan)
                             }
-                            data.push({...rest, status , total_pesanan: total_pesanan + jumlah, status_pengiriman , ...restOfStore})
+                            const statusOrder = () => {
+                                const isAccepted = status_pengiriman.some(pgr => pgr.isBuyerAccepted);
+                                return isAccepted ? "Berhasil" : status;
+                            }
+                            data.push({
+                                ...rest, 
+                                status: statusOrder(), 
+                                total_pesanan: total_pesanan + jumlah, 
+                                status_pengiriman , 
+                                ...restOfStore
+                            })
                         });
                     }
                 }
@@ -671,11 +687,12 @@ module.exports = {
                             })
                         }
                     }
-                }
+                };
+
                 let filteredData = data.filter((dt)=>{
                     if(!status) return true
                     return dt.status === status
-                })
+                });
                 
 
                 return res.status(200).json({ message: 'get data all Order success', data: filteredData })
@@ -1919,6 +1936,7 @@ module.exports = {
                 datas: dataOrder,
                 nama,
                 paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
+                VirtualAccount,
                 total_tagihan,
                 transaksi: transaksiMidtrans? {
                     waktu: transaksiMidtrans.transaction_time,
@@ -2193,6 +2211,114 @@ module.exports = {
                 tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
             })
             return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",pengemasan})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    orderSuccess: async(req, res, next) => {
+        try {
+            const { pengirimanIds } = req.body;
+            const biayaTetap = await BiayaTetap.findOne({})
+            const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).lean();
+            const promisesFunction = []
+            let total_transaksi = await Transaksi.countDocuments({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
+            })
+            for(const shp of shipments){
+                const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
+                const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"});
+                for(prd of shp.productToDelivers){
+                    const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId)
+                    const user = await User.findById(selectedProduct.userId)
+                    if(inv){
+                        promisesFunction.push(
+                            Transaksi.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "masuk",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: selectedProduct.total_price * prd.quantity
+                            }),
+                            Transaksi.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "keluar",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: biayaTetap.fee_vendor
+                            }),
+
+                            Transaksi2.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "masuk",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: biayaTetap.fee_vendor
+                            }),
+
+                            Transaksi2.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "keluar",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: selectedProduct.total_price * prd.quantity
+                            }),
+
+                        )
+                    }
+                };
+                const distri = await Distributtor.findById(shp.distributorId).select("userId");
+                const user = await User.findById(distri.userId)
+                promisesFunction.push(
+                    Transaksi.create({
+                        id_pesanan: shp.orderId,
+                        jenis_transaksi: "masuk",
+                        status: "Pembayaran Berhasil",
+                        kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                        userId: user._id,
+                        jumlah: shp.total_ongkir
+                    }),
+                    Transaksi.create({
+                        id_pesanan: shp.orderId,
+                        jenis_transaksi: "keluar",
+                        status: "Pembayaran Berhasil",
+                        kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                        userId: user._id,
+                        jumlah: biayaTetap.fee_distributor
+                    }),
+
+                    Transaksi2.create({
+                        id_pesanan: shp.orderId,
+                        jenis_transaksi: "keluar",
+                        status: "Pembayaran Berhasil",
+                        kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                        userId: user._id,
+                        jumlah: shp.total_ongkir
+                    }),
+
+                    Transaksi2.create({
+                        id_pesanan: shp.orderId,
+                        jenis_transaksi: "masuk",
+                        status: "Pembayaran Berhasil",
+                        kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                        userId: user._id,
+                        jumlah: biayaTetap.fee_distributor
+                    }),
+                )
+            }
+            await Pengiriman.updateMany(
+                { _id: { $in: pengirimanIds} },
+                { isBuyerAccepted: true }
+            );
+            return res.status(200).json({message: "Berhasil menerima order"});
         } catch (error) {
             console.log(error);
             next(error)

@@ -52,7 +52,7 @@ const ModelPengemudi = new mongoose.Schema({
         type: String,
         required: [true, 'jenis_sim pengemudi harus diisi'],
     }
-})
+}, { timestamps: true })
 
 const Pengemudi = mongoose.model('Pengemudi', ModelPengemudi)
 

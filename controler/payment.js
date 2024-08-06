@@ -14,9 +14,30 @@ const salesReport = require('../utils/checkSalesReport');
 const { default: mongoose } = require('mongoose');
 const PembayaranInvoice = require('../models/model-pembayaran-invoice');
 const Notifikasi = require('../models/notifikasi/notifikasi')
-const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi')
+const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi');
+const { io } = require("socket.io-client");
 
 dotenv.config();
+
+const socket = io('http://localhost:5000', {
+    auth: {
+        fromServer: true
+    }
+});
+
+function formatTanggal(tanggal){
+    const dd = String(tanggal.getDate()).padStart(2, '0');
+    const mm = String(tanggal.getMonth() + 1).padStart(2, '0');
+    const yyyy = tanggal.getFullYear();
+    return `${yyyy}-${mm}-${dd}`
+}
+
+function formatWaktu(waktu){
+    const hh = String(waktu.getHours()).padStart(2, '0');
+    const mn = String(waktu.getMinutes()).padStart(2, '0');
+    const ss = String(waktu.getSeconds()).padStart(2, '0');
+    return `${hh}:${mn}:${ss}`
+}
 
 module.exports = {
     statusPayment: async (req, res, next) => {
@@ -151,7 +172,7 @@ module.exports = {
                         status: "Pembayaran berhasil",
                         userId: pesanan.userId,
                         message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
-                        image_product: pesanan.image_product[0],
+                        image_product: dataProd.dataProduct[0].image_product[0],
                         createdAt: new Date()
                     })
 
@@ -181,11 +202,11 @@ module.exports = {
                 await Transaksi.updateMany(
                     { _id: { $in: transaksiIds }},
                     { status: "Pembayaran Berhasil" }
-                )
+                );
                 await Invoice.updateMany(
                     { _id: { $in: pembayaranInvoice.invoiceIds } },
                     { status: "Lunas" }
-                )
+                );
             }
 
             return res.status(200).json({ message: "Mantap" })
