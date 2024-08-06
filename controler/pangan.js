@@ -141,7 +141,12 @@ module.exports = {
 
     getAllPangan: async (req, res, next) => {
         try {
+            const { page = 1, limit = 5 } = req.query;
+            const skip = (page - 1) * limit;
+
             const pangan = await Pangan.find()
+                .skip(skip)
+                .limit(parseInt(limit));
             if (!pangan) return res.status(400).json({ message: 'data saat ini masi kosong' })
 
             res.status(200).json({

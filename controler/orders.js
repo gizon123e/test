@@ -445,6 +445,7 @@ module.exports = {
                         Object.keys(store).forEach(key => {
                             let jumlah = 0
                             const {totalHargaSubsidi, totalHargaTambahan, status_pengiriman, total_pesanan, ...restOfStore} = store[key]
+                            
                             if(totalHargaTambahan > 0){
                                 const rasio = totalHargaTambahan / totalProductTambahan
                                 jumlah +=  Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan)

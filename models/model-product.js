@@ -19,6 +19,15 @@ const varianSchema = new mongoose.Schema({
       harga: {
         type: Number,
       },
+      bahan: {
+        type: mongoose.Types.ObjectId,
+        ref: "Pangan",
+        default: null
+      },
+      total_gram: {
+        type: Number,
+        default: 0
+      }
     },
   ],
 });
