@@ -90,7 +90,7 @@ module.exports = {
                     // today.setDate(today.getDate() + 7);
                     today.setHours(today.getHours() + 7)
                     today.setMinutes(today.getMinutes() + 15)
-                    console.log(today);
+                    // console.log(today);
                     
                     const now = new Date()
                     const notifikasi = await Notifikasi.findOne({userId: data.userId}).sort({createdAt: -1}).populate('invoiceId');
@@ -107,18 +107,16 @@ module.exports = {
                          })
 
                          socket.emit('notif_pesanan_dikemas', {
-                              userId: notifikasi.userId,
                               jenis: detailNotifikasi.jenis,
+                              userId: notifikasi.userId,
                               status: detailNotifikasi.status,
                               message: detailNotifikasi.message,
                               image: detailNotifikasi.image_product,
-                              waktu: formatWaktu(detailNotifikasi.createdAt),
+                              tanggal: formatWaktu(detailNotifikasi.createdAt),
                          })
                     }else {   
-                         console.log(`waktu sekarang: ${new Date(now.setSeconds(0))}`);   
-                         console.log(`waktu sekarang: ${now.setSeconds(0,0)}`);   
+                         console.log(`waktu sekarang: ${new Date(now.setSeconds(0))}`);
                          console.log(`waktu notif: ${new Date(waktuMunculNotif.setSeconds(0))}`)
-                         console.log(`waktu notif: ${waktuMunculNotif.setSeconds(0,0)}`)
                     }
                }
           }
