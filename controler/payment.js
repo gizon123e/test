@@ -181,11 +181,11 @@ module.exports = {
                 await Transaksi.updateMany(
                     { _id: { $in: transaksiIds }},
                     { status: "Pembayaran Berhasil" }
-                )
+                );
                 await Invoice.updateMany(
                     { _id: { $in: pembayaranInvoice.invoiceIds } },
                     { status: "Lunas" }
-                )
+                );
             }
 
             return res.status(200).json({ message: "Mantap" })

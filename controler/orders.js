@@ -2214,8 +2214,7 @@ module.exports = {
         try {
             const { pengirimanIds } = req.body
             const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).lean()
-            const invoice = await Invoice.find({_id: shipments.map(pgr => pgr.invoice)}).populate('id_transaksi').lean()
-            console.log(invoice)
+            const invoice = await Invoice.find({_id: shipments.map(pgr => pgr.invoice), status: "Lunas"}).populate('id_transaksi').lean();
             await Pengiriman.updateMany(
                 { _id: { $in: pengirimanIds} },
                 { isBuyerAccepted: true }
