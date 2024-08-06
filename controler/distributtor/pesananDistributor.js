@@ -39,18 +39,18 @@ module.exports = {
             }
 
             const datas = await Pengiriman.find(query)
-                .populate({
-                    path: "orderId",
-                    select: ['-items', '-dp', '-shipments'],
-                    populate: [
-                        { path: "addressId" },
-                        {
-                            path: "sekolahId",
-                            select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
-                            populate: "address"
-                        }
-                    ]
-                })
+                // .populate({
+                //     path: "orderId",
+                //     select: ['-items', '-dp', '-shipments'],
+                //     populate: [
+                //         { path: "addressId" },
+                //         {
+                //             path: "sekolahId",
+                //             select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
+                //             populate: "address"
+                //         }
+                //     ]
+                // })
                 .populate({
                     path: "distributorId",
                     select: ['-npwp', '-file_npwp', '-imageProfile', '-jenisPerusahaan', '-tanggal_lahir', '-tolak_pesanan', '-nilai_review', '-nilai_pinalti'],
@@ -88,7 +88,7 @@ module.exports = {
             const foundedProduct = {}
             for (let data of datas) {
                 const { productToDelivers, total_ongkir, potongan_ongkir, ...restOfShipment } = data
-                const storeId = `${data.id_toko._id.toString()}-${data.orderId}-${data._id}`
+                const storeId = `${data.id_toko._id.toString()}-${data.orderId._id.toString()}-${data._id}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
