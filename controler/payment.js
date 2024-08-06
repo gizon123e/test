@@ -190,7 +190,8 @@ module.exports = {
                             id_pesanan: pesanan._id,
                             jenis_transaksi: "masuk",
                             status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                            kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                            jumlah: gross_amount
                         })
                     )
 
