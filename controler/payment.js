@@ -150,7 +150,7 @@ module.exports = {
                         jenis: "Info",
                         status: "Pembayaran berhasil",
                         userId: pesanan.userId,
-                        message: `${invoiceTambahan.kode_invoice} senilai Rp. ${groos_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
+                        message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
                         image_product: pesanan.image_product[0],
                         createdAt: new Date()
                     })
@@ -181,11 +181,11 @@ module.exports = {
                 await Transaksi.updateMany(
                     { _id: { $in: transaksiIds }},
                     { status: "Pembayaran Berhasil" }
-                )
+                );
                 await Invoice.updateMany(
                     { _id: { $in: pembayaranInvoice.invoiceIds } },
                     { status: "Lunas" }
-                )
+                );
             }
 
             return res.status(200).json({ message: "Mantap" })

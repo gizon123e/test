@@ -43,6 +43,10 @@ const modelPengiriman = new mongoose.Schema({
             type: Number
         }
     }],
+    isBuyerAccepted: {
+        type: Boolean,
+        default: false
+    },
     status_pengiriman: {
         type: String,
         enum: ["diproses", "dikirim", "pesanan selesai"],

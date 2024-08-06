@@ -292,7 +292,12 @@ module.exports = {
                                     const rasioJasaAplikasi = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_jasa_aplikasi);
                                     const rasioBiayaLayanan = Math.round(totalHargaProduk / totalPriceVendor * order.biaya_layanan);
                                     const jumlah = total_pesanan + rasioJasaAplikasi + rasioBiayaLayanan
-                                    data.push({...rest, status: "Berlangsung" , total_pesanan: jumlah, ...restOfStore})
+                                    data.push({
+                                        ...rest, 
+                                        status: store[key].status_pengiriman[0].isBuyerAccepted ? "Berhasil" : "Berlangsung" , 
+                                        total_pesanan: jumlah, 
+                                        ...restOfStore
+                                    })
                                 });
                             }
 
@@ -454,7 +459,17 @@ module.exports = {
                                 const rasio = totalHargaSubsidi / totalProductSubsidi
                                 jumlah +=  Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan)
                             }
-                            data.push({...rest, status , total_pesanan: total_pesanan + jumlah, status_pengiriman , ...restOfStore})
+                            const statusOrder = () => {
+                                const isAccepted = status_pengiriman.some(pgr => pgr.isBuyerAccepted);
+                                return isAccepted ? "Berhasil" : status;
+                            }
+                            data.push({
+                                ...rest, 
+                                status: statusOrder(), 
+                                total_pesanan: total_pesanan + jumlah, 
+                                status_pengiriman , 
+                                ...restOfStore
+                            })
                         });
                     }
                 }
@@ -2189,6 +2204,22 @@ module.exports = {
                 tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
             })
             return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",pengemasan})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    orderSuccess: async(req, res, next) => {
+        try {
+            const { pengirimanIds } = req.body
+            const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).lean()
+            const invoice = await Invoice.find({_id: shipments.map(pgr => pgr.invoice), status: "Lunas"}).populate('id_transaksi').lean();
+            await Pengiriman.updateMany(
+                { _id: { $in: pengirimanIds} },
+                { isBuyerAccepted: true }
+            );
+            return res.status(200).json({message: "Berhasil menerima order"})
         } catch (error) {
             console.log(error);
             next(error)
