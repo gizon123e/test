@@ -39,18 +39,18 @@ module.exports = {
             }
 
             const datas = await Pengiriman.find(query)
-                // .populate({
-                //     path: "orderId",
-                //     select: ['-items', '-dp', '-shipments'],
-                //     populate: [
-                //         { path: "addressId" },
-                //         {
-                //             path: "sekolahId",
-                //             select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
-                //             populate: "address"
-                //         }
-                //     ]
-                // })
+                .populate({
+                    path: "orderId",
+                    select: ['-items', '-dp', '-shipments'],
+                    populate: [
+                        { path: "addressId" },
+                        {
+                            path: "sekolahId",
+                            select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
+                            populate: "address"
+                        }
+                    ]
+                })
                 .populate({
                     path: "distributorId",
                     select: ['-npwp', '-file_npwp', '-imageProfile', '-jenisPerusahaan', '-tanggal_lahir', '-tolak_pesanan', '-nilai_review', '-nilai_pinalti'],
