@@ -4,5 +4,6 @@ const controlerReviewDistributor = require('../../controler/distributtor/reviewD
 
 router.get('/list', controlerReviewDistributor.getAllReviewDistributor)
 router.post('/create', authorization, controlerReviewDistributor.createReviewDistributor)
+router.post('/tidak-review', authorization, controlerReviewDistributor.createNonReview)
 
 module.exports = router
