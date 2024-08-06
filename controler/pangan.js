@@ -144,14 +144,20 @@ module.exports = {
             const { page = 1, limit = 5, jenis_pangan } = req.query;
             const skip = (page - 1) * limit;
 
+            const totalItems = await Pangan.countDocuments({ jenis_pangan });
+
             const pangan = await Pangan.find({ jenis_pangan })
                 .skip(skip)
                 .limit(parseInt(limit));
             if (!pangan) return res.status(400).json({ message: 'data saat ini masi kosong' })
+            const totalPages = Math.ceil(totalItems / limit);
 
             res.status(200).json({
                 message: "get All data success",
-                datas: pangan
+                datas: pangan,
+                totalPages: totalPages, // Menambahkan total halaman
+                currentPage: page, // Menambahkan halaman saat ini
+                totalItems: totalItems
             })
 
         } catch (error) {
