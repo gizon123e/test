@@ -775,7 +775,7 @@ module.exports = {
                 const dataProd = await DataProductOrder.findOne({pesananId: order._id});
                 const transaksiSubsidi = await Transaksi.findOne({id_pesanan: order._id, subsidi: true});
                 const transaksiTambahan = await Transaksi.findOne({id_pesanan: order._id, subsidi: false});
-                const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi._id});
+                const invoiceSubsidi = await Invoice.findOne({id_transaksi: transaksiSubsidi?._id});
                 const invoiceTambahan = await Invoice.findOne({id_transaksi: transaksiTambahan?._id, status:"Lunas"});
                 const pengiriman = await Pengiriman.find({orderId: order._id, sellerApproved: false}).populate("distributorId").lean();
                 let detailToko;
@@ -785,7 +785,7 @@ module.exports = {
                 for(const item of order.items){
                     
                     let isApproved = item.isApproved
-                    const productSelected = dataProd.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
+                    const productSelected = dataProd?.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
                     if(!kode_pesanan.has(item.kode_pesanan)){
                         kode_pesanan.add(item.kode_pesanan)
                     }
@@ -1589,7 +1589,7 @@ module.exports = {
                 })
                 
 
-                const detailInvoice = await DetailNotifikasi.create({
+                const detailNotifikasi = await DetailNotifikasi.create({
                     notifikasiId: notifikasi._id,
                     jenis: "Info",
                     status: "Pesanan Makanan Bergizi Gratis telah berhasil",
@@ -1599,12 +1599,12 @@ module.exports = {
                 })
                     
                 socket.emit('notif_pesanan_berhasil', {
-                    jenis: detailInvoice.jenis,
+                    jenis: detailNotifikasi.jenis,
                     userId: user._id,
-                    message: detailInvoice.message,
-                    status: detailInvoice.status,
-                    image: detailInvoice.image_product,
-                    tanggal: `${formatTanggal(detailInvoice.createdAt)}`,
+                    status: detailNotifikasi.status,
+                    message: detailNotifikasi.message,
+                    image: detailNotifikasi.image_product,
+                    tanggal: `${formatTanggal(detailNotifikasi.createdAt)}`,
                 });
 
             } else if (totalQuantity > sekolah.jumlahMurid) {
@@ -1900,8 +1900,8 @@ module.exports = {
                 })
                 
                 socket.emit("notif_selesaikan_pembayaran", {
-                    userId: user._id,
                     jenis: detailNotifNonSubsidi.jenis,
+                    userId: user._id,
                     status: detailNotifNonSubsidi.status,
                     message: detailNotifNonSubsidi.message,
                     image: detailNotifNonSubsidi.image_product,
@@ -2094,12 +2094,12 @@ module.exports = {
             for (const item of productIds){
                 const product = await Product.findById(item);
                 socket.emit('notif_pesanan_selesai', {
-                    jenis: 'pesanan',
+                    jenis: 'Pesanan',
                     userId: pesanan.userId,
+                    status: 'Pesanan telah selesai',
                     message: `Pesanan ${product.name_product} telah selesai`,
                     image: product.image_product[0],
-                    status: 'pesanan telah selesai',
-                    waktu: `${new Date().toLocaleTimeString('en-GB')}`
+                    tanggal: `${new Date().toLocaleTimeString('en-GB')}`
                 });
             }
 
@@ -2186,7 +2186,7 @@ module.exports = {
                 status: detailNotifikasi.status,
                 message: detailNotifikasi.message,
                 image: detailNotifikasi.image_product,
-                Waktu: `${formatWaktu(detailNotifikasi.createdAt)}`
+                tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
             })
             return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",pengemasan})
         } catch (error) {

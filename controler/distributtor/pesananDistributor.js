@@ -407,20 +407,20 @@ module.exports = {
 
                         socket.emit('notif_pesanan_dikirim', {
                             jenis: detailNotifikasiSubsidi.jenis,
-                            status: detailNotifikasiSubsidi.status,
                             userId: notifikasiSubsidi.userId,
+                            status: detailNotifikasiSubsidi.status,
                             message: detailNotifikasiSubsidi.message,
                             image: detailNotifikasiSubsidi.image_product,
-                            waktu: formatTanggal(detailNotifikasiSubsidi.createdAt)
+                            tanggal: formatTanggal(detailNotifikasiSubsidi.createdAt)
                         })
 
                         socket.emit('notif_pesanan_dikirim', {
                             jenis: detailNotifikasiTambahan.jenis,
-                            status: detailNotifikasiTambahan.status,
                             userId: notifikasiTambahan.userId,
+                            status: detailNotifikasiTambahan.status,
                             message: detailNotifikasiTambahan.message,
                             image: detailNotifikasiTambahan.image_product,
-                            waktu:  formatTanggal(detailNotifikasiTambahan.createdAt)
+                            tanggal: formatTanggal(detailNotifikasiTambahan.createdAt)
                         })
                     }
                     const notifikasiSubsidi = await Notifikasi.findOne({userId: dataPengiriman.orderId.userId, jenis_invoice: "Subsidi"}).sort({createdAt: -1})
@@ -437,11 +437,11 @@ module.exports = {
 
                     socket.emit('notif_pesanan_dikirim', {
                         jenis: detailNotifikasiSubsidi.jenis,
-                        status: detailNotifikasiSubsidi.status,
                         userId: notifikasiSubsidi.userId,
+                        status: detailNotifikasiSubsidi.status,
                         message: detailNotifikasiSubsidi.message,
                         image: detailNotifikasiSubsidi.image_product,
-                        waktu: formatTanggal(detailNotifikasiSubsidi.createdAt)
+                        tanggal: formatTanggal(detailNotifikasiSubsidi.createdAt)
                     })
                 }
 
