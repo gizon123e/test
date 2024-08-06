@@ -86,11 +86,12 @@ module.exports = {
                     const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
                     
                     const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
-                    var today = new Date();
-                    // today.setDate(today.getDate() + 7);
+
+                    const today = new Date()
+                    // today.setDate(today.getDate() + 7)
                     today.setHours(today.getHours() + 7)
-                    today.setMinutes(today.getMinutes() + 15)
-                    // console.log(today);
+                    today.setMinutes(today.getMinutes() + 20)
+                    console.log(today)
                     
                     const now = new Date()
                     const notifikasi = await Notifikasi.findOne({userId: data.userId}).sort({createdAt: -1}).populate('invoiceId');
@@ -112,7 +113,7 @@ module.exports = {
                               status: detailNotifikasi.status,
                               message: detailNotifikasi.message,
                               image: detailNotifikasi.image_product,
-                              tanggal: formatWaktu(detailNotifikasi.createdAt),
+                              tanggal: formatTanggal(detailNotifikasi.createdAt),
                          })
                     }else {   
                          console.log(`waktu sekarang: ${new Date(now.setSeconds(0))}`);

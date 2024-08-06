@@ -87,13 +87,6 @@ io.on("connection", (socket) => {
     console.log(data)
     io.to(userId).emit('notifikasi_order', JSON.stringify({...rest}))
   })
-
-  socket.on('notif_pesanan_diterima', async(data) => {
-    const {userId, ...rest} = data
-    console.log(data)
-    io.to(userId).emit('notifikasi_pesanan_diterima', JSON.stringify({...rest}));
-  })
-
   socket.on('notif_pesanan_selesai', async(data) => {
     const {userId, ...rest} = data
     console.log(data)
@@ -119,10 +112,20 @@ io.on("connection", (socket) => {
     console.log(data)
     io.to(userId).emit('notifikasi_pesanan_dikemas', JSON.stringify({...rest}))
   })
+  socket.on('notif_pesanan_diserahkan', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_pesanan_diserahkan', JSON.stringify({...rest}))
+  })
   socket.on('notif_pesanan_dikirim', async(data) => {
     const {userId, ...rest} = data
     console.log(data)
     io.to(userId).emit('notifikasi_pesanan_dikirim', JSON.stringify({...rest}))
+  })
+  socket.on('notif_pesanan_diterima', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_pesanan_diterima', JSON.stringify({...rest}));
   })
   socket.on('notif_pembayaran_berhasil', async(data) => {
     const {userId, ...rest} = data

@@ -2,6 +2,26 @@ const ProsesPengirimanDistributor = require("../../models/distributor/model-pros
 const Pengiriman = require('../../models/model-pengiriman')
 const PelacakanDistributorKonsumen = require('../../models/distributor/pelacakanDistributorKonsumen')
 const Distributtor = require('../../models/distributor/model-distributor')
+const {Transaksi} = require('../../models/model-transaksi')
+const Invoice = require('../../models/model-invoice')
+const Notifikasi = require('../../models/notifikasi/notifikasi')
+const DetailNotifikasi = require('../../models/notifikasi/detail-notifikasi')
+const mongoose = require('mongoose')
+
+const { io } = require("socket.io-client");
+
+const socket = io('http://localhost:5000', {
+    auth: {
+        fromServer: true
+    }
+})
+
+function formatTanggal(tanggal){
+    const dd = String(tanggal.getDate()).padStart(2, '0');
+    const mm = String(tanggal.getMonth() + 1).padStart(2, '0');
+    const yyyy = tanggal.getFullYear();
+    return `${yyyy}-${mm}-${dd}`
+}
 
 module.exports = {
     getAllProsesPengiriman: async (req, res, next) => {
@@ -84,8 +104,37 @@ module.exports = {
     sudahDiJemput: async(req, res, next) => {
         try {
             const distri = await Distributtor.exists({userId: req.user.id})
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Sudah dijemput"}, {new: true});
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Sudah dijemput"}, {new: true}).populate('pengirimanId').populate('produk_pengiriman.productId');
+            const transaksi = await Transaksi.aggregate([
+                { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
+                { $lookup: {
+                    from: "invoices",
+                    let: { id_transaksi: "$_id" },
+                    pipeline: [ {$match: { $expr: { $eq: ["$id_transaksi", "$$id_transaksi"] } } } ],
+                    as: 'invoice'
+                }
+                },
+                { $unwind: "$invoice" }
+            ])
             if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            const notifikasi = await Notifikasi.findOne({invoiceId: transaksi[0].invoice._id})
+            const detailNotifikasi = await DetailNotifikasi.create({
+                notifikasiId: notifikasi._id,
+                status: "Pesanan telah diserahkan ke jasa pengiriman",
+                jenis: "Pesanan",
+                message: `${transaksi[0].invoice.kode_invoice} telah diserahkan ke jasa pengiriman dan akan segera diantar menuju alamat tujuan`,
+                image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+                createdAt: new Date()
+
+            })
+            socket.emit('notif_pesanan_diserahkan', {
+                jenis: detailNotifikasi.jenis,
+                userId: notifikasi.userId,
+                status: detailNotifikasi.status,
+                message: detailNotifikasi.message,
+                image: detailNotifikasi.image_product,
+                tanggal: formatTanggal(detailNotifikasi.createdAt)
+            })
             return res.status(200).json({message: "Berhasil Menerima Penjemputan"});
         } catch (error) {
             console.log(error);
@@ -96,7 +145,37 @@ module.exports = {
     mulaiPengiriman: async(req, res, next) => {
         try {
             const distri = await Distributtor.exists({userId: req.user.id})
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Sedang dikirim"}, {new: true});
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Sedang dikirim"}, {new: true}).populate('pengirimanId').populate('produk_pengiriman.productId');
+            const transaksi = await Transaksi.aggregate([
+                { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
+                { $lookup: {
+                    from: "invoices",
+                    let: { id_transaksi: "$_id" },
+                    pipeline: [ {$match: { $expr: { $eq: ["$id_transaksi", "$$id_transaksi"] } } } ],
+                    as: 'invoice'
+                }
+                },
+                { $unwind: "$invoice" }
+            ])
+            if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            const notifikasi = await Notifikasi.findOne({invoiceId: transaksi[0].invoice._id})
+            const detailNotifikasi = await DetailNotifikasi.create({
+                notifikasiId: notifikasi._id,
+                status: "Pesanan sedang dalam pengiriman",
+                jenis: "Pesanan",
+                message: `${transaksi[0].invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
+                image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+                createdAt: new Date()
+
+            })
+            socket.emit('notif_pesanan_dikirim', {
+                jenis: detailNotifikasi.jenis,
+                userId: notifikasi.userId,
+                status: detailNotifikasi.status,
+                message: detailNotifikasi.message,
+                image: detailNotifikasi.image_product,
+                tanggal: formatTanggal(detailNotifikasi.createdAt)
+            })  
             if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
             return res.status(200).json({message: "Berhasil Memulai Pengiriman"});
         } catch (error) {
@@ -107,14 +186,46 @@ module.exports = {
 
     pesasanSelesai: async(req, res, next) => {
         try {
-            // const { bukti_pengiriman } = req.files
             const distri = await Distributtor.exists({userId: req.user.id})
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Selesai"}, {new: true});
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Selesai"}, {new: true}).populate('pengirimanId').populate('produk_pengiriman.productId');
             if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            
             await Pengiriman.updateOne(
                 { _id: prosesPengiriman.pengirimanId },
                 { status_pengiriman: "pesanan selesai" }
             )
+            
+            const transaksi = await Transaksi.aggregate([
+                { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
+                { $lookup: {
+                    from: "invoices",
+                    let: { id_transaksi: "$_id" },
+                    pipeline: [ {$match: { $expr: { $eq: ["$id_transaksi", "$$id_transaksi"] } } } ],
+                    as: 'invoice'
+                }
+                },
+                { $unwind: "$invoice" }
+            ])
+            if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            const notifikasi = await Notifikasi.findOne({invoiceId: transaksi[0].invoice._id})
+            const detailNotifikasi = await DetailNotifikasi.create({
+                notifikasiId: notifikasi._id,
+                status: "Pesanan telah diterima oleh konsumen",
+                jenis: "Pesanan",
+                message: `${transaksi[0].invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
+                image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+                createdAt: new Date()
+
+            })
+            socket.emit('notif_pesanan_diterima', {
+                jenis: detailNotifikasi.jenis,
+                userId: notifikasi.userId,
+                status: detailNotifikasi.status,
+                message: detailNotifikasi.message,
+                image: detailNotifikasi.image_product,
+                tanggal: formatTanggal(detailNotifikasi.createdAt)
+            })  
+            
             return res.status(200).json({message: "Berhasil Menyelesaikan Pengiriman"});
         } catch (error) {
             console.log(error);

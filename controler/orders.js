@@ -1339,6 +1339,10 @@ module.exports = {
 
     createOrder: async (req, res, next) => {
         try {
+            // const today = new Date()
+            // today.setDate(today.getDate() + 7)
+            // today.setMinutes(today.getMinutes() + 6)
+            // console.log(today)
             const {
                 metode_pembayaran,
                 total,
@@ -1404,7 +1408,7 @@ module.exports = {
                 VirtualAccount = await VA.findById(splitted[0]);
                 if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
                 idPay = va_user.nama_bank._id,
-                    nama = va_user.nama_virtual_account
+                nama = va_user.nama_virtual_account
             } else {
                 paymentNumber = "123"
             }
@@ -1894,7 +1898,7 @@ module.exports = {
                     notifikasiId: notifikasiNonSubsidi._id,
                     jenis: "Info",
                     status: "Selesaikan pembayaranmu",
-                    message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera seleasikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`, 
+                    message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera selesaikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`, 
                     image_product: productNotif.image_product[0],
                     createdAt: new Date() 
                 })
