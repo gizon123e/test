@@ -79,5 +79,46 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+
+    sudahDiJemput: async(req, res, next) => {
+        try {
+            const distri = await Distributtor.exists({userId: req.user.id})
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Sudah dijemput"}, {new: true});
+            if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            return res.status(200).json({message: "Berhasil Menerima Penjemputan"});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    mulaiPengiriman: async(req, res, next) => {
+        try {
+            const distri = await Distributtor.exists({userId: req.user.id})
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Sedang dikirim"}, {new: true});
+            if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            return res.status(200).json({message: "Berhasil Memulai Pengiriman"});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    pesasanSelesai: async(req, res, next) => {
+        try {
+            // const { bukti_pengiriman } = req.files
+            const distri = await Distributtor.exists({userId: req.user.id})
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Selesai"}, {new: true});
+            if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
+            await Pengiriman.updateOne(
+                { _id: prosesPengiriman.pengirimanId },
+                { status_pengiriman: "pesanan selesai" }
+            )
+            return res.status(200).json({message: "Berhasil Menyelesaikan Pengiriman"});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }

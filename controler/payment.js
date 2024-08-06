@@ -13,6 +13,8 @@ const Product = require('../models/model-product');
 const salesReport = require('../utils/checkSalesReport');
 const { default: mongoose } = require('mongoose');
 const PembayaranInvoice = require('../models/model-pembayaran-invoice');
+const Notifikasi = require('../models/notifikasi/notifikasi')
+const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi')
 
 dotenv.config();
 
@@ -39,7 +41,7 @@ module.exports = {
 
     midtransWebHook: async (req, res, next) => {
         try {
-            const { order_id, transaction_status } = req.body;
+            const { order_id, transaction_status, gross_amount} = req.body;
             const detailPesanan = await DetailPesanan.findById(order_id);
             const pembayaranInvoice = await PembayaranInvoice.findById(order_id)
             if(detailPesanan){
@@ -141,6 +143,26 @@ module.exports = {
                             $lt: tomorrow
                         }
                     });
+
+                    const notifikasi = await Notifikasi.findOne({userId: pesanan.userId, jenis_invoice: "Non Subsidi"}).sort({createdAt: -1})
+                    const detailNotifikasi = await DetailNotifikasi.create({
+                        notifikasiId: notifikasi._id,
+                        jenis: "Info",
+                        status: "Pembayaran berhasil",
+                        userId: pesanan.userId,
+                        message: `${invoiceTambahan.kode_invoice} senilai Rp. ${groos_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
+                        image_product: pesanan.image_product[0],
+                        createdAt: new Date()
+                    })
+
+                    socket.emit('notif_pembayaran_berhasil', {
+                        jenis: detailNotifikasi.jenis,
+                        userId: notifikasi.userId,
+                        status: detailNotifikasi.status,
+                        message: detailNotifikasi.message,
+                        image: detailNotifikasi.image_product,
+                        tanggal: formatWaktu(detailNotifikasi.createdAt)
+                    })
 
                     promisesFunct.push(
                         Transaksi2.create({
