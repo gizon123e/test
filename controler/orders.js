@@ -686,11 +686,12 @@ module.exports = {
                             })
                         }
                     }
-                }
+                };
+
                 let filteredData = data.filter((dt)=>{
                     if(!status) return true
                     return dt.status === status
-                })
+                });
                 
 
                 return res.status(200).json({ message: 'get data all Order success', data: filteredData })
@@ -1930,6 +1931,7 @@ module.exports = {
                 datas: dataOrder,
                 nama,
                 paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
+                VirtualAccount,
                 total_tagihan,
                 transaksi: transaksiMidtrans? {
                     waktu: transaksiMidtrans.transaction_time,
@@ -2212,14 +2214,23 @@ module.exports = {
 
     orderSuccess: async(req, res, next) => {
         try {
-            const { pengirimanIds } = req.body
-            const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).lean()
-            const invoice = await Invoice.find({_id: shipments.map(pgr => pgr.invoice), status: "Lunas"}).populate('id_transaksi').lean();
+            const { pengirimanIds } = req.body;
+            const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).lean();
+            for(const shp of shipments){
+                const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
+                for(prd of shp.productToDelivers){
+                    const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId)
+                    const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"});
+                    if(inv){
+                        
+                    }
+                }
+            }
             await Pengiriman.updateMany(
                 { _id: { $in: pengirimanIds} },
                 { isBuyerAccepted: true }
             );
-            return res.status(200).json({message: "Berhasil menerima order"})
+            return res.status(200).json({message: "Berhasil menerima order"});
         } catch (error) {
             console.log(error);
             next(error)
