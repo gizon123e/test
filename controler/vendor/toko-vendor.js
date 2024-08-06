@@ -117,6 +117,7 @@ module.exports = {
                     path: "produk_pengiriman.productId",
                     populate: "categoryId"
                 })
+                .populate('distributorId')
                 .lean()
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
