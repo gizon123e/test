@@ -125,6 +125,10 @@ module.exports = {
                     if(status_distributor === "Sedang dijemput"){
                         return "Menunggu penjemputan"
                     }
+
+                    if(status_distributor === 'Selesai'){
+                        return 'telah diterima konsumen'
+                    }
                 }
                 return {
                     ...restOfPgr,

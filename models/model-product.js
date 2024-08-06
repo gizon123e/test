@@ -3,7 +3,6 @@ const Carts = require("./model-cart");
 const Pesanan = require("./pesanan/model-orders");
 const DetailPesanan = require("./model-detail-pesanan");
 const VirtualAccountUser = require("./model-user-va");
-const { EventEmitterAsyncResource } = require("nodemailer/lib/xoauth2");
 
 const varianSchema = new mongoose.Schema({
   _id: false,
