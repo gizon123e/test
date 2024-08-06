@@ -14,7 +14,8 @@ router.post('/create', authorization, notEmptyDetailData, controlerOrder.createO
 router.put("/update_status", authorization, emptyData, controlerOrder.update_status)
 router.put("/update_pengiriman/:id", authorization, controlerOrder.update_shipments)
 router.put("/cancel", authorization, emptyData, controlerOrder.cancelOrder);
-router.put('/confirm', authorization, controlerOrder.confirmOrder)
+router.put('/confirm', authorization, controlerOrder.confirmOrder);
+router.put('/pesanan-terkonfirmasi', authorization, controlerOrder.orderSuccess);
 router.delete('/delete/:id', authorization, controlerOrder.deleteOrder)
 
 module.exports = router
