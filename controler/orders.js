@@ -2171,7 +2171,7 @@ module.exports = {
             const waktuPengiriman = (jarakTempuh / avgKecepatan) * 3600;
             const waktuPengemasan = (totalQuantity * avgPengemasan) * 60;
 
-            const totalPengemasanPengiriman = waktuPengemasan + waktuPengiriman
+            let totalPengemasanPengiriman = waktuPengemasan + waktuPengiriman
 
             if(totalPengemasanPengiriman > maxPengemasanPengiriman){
                 totalPengemasanPengiriman = maxPengemasanPengiriman
