@@ -16,6 +16,8 @@ const PembayaranInvoice = require('../models/model-pembayaran-invoice');
 const Notifikasi = require('../models/notifikasi/notifikasi')
 const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi');
 const { io } = require("socket.io-client");
+const BiayaTetap = require('../models/model-biaya-tetap');
+const Distributtor = require('../models/distributor/model-distributor');
 
 dotenv.config();
 
@@ -24,6 +26,22 @@ const socket = io('http://localhost:5000', {
         fromServer: true
     }
 });
+
+const now = new Date();
+now.setHours(0, 0, 0, 0);
+const tomorrow = new Date(now);
+tomorrow.setDate(now.getDate() + 1);
+const today = new Date();
+
+const dd = String(today.getDate()).padStart(2, '0');
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const yyyy = today.getFullYear();
+
+const hh = String(today.getHours()).padStart(2, '0');
+const mn = String(today.getMinutes()).padStart(2, '0');
+const ss = String(today.getSeconds()).padStart(2, '0');
+const date = `${yyyy}${mm}${dd}`;
+const minutes = `${hh}${mn}${ss}`;
 
 function formatTanggal(tanggal){
     const dd = String(tanggal.getDate()).padStart(2, '0');
@@ -65,6 +83,15 @@ module.exports = {
             const { order_id, transaction_status, gross_amount} = req.body;
             const detailPesanan = await DetailPesanan.findById(order_id);
             const pembayaranInvoice = await PembayaranInvoice.findById(order_id)
+            const promisesFunct = []
+            const biayaTetap = await BiayaTetap.findOne({}).lean()
+            let total_transaksi = await Transaksi.estimatedDocumentCount({
+                createdAt: {
+                    $gte: now,
+                    $lt: tomorrow
+                }
+            });
+
             if(detailPesanan){
                 let pesanan;
                 let user;
@@ -82,7 +109,6 @@ module.exports = {
                 const ss = String(today.getSeconds()).padStart(2, '0');
                 const date = `${yyyy}${mm}${dd}`;
                 const minutes = `${hh}${mn}${ss}`
-                const promisesFunct = []
                 if (transaction_status === "settlement") {
                     pesanan = await Pesanan.findById(detailPesanan.id_pesanan).lean();
                     const { items, ...restOfOrder } = pesanan;
@@ -158,13 +184,6 @@ module.exports = {
                         
                     )
 
-                    const total_transaksi = await Transaksi.estimatedDocumentCount({
-                        createdAt: {
-                            $gte: now,
-                            $lt: tomorrow
-                        }
-                    });
-
                     const notifikasi = await Notifikasi.findOne({userId: pesanan.userId, jenis_invoice: "Non Subsidi"}).sort({createdAt: -1})
                     const detailNotifikasi = await DetailNotifikasi.create({
                         notifikasiId: notifikasi._id,
@@ -194,22 +213,145 @@ module.exports = {
                             jumlah: gross_amount
                         })
                     )
-
-                    await Promise.all(promisesFunct)
                 }
             }else if(pembayaranInvoice){
                 const invoices = await Invoice.find({_id: {$in: pembayaranInvoice.invoiceIds}}).lean();
                 const transaksiIds = invoices.map(inv => inv.id_transaksi);
+                const shipments = await Pengiriman.find({invoice: { $in: pembayaranInvoice.invoiceIds }}).populate({
+                    path: "invoice",
+                    populate:{
+                        path: "id_transaksi"
+                    }
+                }).lean();
+                const countedSeller = new Set()
+                const addedInv = new Set()
+                console.log(pembayaranInvoice)
+                for(const shp of shipments){
+                    const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
+                    console.log(shp.isBuyerAccepted)
+                    for(prd of shp.productToDelivers){
+                        const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId)
+                        const user = await User.findById(selectedProduct.userId)
+                        if(shp.isBuyerAccepted){
+                            promisesFunct.push(
+                                Transaksi.create({
+                                    id_pesanan: shp.orderId,
+                                    jenis_transaksi: "masuk",
+                                    status: "Pembayaran Berhasil",
+                                    kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                                    userId: user._id,
+                                    jumlah: selectedProduct.total_price * prd.quantity
+                                }),
+                                Transaksi2.create({
+                                    id_pesanan: shp.orderId,
+                                    jenis_transaksi: "keluar",
+                                    status: "Pembayaran Berhasil",
+                                    kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                    userId: user._id,
+                                    jumlah: selectedProduct.total_price * prd.quantity
+                                }),
+    
+                            )
+                            
+                            if(!countedSeller.has(user._id.toString())){
+                                Transaksi.create({
+                                    id_pesanan: shp.orderId,
+                                    jenis_transaksi: "keluar",
+                                    status: "Pembayaran Berhasil",
+                                    kode_transaksi: `TRX_${user.get('kode_role')}_OUT_PRH_${date}_${minutes}_${total_transaksi + 1}`,
+                                    userId: user._id,
+                                    jumlah: biayaTetap.fee_vendor
+                                }),
+                                
+                                Transaksi2.create({
+                                    id_pesanan: shp.orderId,
+                                    jenis_transaksi: "masuk",
+                                    status: "Pembayaran Berhasil",
+                                    kode_transaksi: `TRX_PRH_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                    userId: user._id,
+                                    jumlah: biayaTetap.fee_vendor
+                                }),
+    
+                                countedSeller.add(user._id.toString())
+                            }
+    
+                            if(!addedInv.has(shp.invoice._id.toString())){
+                                Transaksi2.create({
+                                    id_pesanan: shp.orderId,
+                                    jenis_transaksi: "masuk",
+                                    status: "Pembayaran Berhasil",
+                                    kode_transaksi: `TRX_SYS_OUT_PRH_${date}_${minutes}_${total_transaksi + 1}`,
+                                    userId: user._id,
+                                    jumlah: shp.invoice.id_transaksi.detailBiaya.biaya_layanan + shp.invoice.id_transaksi.detailBiaya.biaya_jasa_aplikasi
+                                });
+                                addedInv.add(shp.invoice._id.toString())
+                            }
+                        }
+                    };
+                    if(shp.isBuyerAccepted){
+                        const distri = await Distributtor.findById(shp.distributorId).select("userId");
+                        const user = await User.findById(distri.userId)
+                        promisesFunct.push(
+                            Transaksi.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "masuk",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: shp.total_ongkir
+                            }),
+                            Transaksi.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "keluar",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: biayaTetap.fee_distributor
+                            }),
+    
+                            Transaksi2.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "keluar",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: shp.total_ongkir
+                            }),
+    
+                            Transaksi2.create({
+                                id_pesanan: shp.orderId,
+                                jenis_transaksi: "masuk",
+                                status: "Pembayaran Berhasil",
+                                kode_transaksi: `TRX_SYS_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`,
+                                userId: user._id,
+                                jumlah: biayaTetap.fee_distributor
+                            }),
+                        )
+                    }
+                };
+
+                promisesFunct.push(
+                    Transaksi2.create({
+                        id_pesanan: pembayaranInvoice,
+                        jenis_transaksi: "masuk",
+                        status: "Pembayaran Berhasil",
+                        kode_transaksi: `TRX_SYS_IN_KNS_${date}_${minutes}_${total_transaksi + 1}`,
+                        jumlah: gross_amount,
+                        subsidi: true
+                    })
+                );
+
                 await Transaksi.updateMany(
                     { _id: { $in: transaksiIds }},
                     { status: "Pembayaran Berhasil" }
                 );
+
                 await Invoice.updateMany(
                     { _id: { $in: pembayaranInvoice.invoiceIds } },
                     { status: "Lunas" }
                 );
             }
-
+            await Promise.all(promisesFunct)
             return res.status(200).json({ message: "Mantap" })
         } catch (error) {
             console.log(error)
