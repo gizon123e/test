@@ -13,14 +13,14 @@ const { Transaksi } = require('../../models/model-transaksi')
 const { calculateDistance } = require('../../utils/menghitungJarak');
 const Invoice = require("../../models/model-invoice");
 
-function formatTanggal(tanggal){
+function formatTanggal(tanggal) {
     const dd = String(tanggal.getDate()).padStart(2, '0');
     const mm = String(tanggal.getMonth() + 1).padStart(2, '0');
     const yyyy = tanggal.getFullYear();
     return `${yyyy}-${mm}-${dd}`
 }
 
-function formatWaktu(waktu){
+function formatWaktu(waktu) {
     const hh = String(waktu.getHours()).padStart(2, '0');
     const mn = String(waktu.getMinutes()).padStart(2, '0');
     const ss = String(waktu.getSeconds()).padStart(2, '0');
@@ -293,7 +293,7 @@ module.exports = {
             const { id_toko, distributorId, orderId, kode_pengiriman, status, id_pengiriman } = req.body
             if (!status) return res.status(400).json({ message: 'status harus di isi' })
 
-            const dataPengiriman = await Pengiriman.findOne({_id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
+            const dataPengiriman = await Pengiriman.findOne({ _id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
                 .populate({
                     path: "orderId",
                     populate: "addressId"
@@ -356,12 +356,7 @@ module.exports = {
                         path: "categoryId"
                     }
                 })
-
-            const socket = io('http://localhost:5000', {
-                auth: {
-                    fromServer: true
-                }
-            })
+                
             const prodIds = payLoadDataPengiriman.flatMap(pgr => {
                 return pgr.productToDelivers.map(item => item.productId);
             });
@@ -375,77 +370,6 @@ module.exports = {
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
-                
-                const kodeInvSubsidi = invoiceSubsidi.kode_invoice
-                let kodeInvTamabahan
-                if(invoiceTambahan){
-                    kodeInvTamabahan = invoiceTambahan.kode_invoice
-                }
-                
-                for (const product of products) {
-                    if(kodeInvTamabahan){
-                        const notifikasiSubsidi = await Notifikasi.findOne({userId: dataPengiriman.orderId.userId, jenis_invoice: "Subsidi"}).sort({createdAt: -1})
-                        const notifikasiTambahan = await Notifikasi.findOne({userId: dataPengiriman.orderId.userId, jenis_invoice: "Non Subsidi"}).sort({createdAt: -1})
-
-                        const detailNotifikasiSubsidi = await DetailNotifikasi.create({
-                            notifikasiId: notifikasiSubsidi._id,
-                            userId: notifikasiSubsidi.userId,
-                            status: "Pesanan sedang dalam pengiriman",
-                            message: `${kodeInvSubsidi} sedang dalam perjalanan ke alamat tujuan`,
-                            jenis: "Pesanan",
-                            image_product: product.image_product[0],
-                            createdAt: new Date()
-                        })
-
-                        const detailNotifikasiTambahan = await DetailNotifikasi.create({
-                            notifikasiId: notifikasiTambahan._id, 
-                            userId: notifikasiTambahan.userId,
-                            status: "Pesanan sedang dalam pengiriman",
-                            message: `${kodeInvTamabahan} sedang dalam perjalanan ke alamat tujuan`,
-                            jenis: "Pesanan",
-                            image_product: product.image_product[0],
-                            createdAt: new Date()
-                        })
-
-                        socket.emit('notif_pesanan_dikirim', {
-                            jenis: detailNotifikasiSubsidi.jenis,
-                            userId: notifikasiSubsidi.userId,
-                            status: detailNotifikasiSubsidi.status,
-                            message: detailNotifikasiSubsidi.message,
-                            image: detailNotifikasiSubsidi.image_product,
-                            tanggal: formatTanggal(detailNotifikasiSubsidi.createdAt)
-                        })
-
-                        socket.emit('notif_pesanan_dikirim', {
-                            jenis: detailNotifikasiTambahan.jenis,
-                            userId: notifikasiTambahan.userId,
-                            status: detailNotifikasiTambahan.status,
-                            message: detailNotifikasiTambahan.message,
-                            image: detailNotifikasiTambahan.image_product,
-                            tanggal: formatTanggal(detailNotifikasiTambahan.createdAt)
-                        })
-                    }
-                    const notifikasiSubsidi = await Notifikasi.findOne({userId: dataPengiriman.orderId.userId, jenis_invoice: "Subsidi"}).sort({createdAt: -1})
-                    
-                    const detailNotifikasiSubsidi = await DetailNotifikasi.create({
-                        notifikasiId: notifikasiSubsidi._id,
-                        userId: notifikasiSubsidi.userId,
-                        status: "Pesanan sedang dalam pengiriman",
-                        message: `${kodeInvSubsidi} sedang dalam perjalanan ke alamat tujuan`,
-                        jenis: "Pesanan",
-                        image_product: product.image_product[0],
-                        createdAt: new Date()
-                    })
-
-                    socket.emit('notif_pesanan_dikirim', {
-                        jenis: detailNotifikasiSubsidi.jenis,
-                        userId: notifikasiSubsidi.userId,
-                        status: detailNotifikasiSubsidi.status,
-                        message: detailNotifikasiSubsidi.message,
-                        image: detailNotifikasiSubsidi.image_product,
-                        tanggal: formatTanggal(detailNotifikasiSubsidi.createdAt)
-                    })
-                }
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
                     tarif_pengiriman += data.total_ongkir

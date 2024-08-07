@@ -2,6 +2,7 @@ const ReviewDistributor = require('../../models/distributor/model-reviewDistribu
 const Distributtor = require('../../models/distributor/model-distributor')
 const PinaltiDistributor = require('../../models/distributor/model-pinaltiDistributor')
 const Konsumen = require('../../models/konsumen/model-konsumen')
+const Sekolah = require('../../models/model-sekolah')
 
 module.exports = {
     getAllReviewDistributor: async (req, res, next) => {
@@ -41,7 +42,7 @@ module.exports = {
 
     createReviewDistributor: async (req, res, next) => {
         try {
-            const { id_distributor, nilai_ketepatan = 0, nilai_komunikasi = 0, id_produk, id_toko, id_address } = req.body
+            const { id_distributor, nilai_ketepatan = 0, nilai_komunikasi = 0, id_produk, id_toko, id_address, id_sekolah, id_jenis_pengiriman } = req.body
 
             const dataDistributor = await Distributtor.findOne({ _id: id_distributor })
             if (!dataDistributor) return res.status(404).json({ message: "data Not Found" })
@@ -52,13 +53,15 @@ module.exports = {
             const reviewDistributor = await ReviewDistributor.find({ id_distributor: id_distributor })
             const indexReview = reviewDistributor.length + 1
 
-            const getAllPinaltiDistributor = await PinaltiDistributor.find({})
+            const getAllPinaltiDistributor = await PinaltiDistributor.find({ id_distributor: id_distributor })
             let hitunganTotalPinalti = 0
             if (getAllPinaltiDistributor) {
                 for (let data of getAllPinaltiDistributor) {
                     hitunganTotalPinalti += data.poin_pinalti
                 }
             }
+
+            console.log('tes 1', hitunganTotalPinalti)
 
             let hitunganPoinReview = 0
             if (reviewDistributor) {
@@ -70,6 +73,7 @@ module.exports = {
                 }
             }
 
+            console.log('tes 2', hitunganPoinReview)
             const perhitunganNilaiPoin = (nilai_ketepatan + nilai_komunikasi) / 2
 
             let totalPerhitunganPoin
@@ -81,6 +85,8 @@ module.exports = {
                 totalPerhitunganPoin = perhitunganNilaiPoin / indexReview
             }
 
+            console.log('tes 2', totalPerhitunganPoin)
+
             if (totalPerhitunganPoin < 1) {
                 await Distributtor.findOneAndUpdate({ _id: id_distributor }, { nilai_review: 1 }, { new: true })
             } else {
@@ -88,7 +94,7 @@ module.exports = {
             }
 
             const dataReview = await ReviewDistributor.create(
-                { id_distributor, nilai_ketepatan, nilai_komunikasi, id_konsumen: dataKonsumen._id, id_produk, id_toko, id_address, nilai_total_review: totalPerhitunganPoin },
+                { id_distributor, nilai_ketepatan, nilai_komunikasi, id_konsumen: dataKonsumen._id, id_produk, id_toko, id_address, nilai_total_review: totalPerhitunganPoin, id_sekolah, id_jenis_pengiriman },
             )
 
             res.status(201).json({
@@ -110,7 +116,7 @@ module.exports = {
 
     createNonReview: async (req, res, next) => {
         try {
-            const { id_distributor, id_produk, id_toko, id_address } = req.body
+            const { id_distributor, id_produk, id_toko, id_address, id_jenis_pengiriman, id_sekolah } = req.body
 
             const dataDistributor = await Distributtor.findOne({ _id: id_distributor })
             if (!dataDistributor) return res.status(404).json({ message: "data Not Found" })
@@ -118,7 +124,7 @@ module.exports = {
             const dataKonsumen = await Konsumen.findOne({ userId: req.user.id })
             if (!dataKonsumen) return res.status(404).json({ message: "data Konsumen Not Found" })
 
-            const data = await ReviewDistributor.create({ id_distributor, nilai_ketepatan: 0, nilai_komunikasi: 0, id_konsumen: dataKonsumen._id, id_produk, id_toko, id_address, nilai_total_review: 0 })
+            const data = await ReviewDistributor.create({ id_distributor, nilai_ketepatan: 0, nilai_komunikasi: 0, id_konsumen: dataKonsumen._id, id_produk, id_toko, id_address, nilai_total_review: 0, id_jenis_pengiriman, id_sekolah })
 
             res.status(200).json({
                 message: 'create data success',
