@@ -889,7 +889,7 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const { sellerId, status_order } = req.query
+            const { sellerId, status_order } = req.query;
             const dataOrder = await Orders.aggregate([
                 {
                     $match: {
@@ -974,6 +974,22 @@ module.exports = {
                 },
                 {
                     $unwind: "$sekolahId"
+                },
+                {
+                    $lookup:{
+                        from: "addresses",
+                        foreignField: "_id",
+                        localField: "sekolahId.address",
+                        as: "alamatSekolah"
+                    }
+                },
+                {
+                    $unwind: "$alamatSekolah"
+                },
+                {
+                    $addFields:{
+                        "sekolahId.address": "$alamatSekolah"
+                    }
                 },
                 {
                     $group: {
