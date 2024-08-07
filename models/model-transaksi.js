@@ -71,6 +71,10 @@ const modelTransaksi2 = new mongoose.Schema({
     userId:{
         type: mongoose.Types.ObjectId,
         ref: "User"
+    },
+    subsidi: {
+        type: Boolean,
+        default: false
     }
 }, {timestamps: true});
 
