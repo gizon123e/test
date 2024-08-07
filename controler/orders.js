@@ -965,6 +965,17 @@ module.exports = {
                 },
                 { $project: { alamat: 0 } },
                 {
+                    $lookup:{
+                        from: "sekolahs",
+                        foreignField: "_id",
+                        localField: "$sekolahId",
+                        as: "sekolahId"
+                    }
+                },
+                {
+                    $unwind: "$sekolahId"
+                },
+                {
                     $group: {
                         _id: "$_id",
                         items: {
@@ -986,6 +997,7 @@ module.exports = {
                         createdAt: { $first: "$createdAt" },
                         dp: { $first: "$dp" },
                         biaya_asuransi: { $first: "$biaya_asuransi" },
+                        sekolahId: { $first: "$sekolahId" },
                     }
                 },
                 {
@@ -1004,7 +1016,8 @@ module.exports = {
                             biaya_jasa_aplikasi: "$biaya_jasa_aplikasi",
                             createdAt: "$createdAt",
                             dp: "$dp",
-                            biaya_asuransi: "$biaya_asuransi"
+                            biaya_asuransi: "$biaya_asuransi",
+                            sekolahId: "$sekolahId",
                         }
                     }
                 },
@@ -1113,7 +1126,10 @@ module.exports = {
                 }
                 const pay = paymentMethod.find(item =>{ return item !== null })
                 const paymentNumber = await VirtualAccountUser.findOne({userId: req.user.id, nama_bank: pay._id}).select("nomor_va").lean()
-                Object.keys(store).forEach(key => data.push(store[key]));
+                Object.keys(store).forEach(key => {
+                    console.log(key)
+                    data.push(store[key])
+                });
                 return res.status(200).json({ 
                     message: 'get detail data order success',
                     _id, 
@@ -2284,53 +2300,28 @@ module.exports = {
             for(const shp of shipments){
                 const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
                 const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"}).populate('id_transaksi');
+                let user;
+                let total_harga_produk = 0
                 for(prd of shp.productToDelivers){
                     const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId)
-                    const user = await User.findById(selectedProduct.userId)
                     if(inv){
-                        promisesFunction.push(
-                            Transaksi.create({
-                                id_pesanan: shp.orderId,
-                                jenis_transaksi: "masuk",
-                                status: "Pembayaran Berhasil",
-                                kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi += 1}`,
-                                userId: user._id,
-                                jumlah: selectedProduct.total_price * prd.quantity
-                            }),
-                            Transaksi2.create({
-                                id_pesanan: shp.orderId,
-                                jenis_transaksi: "keluar",
-                                status: "Pembayaran Berhasil",
-                                kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
-                                userId: user._id,
-                                jumlah: selectedProduct.total_price * prd.quantity
-                            }),
-
-                        )
+                        
+                        total_harga_produk += selectedProduct.total_price * prd.quantity
                         
                         if(!countedSeller.has(user._id.toString())){
-                            Transaksi.create({
-                                id_pesanan: shp.orderId,
-                                jenis_transaksi: "keluar",
-                                status: "Pembayaran Berhasil",
-                                kode_transaksi: `TRX_${user.get('kode_role')}_OUT_PRH_${date}_${minutes}_${total_transaksi += 1}`,
-                                userId: user._id,
-                                jumlah: biayaTetap.fee_vendor
-                            }),
-                            
-                            Transaksi2.create({
-                                id_pesanan: shp.orderId,
-                                jenis_transaksi: "masuk",
-                                status: "Pembayaran Berhasil",
-                                kode_transaksi: `TRX_PRH_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
-                                userId: user._id,
-                                jumlah: biayaTetap.fee_vendor
-                            }),
-
+                            user = await User.findById(selectedProduct.userId)
                             countedSeller.add(user._id.toString())
                         }
 
-                        if(!addedInv.has(inv._id.toString())){
+                        
+                    }
+                };
+                if(inv){
+                    const distri = await Distributtor.findById(shp.distributorId).select("userId");
+                    const user = await User.findById(distri.userId)
+
+                    if(!addedInv.has(inv._id.toString())){
+                        promisesFunction.push(
                             Transaksi2.create({
                                 id_pesanan: shp.orderId,
                                 jenis_transaksi: "masuk",
@@ -2338,7 +2329,7 @@ module.exports = {
                                 kode_transaksi: `TRX_SYS_OUT_PRH_${date}_${minutes}_${total_transaksi += 1}`,
                                 userId: user._id,
                                 jumlah: inv.id_transaksi.detailBiaya.biaya_layanan + inv.id_transaksi.detailBiaya.biaya_jasa_aplikasi
-                            });
+                            }),
 
                             Transaksi2.create({
                                 id_pesanan: shp.orderId,
@@ -2347,16 +2338,50 @@ module.exports = {
                                 kode_transaksi: `TRX_PRH_IN_SYS_${date}_${minutes}_${total_transaksi += 1}`,
                                 userId: user._id,
                                 jumlah: inv.id_transaksi.detailBiaya.biaya_layanan + inv.id_transaksi.detailBiaya.biaya_jasa_aplikasi
-                            });
+                            })
+                        )
 
-                            addedInv.add(inv._id.toString())
-                        }
+                        addedInv.add(inv._id.toString())
                     }
-                };
-                if(inv){
-                    const distri = await Distributtor.findById(shp.distributorId).select("userId");
-                    const user = await User.findById(distri.userId)
+
                     promisesFunction.push(
+
+                        Transaksi.create({
+                            id_pesanan: shp.orderId,
+                            jenis_transaksi: "masuk",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: user._id,
+                            jumlah: total_harga_produk
+                        }),
+
+                        Transaksi2.create({
+                            id_pesanan: shp.orderId,
+                            jenis_transaksi: "keluar",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: user._id,
+                            jumlah: total_harga_produk
+                        }),
+
+                        Transaksi.create({
+                            id_pesanan: shp.orderId,
+                            jenis_transaksi: "keluar",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_${user.get('kode_role')}_OUT_PRH_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: user._id,
+                            jumlah: biayaTetap.fee_vendor
+                        }),
+                        
+                        Transaksi2.create({
+                            id_pesanan: shp.orderId,
+                            jenis_transaksi: "masuk",
+                            status: "Pembayaran Berhasil",
+                            kode_transaksi: `TRX_PRH_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: user._id,
+                            jumlah: biayaTetap.fee_vendor
+                        }),
+
                         Transaksi.create({
                             id_pesanan: shp.orderId,
                             jenis_transaksi: "masuk",
@@ -2365,6 +2390,7 @@ module.exports = {
                             userId: user._id,
                             jumlah: shp.total_ongkir
                         }),
+
                         Transaksi.create({
                             id_pesanan: shp.orderId,
                             jenis_transaksi: "keluar",
@@ -2398,6 +2424,8 @@ module.exports = {
                 { _id: { $in: pengirimanIds} },
                 { isBuyerAccepted: true }
             );
+
+            await Promise.all(promisesFunction)
             return res.status(200).json({message: "Berhasil menerima order"});
         } catch (error) {
             console.log(error);
