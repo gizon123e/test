@@ -968,7 +968,7 @@ module.exports = {
                     $lookup:{
                         from: "sekolahs",
                         foreignField: "_id",
-                        localField: "$sekolahId",
+                        localField: "sekolahId",
                         as: "sekolahId"
                     }
                 },
