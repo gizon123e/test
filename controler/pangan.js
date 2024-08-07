@@ -144,6 +144,8 @@ module.exports = {
             const { page = 1, limit = 5, jenis_pangan, kelompok_pangan } = req.query;
             const skip = (page - 1) * limit;
 
+            if (req.user.role === 'kimia farmasi') return res.status(400).json({ message: 'anda tidak memiliki izin akses ini' })
+
             const totalItems = await Pangan.countDocuments({ jenis_pangan });
 
             const pangan = await Pangan.find({ jenis_pangan, kelompok_pangan })

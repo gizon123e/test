@@ -14,7 +14,7 @@ const modelUserAdminPanel = mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["administrator", "oprator"],
+        enum: ["administrator", "oprator", "kimia farmasi"],
         message: "{VALUE} is not supported",
         required: [true, 'Role harus di isi']
     }

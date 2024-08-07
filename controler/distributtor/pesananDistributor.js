@@ -393,11 +393,23 @@ module.exports = {
                 total_berat += totalBeratProduct
             }
 
-            if (status === "Ditolak") {
-                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: 2, status_distributor: "Ditolak" });
+            const dataDistributor = await Distributtor.findOne({ _id: distributorId })
+
+            if (status === "Ditolak" && dataPengiriman.status_distributor === 'Diterima') {
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: true, status_distributor: "Ditolak" });
+                await PinaltiDistributor.create({
+                    id_distributor: distributorId,
+                    alasan_pinalti: "membatalkan pengiriman setelah konfirmasi (terima)s",
+                    poin_pinalti: 3
+                })
+
+                await ProsesPengirimanDistributor.deleteOne({ distributorId, kode_pengiriman: kode_pengiriman, pengirimanId: id_pengiriman })
+
+            } else if (status === "Ditolak") {
+                await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: true, status_distributor: "Ditolak" });
 
                 const currentDate = new Date();
-                await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: distri.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+                await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: dataDistributor.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
                 await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { status_distributor: status, });
 
