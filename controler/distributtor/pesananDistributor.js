@@ -13,14 +13,14 @@ const { Transaksi } = require('../../models/model-transaksi')
 const { calculateDistance } = require('../../utils/menghitungJarak');
 const Invoice = require("../../models/model-invoice");
 
-function formatTanggal(tanggal){
+function formatTanggal(tanggal) {
     const dd = String(tanggal.getDate()).padStart(2, '0');
     const mm = String(tanggal.getMonth() + 1).padStart(2, '0');
     const yyyy = tanggal.getFullYear();
     return `${yyyy}-${mm}-${dd}`
 }
 
-function formatWaktu(waktu){
+function formatWaktu(waktu) {
     const hh = String(waktu.getHours()).padStart(2, '0');
     const mn = String(waktu.getMinutes()).padStart(2, '0');
     const ss = String(waktu.getSeconds()).padStart(2, '0');
@@ -88,7 +88,7 @@ module.exports = {
             const foundedProduct = {}
             for (let data of datas) {
                 const { productToDelivers, total_ongkir, potongan_ongkir, ...restOfShipment } = data
-                const storeId = `${data.id_toko._id.toString()}-${data.orderId}-${data._id}`
+                const storeId = `${data.id_toko._id.toString()}-${data.orderId._id.toString()}-${data._id}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
@@ -291,7 +291,7 @@ module.exports = {
             const { id_toko, distributorId, orderId, kode_pengiriman, status, id_pengiriman } = req.body
             if (!status) return res.status(400).json({ message: 'status harus di isi' })
 
-            const dataPengiriman = await Pengiriman.findOne({_id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
+            const dataPengiriman = await Pengiriman.findOne({ _id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
                 .populate({
                     path: "orderId",
                     populate: "addressId"

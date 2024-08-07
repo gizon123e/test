@@ -45,6 +45,11 @@ const modelReviewDistributor = new mongoose.Schema({
     nilai_total_review: {
         type: Number,
         required: [true, 'nilai_total_review harus di isi']
+    },
+    id_sekolah: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Sekolah',
+        required: [true, 'id_sekolahn harus di isi'],
     }
 }, { timestamps: true })
 
