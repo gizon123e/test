@@ -132,6 +132,11 @@ io.on("connection", (socket) => {
     console.log(data)
     io.to(userId).emit('notifikasi_pembayaran_berhasil', JSON.stringify({...rest}));
   })
+  socket.on('notif_pesanan_dibatalkan', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_pesanan_dibatalkan', JSON.stringify({...rest}));
+  })
 });
 
 module.exports = io;

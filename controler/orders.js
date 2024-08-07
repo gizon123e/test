@@ -1356,10 +1356,10 @@ module.exports = {
 
     createOrder: async (req, res, next) => {
         try {
-            // const today = new Date()
-            // today.setDate(today.getDate() + 7)
-            // today.setMinutes(today.getMinutes() + 6)
-            // console.log(today)
+            const today = new Date()
+            today.setDate(today.getDate() + 7)
+            today.setMinutes(today.getMinutes() + 2)
+            console.log(today)
             const {
                 metode_pembayaran,
                 total,
@@ -2150,67 +2150,117 @@ module.exports = {
             .populate('invoice')
             .populate('productToDelivers.productId')
             .lean();
-
-            // return res.status(200).json(pengiriman);
-            if(!pengiriman) return res.status(404).json({message: `Tidak ada pengiriman dengan id ${pengirimanId}`});
-
-            const biayaTetap = await BiayaTetap.findOne({_id: "66456e44e21bfd96d4389c73"});
             
+            const biayaTetap = await BiayaTetap.findOne({_id: "66456e44e21bfd96d4389c73"}).lean();
             const avgPengemasan = biayaTetap.lama_pengemasan;
             const avgKecepatan = biayaTetap.rerata_kecepatan;
             const maxPengemasanPengiriman = biayaTetap.max_pengemasan_pengiriman * 60;
 
-            const totalQuantity = pengiriman.productToDelivers.reduce((accumulator, currentValue)=>{
-                return accumulator + currentValue.quantity
-            }, 0)
-
-            const latTokoVendor = parseFloat(pengiriman.id_toko.address.pinAlamat.lat);
-            const longTokoVendor = parseFloat(pengiriman.id_toko.address.pinAlamat.long);
-
-            const latKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.lat);
-            const longKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.long);
-
-            const jarakTempuh = calculateDistance(latTokoVendor, longTokoVendor, latKonsumen, longKonsumen, 100).toFixed(2);
-
-            const waktuPengiriman = (jarakTempuh / avgKecepatan) * 3600;
-            const waktuPengemasan = (totalQuantity * avgPengemasan) * 60;
-
-            const totalPengemasanPengiriman = waktuPengemasan + waktuPengiriman
-
-            if(totalPengemasanPengiriman > maxPengemasanPengiriman){
-                totalPengemasanPengiriman = maxPengemasanPengiriman
-            }
+            if(!pengiriman) return res.status(404).json({message: `Tidak ada pengiriman dengan id ${pengirimanId}`});
             
-            const pengemasan = await Pengemasan.create({
-                orderId: pengiriman.orderId,
-                total_quantity: totalQuantity,
-                total_jarak: jarakTempuh,
-                waktu_pengemasan: waktuPengemasan,
-                waktu_pengiriman: waktuPengiriman,
-                total_pengemasan_pengiriman: totalPengemasanPengiriman
-            })
+            const transaksi = await Transaksi.findById(pengiriman.invoice.id_transaksi);
+            if(transaksi.subsidi == true){
+                
+                const totalQuantity = pengiriman.productToDelivers.reduce((accumulator, currentValue)=>{
+                    return accumulator + currentValue.quantity
+                }, 0)
 
-            const notifikasi = await Notifikasi.findOne({invoiceId: pengiriman.invoice._id}).lean();
-            if(!notifikasi) return res.status(404).json({message: `Tidak ada notifikasi dengan invoiceId ${pengiriman.invoice._id}`});
+                const latTokoVendor = parseFloat(pengiriman.id_toko.address.pinAlamat.lat);
+                const longTokoVendor = parseFloat(pengiriman.id_toko.address.pinAlamat.long);
 
-            const detailNotifikasi = await DetailNotifikasi.create({
-                notifikasiId: notifikasi._id,
-                status: "Pesanan telah dikonfirmasi",
-                message: `${pengiriman.invoice.kode_invoice} telah dikonfirmasi penjual dan akan segera dikemas`,
-                jenis: "Pesanan",
-                image_product: pengiriman.productToDelivers[0].productId.image_product[0],
-                createdAt: new Date()
-            })
+                const latKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.lat);
+                const longKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.long);
 
-            socket.emit('notif_pesanan_dikonfirmasi', {
-                jenis: detailNotifikasi.jenis,
-                userId: notifikasi.userId,
-                status: detailNotifikasi.status,
-                message: detailNotifikasi.message,
-                image: detailNotifikasi.image_product,
-                tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
-            })
-            return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",pengemasan})
+                const jarakTempuh = calculateDistance(latTokoVendor, longTokoVendor, latKonsumen, longKonsumen, 100).toFixed(2);
+
+                const waktuPengiriman = (jarakTempuh / avgKecepatan) * 3600;
+                const waktuPengemasan = (totalQuantity * avgPengemasan) * 60;
+
+                let totalPengemasanPengiriman = waktuPengemasan + waktuPengiriman
+                if(totalPengemasanPengiriman > maxPengemasanPengiriman){
+                    totalPengemasanPengiriman = maxPengemasanPengiriman
+                }
+                
+                const pengemasan = await Pengemasan.create({
+                    orderId: pengiriman.orderId,
+                    total_quantity: totalQuantity,
+                    total_jarak: jarakTempuh,
+                    waktu_pengemasan: waktuPengemasan,
+                    waktu_pengiriman: waktuPengiriman,
+                    total_pengemasan_pengiriman: totalPengemasanPengiriman
+                })
+
+                const notifikasi = await Notifikasi.findOne({invoiceId: pengiriman.invoice._id}).lean();
+                if(!notifikasi) return res.status(404).json({message: `Tidak ada notifikasi dengan invoiceId ${pengiriman.invoice._id}`});
+
+                const detailNotifikasi = await DetailNotifikasi.create({
+                    notifikasiId: notifikasi._id,
+                    status: "Pesanan telah dikonfirmasi",
+                    message: `${pengiriman.invoice.kode_invoice} telah dikonfirmasi penjual dan akan segera dikemas`,
+                    jenis: "Pesanan",
+                    image_product: pengiriman.productToDelivers[0].productId.image_product[0],
+                    createdAt: new Date()
+                })
+
+                socket.emit('notif_pesanan_dikonfirmasi', {
+                    jenis: detailNotifikasi.jenis,
+                    userId: notifikasi.userId,
+                    status: detailNotifikasi.status,
+                    message: detailNotifikasi.message,
+                    image: detailNotifikasi.image_product,
+                    tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
+                })
+                return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",pengemasan})
+            }else {
+                const pengemasan = await Pengemasan.findOne({
+                    orderId: pengiriman.orderId
+                })
+                
+                const totalQuantity = pengiriman.productToDelivers.reduce((accumulator, currentValue)=>{
+                    return accumulator + currentValue.quantity
+                }, 0)
+
+                const totalQuantityUpdate = pengemasan.total_quantity + totalQuantity
+
+                const waktuPengemasan = (totalQuantity * avgPengemasan) * 60;
+                
+                let totalPengemasanPengiriman = pengemasan.total_pengemasan_pengiriman + waktuPengemasan
+
+                if(totalPengemasanPengiriman > maxPengemasanPengiriman){
+                    totalPengemasanPengiriman = maxPengemasanPengiriman
+                }
+
+                const updatePengemasan = await Pengemasan.findOneAndUpdate({
+                    orderId: pengiriman.orderId
+                }, {
+                    total_quantity: totalQuantityUpdate,
+                    total_pengemasan_pengiriman: totalPengemasanPengiriman
+                }, {
+                    new: true
+                })
+
+                const notifikasi = await Notifikasi.findOne({invoiceId: pengiriman.invoice._id}).lean();
+                if(!notifikasi) return res.status(404).json({message: `Tidak ada notifikasi dengan invoiceId ${pengiriman.invoice._id}`});
+
+                const detailNotifikasi = await DetailNotifikasi.create({
+                    notifikasiId: notifikasi._id,
+                    status: "Pesanan telah dikonfirmasi",
+                    message: `${pengiriman.invoice.kode_invoice} telah dikonfirmasi penjual dan akan segera dikemas`,
+                    jenis: "Pesanan",
+                    image_product: pengiriman.productToDelivers[0].productId.image_product[0],
+                    createdAt: new Date()
+                })
+
+                socket.emit('notif_pesanan_dikonfirmasi', {
+                    jenis: detailNotifikasi.jenis,
+                    userId: notifikasi.userId,
+                    status: detailNotifikasi.status,
+                    message: detailNotifikasi.message,
+                    image: detailNotifikasi.image_product,
+                    tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
+                })
+                return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",updatePengemasan})
+            }
         } catch (error) {
             console.log(error);
             next(error)
@@ -2328,11 +2378,25 @@ module.exports = {
     cancelOrder: async (req, res, next) => {
         try {
             const { pesananId, reason } = req.body
+            const invoice = await Transaksi.aggregate([
+                { $match: { id_pesanan: new mongoose.Types.ObjectId(pesananId) } },
+                { $project: { _id:1}},
+                { $lookup: {
+                    from: "invoices",
+                    let: { id_transaksi: "$_id" },
+                    pipeline: [ {$match: { $expr: { $eq: ["$id_transaksi", "$$id_transaksi"] } } } ],
+                    as: 'invoice'
+                }
+                },
+                { $unwind: "$invoice" }
+            ])
+            // return res.status(200).json(invoice)
             const order = await Pesanan.findOneAndUpdate({ _id: pesananId, userId: req.user.id }, {
                 status: "Dibatalkan",
                 reason,
                 canceledBy: "pengguna"
-            })
+            }).populate("items.product.productId")
+            // return res.status(200).json()
             const detailPesanan = await DetailPesanan.exists({id_pesanan: pesananId});
             await axios.post(`https://api.sandbox.midtrans.com/v2/${detailPesanan._id}/cancel`, {}, {
                 headers: {
@@ -2341,7 +2405,49 @@ module.exports = {
             })
             await VA_Used.deleteOne({orderId: pesananId, userId: req.user.id})
             if(!order) return res.status(404).json({message: `Tidak ada order dengan id ${pesananId}`})
-            return res.status(200).json({message: "Berhasil Membatalkan Order", data: order})
+            if (invoice.length == 1){
+                const notifikasi = await Notifikasi.findOne({invoiceId: invoice[0].invoice._id})
+                const detailNotifikasi = await DetailNotifikasi.create({
+                    notifikasiId: notifikasi._id,
+                    status: "Pesanan dibatalkan",
+                    jenis: "Info",
+                    message: `${invoice[0].invoice.kode_invoice} telah dibatalkan oleh kamu`,
+                    image_product: order.items[0].product[0].productId.image_product[0],
+                    createdAt: new Date()
+    
+                })
+                socket.emit('notif_pesanan_dibatalkan', {
+                    jenis: detailNotifikasi.jenis,
+                    userId: notifikasi.userId,
+                    status: detailNotifikasi.status,
+                    message: detailNotifikasi.message,
+                    image: detailNotifikasi.image_product,
+                    tanggal: formatTanggal(detailNotifikasi.createdAt)
+                })
+                return res.status(200).json({message: "Berhasil Membatalkan Pesanan"});
+            }else {
+                for(const item of invoice){
+                    const notifikasi = await Notifikasi.findOne({invoiceId: item.invoice._id})
+                    const detailNotifikasi = await DetailNotifikasi.create({
+                        notifikasiId: notifikasi._id,
+                        status: "Pesanan dibatalkan",
+                        jenis: "Info",
+                        message: `${item.invoice.kode_invoice} telah dibatalkan oleh kamu`,
+                        image_product: order.items[0].product[0].productId.image_product[0],
+                        createdAt: new Date()
+        
+                    })
+                    socket.emit('notif_pesanan_dibatalkan', {
+                        jenis: detailNotifikasi.jenis,
+                        userId: notifikasi.userId,
+                        status: detailNotifikasi.status,
+                        message: detailNotifikasi.message,
+                        image: detailNotifikasi.image_product,
+                        tanggal: formatTanggal(detailNotifikasi.createdAt)
+                    })
+                }
+                return res.status(200).json({message: "Berhasil Membatalkan Pesanan"});
+            }
         } catch (error) {
             console.log(error);
             next(error)

@@ -354,12 +354,7 @@ module.exports = {
                         path: "categoryId"
                     }
                 })
-
-            const socket = io('http://localhost:5000', {
-                auth: {
-                    fromServer: true
-                }
-            })
+                
             const prodIds = payLoadDataPengiriman.flatMap(pgr => {
                 return pgr.productToDelivers.map(item => item.productId);
             });
@@ -373,7 +368,7 @@ module.exports = {
 
                 const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
-                
+
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
                     tarif_pengiriman += data.total_ongkir
                     for (const item of data.productToDelivers) {
