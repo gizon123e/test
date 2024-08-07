@@ -2287,7 +2287,19 @@ module.exports = {
         try {
             const { pengirimanIds } = req.body;
             const biayaTetap = await BiayaTetap.findOne({}).lean()
-            const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).populate().lean();
+            const shipments = await Pengiriman.find({ _id: { $in: pengirimanIds} }).populate('productToDelivers.productId').lean();
+            const invoice = await Transaksi.aggregate([
+                { $match: { id_pesanan: new mongoose.Types.ObjectId(shipments[0].orderId) } },
+                { $project: {_id: 1}},
+                { $lookup: {
+                    from: "invoices",
+                    let: { id_transaksi: "$_id" },
+                    pipeline: [ {$match: { $expr: { $eq: ["$id_transaksi", "$$id_transaksi"] } } } ],
+                    as: 'invoice'
+                }
+                },
+                { $unwind: "$invoice" }
+            ])
             const promisesFunction = []
             let total_transaksi = await Transaksi.countDocuments({
                 createdAt: {
@@ -2303,12 +2315,13 @@ module.exports = {
                 let user;
                 let total_harga_produk = 0
                 for(prd of shp.productToDelivers){
-                    const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId)
+                    const selectedProduct = dataProduct.dataProduct.find(prod => prod._id === prd.productId._id)
+                    console.log(selectedProduct)
                     if(inv){
                         
                         total_harga_produk += selectedProduct.total_price * prd.quantity
                         
-                        if(!countedSeller.has(user._id.toString())){
+                        if(!countedSeller.has(user?._id.toString())){
                             user = await User.findById(selectedProduct.userId)
                             countedSeller.add(user._id.toString())
                         }
@@ -2424,9 +2437,51 @@ module.exports = {
                 { _id: { $in: pengirimanIds} },
                 { isBuyerAccepted: true }
             );
-
             await Promise.all(promisesFunction)
-            return res.status(200).json({message: "Berhasil menerima order"});
+
+            if (invoice.length == 1){
+                const notifikasi = await Notifikasi.findOne({invoiceId: invoice[0].invoice._id})
+                const detailNotifikasi = await DetailNotifikasi.create({
+                    notifikasiId: notifikasi._id,
+                    status: "Pesanan telah selesai",
+                    jenis: "Pesanan",
+                    message: `Klik untuk beri penilaian ${invoice[0].invoice.kode_invoice} `,
+                    image_product: shipments[0].productToDelivers[0].productId.image_product[0],
+                    createdAt: new Date()
+    
+                })
+                socket.emit('notif_pesanan_selesai', {
+                    jenis: detailNotifikasi.jenis,
+                    userId: notifikasi.userId,
+                    status: detailNotifikasi.status,
+                    message: detailNotifikasi.message,
+                    image: detailNotifikasi.image_product,
+                    tanggal: formatTanggal(detailNotifikasi.createdAt)
+                })
+                return res.status(200).json({message: "Berhasil Menerima Order"});
+            }else {
+                for(const item of invoice){
+                    const notifikasi = await Notifikasi.findOne({invoiceId: item.invoice._id})
+                    const detailNotifikasi = await DetailNotifikasi.create({
+                        notifikasiId: notifikasi._id,
+                        status: "Pesanan telah selesai",
+                        jenis: "Pesanan",
+                        message: `Klik untuk beri penilaian ${item.invoice.kode_invoice}`,
+                        image_product: shipments[0].productToDelivers[0].productId.image_product[0],
+                        createdAt: new Date()
+        
+                    })
+                    socket.emit('notif_pesanan_selesai', {
+                        jenis: detailNotifikasi.jenis,
+                        userId: notifikasi.userId,
+                        status: detailNotifikasi.status,
+                        message: detailNotifikasi.message,
+                        image: detailNotifikasi.image_product,
+                        tanggal: formatTanggal(detailNotifikasi.createdAt)
+                    })
+                }
+                return res.status(200).json({message: "Berhasil Menerima Order"});
+            }
         } catch (error) {
             console.log(error);
             next(error)

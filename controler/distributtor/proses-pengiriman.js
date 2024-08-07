@@ -259,12 +259,6 @@ module.exports = {
             const distri = await Distributtor.exists({userId: req.user.id})
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({_id: req.params.id, distributorId: distri._id}, { status_distributor: "Selesai"}, {new: true}).populate('pengirimanId').populate('produk_pengiriman.productId');
             if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
-            
-            await Pengiriman.updateOne(
-                { _id: prosesPengiriman.pengirimanId },
-                { status_pengiriman: "pesanan selesai" }
-            )
-            
             const invoice = await Transaksi.aggregate([
                 { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
                 { $lookup: {
@@ -276,6 +270,7 @@ module.exports = {
                 },
                 { $unwind: "$invoice" }
             ])
+
             if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
             // const notifikasi = await Notifikasi.findOne({invoiceId: transaksi[0].invoice._id})
             // const detailNotifikasi = await DetailNotifikasi.create({
@@ -297,6 +292,10 @@ module.exports = {
             // })  
             // return res.status(200).json({message: "Berhasil Menyelesaikan Pengiriman"});
             if (invoice.length == 1){
+                await Pengiriman.updateOne(
+                    { _id: prosesPengiriman.pengirimanId},
+                    { status_pengiriman: "pesanan selesai" }
+                )
                 const notifikasi = await Notifikasi.findOne({invoiceId: invoice[0].invoice._id})
                 const detailNotifikasi = await DetailNotifikasi.create({
                     notifikasiId: notifikasi._id,
@@ -317,6 +316,10 @@ module.exports = {
                 })
                 return res.status(200).json({message: "Berhasil Menyelesaikan Pengiriman"});
             }else {
+                await Pengiriman.updateMany(
+                    { orderId: prosesPengiriman.pengirimanId.orderId},
+                    { status_pengiriman: "pesanan selesai" }
+                )
                 for(const item of invoice){
                     const notifikasi = await Notifikasi.findOne({invoiceId: item.invoice._id})
                     const detailNotifikasi = await DetailNotifikasi.create({
