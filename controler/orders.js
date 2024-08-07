@@ -968,7 +968,7 @@ module.exports = {
                     $lookup:{
                         from: "sekolahs",
                         foreignField: "_id",
-                        localField: "$sekolahId",
+                        localField: "sekolahId",
                         as: "sekolahId"
                     }
                 },
@@ -2307,7 +2307,7 @@ module.exports = {
                     if(inv){
                         
                         total_harga_produk += selectedProduct.total_price * prd.quantity
-                        
+
                         if(!countedSeller.has(user._id.toString())){
                             user = await User.findById(selectedProduct.userId)
                             countedSeller.add(user._id.toString())
