@@ -463,12 +463,11 @@ module.exports = {
                 }
             }
 
-            console.log(id_distributor)
-            const dataPayload = datas.filter(item => item.distributor._id.toString() !== id_distributor);
-
             if (datas.length === 0) {
                 return res.status(400).json({ message: "distributor belom tersedia" })
             }
+
+            const dataPayload = datas.filter(item => item.distributor._id.toString() !== id_distributor);
 
             res.status(200).json({
                 message: "success get data Distributtor",

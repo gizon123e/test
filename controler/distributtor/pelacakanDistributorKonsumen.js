@@ -1,4 +1,5 @@
 const PelacakanDistributorKonsumen = require('../../models/distributor/pelacakanDistributorKonsumen')
+const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
 
 module.exports = {
     getTrekingDistributor: async (req, res) => {
@@ -28,9 +29,18 @@ module.exports = {
 
     createPelacakanDistributorKonsumen: async (req, res, next) => {
         try {
-            const { id_toko, id_address, latitude, longitude, id_distributor, id_pesanan } = req.body
+            const { id_toko, id_address, latitude, longitude, id_distributor, id_pesanan, id_konsumen, } = req.body
 
-            const data = await PelacakanDistributorKonsumen.create({ id_toko, id_address, latitude, longitude, id_distributor, id_pesanan })
+            const data = await PelacakanDistributorKonsumen.create({
+                id_toko,
+                id_address,
+                latitude,
+                longitude,
+                id_distributor,
+                id_pesanan,
+                id_konsumen,
+                statusPengiriman: 'Pesanan diserahkan ke distributor'
+            })
 
             res.status(201).json({
                 message: "create data success",
@@ -49,28 +59,4 @@ module.exports = {
             next(error);
         }
     },
-
-    updatePelacakanDistributorKonsumen: async (req, res, next) => {
-        try {
-            const { id_toko, id_address, latitude, longitude, id, id_distributor } = req.body
-
-            const data = await PelacakanDistributorKonsumen.findByIdAndUpdate({ _id: id }, { id_toko, id_address, latitude, longitude, id_distributor })
-
-            res.status(201).json({
-                message: "create data success",
-                data
-            })
-        } catch (error) {
-            console.log(error)
-            if (error && error.name === 'ValidationError') {
-                return res.status(400).json({
-                    error: true,
-                    message: error.message,
-                    fields: error.fields
-                })
-            }
-
-            next(error);
-        }
-    }
 }
