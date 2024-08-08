@@ -42,17 +42,9 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
         type: String,
         required: false
     },
-    pesana_diserahkan_distributor: {
+    statusPengiriman: {
         type: String,
-        default: null
-    },
-    pesanan_dalam_penjemputan: {
-        type: String,
-        default: null
-    },
-    pesanan_diserahkan_konsumen: {
-        type: String,
-        default: null
+        required: false
     }
 
 }, { timestamps: true })
