@@ -31,6 +31,8 @@ const Pengemasan = require('../models/model-pengemasan');
 const { calculateDistance } = require('../utils/menghitungJarak');
 const ProsesPengirimanDistributor = require("../models/distributor/model-proses-pengiriman");
 const Distributtor = require("../models/distributor/model-distributor");
+const Vendor = require("../models/vendor/model-vendor");
+const IncompleteOrders = require("../models/pesanan/model-incomplete-orders");
 dotenv.config();
 
 const now = new Date();
@@ -104,7 +106,8 @@ module.exports = {
 
     getOrders: async (req, res, next) => {
         try {
-            const { status } = req.query
+            const { status, page = 1, limit = 5 } = req.query;
+            const skip = (page - 1) * limit;
             let dataOrders;
             if (req.user.role === 'konsumen') {
                 const filter = {
@@ -203,6 +206,8 @@ module.exports = {
                         }
                     }
                 ])
+                .skip(skip)
+                .limit(parseInt(limit))
 
                 if (!dataOrders || dataOrders.length < 1) {
                     return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
@@ -562,7 +567,10 @@ module.exports = {
                             createdAt: -1
                         }
                     }
-                ]);
+                ])
+                .skip(skip)
+                .limit(parseInt(limit))
+
                 const data = []
                 for(const order of dataOrders){
                     const { createdAt, updatedAt, status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order
@@ -873,6 +881,11 @@ module.exports = {
 
                     const created = checkCreatedAt()
                     const sixHoursAgo = new Date(new Date().getTime() - 6 * 60 * 60 * 1000)
+                    const toko = await TokoVendor.findById(pesanan[key].pengiriman.id_toko).select("userId")
+                    await Vendor.updateOne(
+                        { userId: toko.userId },
+                        { $inc : { nilai_pinalti: 2 }}
+                    )
                     if(created < sixHoursAgo){
                         await Pengiriman.findByIdAndUpdate(pesanan[key].pengiriman._id, {
                             canceled: true,
@@ -889,7 +902,7 @@ module.exports = {
 
     getOrderDetail: async (req, res, next) => {
         try {
-            const { sellerId, status_order } = req.query
+            const { sellerId, status_order } = req.query;
             const dataOrder = await Orders.aggregate([
                 {
                     $match: {
@@ -974,6 +987,22 @@ module.exports = {
                 },
                 {
                     $unwind: "$sekolahId"
+                },
+                {
+                    $lookup:{
+                        from: "addresses",
+                        foreignField: "_id",
+                        localField: "sekolahId.address",
+                        as: "alamatSekolah"
+                    }
+                },
+                {
+                    $unwind: "$alamatSekolah"
+                },
+                {
+                    $addFields:{
+                        "sekolahId.address": "$alamatSekolah"
+                    }
                 },
                 {
                     $group: {
@@ -2152,9 +2181,8 @@ module.exports = {
     confirmOrder: async(req, res, next) => {
         try {
             if(req.user.role === 'konsumen') return res.status(403).json({message: "Invalid Request"})
-            const { pengirimanId } = req.body
-            
-            const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true }, {new :true})
+            const { userIdKonsumen, pengirimanId, completedOrders } = req.body            
+            const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true, amountCapable: completedOrders }, {new :true})
             .populate({
                 path: 'orderId',
                 populate: 'addressId',
@@ -2167,10 +2195,24 @@ module.exports = {
             .populate('productToDelivers.productId')
             .lean();
             
+            const total_produk_qty = pengiriman.productToDelivers.reduce((acc, val)=> acc + val.quantity, 0);
             const biayaTetap = await BiayaTetap.findOne({_id: "66456e44e21bfd96d4389c73"}).lean();
             const avgPengemasan = biayaTetap.lama_pengemasan;
             const avgKecepatan = biayaTetap.rerata_kecepatan;
             const maxPengemasanPengiriman = biayaTetap.max_pengemasan_pengiriman * 60;
+            if(!userIdKonsumen) return res.status(400).json({message: "Kirimkan userId konsumen"})
+            if(completedOrders !== total_produk_qty){
+                await IncompleteOrders.create({
+                    userIdSeller: req.user.id,
+                    userIdKonsumen,
+                    pengirimanId,
+                    completedOrders
+                });
+                await Vendor.updateOne(
+                    { userId: req.user.id },
+                    { $inc : { nilai_pinalti: 1 }}
+                )
+            }
 
             if(!pengiriman) return res.status(404).json({message: `Tidak ada pengiriman dengan id ${pengirimanId}`});
             
@@ -2277,6 +2319,7 @@ module.exports = {
                 })
                 return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",updatePengemasan})
             }
+
         } catch (error) {
             console.log(error);
             next(error)
@@ -2310,7 +2353,8 @@ module.exports = {
             const countedSeller = new Set()
             const addedInv = new Set()
             for(const shp of shipments){
-                const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
+                const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId});
+                const incompleteOrder = await IncompleteOrders.findOne({pengirimanId: shp._id})
                 const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"}).populate('id_transaksi');
                 let user;
                 let total_harga_produk = 0

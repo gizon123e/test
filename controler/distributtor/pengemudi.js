@@ -106,6 +106,25 @@ module.exports = {
         }
     },
 
+    updatePengemudiDistributor: async (req, res, next) => {
+        try {
+            const { no_telepon, jenis_sim } = req.body
+            const files = req.files;
+            const file_sim = files ? files.file_sim : null;
+
+            const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+
+            const regexNotelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
+            if (!regexNotelepon.test(no_telepon.toString())) return res.status(400).json({ message: "Nomor telepon tidak valid" });
+
+            await file_sim.mv(imagePath);
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
+
     updateVerifikasi: async (req, res, next) => {
         try {
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")

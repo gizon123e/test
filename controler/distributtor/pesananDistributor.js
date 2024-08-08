@@ -83,7 +83,6 @@ module.exports = {
                 .limit(parseInt(limit));
 
             if (!datas || datas.length === 0) return res.status(404).json({ message: "Saat ini data pesanan distributor kosong" });
-
             const pengiriman = {}
             const foundedProduct = {}
             for (let data of datas) {
@@ -356,7 +355,7 @@ module.exports = {
                         path: "categoryId"
                     }
                 })
-                
+
             const prodIds = payLoadDataPengiriman.flatMap(pgr => {
                 return pgr.productToDelivers.map(item => item.productId);
             });
@@ -405,6 +404,9 @@ module.exports = {
 
                 await ProsesPengirimanDistributor.deleteOne({ distributorId, kode_pengiriman: kode_pengiriman, pengirimanId: id_pengiriman })
 
+                const currentDate = new Date();
+                await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: dataDistributor.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
+
             } else if (status === "Ditolak") {
                 await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { rejected: true, status_distributor: "Ditolak" });
 
@@ -424,7 +426,7 @@ module.exports = {
                     kode_pengiriman: dataPengiriman.kode_pengiriman,
                     tarif_pengiriman: tarif_pengiriman,
                     produk_pengiriman: productToDelivers,
-                    waktu_pesanan: dataPengiriman.orderId.createdAt,
+                    waktu_pesanan: new Date(dataPengiriman.orderId.createdAt),
                     jenisKendaraan: dataPengiriman.id_jenis_kendaraan,
                     potongan_ongkir: dataPengiriman.potongan_ongkir,
                     waktu_pengiriman: dataPengiriman.waktu_pengiriman,
@@ -442,7 +444,6 @@ module.exports = {
         try {
             const currentTime = new Date();
             const twentyFourHoursAgo = new Date(currentTime.getTime() - 23 * 60 * 60 * 1000);
-
             const dataRisertAnkaPelanggaran = await Distributtor.find({
                 date_tolak: { $lte: twentyFourHoursAgo }
             })

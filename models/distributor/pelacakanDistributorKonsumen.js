@@ -11,7 +11,7 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
         required: [true, "id_distributor harus di isi"],
         ref: "TokoVendor"
     },
-    id_kosumen: {
+    id_konsumen: {
         type: mongoose.Types.ObjectId,
         required: [true, "id_kosumen harus di isi"],
         ref: "Konsumen"
@@ -31,10 +31,6 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
         required: [true, "id_pesanan harus di isi"],
         ref: "Pengiriman"
     },
-    ketersediaan: {
-        type: Boolean,
-        default: false
-    },
     total_qty: {
         type: Number,
     },
@@ -42,17 +38,9 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
         type: String,
         required: false
     },
-    pesana_diserahkan_distributor: {
+    statusPengiriman: {
         type: String,
-        default: null
-    },
-    pesanan_dalam_penjemputan: {
-        type: String,
-        default: null
-    },
-    pesanan_diserahkan_konsumen: {
-        type: String,
-        default: null
+        required: false
     }
 
 }, { timestamps: true })
