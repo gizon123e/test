@@ -106,7 +106,8 @@ module.exports = {
 
     getOrders: async (req, res, next) => {
         try {
-            const { status } = req.query
+            const { status, page = 1, limit = 5 } = req.query;
+            const skip = (page - 1) * limit;
             let dataOrders;
             if (req.user.role === 'konsumen') {
                 const filter = {
@@ -205,6 +206,8 @@ module.exports = {
                         }
                     }
                 ])
+                .skip(skip)
+                .limit(parseInt(limit))
 
                 if (!dataOrders || dataOrders.length < 1) {
                     return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` })
@@ -564,7 +567,10 @@ module.exports = {
                             createdAt: -1
                         }
                     }
-                ]);
+                ])
+                .skip(skip)
+                .limit(parseInt(limit))
+
                 const data = []
                 for(const order of dataOrders){
                     const { createdAt, updatedAt, status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order
