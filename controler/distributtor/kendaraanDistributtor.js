@@ -554,7 +554,7 @@ module.exports = {
 
     updateKendaraanDistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const { warna, } = req.body
             const files = req.files;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
             const fileSTNK = files ? files.fileSTNK : null;
@@ -570,13 +570,7 @@ module.exports = {
             await fotoKendaraan.mv(imagePathProfile);
 
             const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, {
-                id_distributor,
-                jenisKendaraan,
-                merekKendaraan,
-                nomorPolisi,
                 warna,
-                typeKendaraan,
-                tarifId,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
 
