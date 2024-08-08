@@ -84,7 +84,8 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
     },
     total_qty: {
         type: Number,
-        required: false
+        required: false,
+        default: 0
     }
 }, { timestamps: true })
 
