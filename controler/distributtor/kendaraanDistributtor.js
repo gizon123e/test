@@ -145,7 +145,7 @@ module.exports = {
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
             distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latitudeVebdor, longitudeVendor, 100);
-            console.log(distance)
+
             if (isNaN(distance)) {
                 return res.status(400).json({
                     message: "Jarak antara konsumen dan vendor melebihi 100 km"
@@ -398,13 +398,15 @@ module.exports = {
             if (!regexNotelepon.test(no_telepon.toString())) return res.status(400).json({ message: "Nomor telepon tidak valid" });
 
             const dataCreateKendaraan = []
-            const validateLayananKendaraan = await LayananKendaraanDistributor.findOne({ jenisKendaraan: jenisKendaraan }).populate("jenisKendaraan")
+            const validateLayananKendaraan = await LayananKendaraanDistributor.findOne({ jenisKendaraan: jenisKendaraan, id_distributor: id_distributor }).populate("jenisKendaraan")
 
             const dataTarifidArray = tarifId.split('/');
+            console.log(dataTarifidArray)
+
             if (!validateLayananKendaraan) {
                 for (let idTarif of dataTarifidArray) {
                     const validateTarifId = await Tarif.findOne({ _id: idTarif })
-                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not Found" })
                     const createLayanaKendaraan = await LayananKendaraanDistributor.create({
                         id_distributor,
                         jenisKendaraan,
@@ -415,6 +417,7 @@ module.exports = {
                 }
             } else if (validateJenisKendaraan.jenis !== validateLayananKendaraan.jenisKendaraan.jenis) {
                 for (let idTarif of dataTarifidArray) {
+                    console.log('tes 2 --------->')
                     const validateTarifId = await Tarif.findOne({ _id: idTarif })
                     if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
                     const createLayanaKendaraan = await LayananKendaraanDistributor.create({
@@ -422,6 +425,8 @@ module.exports = {
                         jenisKendaraan,
                         tarifId: idTarif,
                     })
+
+                    console.log('tes 2 --------->')
 
                     dataCreateKendaraan.push(createLayanaKendaraan)
                 }
@@ -494,8 +499,6 @@ module.exports = {
             const dataTarifidArray = tarifId.split('/')
             const dataCreateKendaraan = []
 
-            console.log("layanan", validateLayananKendaraan)
-            console.log("jenis", validateJenisKendaraan)
             if (!validateLayananKendaraan) {
                 for (let idTarif of dataTarifidArray) {
                     const validateTarifId = await Tarif.findOne({ _id: idTarif })
