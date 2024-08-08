@@ -230,7 +230,7 @@ module.exports = {
         try {
             const distri = await Distributtor.exists({ userId: req.user.id })
 
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim", total_qty: total_qty }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim", }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
             const invoice = await Transaksi.aggregate([
                 { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
                 {
