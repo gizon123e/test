@@ -315,12 +315,12 @@ module.exports = {
 
     pesasanSelesai: async (req, res, next) => {
         try {
-            const { id_address, latitude, longitude, id_konsumen, total_qty, ketersediaan } = req.body
+            const { id_address, latitude, longitude, id_konsumen } = req.body
             const files = req.files
             const images = files ? files.images : null;
 
             const imageNameProfile = `${Date.now()}${path.extname(imageProfile.name)}`;
-            const imagePathProfile = path.join(__dirname, '../../public/pengiriman', images);
+            const imagePathProfile = path.join(__dirname, '../../public/ulasan-produk', images);
 
             await images.mv(imagePathProfile);
 
@@ -335,10 +335,10 @@ module.exports = {
                 id_pesanan: req.params.id,
                 id_konsumen,
             }, {
-                image_pengiriman: `${process.env.HOST}public/pengiriman/${imageNameProfile}`
+                image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}`
             })
 
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Selesai" }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Selesai", image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}` }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
             await Pengiriman.updateOne(

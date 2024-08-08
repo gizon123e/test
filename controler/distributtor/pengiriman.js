@@ -17,7 +17,7 @@ module.exports = {
             const { orderId, id_toko, kode_pengiriman, distributorId } = req.body
 
             const pengiriman = await Pengiriman.find({ orderId, id_toko, kode_pengiriman });
-            if (!pengiriman) return res.status(404).json({ message: `Pengiriman dengan Id ${req.params.id} tidak ditemukan` })
+            if (!pengiriman) return res.status(404).json({ message: `Pengiriman tidak ditemukan` })
 
             await Pengiriman.updateMany({ orderId, id_toko, kode_pengiriman }, { distributorId, status_distributor: "Pesanan terbaru", rejected: false, status_pengiriman: 'diproses' })
 

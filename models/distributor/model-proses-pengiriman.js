@@ -86,6 +86,11 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         type: Number,
         required: false,
         default: 0
+    },
+    image_pengiriman: {
+        type: String,
+        required: false,
+        default: null
     }
 }, { timestamps: true })
 
