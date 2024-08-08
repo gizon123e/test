@@ -7,6 +7,7 @@ router.get("/list/:id", authorization, controlerPesananDistributor.getAllPesanan
 router.get('/detail/:id', authorization, controlerPesananDistributor.getByIdPengirimanDistributor);
 router.put("/request-pickup/:id", authorization, controllerPengiriman.requestPickUp);
 router.put('/terima', controlerPesananDistributor.updateDiTerimaDistributor);
+router.put('pencarian-ulang', authorization, controllerPengiriman.createPencarianUlangDistributor)
 
 module.exports = router
 
