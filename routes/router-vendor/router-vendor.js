@@ -19,7 +19,6 @@ router.get('/toko/proses-pengiriman', authorization, controllerToko.getAllProses
 router.get('/notifikasi/rekomendasi', authorization, controllerToko.getNotifUpload);
 router.get('/toko/penghasilan', authorization, controllerPenghasilan.getPenghasilan);
 router.post("/create", controllerVendor.createVendor);
-router.post("/toko/order/incomplete", authorization, controllerToko.createIncompleteOrders);
 router.post("/create/toko", controllerToko.createToko);
 router.post("/pic/create", controllerPic.createPic);
 router.put("/update", authorization, controllerVendor.updateVendor);

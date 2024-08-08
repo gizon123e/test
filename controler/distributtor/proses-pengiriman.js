@@ -50,9 +50,21 @@ module.exports = {
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
 
+            const datas = []
+            for (let data of dataProsesPengirimanDistributor) {
+                let total_qty = 0
+                for (let item of data.produk_pengiriman) {
+                    total_qty += item.quantity
+                }
+                datas.push({
+                    data,
+                    total_qty
+                })
+            }
+
             res.status(200).json({
                 message: "data get All success",
-                datas: dataProsesPengirimanDistributor
+                datas: datas
             })
         } catch (error) {
             console.log(error)

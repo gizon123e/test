@@ -199,28 +199,5 @@ module.exports = {
             console.log(error);
             next(error);
         }
-    },
-
-    createIncompleteOrders: async(req, res, next) => {
-        try {
-            const { userIdKonsumen, pengirimanId, completedOrders } = req.body
-            if(!userIdKonsumen) return res.status(400).json({message: "Kirimkan userIdKonsumen"});
-            if(!pengirimanId) return res.status(400).json({message: "Kirimkan pengirimanId"});
-            if(req.user.role.toLowerCase() !== "vendor") return res.status(400).json({message: "Invalid resource request"});
-            const incompleteOrder = await IncompleteOrders.create({
-                userIdSeller: req.user.id,
-                userIdKonsumen,
-                pengirimanId,
-                completedOrders
-            });
-            await Vendor.updateOne(
-                { userId: req.user.id },
-                { $inc : { nilai_pinalti: 1 }}
-            )
-            return res.status(200).json({message: "Berhasil membuat pesanan tidak terpenuhi", data: incompleteOrder})
-        } catch (error) {
-            console.log(error);
-            next(error)
-        }
     }
 }
