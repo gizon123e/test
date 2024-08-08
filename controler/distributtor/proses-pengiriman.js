@@ -29,6 +29,9 @@ function formatTanggal(tanggal) {
 module.exports = {
     getAllProsesPengiriman: async (req, res, next) => {
         try {
+            const { status, page = 1, limit = 5 } = req.query;
+            const skip = (page - 1) * limit;
+
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: 'data not FOund' })
 
@@ -47,12 +50,14 @@ module.exports = {
                     path: "produk_pengiriman.productId",
                     populate: "categoryId"
                 })
+                .skip(skip)
+                .limit(parseInt(limit));
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
 
             res.status(200).json({
                 message: "data get All success",
-                datas: datas
+                datas: dataProsesPengirimanDistributor
             })
         } catch (error) {
             console.log(error)
