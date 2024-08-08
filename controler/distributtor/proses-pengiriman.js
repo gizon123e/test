@@ -50,18 +50,6 @@ module.exports = {
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
 
-            const datas = []
-            for (let data of dataProsesPengirimanDistributor) {
-                let total_qty = 0
-                for (let item of data.produk_pengiriman) {
-                    total_qty += item.quantity
-                }
-                datas.push({
-                    data,
-                    total_qty
-                })
-            }
-
             res.status(200).json({
                 message: "data get All success",
                 datas: datas
@@ -208,7 +196,7 @@ module.exports = {
             if (!total_qty || !ketersediaan) return res.status(400).json({ message: "data total_qty & ketersediaan harus di isi" })
             const distri = await Distributtor.exists({ userId: req.user.id })
 
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim" }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim", total_qty: total_qty }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
             console.log(prosesPengiriman)
 
             await PelacakanDistributorKonsumen.create({

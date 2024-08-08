@@ -11,7 +11,7 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         ref: "Sekolah",
         required: [true, "konsumenId harus di isi"]
     },
-    pengirimanId:{
+    pengirimanId: {
         type: mongoose.Types.ObjectId,
         ref: "Pengiriman",
         required: [true, 'kirimkan pengirimanId']
@@ -81,6 +81,10 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
     total_berat: {
         type: Number,
         required: [true, "total_berat harus di isi"]
+    },
+    total_qty: {
+        type: Number,
+        required: false
     }
 }, { timestamps: true })
 
