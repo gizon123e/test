@@ -145,7 +145,7 @@ module.exports = {
             if (!total_qty) return res.status(400).json({ message: "data total_qty harus di isi" })
 
             const distri = await Distributtor.exists({ userId: req.user.id })
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sudah dijemput" }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
+            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sudah dijemput", total_qty: total_qty }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
             const dataOneProsesPengirirman = await ProsesPengirimanDistributor.findOne({ _id: req.params.id, distributorId: distri._id })
 
             console.log(dataOneProsesPengirirman)
