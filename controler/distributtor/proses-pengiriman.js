@@ -192,11 +192,12 @@ module.exports = {
 
     mulaiPengiriman: async (req, res, next) => {
         try {
-            const { id_address, latitude, longitude, id_konsumen, total_qty, ketersediaan } = req.body
+            const { id_address, latitude, longitude, id_konsumen, total_qty } = req.body
             if (!total_qty || !ketersediaan) return res.status(400).json({ message: "data total_qty & ketersediaan harus di isi" })
             const distri = await Distributtor.exists({ userId: req.user.id })
 
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim" }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
+            console.log(prosesPengiriman)
 
             await PelacakanDistributorKonsumen.create({
                 id_toko: prosesPengiriman.tokoId,
@@ -208,7 +209,6 @@ module.exports = {
                 id_konsumen,
                 statusPengiriman: 'Pesanan sedang dalam perjalanan',
                 total_qty,
-                ketersediaan
             })
 
             const invoice = await Transaksi.aggregate([
