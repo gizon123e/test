@@ -31,6 +31,7 @@ const Pengemasan = require('../models/model-pengemasan');
 const { calculateDistance } = require('../utils/menghitungJarak');
 const ProsesPengirimanDistributor = require("../models/distributor/model-proses-pengiriman");
 const Distributtor = require("../models/distributor/model-distributor");
+const Vendor = require("../models/vendor/model-vendor");
 dotenv.config();
 
 const now = new Date();
@@ -873,6 +874,11 @@ module.exports = {
 
                     const created = checkCreatedAt()
                     const sixHoursAgo = new Date(new Date().getTime() - 6 * 60 * 60 * 1000)
+                    const toko = await TokoVendor.findById(pesanan[key].pengiriman.id_toko).select("userId")
+                    await Vendor.updateOne(
+                        { userId: toko.userId },
+                        { $inc : { nilai_pinalti: 2 }}
+                    )
                     if(created < sixHoursAgo){
                         await Pengiriman.findByIdAndUpdate(pesanan[key].pengiriman._id, {
                             canceled: true,
