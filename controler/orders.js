@@ -2345,7 +2345,8 @@ module.exports = {
             const countedSeller = new Set()
             const addedInv = new Set()
             for(const shp of shipments){
-                const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId})
+                const dataProduct = await DataProductOrder.findOne({pesananId: shp.orderId});
+                const incompleteOrder = await IncompleteOrders.findOne({pengirimanId: shp._id})
                 const inv = await Invoice.findOne({_id: shp.invoice, status: "Lunas"}).populate('id_transaksi');
                 let user;
                 let total_harga_produk = 0

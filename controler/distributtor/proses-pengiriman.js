@@ -52,12 +52,14 @@ module.exports = {
 
             const datas = []
             for (let data of dataProsesPengirimanDistributor) {
+                const { waktu_pengiriman, ...restOfData } = data
                 let total_qty = 0
                 for (let item of data.produk_pengiriman) {
                     total_qty += item.quantity
                 }
                 datas.push({
-                    data,
+                    ...restOfData,
+                    waktu_pengiriman: new Date(waktu_pengiriman),
                     total_qty
                 })
             }

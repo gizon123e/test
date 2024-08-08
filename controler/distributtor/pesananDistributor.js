@@ -83,7 +83,6 @@ module.exports = {
                 .limit(parseInt(limit));
 
             if (!datas || datas.length === 0) return res.status(404).json({ message: "Saat ini data pesanan distributor kosong" });
-
             const pengiriman = {}
             const foundedProduct = {}
             for (let data of datas) {
