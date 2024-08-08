@@ -79,6 +79,10 @@ const modelPengiriman = new mongoose.Schema({
     isRequestedToPickUp: {
         type: Boolean,
         default: false
+    },
+    amountCapable: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true });
 
