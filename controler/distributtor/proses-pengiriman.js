@@ -90,8 +90,6 @@ module.exports = {
 
     mulaiPenjemputan: async (req, res, next) => {
         try {
-            const { id_toko, id_address, latitude, longitude, id_distributor, id_pesanan, id_konsumen, } = req.body
-
             const distri = await Distributtor.exists({ userId: req.user.id })
 
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput" }, { new: true });
@@ -100,18 +98,6 @@ module.exports = {
                 { _id: prosesPengiriman.pengirimanId },
                 { status_pengiriman: "dikirim" }
             )
-
-            await PelacakanDistributorKonsumen.create({
-                id_toko,
-                id_address,
-                latitude,
-                longitude,
-                id_distributor,
-                id_pesanan,
-                id_konsumen,
-                statusPengiriman: 'Pesanan diserahkan ke distributor'
-            })
-
 
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
@@ -124,10 +110,20 @@ module.exports = {
 
     sudahDiJemput: async (req, res, next) => {
         try {
-            if (!total_qty || !ketersediaan) return res.status(400).json({ message: "data total_qty & ketersediaan harus di isi" })
-
+            const { id_address, latitude, longitude, id_konsumen } = req.body
             const distri = await Distributtor.exists({ userId: req.user.id })
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sudah dijemput" }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
+
+            await PelacakanDistributorKonsumen.create({
+                id_toko: prosesPengiriman.tokoId,
+                id_address,
+                latitude,
+                longitude,
+                id_distributor: distri._id,
+                id_pesanan: req.params.id,
+                id_konsumen,
+                statusPengiriman: 'Pesanan diserahkan ke distributor'
+            })
             const invoice = await Transaksi.aggregate([
                 { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
                 { $project: { _id: 1 } },
@@ -196,7 +192,7 @@ module.exports = {
     mulaiPengiriman: async (req, res, next) => {
         try {
             const { id_address, latitude, longitude, id_konsumen, total_qty, ketersediaan } = req.body
-
+            if (!total_qty || !ketersediaan) return res.status(400).json({ message: "data total_qty & ketersediaan harus di isi" })
             const distri = await Distributtor.exists({ userId: req.user.id })
 
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim" }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
