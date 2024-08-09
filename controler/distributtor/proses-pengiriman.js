@@ -95,10 +95,13 @@ module.exports = {
                 populate("jenisKendaraan")
 
             if (!dataProsesPengirimanDistributor) return res.status(404).json({ message: "Data Not Found" })
-
+            const { waktu_pengiriman, ...pgr } = dataProsesPengirimanDistributor
             res.status(200).json({
                 message: "get detail success",
-                data: dataProsesPengirimanDistributor
+                data: {
+                    waktu_pengiriman: new Date(waktu_pengiriman),
+                    ...pgr
+                }
             })
 
         } catch (error) {
