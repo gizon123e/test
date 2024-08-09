@@ -2351,7 +2351,7 @@ module.exports = {
                     if(inv){
                         
                         total_harga_produk += selectedProduct.total_price * prd.quantity
-
+                        
                         if(!countedSeller.has(user._id.toString())){
                             user = await User.findById(selectedProduct.userId)
                             countedSeller.add(user._id.toString())
@@ -2362,7 +2362,7 @@ module.exports = {
                 };
                 if(inv){
                     const distri = await Distributtor.findById(shp.distributorId).select("userId");
-                    const user = await User.findById(distri.userId)
+                    const userDistri = await User.findById(distri.userId)
 
                     if(!addedInv.has(inv._id.toString())){
                         promisesFunction.push(
@@ -2371,7 +2371,6 @@ module.exports = {
                                 jenis_transaksi: "masuk",
                                 status: "Pembayaran Berhasil",
                                 kode_transaksi: `TRX_SYS_OUT_PRH_${date}_${minutes}_${total_transaksi += 1}`,
-                                userId: user._id,
                                 jumlah: inv.id_transaksi.detailBiaya.biaya_layanan + inv.id_transaksi.detailBiaya.biaya_jasa_aplikasi
                             }),
 
@@ -2380,7 +2379,6 @@ module.exports = {
                                 jenis_transaksi: "masuk",
                                 status: "Pembayaran Berhasil",
                                 kode_transaksi: `TRX_PRH_IN_SYS_${date}_${minutes}_${total_transaksi += 1}`,
-                                userId: user._id,
                                 jumlah: inv.id_transaksi.detailBiaya.biaya_layanan + inv.id_transaksi.detailBiaya.biaya_jasa_aplikasi
                             })
                         )
@@ -2430,8 +2428,8 @@ module.exports = {
                             id_pesanan: shp.orderId,
                             jenis_transaksi: "masuk",
                             status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_${user.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi += 1}`,
-                            userId: user._id,
+                            kode_transaksi: `TRX_${userDistri.get('kode_role')}_IN_SYS_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: userDistri._id,
                             jumlah: shp.total_ongkir
                         }),
 
@@ -2439,8 +2437,8 @@ module.exports = {
                             id_pesanan: shp.orderId,
                             jenis_transaksi: "keluar",
                             status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_${user.get('kode_role')}_OUT_PRH_${date}_${minutes}_${total_transaksi += 1}`,
-                            userId: user._id,
+                            kode_transaksi: `TRX_${userDistri.get('kode_role')}_OUT_PRH_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: userDistri._id,
                             jumlah: biayaTetap.fee_distributor
                         }),
 
@@ -2448,8 +2446,8 @@ module.exports = {
                             id_pesanan: shp.orderId,
                             jenis_transaksi: "keluar",
                             status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_SYS_OUT_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
-                            userId: user._id,
+                            kode_transaksi: `TRX_SYS_OUT_${userDistri.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: userDistri._id,
                             jumlah: shp.total_ongkir
                         }),
 
@@ -2457,8 +2455,8 @@ module.exports = {
                             id_pesanan: shp.orderId,
                             jenis_transaksi: "masuk",
                             status: "Pembayaran Berhasil",
-                            kode_transaksi: `TRX_PRH_IN_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
-                            userId: user._id,
+                            kode_transaksi: `TRX_PRH_IN_${userDistri.get('kode_role')}_${date}_${minutes}_${total_transaksi += 1}`,
+                            userId: userDistri._id,
                             jumlah: biayaTetap.fee_distributor
                         }),
                     )

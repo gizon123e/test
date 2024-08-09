@@ -8,13 +8,10 @@ module.exports = {
     getPenghasilan: async(req, res, next) => {
         try {
             const transaksis = await Transaksi.find({
-                userId: req.user.id,
-                createdAt: {
-                    $gte: now
-                }
+                userId: req.user.id
             })
             .lean();
-
+            console.log(req.user)
             const products = (await Product.find({userId: req.user.id}).lean()).map(prod => prod._id);
             const salesReport = await SalesReport.find({productId: { $in: products }});
             let total_terjual = 0;
