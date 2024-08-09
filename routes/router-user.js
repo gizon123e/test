@@ -9,6 +9,7 @@ const router = require("express").Router();
 // router auth user
 router.get("/check-verified-detail", authorization, controlerAuthUser.validateDetail);
 router.post("/login", controlerAuthUser.login);
+router.post("/reset-password", authorization , controlerAuthUser.resetPassword);
 router.post("/register", controlerAuthUser.register);
 router.post('/check-duplicate', controlerAuthUser.chekDuplicateNumberOrEmail);
 router.post("/check-verified", controlerAuthUser.validateUser);

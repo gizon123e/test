@@ -398,6 +398,18 @@ module.exports = {
     }
   },
 
+  resetPassword: async(req, res, next) => {
+    try {
+      const { password, userId } = req.body
+      const password_baru = await bcrypt.hash(password, 10);
+      await User.findByIdAndUpdate(userId, { password: password_baru });
+      return res.status(201).json({message: "Berhasil Mengubah Password"})
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
   successRegisterWithEmail: async (req, res, next) =>{
     try {
       const registeredUser = await User.exists({'email.content': req.user.email});
