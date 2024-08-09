@@ -2352,7 +2352,7 @@ module.exports = {
                         
                         total_harga_produk += selectedProduct.total_price * prd.quantity
                         
-                        if(!countedSeller.has(user._id.toString())){
+                        if(!countedSeller.has(user?._id.toString())){
                             user = await User.findById(selectedProduct.userId)
                             countedSeller.add(user._id.toString())
                         }
