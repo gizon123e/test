@@ -13,7 +13,7 @@ module.exports = {
             const processPengiriman = await ProsesPengirimanDistributor.findOne({ pengirimanId: pengirimanId })
             if (!processPengiriman) return res.status(404).json({ message: "pesanan id not found" })
 
-            const location = await PelacakanDistributorKonsumen.find({ id_toko, id_distributor, id_pesanan: processPengiriman._id });
+            const location = await PelacakanDistributorKonsumen.find({ id_toko, id_distributor, id_pesanan: processPengiriman._id, id_konsumen: konsumen._id });
             if (!location) {
                 return res.status(404).json({ message: 'Lokasi tidak ditemukan' });
             }

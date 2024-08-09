@@ -401,7 +401,6 @@ module.exports = {
             const validateLayananKendaraan = await LayananKendaraanDistributor.findOne({ jenisKendaraan: jenisKendaraan, id_distributor: id_distributor }).populate("jenisKendaraan")
 
             const dataTarifidArray = tarifId.split('/');
-            console.log(dataTarifidArray)
 
             if (!validateLayananKendaraan) {
                 for (let idTarif of dataTarifidArray) {
@@ -417,7 +416,7 @@ module.exports = {
                 }
             } else if (validateJenisKendaraan.jenis !== validateLayananKendaraan.jenisKendaraan.jenis) {
                 for (let idTarif of dataTarifidArray) {
-                    console.log('tes 2 --------->')
+
                     const validateTarifId = await Tarif.findOne({ _id: idTarif })
                     if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
                     const createLayanaKendaraan = await LayananKendaraanDistributor.create({
@@ -425,8 +424,6 @@ module.exports = {
                         jenisKendaraan,
                         tarifId: idTarif,
                     })
-
-                    console.log('tes 2 --------->')
 
                     dataCreateKendaraan.push(createLayanaKendaraan)
                 }
