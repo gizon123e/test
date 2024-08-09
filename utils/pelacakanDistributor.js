@@ -1,4 +1,4 @@
-const PelacakanDistributorKonsumen = require('../models/distributor/pelacakanDistributorKonsumen');
+const PelacakanDistributorKonsumen = require('../models/konsumen/pelacakanDistributorKonsumen');
 
 const updateDistributorKonsumenLocation = async (data) => {
   const { id_toko, id_address, latitude, longitude } = data;

@@ -115,10 +115,17 @@ module.exports = {
             const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
             const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
 
+            await file_sim.mv(imagePath);
+
             const regexNotelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
             if (!regexNotelepon.test(no_telepon.toString())) return res.status(400).json({ message: "Nomor telepon tidak valid" });
 
-            await file_sim.mv(imagePath);
+            const dataPengemudi = await Pengemudi.create({
+                file_sim: `${process.env.HOST}public/image-profile-distributtor/${imageName}`,
+                no_telepon: no_telepon.toString(),
+                jenis_sim
+            })
+
         } catch (error) {
             console.log(error)
             next(error)

@@ -1,6 +1,6 @@
 const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
 const Pengiriman = require('../../models/model-pengiriman')
-const PelacakanDistributorKonsumen = require('../../models/distributor/pelacakanDistributorKonsumen')
+const PelacakanDistributorKonsumen = require('../../models/konsumen/pelacakanDistributorKonsumen')
 const Distributtor = require('../../models/distributor/model-distributor')
 const { Transaksi } = require('../../models/model-transaksi')
 const Invoice = require('../../models/model-invoice')
@@ -113,6 +113,8 @@ module.exports = {
     mulaiPenjemputan: async (req, res, next) => {
         try {
             const { id_address, latitude, longitude, id_konsumen } = req.body
+
+            if (!id_address) return res.status(400).json({ message: 'id_address harus di isi' })
             const distri = await Distributtor.exists({ userId: req.user.id })
 
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput" }, { new: true });
@@ -145,7 +147,7 @@ module.exports = {
     sudahDiJemput: async (req, res, next) => {
         try {
             const { id_address, latitude, longitude, id_konsumen, total_qty } = req.body
-            if (!total_qty) return res.status(400).json({ message: "data total_qty harus di isi" })
+            if (!total_qty || !id_address) return res.status(400).json({ message: "data total_qty dan id_address harus di isi" })
 
             const distri = await Distributtor.exists({ userId: req.user.id })
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sudah dijemput", total_qty: total_qty }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
