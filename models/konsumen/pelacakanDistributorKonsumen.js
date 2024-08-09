@@ -16,6 +16,11 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
         required: [true, "id_kosumen harus di isi"],
         ref: "Konsumen"
     },
+    id_address: {
+        type: mongoose.Types.ObjectId,
+        required: false,
+        ref: "Address"
+    },
     latitude: {
         type: Number,
         required: false,
