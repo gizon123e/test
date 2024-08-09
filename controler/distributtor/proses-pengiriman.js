@@ -35,7 +35,13 @@ module.exports = {
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: 'data not FOund' })
 
-            const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ distributorId: distributor._id })
+            let query = { distributorId: distributor._id }
+
+            if (status) {
+                query.status_distributor = status
+            }
+
+            const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find(query)
                 .populate({
                     path: "tokoId",
                     populate: "address"
