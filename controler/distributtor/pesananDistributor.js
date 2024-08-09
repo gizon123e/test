@@ -358,12 +358,6 @@ module.exports = {
                     }
                 })
 
-            const prodIds = payLoadDataPengiriman.flatMap(pgr => {
-                return pgr.productToDelivers.map(item => item.productId);
-            });
-
-            const products = await Product.find({ _id: { $in: prodIds } })
-
             let productToDelivers = []
             let tarif_pengiriman = 0
             for (const data of payLoadDataPengiriman) {

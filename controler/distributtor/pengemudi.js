@@ -126,6 +126,10 @@ module.exports = {
                 jenis_sim
             })
 
+            res.status(200).json({
+                message: "update success data",
+                data: dataPengemudi
+            })
         } catch (error) {
             console.log(error)
             next(error)

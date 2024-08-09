@@ -18,6 +18,7 @@ const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi');
 const { io } = require("socket.io-client");
 const BiayaTetap = require('../models/model-biaya-tetap');
 const Distributtor = require('../models/distributor/model-distributor');
+const ProsesPengirimanDistributor = require('../models/distributor/model-proses-pengiriman');
 
 dotenv.config();
 
@@ -132,8 +133,12 @@ module.exports = {
                     const pengiriman = await Pengiriman.find({invoice: invoiceTambahan._id})
 
                     for(const pgr of pengiriman){
+                        const proses = await ProsesPengirimanDistributor.findOne({kode_pengiriman: pgr.kode_pengiriman})
                         for(const prd of pgr.productToDelivers){
+                            const index = proses.produk_pengiriman.findIndex(prod => prod._id === prd._id)
+                            proses.produk_pengiriman[index].quantity += prd.quantity
                             promisesFunct.push(
+                                proses.save(),
                                 Product.findByIdAndUpdate(
                                     prd.productId,
                                     {
