@@ -87,47 +87,50 @@ module.exports = {
             const foundedProduct = {}
             for (let data of datas) {
                 const { productToDelivers, total_ongkir, potongan_ongkir, ...restOfShipment } = data
-                const storeId = `${data.id_toko._id.toString()}-${data.orderId._id.toString()}-${data._id}`
-                const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
+                const proses = await ProsesPengirimanDistributor.exists({pengirimanId: data._id});
+                if(!proses){
+                    const storeId = `${data.id_toko._id.toString()}-${data.orderId._id.toString()}-${data._id}`
+                    const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
-                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
-                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
+                    const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
+                    const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
 
-                productToDelivers.forEach(prod => {
-                    const productId = prod.productId._id.toString();
-                    if (!foundedProduct[productId]) {
-                        foundedProduct[productId] = {
-                            storeId,
-                            productId: prod.productId,
-                            quantity: 0
+                    productToDelivers.forEach(prod => {
+                        const productId = prod.productId._id.toString();
+                        if (!foundedProduct[productId]) {
+                            foundedProduct[productId] = {
+                                storeId,
+                                productId: prod.productId,
+                                quantity: 0
+                            }
                         }
-                    }
-                    foundedProduct[productId].quantity += prod.quantity
-                })
+                        foundedProduct[productId].quantity += prod.quantity
+                    })
 
-                if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
-                    if (!pengiriman[storeId]) {
-                        pengiriman[storeId] = {
-                            ...restOfShipment,
-                            total_ongkir: 0,
-                            potongan_ongkir: 0,
+                    if (data.invoice.toString() === invoiceSubsidi?._id.toString()) {
+                        if (!pengiriman[storeId]) {
+                            pengiriman[storeId] = {
+                                ...restOfShipment,
+                                total_ongkir: 0,
+                                potongan_ongkir: 0,
+                            }
                         }
+
+                        pengiriman[storeId].potongan_ongkir += potongan_ongkir
+                        pengiriman[storeId].total_ongkir += total_ongkir
                     }
 
-                    pengiriman[storeId].potongan_ongkir += potongan_ongkir
-                    pengiriman[storeId].total_ongkir += total_ongkir
-                }
-
-                if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
-                    if (!pengiriman[storeId]) {
-                        pengiriman[storeId] = {
-                            ...restOfShipment,
-                            total_ongkir: 0,
-                            potongan_ongkir: 0,
+                    if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
+                        if (!pengiriman[storeId]) {
+                            pengiriman[storeId] = {
+                                ...restOfShipment,
+                                total_ongkir: 0,
+                                potongan_ongkir: 0,
+                            }
                         }
+                        pengiriman[storeId].potongan_ongkir += potongan_ongkir
+                        pengiriman[storeId].total_ongkir += total_ongkir
                     }
-                    pengiriman[storeId].potongan_ongkir += potongan_ongkir
-                    pengiriman[storeId].total_ongkir += total_ongkir
                 }
             }
             const mergedProduct = Object.keys(foundedProduct).map(key => foundedProduct[key])
