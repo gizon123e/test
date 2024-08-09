@@ -135,10 +135,14 @@ module.exports = {
                     for(const pgr of pengiriman){
                         const proses = await ProsesPengirimanDistributor.findOne({kode_pengiriman: pgr.kode_pengiriman})
                         for(const prd of pgr.productToDelivers){
-                            const index = proses.produk_pengiriman.findIndex(prod => prod._id === prd._id)
-                            proses.produk_pengiriman[index].quantity += prd.quantity
+                            if(proses){
+                                const index = proses.produk_pengiriman.findIndex(prod => prod._id === prd._id)
+                                proses.produk_pengiriman[index].quantity += prd.quantity
+                                promisesFunct.push(
+                                    proses.save()
+                                )
+                            }
                             promisesFunct.push(
-                                proses.save(),
                                 Product.findByIdAndUpdate(
                                     prd.productId,
                                     {
