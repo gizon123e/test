@@ -374,6 +374,119 @@ module.exports = {
         }
     },
 
+    getAllDistributtorBeckup: async (req, res, next) => {
+        try {
+            const { name, addressId } = req.query
+            const { product = [], id_toko = [] } = req.body
+
+            const ukuranVolumeMotor = 100 * 30 * 40
+            let totalUkuranVolumeProduct = 0
+            let totalUkuranBeratProduct = 0
+
+            for (let productId of product) {
+                const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
+                const ukuranVolumeProduct = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang;
+                const ukuranBeratProduct = dataProduct.berat * productId.qty;
+                totalUkuranVolumeProduct += ukuranVolumeProduct;
+                totalUkuranBeratProduct += ukuranBeratProduct;
+            }
+            const addressTokoVendor = []
+            for (const data of id_toko) {
+                const addressVendor = await TokoVendor.findOne({ _id }).populate('address')
+            }
+
+            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
+            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+
+            const konsumenAddress = await Konsumen.findOne({ userId: req.user.id }).populate("address")
+            const latitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.lat)
+            const longitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.long)
+
+            if (addressId) {
+                const addressCustom = await Address.findById(addressId)
+                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
+                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
+                const jarakVendorKonsumen = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+                if (isNaN(jarakVendorKonsumen)) {
+                    return res.status(400).json({
+                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                    });
+                }
+            } else {
+                const jarakVendorKonsumen = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+                if (isNaN(jarakVendorKonsumen)) {
+                    return res.status(400).json({
+                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                    });
+                }
+            }
+
+            let query = {
+
+            }
+            if (name) {
+                query.nama_distributor = { $regex: name, $options: 'i' }
+            }
+
+            let datas = []
+            const dataDistributtor = await Distributtor.find(query).populate("userId", '-password').populate('alamat_id')
+            if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
+
+            for (let distributor of dataDistributtor) {
+                const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
+                const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
+
+                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+
+                if (Math.round(distance) < 50 && distance !== NaN) {
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
+                        .populate({
+                            path: "id_distributor",
+                            populate: "alamat_id"
+                        })
+                        .populate("jenisKendaraan")
+                        .lean()
+
+                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, status: 'Aktif' })
+
+                    let filteredDataKendaraan = dataKendaraan
+                    if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis !== 'Motor');
+                    } else {
+                        filteredDataKendaraan = dataKendaraan
+                    }
+
+                    if (filteredDataKendaraan.length > 0 && dataPengemudi.length > 0) {
+                        datas.push({
+                            distributor,
+                            jarakTempu: Math.round(distance)
+                        })
+                    }
+                }
+            }
+
+            if (datas.length === 0) {
+                return res.status(400).json({ message: "distributor belom tersedia" })
+            }
+
+            res.status(200).json({
+                message: "success get data Distributtor",
+                datas
+            })
+
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
+    },
+
     getAllPencarianUlangDistributor: async (req, res, next) => {
         try {
             const { name, addressId } = req.query
