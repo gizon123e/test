@@ -86,7 +86,7 @@ module.exports = {
             const pengiriman = {}
             const foundedProduct = {}
             for (let data of datas) {
-                const { productToDelivers, total_ongkir, potongan_ongkir, ...restOfShipment } = data
+                const { productToDelivers, total_ongkir, ongkir, potongan_ongkir, ...restOfShipment } = data
                 const storeId = `${data.id_toko._id.toString()}-${data.orderId._id.toString()}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
@@ -111,11 +111,13 @@ module.exports = {
                             ...restOfShipment,
                             total_ongkir: 0,
                             potongan_ongkir: 0,
+                            ongkir: 0
                         }
                     }
 
                     pengiriman[storeId].potongan_ongkir += potongan_ongkir
                     pengiriman[storeId].total_ongkir += total_ongkir
+                    pengiriman[storeId].ongkir += ongkir
                 }
 
                 if (data.invoice.toString() === invoiceTambahan?._id.toString()) {
@@ -124,10 +126,12 @@ module.exports = {
                             ...restOfShipment,
                             total_ongkir: 0,
                             potongan_ongkir: 0,
+                            ongkir: 0
                         }
                     }
                     pengiriman[storeId].potongan_ongkir += potongan_ongkir
                     pengiriman[storeId].total_ongkir += total_ongkir
+                    pengiriman[storeId].ongkir += ongkir
                 }
             }
             const mergedProduct = Object.keys(foundedProduct).map(key => foundedProduct[key])
