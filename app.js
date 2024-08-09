@@ -86,6 +86,9 @@ app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
 app.use('/api/review-vendor', require('./routes/router-vendor/router-reviewVendor'))
 
+// router konsumen
+app.use("/api/treking", require('./routes/router-konsumen/router-pelacakan'))
+
 // router distributtor
 app.use("/api/distributor", require('./routes/router-distributtor/router-distributtor'));
 app.use('/api/document-penanggungan-jawab', require('./routes/router-distributtor/router-document-penanggungJawab'))

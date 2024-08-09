@@ -1,11 +1,19 @@
-const PelacakanDistributorKonsumen = require('../../models/distributor/pelacakanDistributorKonsumen')
-const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
+const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman');
+const PelacakanDistributorKonsumen = require('../../models/konsumen/pelacakanDistributorKonsumen');
+const Konsumen = require('../../models/konsumen/model-konsumen');
 
 module.exports = {
     getTrekingDistributor: async (req, res) => {
-        const { id_toko, id_address } = req.params;
         try {
-            const location = await PelacakanDistributorKonsumen.findOne({ id_address, id_toko });
+            const { id_toko, id_distributor, pengirimanId } = req.params;
+
+            const konsumen = await Konsumen.findOne({ userId: req.user.id })
+            if (!konsumen) return res.status(404).json({ message: 'konsumen tidak ada' })
+
+            const processPengiriman = await ProsesPengirimanDistributor.findOne({ pengirimanId: pengirimanId })
+            if (!processPengiriman) return res.status(404).json({ message: "pesanan id not found" })
+
+            const location = await PelacakanDistributorKonsumen.find({ id_toko, id_distributor, id_pesanan: processPengiriman._id, id_konsumen: konsumen._id });
             if (!location) {
                 return res.status(404).json({ message: 'Lokasi tidak ditemukan' });
             }
