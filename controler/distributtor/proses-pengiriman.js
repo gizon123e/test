@@ -12,6 +12,7 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 const { io } = require("socket.io-client");
+const Pengemudi = require("../../models/distributor/model-pengemudi")
 
 const socket = io('http://localhost:5000', {
     auth: {
@@ -120,7 +121,7 @@ module.exports = {
         try {
             const { id_pengemudi, id_kendaraan } = req.body
 
-            const data = await ProsesPengirimanDistributor.findByIdAndUpdate({ _id: req.params }, { id_pengemudi, id_kendaraan }, { new: true })
+            const data = await ProsesPengirimanDistributor.findByIdAndUpdate({ _id: req.params.id }, { id_pengemudi, id_kendaraan }, { new: true })
 
             res.status(200).json({
                 message: "update proses pengiriman distributor",

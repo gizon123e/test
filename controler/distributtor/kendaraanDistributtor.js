@@ -797,13 +797,13 @@ module.exports = {
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: "distributor not found" })
 
-            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id })
-            if (kendaraaan.length === 0) return res.status(400).json({ message: 'belom ada yang tersedia kendaraanmu' })
-
-            const prosesPengiriman = await ProsesPengirimanDistributor.findById(req.params.id)
+            const prosesPengiriman = await ProsesPengirimanDistributor.findById(req.params.id).populate('pengirimanId')
             if (!prosesPengiriman) return res.status(404).json({ message: "proses pesanan not found" })
 
-            const datas = kendaraaan.filter((item) => item._id !== prosesPengiriman.id_kendaraan)
+            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id, jenisKendaraan: prosesPengiriman.id_jenis_kendaraan })
+            if (kendaraaan.length === 0) return res.status(400).json({ message: 'belom ada yang tersedia kendaraanmu' })
+
+            const datas = kendaraaan.filter((item) => item._id === prosesPengiriman.id_kendaraan)
 
             res.status(200).json({
                 message: "get data Kendaraan success",
