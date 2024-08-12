@@ -93,12 +93,15 @@ module.exports = {
                     populate: "address"
                 })
                 .populate({
-                    path: "konsumenId",
+                    path: "sekolahId",
                     populate: "address"
                 })
                 .populate("jenisPengiriman")
-                .populate({ path: "produk_pengiriman.produkId" }).
-                populate("jenisKendaraan")
+                .populate({
+                    path: "produk_pengiriman.productId",
+                    populate: "categoryId"
+                })
+                .populate("jenisKendaraan")
 
             if (!dataProsesPengirimanDistributor) return res.status(404).json({ message: "Data Not Found" })
 
