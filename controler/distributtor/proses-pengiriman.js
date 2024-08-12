@@ -12,6 +12,7 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 const { io } = require("socket.io-client");
+const Pengemudi = require("../../models/distributor/model-pengemudi")
 
 const socket = io('http://localhost:5000', {
     auth: {

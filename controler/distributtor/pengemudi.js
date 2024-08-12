@@ -182,7 +182,15 @@ module.exports = {
             const prosesPengiriman = await ProsesPengirimanDistributor.findById(req.params.id)
             if (!prosesPengiriman) return res.status(404).json({ message: "data proses pengiriman not found" })
 
-            const datas = pengemudi.filter((item) => item._id !== prosesPengiriman.id_pengemudi)
+            const datas = pengemudi.filter((item) => {
+                if (item._id.equals(prosesPengiriman.id_kendaraan)) {
+                    return {
+                        ...item.toObject(),
+                        status: "sedang penjemputan"
+                    };
+                }
+                return item;
+            });
 
             res.status(200).json({
                 message: "get data pengemudi success",
