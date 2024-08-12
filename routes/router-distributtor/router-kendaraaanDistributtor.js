@@ -11,6 +11,7 @@ router.get('/list', authorization, controlerKendaraanDistributtor.getKendaraanDi
 router.get('/panel/:id', controlerKendaraanDistributtor.getKendaraanDistributorDetailPanel)
 router.get('/verifikasi/:id', controlerKendaraanDistributtor.veriifikasiKendaraan)
 router.get('/detail/:id', controlerKendaraanDistributtor.detailKendaraan)
+router.get('/cari-kendaraan/:id', authorization, controlerKendaraanDistributtor.getAllpencarianKendaraDiProsesPengiriman)
 router.post('/detail/:id', authorization, controlerKendaraanDistributtor.getKendaraanDistributorById)
 router.post('/create', controlerKendaraanDistributtor.createKendaraandistributtor)
 router.post('/create-perusahaan', controlerKendaraanDistributtor.createKendaraanPerusahaan)

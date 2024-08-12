@@ -91,6 +91,18 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         type: String,
         required: false,
         default: null
+    },
+    id_kendaraan: {
+        type: mongoose.Types.ObjectId,
+        ref: "KendaraanDistributor",
+        required: false,
+        default: null
+    },
+    id_pengemudi: {
+        type: mongoose.Types.ObjectId,
+        ref: "Pengemudi",
+        required: false,
+        default: null
     }
 }, { timestamps: true })
 

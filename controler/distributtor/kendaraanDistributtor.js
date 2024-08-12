@@ -15,6 +15,7 @@ const LayananKendaraanDistributor = require('../../models/distributor/layananKen
 const path = require('path')
 const fs = require('fs')
 const dotenv = require('dotenv')
+const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
 dotenv.config()
 
 module.exports = {
@@ -775,6 +776,38 @@ module.exports = {
             res.status(200).json({
                 message: 'get data detail kendaraan success',
                 data: kendaran
+            })
+
+        } catch (error) {
+            console.error(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+
+    getAllpencarianKendaraDiProsesPengiriman: async (req, res, next) => {
+        try {
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            if (!distributor) return res.status(404).json({ message: "distributor not found" })
+
+            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id })
+            if (kendaraaan.length === 0) return res.status(400).json({ message: 'belom ada yang tersedia kendaraanmu' })
+
+            const prosesPengiriman = await ProsesPengirimanDistributor.findById(req.params.id)
+            if (!prosesPengiriman) return res.status(404).json({ message: "proses pesanan not found" })
+
+            const datas = kendaraaan.filter((item) => item._id !== prosesPengiriman.id_kendaraan)
+
+            res.status(200).json({
+                message: "get data Kendaraan success",
+                datas
             })
 
         } catch (error) {

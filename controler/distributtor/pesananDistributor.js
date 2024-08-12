@@ -427,7 +427,7 @@ module.exports = {
                     waktu_pesanan: new Date(dataPengiriman.orderId.createdAt),
                     jenisKendaraan: dataPengiriman.id_jenis_kendaraan,
                     potongan_ongkir: dataPengiriman.potongan_ongkir,
-                    waktu_pengiriman: dataPengiriman.waktu_pengiriman,
+                    waktu_pengiriman: new Date(dataPengiriman.waktu_pengiriman),
                     total_berat: total_berat
                 })
             }

@@ -93,21 +93,38 @@ module.exports = {
                     populate: "address"
                 })
                 .populate({
-                    path: "konsumenId",
+                    path: "sekolahId",
                     populate: "address"
                 })
                 .populate("jenisPengiriman")
-                .populate({ path: "produk_pengiriman.produkId" }).
-                populate("jenisKendaraan")
+                .populate({
+                    path: "produk_pengiriman.productId",
+                    populate: "categoryId"
+                })
+                .populate("jenisKendaraan")
 
             if (!dataProsesPengirimanDistributor) return res.status(404).json({ message: "Data Not Found" })
-            const { waktu_pengiriman, ...pgr } = dataProsesPengirimanDistributor
+
             res.status(200).json({
                 message: "get detail success",
-                data: {
-                    waktu_pengiriman: new Date(waktu_pengiriman),
-                    ...pgr
-                }
+                data: dataProsesPengirimanDistributor
+            })
+
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
+
+    updatePerusahaanPenegmudiDanKendaraan: async (req, res, next) => {
+        try {
+            const { id_pengemudi, id_kendaraan } = req.body
+
+            const data = await ProsesPengirimanDistributor.findByIdAndUpdate({ _id: req.params }, { id_pengemudi, id_kendaraan }, { new: true })
+
+            res.status(200).json({
+                message: "update proses pengiriman distributor",
+                data
             })
 
         } catch (error) {
@@ -143,7 +160,7 @@ module.exports = {
 
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
-            return res.status(200).json({ message: "Berhasil Memulai Penjemputan" });
+            return res.status(200).json({ message: "Berhasil Memulai Penjemputan", });
         } catch (error) {
             console.log(error);
             next(error)
@@ -254,27 +271,9 @@ module.exports = {
                 },
                 { $unwind: "$invoice" }
             ])
-            if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
-            // const notifikasi = await Notifikasi.findOne({invoiceId: transaksi[0].invoice._id})
-            // const detailNotifikasi = await DetailNotifikasi.create({
-            //     notifikasiId: notifikasi._id,
-            //     status: "Pesanan sedang dalam pengiriman",
-            //     jenis: "Pesanan",
-            //     message: `${transaksi[0].invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
-            //     image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
-            //     createdAt: new Date()
 
-            // })
-            // socket.emit('notif_pesanan_dikirim', {
-            //     jenis: detailNotifikasi.jenis,
-            //     userId: notifikasi.userId,
-            //     status: detailNotifikasi.status,
-            //     message: detailNotifikasi.message,
-            //     image: detailNotifikasi.image_product,
-            //     tanggal: formatTanggal(detailNotifikasi.createdAt)
-            // })  
-            // if(!prosesPengiriman) return res.status(404).json({message: "Proses pengiriman tidak ditemukan"});
-            // return res.status(200).json({message: "Berhasil Memulai Pengiriman"});
+            if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
+
             if (invoice.length == 1) {
                 const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id })
                 const detailNotifikasi = await DetailNotifikasi.create({
