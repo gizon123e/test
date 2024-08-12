@@ -14,14 +14,18 @@ module.exports = {
             console.log(req.user)
             const products = (await Product.find({userId: req.user.id}).lean()).map(prod => prod._id);
             const salesReport = await SalesReport.find({productId: { $in: products }});
-            let total_terjual = 0;
             const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi === "masuk").reduce((acc, val)=> acc + val.jumlah, 0) - transaksis.filter(tr => tr.jenis_transaksi === "keluar").reduce((acc, val)=> acc + val.jumlah, 0)
-
+            let total_produk = 0;
+            let total_quantity = 0;
+            const addedProduct = new Set()
             for(sp of salesReport){
-                sp.track.map(tr => total_terjual += tr.soldAtMoment)
+                if(!addedProduct.has(sp.productId)){
+                    total_produk += 1;
+                }
+                total_quantity += sp.track.reduce((acc, val) => acc + val.soldAtMoment, 0)
             };
             
-            return res.status(200).json({message: "Berhasil menampilkan penghasilan", total_penghasilan , data: transaksis, totalProdukTerjual: total_terjual })
+            return res.status(200).json({message: "Berhasil menampilkan penghasilan", total_penghasilan , data: transaksis, total: { total_produk, total_quantity } })
         } catch (error) {
             console.log(error);
             next(error)
