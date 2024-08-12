@@ -293,14 +293,21 @@ module.exports = {
                 const addressCustom = await Address.findById(addressId)
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
                 const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-                const jarakVendorKonsumen = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+                const jarakVendorKonsumen = calculateDistance(parseFloat(latitudeAddressCustom), parseFloat(longitudeAddressCustom), parseFloat(latitudeVendor), parseFloat(longitudeVendor), 100);
+                console.log("address custom", {
+                    latA: parseFloat(latitudeAddressCustom),
+                    longA: parseFloat(longitudeAddressCustom),
+                    latB: parseFloat(latitudeVendor),
+                    longB: parseFloat(longitudeVendor)
+                })
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
                         message: "Jarak antara konsumen dan vendor melebihi 100 km"
                     });
                 }
             } else {
-                const jarakVendorKonsumen = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+                const jarakVendorKonsumen = calculateDistance(parseFloat(latitudeKonsumen), parseFloat(longitudeKonsumen), parseFloat(latitudeVendor), parseFloat(longitudeVendor), 100);
+                console.log("address konsumen", jarakVendorKonsumen)
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
                         message: "Jarak antara konsumen dan vendor melebihi 100 km"
@@ -374,7 +381,7 @@ module.exports = {
         }
     },
 
-    getAllDistributtorBeckup: async (req, res, next) => {
+    getAllDistributtorBeckupBisaOrderVendorLebiDariSatu: async (req, res, next) => {
         try {
             const { name, addressId } = req.query
             const { product = [], id_toko = [] } = req.body
@@ -390,87 +397,90 @@ module.exports = {
                 totalUkuranVolumeProduct += ukuranVolumeProduct;
                 totalUkuranBeratProduct += ukuranBeratProduct;
             }
-            const addressTokoVendor = []
-            for (const data of id_toko) {
-                const addressVendor = await TokoVendor.findOne({ _id }).populate('address')
+
+            if (id_toko.length === 2) {
+                const toko1 = await TokoVendor.findOne({ _id: id_toko[0] }).populate('address');
+                const toko2 = await TokoVendor.findOne({ _id: id_toko[1] }).populate('address');
+
+                console.log("toko1", toko1)
+                console.log("toko2", toko2)
+
+                const latitudeToko1 = parseFloat(toko1.address.pinAlamat.lat)
+                const longitudeToko1 = parseFloat(toko1.address.pinAlamat.long)
+                const latitudeToko2 = parseFloat(toko2.address.pinAlamat.lat)
+                const longitudeToko2 = parseFloat(toko2.address.pinAlamat.long)
+
+                const jarak = calculateDistance(latitudeToko1, longitudeToko1, latitudeToko2, longitudeToko2, 200);
+                if (isNaN(jarak)) {
+                    return res.status(400).json({
+                        message: "Jarak antara toko 1 dan toko 2 melebihi 5 km"
+                    });
+                }
             }
 
-            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
-
-            const konsumenAddress = await Konsumen.findOne({ userId: req.user.id }).populate("address")
-            const latitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.lat)
-            const longitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.long)
-
+            const tokoVendor = []
             if (addressId) {
                 const addressCustom = await Address.findById(addressId)
-                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
-                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-                const jarakVendorKonsumen = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
-                if (isNaN(jarakVendorKonsumen)) {
-                    return res.status(400).json({
-                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
-                    });
-                }
-            } else {
-                const jarakVendorKonsumen = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
-                if (isNaN(jarakVendorKonsumen)) {
-                    return res.status(400).json({
-                        message: "Jarak antara konsumen dan vendor melebihi 100 km"
-                    });
+                if (!addressCustom) return res.status(404).json({ essage: 'addressId dat Not Found' })
+
+                for (let data of id_toko) {
+                    const toko = await TokoVendor.findOne({ _id: data }).populate('address');
+
+                    const latitudeToko = parseFloat(toko.address.pinAlamat.lat)
+                    const longitudeToko = parseFloat(toko.address.pinAlamat.long)
+
+                    const jarak = calculateDistance(parseFloat(addressCustom.pinAlamat.lat), parseFloat(addressCustom.pinAlamat.long), latitudeToko, longitudeToko, 100);
+                    if (Math.round(jarak) < 100 && jarak !== NaN) {
+                        tokoVendor.push(toko)
+                    }
                 }
             }
 
-            let query = {
-
-            }
+            let query = {}
             if (name) {
                 query.nama_distributor = { $regex: name, $options: 'i' }
             }
 
             let datas = []
             const dataDistributtor = await Distributtor.find(query).populate("userId", '-password').populate('alamat_id')
-            if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
-
             for (let distributor of dataDistributtor) {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
-                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+                for (let itemToko of tokoVendor) {
+                    const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, parseFloat(itemToko.address.pinAlamat.lat), parseFloat(itemToko.address.pinAlamat.long), 50);
 
-                if (Math.round(distance) < 50 && distance !== NaN) {
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
-                        .populate({
-                            path: "id_distributor",
-                            populate: "alamat_id"
-                        })
-                        .populate("jenisKendaraan")
-                        .lean()
+                    if (Math.round(distance) < 50 && distance !== NaN) {
+                        const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
+                            .populate({
+                                path: "id_distributor",
+                                populate: "alamat_id"
+                            })
+                            .populate("jenisKendaraan")
+                            .lean()
 
-                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, status: 'Aktif' })
+                        const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, status: 'Aktif' })
 
-                    let filteredDataKendaraan = dataKendaraan
-                    if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
-                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis !== 'Motor');
-                    } else {
-                        filteredDataKendaraan = dataKendaraan
+                        let filteredDataKendaraan = dataKendaraan
+                        if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
+                            filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis !== 'Motor');
+                        } else {
+                            filteredDataKendaraan = dataKendaraan
+                        }
+
+                        if (filteredDataKendaraan.length > 0 && dataPengemudi.length > 0) {
+                            datas.push({
+                                distributor,
+                                jarakTempu: Math.round(distance)
+                            })
+                        }
                     }
 
-                    if (filteredDataKendaraan.length > 0 && dataPengemudi.length > 0) {
-                        datas.push({
-                            distributor,
-                            jarakTempu: Math.round(distance)
-                        })
-                    }
                 }
             }
 
-            if (datas.length === 0) {
-                return res.status(400).json({ message: "distributor belom tersedia" })
-            }
-
             res.status(200).json({
-                message: "success get data Distributtor",
+                message: 'get data all distributor success',
                 datas
             })
 

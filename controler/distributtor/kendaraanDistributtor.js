@@ -593,6 +593,61 @@ module.exports = {
         }
     },
 
+    updateIndividuKendaraanPengemudi: async (req, res, next) => {
+        try {
+            const { warna, no_telepon, jenis_sim } = req.body
+            const files = req.files;
+            const fotoKendaraan = files ? files.fotoKendaraan : null;
+            const fileSTNK = files ? files.fileSTNK : null;
+            const file_sim = files ? files.file_sim : null;
+
+            const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+
+            await file_sim.mv(imagePath);
+
+            const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
+            const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
+
+            await fileSTNK.mv(imagePathSTNK);
+
+            const imageNameProfile = `${Date.now()}${path.extname(fotoKendaraan.name)}`;
+            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
+
+            await fotoKendaraan.mv(imagePathProfile);
+
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+
+            const data = await KendaraanDistributor.updateOne({ id_distributor: distributor._id }, {
+                warna,
+                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
+
+            })
+
+            await Pengemudi.updateOne({ id_distributor: distributor._id }, {
+                no_telepon,
+                jenis_sim,
+                file_sim: `${process.env.HOST}/public/image-profile-distributtor${imageName}`
+            })
+
+            res.status(201).json({
+                message: "create data success",
+                data
+            })
+        } catch (error) {
+            console.error("Error creating document:", error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
     deleteKendaraanDistributtor: async (req, res, next) => {
         try {
             const data = await KendaraanDistributor.findOne({ _id: req.params.id })
