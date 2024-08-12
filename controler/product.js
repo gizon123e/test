@@ -886,13 +886,13 @@ module.exports = {
         const pangan_terbanyak = await Pangan.findById(maxBeratPangan.panganId)
 
         const Kelompok_pangan = pangan_terbanyak.kelompok_pangan
-        const kode_bahan = pangan_terbanyak.kode_bahan.substring(0,2);
+        const kode_bahan = pangan_terbanyak.kode_bahan.substring(0,1);
 
-        const kodeRegex = new RegExp(`${kode_bahan}`)
+        const kodeRegex = new RegExp(`${kode_bahan}P`)
         
         const pangan_terakhir = await Pangan.findOne({ kode_bahan: kodeRegex }).sort({kode_bahan: -1})
         
-        const kode_bahan_terbaru = `${kode_bahan}`+`${parseInt(pangan_terakhir.kode_bahan.substring(2, 5)) + 1}`;
+        const kode_bahan_terbaru = `${kode_bahan}P`+`${parseInt(pangan_terakhir.kode_bahan.substring(2, 5)) + 1}`;
         
         const nama_bahan = []
         
