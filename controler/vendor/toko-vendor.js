@@ -169,13 +169,10 @@ module.exports = {
         try{
             const dataToko = await Toko.findOne({userId: req.user.id}).populate('address');
             const province = dataToko.address.province;
-            const provinceRegex = new RegExp(province, 'i');
+            const provinceRegex = new RegExp(`^${province}`, 'i');
 
             const message = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("notif_rekomen_vendor");
 
-            // const date = new Date();
-
-            // const today = `${date.getDate().padStart(2, '0')}-${date.getMonth().padStart(2, '0')}-${date.getFullYear()}`
             const timestamp = new Date();
             const day = String(timestamp.getDate()).padStart(2, '0');
             const month = String(timestamp.getMonth() + 1).padStart(2, '0'); // Bulan dimulai dari 0
