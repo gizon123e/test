@@ -1418,7 +1418,8 @@ module.exports = {
                 sekolahId,
                 biaya_awal_asuransi
             } = req.body
-            console.log(JSON.stringify(req.body))
+            console.log(req.user)
+
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if(!sekolahId) return res.status(400).json({message: "Kirimkan Id Sekolah"})
             if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" })
@@ -1502,19 +1503,21 @@ module.exports = {
             
             const promisesFunct = []
 
-            const detailPesanan = await DetailPesanan.create({
-                _id: idPesanan,
-                id_pesanan: dataOrder._id,
-                total_price: total,
-                jumlah_dp: total * dp.value,
-                id_va: metode_pembayaran.includes("Virtual Account") ? idPay : null,
-                id_fintech: metode_pembayaran.includes("Fintech") ? idPay : null,
-                id_gerai_tunai: metode_pembayaran.includes("Gerai") ? idPay : null,
-                id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
-                biaya_jasa_aplikasi,
-                biaya_layanan,
-                biaya_asuransi
-            });
+            promisesFunct.push(
+                DetailPesanan.create({
+                    _id: idPesanan,
+                    id_pesanan: dataOrder._id,
+                    total_price: total,
+                    jumlah_dp: total * dp.value,
+                    id_va: metode_pembayaran.includes("Virtual Account") ? idPay : null,
+                    id_fintech: metode_pembayaran.includes("Fintech") ? idPay : null,
+                    id_gerai_tunai: metode_pembayaran.includes("Gerai") ? idPay : null,
+                    id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
+                    biaya_jasa_aplikasi,
+                    biaya_layanan,
+                    biaya_asuransi
+                })
+            )
 
             let total_transaksi = await Transaksi.countDocuments({
                 createdAt: {
@@ -1523,16 +1526,14 @@ module.exports = {
                 }
             });
 
-            const sekolah = await Sekolah.findOne({_id: sekolahId, userId: req.user.id})
-            if(!sekolah) return res.status(404).json({message: "Tidak ada sekolah yang ditemukan"})
-            let totalQuantity = 0
-            const ids = []
+            let totalQuantity = 0;
+            const ids = [];
             items.map(item => {
-                item.product.map(prod => ids.push(prod.productId))
+                item.product.map(prod => ids.push(prod.productId));
                 item.product.map( prod => {
                     totalQuantity += prod.quantity
-                })
-            })
+                });
+            });
             const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
             let transaksiMidtrans;
             let total_tagihan = biaya_jasa_aplikasi + biaya_layanan;
@@ -1565,200 +1566,26 @@ module.exports = {
                 biaya_jasa_aplikasi,
                 biaya_layanan
             };
+            
+            if(req.user.role === 'konsumen'){
+                const sekolah = await Sekolah.findOne({_id: sekolahId, userId: req.user.id})
+                if(!sekolah) return res.status(404).json({message: "Tidak ada sekolah yang ditemukan"})
 
-            if ((sekolah.jumlahMurid === totalQuantity) || (sekolah.jumlahMurid > totalQuantity)) {
-                const idInvoiceSubsidi = new mongoose.Types.ObjectId()
-                
-                items.map((item)=>{
-                    item.product.map(prd=>{
-                        const foundedProd = arrayProducts.find(prod => prod._id.toString() === prd.productId.toString());
-                        detailBiaya.totalHargaProduk += foundedProd.total_price * prd.quantity;
-                        if(biaya_asuransi){
-                            total_tagihan += prd.quantity * biaya_awal_asuransi
-                            detailBiaya.asuransiPengiriman += prd.quantity * biaya_awal_asuransi
-                        };
-
-                        promisesFunct.push(
-                            Product.findOneAndUpdate(
-                                { _id: prd.productId},
-                                {
-                                    $inc:{
-                                        total_stok: -prd.quantity
-                                    } 
-                                }
-                            ),
-                            salesReport(prd.productId, {
-                                time: new Date(),
-                                soldAtMoment: prd.quantity
-                            })
-                        )
-                    })
-                });
-
-                for (let i = 0; i < dataOrder.shipments.length; i++) {
-
-                    detailBiaya.totalOngkir += dataOrder.shipments[i].ongkir
-                    detailBiaya.totalPotonganOngkir += dataOrder.shipments[i].potongan_ongkir
-                    detailBiaya.jumlahOngkir += dataOrder.shipments[i].total_ongkir
-
-                    promisesFunct.push(
-                        Pengiriman.create({
-                            orderId: dataOrder._id,
-                            distributorId: dataOrder.shipments[i].id_distributor,
-                            productToDelivers: dataOrder.shipments[i].products,
-                            waktu_pengiriman: new Date(dataOrder.items[i].deadline),
-                            total_ongkir: dataOrder.shipments[i].total_ongkir,
-                            ongkir: dataOrder.shipments[i].ongkir,
-                            potongan_ongkir: dataOrder.shipments[i].potongan_ongkir,
-                            jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
-                            id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
-                            id_toko: dataOrder.shipments[i].id_toko_vendor,
-                            kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-                            invoice: idInvoiceSubsidi
-                        })
-                    );
-                    total_pengiriman += 1;
-                };
-
-                const kode_transaksi = await Transaksi.create({
-                    id_pesanan: dataOrder._id,
-                    jenis_transaksi: "keluar",
-                    status: "Menunggu Pembayaran",
-                    subsidi: true,
-                    detailBiaya,
-                    kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
-                });
-
-                const invoice = await Invoice.create({
-                    _id: idInvoiceSubsidi,
-                    id_transaksi: kode_transaksi,
-                    userId: req.user.id,
-                    status: "Piutang",
-                    kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
-                });
-
-                promisesFunct.push(
-                    DataProductOrder.create({
-                        pesananId: dataOrder._id,
-                        dataProduct: arrayProducts
-                    }),
-                    Orders.findByIdAndUpdate(dataOrder._id, { status: "Berlangsung" })
-                )
-
-                const formatHarga = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-
-                const notifikasi = await Notifikasi.create({
-                    userId: user._id,
-                    invoiceId: invoice._id,
-                    jenis_invoice: "Subsidi",
-                    createdAt: new Date(),
-                })
-                
-
-                const detailNotifikasi = await DetailNotifikasi.create({
-                    notifikasiId: notifikasi._id,
-                    jenis: "Info",
-                    status: "Pesanan Makanan Bergizi Gratis telah berhasil",
-                    message: `${invoice.kode_invoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
-                    image_product: products[0].image_product[0], 
-                    createdAt: new Date()
-                })
+                if ((sekolah.jumlahMurid === totalQuantity) || (sekolah.jumlahMurid > totalQuantity)) {
+                    const idInvoiceSubsidi = new mongoose.Types.ObjectId()
                     
-                socket.emit('notif_pesanan_berhasil', {
-                    jenis: detailNotifikasi.jenis,
-                    userId: user._id,
-                    status: detailNotifikasi.status,
-                    message: detailNotifikasi.message,
-                    image: detailNotifikasi.image_product,
-                    tanggal: `${formatTanggal(detailNotifikasi.createdAt)}`,
-                });
+                    items.map((item)=>{
+                        item.product.map(prd=>{
+                            const foundedProd = arrayProducts.find(prod => prod._id.toString() === prd.productId.toString());
+                            detailBiaya.totalHargaProduk += foundedProd.total_price * prd.quantity;
+                            if(biaya_asuransi){
+                                total_tagihan += prd.quantity * biaya_awal_asuransi
+                                detailBiaya.asuransiPengiriman += prd.quantity * biaya_awal_asuransi
+                            };
 
-            } else if (totalQuantity > sekolah.jumlahMurid) {
-                const id_transaksi_subsidi = new mongoose.Types.ObjectId();
-                const id_invoice_subsidi = new mongoose.Types.ObjectId()
-                const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
-                const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
-                let sisaSubsidi = sekolah.jumlahMurid;
-                let productNotif
-                const kodeInvoice = `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
-                const ids=[]
-                for (const item of items) {
-                    const dapatSubsidi = [];
-                    const tidakDapatSubsidi = [];
-
-                    for (const prod of item.product) {
-                        if (prod.quantity <= sisaSubsidi) {
-                            dapatSubsidi.push({
-                                productId: prod.productId,
-                                quantity: prod.quantity
-                            });
-                            sisaSubsidi -= prod.quantity;
-                        } else {
-                            if (sisaSubsidi > 0) {
-                                dapatSubsidi.push({
-                                    productId: prod.productId,
-                                    quantity: sisaSubsidi
-                                });
-                                tidakDapatSubsidi.push({
-                                    productId: prod.productId,
-                                    quantity: prod.quantity - sisaSubsidi
-                                });
-                                sisaSubsidi = 0;
-                            } else {
-                                tidakDapatSubsidi.push({
-                                    productId: prod.productId,
-                                    quantity: prod.quantity
-                                });
-                            }
-                        }
-                    };
-
-                    let pengirimanSubsidi;
-                    let pengirimanNonSubsidi;
-                    let total_subsidi = 0
-
-                    dapatSubsidi.map(ds => {
-                        shipments.find(ship => {
-                            ship.products.map(prod => { if(prod.productId === ds.productId) pengirimanSubsidi = ship });
-                        });
-                    });
-
-                    tidakDapatSubsidi.map(tds => {
-                        shipments.find(ship => {
-                            ship.products.map(prod => { if(prod.productId === tds.productId) pengirimanNonSubsidi = ship });
-                        });
-                    });
-
-                    if(dapatSubsidi.length > 0){
-
-                        const totalProduk = pengirimanSubsidi.products.reduce((accumulator, currentValue)=>{
-                            return accumulator + currentValue.quantity
-                        }, 0);
-
-                        const totalProdukSubsidi = dapatSubsidi.reduce((acc, val)=>{
-                            ids.push(val.productId)
-                            return acc + val.quantity
-                        }, 0)
-
-                        const baseOngkir = pengirimanSubsidi.ongkir / totalProduk
-                        const basePotonganOngkir = pengirimanSubsidi.potongan_ongkir / totalProduk
-                        const potongan_ongkir = Math.round(basePotonganOngkir * totalProdukSubsidi);
-                        const ongkir = Math.round(baseOngkir * totalProdukSubsidi);
-                        const total_ongkir = ongkir - potongan_ongkir
-                        detailBiayaSubsidi.totalOngkir += ongkir
-                        detailBiayaSubsidi.totalPotonganOngkir += potongan_ongkir;
-                        detailBiayaSubsidi.jumlahOngkir += total_ongkir
-                        total_subsidi += total_ongkir;
-                        let productIds = [];
-                        
-                        for(const prd of dapatSubsidi){
-                            const prod = await Product.findById(prd.productId).select("total_price").lean();
-                            productIds.push(prd.productId)
-                            total_subsidi += prod.total_price * prd.quantity;
-                            detailBiayaSubsidi.totalHargaProduk += prod.total_price * prd.quantity
                             promisesFunct.push(
-                                Product.findByIdAndUpdate(
-                                    prd.productId,
+                                Product.findOneAndUpdate(
+                                    { _id: prd.productId},
                                     {
                                         $inc:{
                                             total_stok: -prd.quantity
@@ -1770,109 +1597,447 @@ module.exports = {
                                     soldAtMoment: prd.quantity
                                 })
                             )
-                        }
-                        promisesFunct.push(
-                            Pengiriman.create({
-                                orderId: dataOrder._id,
-                                distributorId: pengirimanSubsidi.id_distributor,
-                                productToDelivers: dapatSubsidi,
-                                waktu_pengiriman: item.deadline,
-                                total_ongkir,
-                                ongkir,
-                                potongan_ongkir,
-                                jenis_pengiriman: pengirimanSubsidi.id_jenis_layanan,
-                                id_jenis_kendaraan: pengirimanSubsidi.id_jenis_kendaraan,
-                                id_toko: pengirimanSubsidi.id_toko_vendor,
-                                kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-                                invoice: id_invoice_subsidi
-                            }),
-                        )
-
-                        const products = await Product.find({_id: {$in: productIds}})
-                        .select("_id total_price name_product image_product")
-                        const formatHarga = total_subsidi.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                        
-                        const notifikasiSubdisi = await Notifikasi.create({
-                            userId: user._id,
-                            invoiceId: id_invoice_subsidi,
-                            jenis_invoice: "Subsidi",
-                            createdAt: new Date(),
                         })
+                    });
 
-                        const detailNotifSubsidi = await DetailNotifikasi.create({
-                            notifikasiId: notifikasiSubdisi._id,
-                            jenis: "Info",
-                            status: "Pesanan Makanan Bergizi Gratis telah berhasil",
-                            message: `${kodeInvoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
-                            image_product: products[0].image_product[0], 
-                            createdAt: new Date()
-                        })
+                    for (let i = 0; i < dataOrder.shipments.length; i++) {
 
-                        socket.emit('notif_pesanan_berhasil', {
-                            jenis: detailNotifSubsidi.jenis,
-                            userId: user._id,
-                            status: detailNotifSubsidi.status,
-                            message: detailNotifSubsidi.message,
-                            image: detailNotifSubsidi.image_product,
-                            tanggal: `${formatTanggal(detailNotifSubsidi.createdAt)}`,
-                        })
-                    }
-
-                    if (tidakDapatSubsidi.length > 0) {
-                        productNotif = await Product.findById(tidakDapatSubsidi[0].productId).select("_id name_product image_product");
-                        const totalProdukSubsidi = tidakDapatSubsidi.reduce((acc, val) => acc + val.quantity, 0);
-                        const totalProduk = pengirimanNonSubsidi.products.reduce((acc, prod) => acc + prod.quantity, 0);
-                        const baseOngkir = pengirimanNonSubsidi.ongkir / totalProduk;
-                        const basePotonganOngkir = pengirimanNonSubsidi.potongan_ongkir / totalProduk
-                        const potongan_ongkir = Math.round(basePotonganOngkir * totalProdukSubsidi)
-                        const ongkir = Math.round(baseOngkir * totalProdukSubsidi)
-                        const total_ongkir = ongkir - potongan_ongkir
-                        detailBiayaTambahan.totalOngkir += ongkir
-                        detailBiayaTambahan.totalPotonganOngkir += potongan_ongkir;
-                        detailBiayaTambahan.jumlahOngkir += total_ongkir
-
-                        for (const prod of tidakDapatSubsidi) {
-                            const product = await Product.findById(prod.productId).select('total_price').lean();
-                            total_tagihan += product.total_price * prod.quantity;
-                            detailBiayaTambahan.totalHargaProduk += product.total_price * prod.quantity
-                            if(biaya_asuransi){
-                                total_tagihan += prod.quantity * biaya_awal_asuransi
-                            }
-                        }
+                        detailBiaya.totalOngkir += dataOrder.shipments[i].ongkir
+                        detailBiaya.totalPotonganOngkir += dataOrder.shipments[i].potongan_ongkir
+                        detailBiaya.jumlahOngkir += dataOrder.shipments[i].total_ongkir
 
                         promisesFunct.push(
                             Pengiriman.create({
                                 orderId: dataOrder._id,
-                                distributorId: pengirimanNonSubsidi.id_distributor,
-                                productToDelivers: tidakDapatSubsidi,
-                                waktu_pengiriman: item.deadline,
-                                total_ongkir,
-                                ongkir,
-                                potongan_ongkir,
-                                jenis_pengiriman: pengirimanNonSubsidi.id_jenis_layanan,
-                                id_jenis_kendaraan: pengirimanNonSubsidi.id_jenis_kendaraan,
-                                id_toko: pengirimanNonSubsidi.id_toko_vendor,
+                                distributorId: dataOrder.shipments[i].id_distributor,
+                                productToDelivers: dataOrder.shipments[i].products,
+                                waktu_pengiriman: new Date(dataOrder.items[i].deadline),
+                                total_ongkir: dataOrder.shipments[i].total_ongkir,
+                                ongkir: dataOrder.shipments[i].ongkir,
+                                potongan_ongkir: dataOrder.shipments[i].potongan_ongkir,
+                                jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
+                                id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
+                                id_toko: dataOrder.shipments[i].id_toko_vendor,
                                 kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
-                                invoice: id_invoice_non_subsidi
-                            }),
+                                invoice: idInvoiceSubsidi
+                            })
                         );
-                
-                        total_tagihan += total_ongkir;
+                        total_pengiriman += 1;
+                    };
+
+                    const kode_transaksi = await Transaksi.create({
+                        id_pesanan: dataOrder._id,
+                        jenis_transaksi: "keluar",
+                        status: "Menunggu Pembayaran",
+                        subsidi: true,
+                        detailBiaya,
+                        kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                    });
+
+                    const invoice = await Invoice.create({
+                        _id: idInvoiceSubsidi,
+                        id_transaksi: kode_transaksi,
+                        userId: req.user.id,
+                        status: "Piutang",
+                        kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                    });
+
+                    promisesFunct.push(
+                        DataProductOrder.create({
+                            pesananId: dataOrder._id,
+                            dataProduct: arrayProducts
+                        }),
+                        Orders.findByIdAndUpdate(dataOrder._id, { status: "Berlangsung" })
+                    )
+
+                    const formatHarga = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+
+                    const notifikasi = await Notifikasi.create({
+                        userId: user._id,
+                        invoiceId: invoice._id,
+                        jenis_invoice: "Subsidi",
+                        createdAt: new Date(),
+                    })
+                    
+
+                    const detailNotifikasi = await DetailNotifikasi.create({
+                        notifikasiId: notifikasi._id,
+                        jenis: "Info",
+                        status: "Pesanan Makanan Bergizi Gratis telah berhasil",
+                        message: `${invoice.kode_invoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                        image_product: products[0].image_product[0], 
+                        createdAt: new Date()
+                    })
+                        
+                    socket.emit('notif_pesanan_berhasil', {
+                        jenis: detailNotifikasi.jenis,
+                        userId: user._id,
+                        status: detailNotifikasi.status,
+                        message: detailNotifikasi.message,
+                        image: detailNotifikasi.image_product,
+                        tanggal: `${formatTanggal(detailNotifikasi.createdAt)}`,
+                    });
+
+                } else if (totalQuantity > sekolah.jumlahMurid) {
+                    const id_transaksi_subsidi = new mongoose.Types.ObjectId();
+                    const id_invoice_subsidi = new mongoose.Types.ObjectId()
+                    const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
+                    const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
+                    let sisaSubsidi = sekolah.jumlahMurid;
+                    let productNotif
+                    const kodeInvoice = `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                    const ids=[]
+                    for (const item of items) {
+                        const dapatSubsidi = [];
+                        const tidakDapatSubsidi = [];
+
+                        for (const prod of item.product) {
+                            if (prod.quantity <= sisaSubsidi) {
+                                dapatSubsidi.push({
+                                    productId: prod.productId,
+                                    quantity: prod.quantity
+                                });
+                                sisaSubsidi -= prod.quantity;
+                            } else {
+                                if (sisaSubsidi > 0) {
+                                    dapatSubsidi.push({
+                                        productId: prod.productId,
+                                        quantity: sisaSubsidi
+                                    });
+                                    tidakDapatSubsidi.push({
+                                        productId: prod.productId,
+                                        quantity: prod.quantity - sisaSubsidi
+                                    });
+                                    sisaSubsidi = 0;
+                                } else {
+                                    tidakDapatSubsidi.push({
+                                        productId: prod.productId,
+                                        quantity: prod.quantity
+                                    });
+                                }
+                            }
+                        };
+
+                        let pengirimanSubsidi;
+                        let pengirimanNonSubsidi;
+                        let total_subsidi = 0
+
+                        dapatSubsidi.map(ds => {
+                            shipments.find(ship => {
+                                ship.products.map(prod => { if(prod.productId === ds.productId) pengirimanSubsidi = ship });
+                            });
+                        });
+
+                        tidakDapatSubsidi.map(tds => {
+                            shipments.find(ship => {
+                                ship.products.map(prod => { if(prod.productId === tds.productId) pengirimanNonSubsidi = ship });
+                            });
+                        });
+
+                        if(dapatSubsidi.length > 0){
+
+                            const totalProduk = pengirimanSubsidi.products.reduce((accumulator, currentValue)=>{
+                                return accumulator + currentValue.quantity
+                            }, 0);
+
+                            const totalProdukSubsidi = dapatSubsidi.reduce((acc, val)=>{
+                                ids.push(val.productId)
+                                return acc + val.quantity
+                            }, 0)
+
+                            const baseOngkir = pengirimanSubsidi.ongkir / totalProduk
+                            const basePotonganOngkir = pengirimanSubsidi.potongan_ongkir / totalProduk
+                            const potongan_ongkir = Math.round(basePotonganOngkir * totalProdukSubsidi);
+                            const ongkir = Math.round(baseOngkir * totalProdukSubsidi);
+                            const total_ongkir = ongkir - potongan_ongkir
+                            detailBiayaSubsidi.totalOngkir += ongkir
+                            detailBiayaSubsidi.totalPotonganOngkir += potongan_ongkir;
+                            detailBiayaSubsidi.jumlahOngkir += total_ongkir
+                            total_subsidi += total_ongkir;
+                            let productIds = [];
+                            
+                            for(const prd of dapatSubsidi){
+                                const prod = await Product.findById(prd.productId).select("total_price").lean();
+                                productIds.push(prd.productId)
+                                total_subsidi += prod.total_price * prd.quantity;
+                                detailBiayaSubsidi.totalHargaProduk += prod.total_price * prd.quantity
+                                promisesFunct.push(
+                                    Product.findByIdAndUpdate(
+                                        prd.productId,
+                                        {
+                                            $inc:{
+                                                total_stok: -prd.quantity
+                                            } 
+                                        }
+                                    ),
+                                    salesReport(prd.productId, {
+                                        time: new Date(),
+                                        soldAtMoment: prd.quantity
+                                    })
+                                )
+                            }
+                            promisesFunct.push(
+                                Pengiriman.create({
+                                    orderId: dataOrder._id,
+                                    distributorId: pengirimanSubsidi.id_distributor,
+                                    productToDelivers: dapatSubsidi,
+                                    waktu_pengiriman: item.deadline,
+                                    total_ongkir,
+                                    ongkir,
+                                    potongan_ongkir,
+                                    jenis_pengiriman: pengirimanSubsidi.id_jenis_layanan,
+                                    id_jenis_kendaraan: pengirimanSubsidi.id_jenis_kendaraan,
+                                    id_toko: pengirimanSubsidi.id_toko_vendor,
+                                    kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+                                    invoice: id_invoice_subsidi
+                                }),
+                            )
+
+                            const products = await Product.find({_id: {$in: productIds}})
+                            .select("_id total_price name_product image_product")
+                            const formatHarga = total_subsidi.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                            
+                            const notifikasiSubdisi = await Notifikasi.create({
+                                userId: user._id,
+                                invoiceId: id_invoice_subsidi,
+                                jenis_invoice: "Subsidi",
+                                createdAt: new Date(),
+                            })
+
+                            const detailNotifSubsidi = await DetailNotifikasi.create({
+                                notifikasiId: notifikasiSubdisi._id,
+                                jenis: "Info",
+                                status: "Pesanan Makanan Bergizi Gratis telah berhasil",
+                                message: `${kodeInvoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                                image_product: products[0].image_product[0], 
+                                createdAt: new Date()
+                            })
+
+                            socket.emit('notif_pesanan_berhasil', {
+                                jenis: detailNotifSubsidi.jenis,
+                                userId: user._id,
+                                status: detailNotifSubsidi.status,
+                                message: detailNotifSubsidi.message,
+                                image: detailNotifSubsidi.image_product,
+                                tanggal: `${formatTanggal(detailNotifSubsidi.createdAt)}`,
+                            })
+                        }
+
+                        if (tidakDapatSubsidi.length > 0) {
+                            productNotif = await Product.findById(tidakDapatSubsidi[0].productId).select("_id name_product image_product");
+                            const totalProdukSubsidi = tidakDapatSubsidi.reduce((acc, val) => acc + val.quantity, 0);
+                            const totalProduk = pengirimanNonSubsidi.products.reduce((acc, prod) => acc + prod.quantity, 0);
+                            const baseOngkir = pengirimanNonSubsidi.ongkir / totalProduk;
+                            const basePotonganOngkir = pengirimanNonSubsidi.potongan_ongkir / totalProduk
+                            const potongan_ongkir = Math.round(basePotonganOngkir * totalProdukSubsidi)
+                            const ongkir = Math.round(baseOngkir * totalProdukSubsidi)
+                            const total_ongkir = ongkir - potongan_ongkir
+                            detailBiayaTambahan.totalOngkir += ongkir
+                            detailBiayaTambahan.totalPotonganOngkir += potongan_ongkir;
+                            detailBiayaTambahan.jumlahOngkir += total_ongkir
+
+                            for (const prod of tidakDapatSubsidi) {
+                                const product = await Product.findById(prod.productId).select('total_price').lean();
+                                total_tagihan += product.total_price * prod.quantity;
+                                detailBiayaTambahan.totalHargaProduk += product.total_price * prod.quantity
+                                if(biaya_asuransi){
+                                    total_tagihan += prod.quantity * biaya_awal_asuransi
+                                }
+                            }
+
+                            promisesFunct.push(
+                                Pengiriman.create({
+                                    orderId: dataOrder._id,
+                                    distributorId: pengirimanNonSubsidi.id_distributor,
+                                    productToDelivers: tidakDapatSubsidi,
+                                    waktu_pengiriman: item.deadline,
+                                    total_ongkir,
+                                    ongkir,
+                                    potongan_ongkir,
+                                    jenis_pengiriman: pengirimanNonSubsidi.id_jenis_layanan,
+                                    id_jenis_kendaraan: pengirimanNonSubsidi.id_jenis_kendaraan,
+                                    id_toko: pengirimanNonSubsidi.id_toko_vendor,
+                                    kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+                                    invoice: id_invoice_non_subsidi
+                                }),
+                            );
+                    
+                            total_tagihan += total_ongkir;
+                        }
+                        total_pengiriman += 1
                     }
+                    const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
+                    
+                    promisesFunct.push(
+                        Transaksi.create({
+                            _id: id_transaksi_subsidi,
+                            id_pesanan: dataOrder._id,
+                            jenis_transaksi: "keluar",
+                            status: "Menunggu Pembayaran",
+                            subsidi: true,
+                            detailBiaya: detailBiayaSubsidi,
+                            kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
+
+                        Transaksi.create({
+                            _id: id_transaksi_non_subsidi,
+                            id_pesanan: dataOrder._id,
+                            jenis_transaksi: "keluar",
+                            status: "Menunggu Pembayaran",
+                            detailBiaya: detailBiayaTambahan,
+                            subsidi: false,
+                            kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
+
+                        Invoice.create({
+                            _id: id_invoice_subsidi,
+                            id_transaksi: id_transaksi_subsidi,
+                            userId: req.user.id,
+                            status: "Piutang",
+                            kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
+
+            
+                        Invoice.create({
+                            _id: id_invoice_non_subsidi,
+                            id_transaksi: id_transaksi_non_subsidi,
+                            userId: req.user.id,
+                            status: "Belum Lunas",
+                            kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                        }),
+
+                        DataProductOrder.create({
+                            pesananId: dataOrder._id,
+                            dataProduct: arrayProducts
+                        })
+                    )
+                    const grossAmount = () => {
+                        if (dp.isUsed && poin_terpakai) {
+                            return (dp.value * Math.round(total_tagihan)) - poin_terpakai;
+                        } else if (dp.isUsed) {
+                            return dp.value * Math.round(total_tagihan);
+                        } else {
+                            return Math.round(total_tagihan);
+                        }
+                    };
+
+                    const options = {
+                        method: 'POST',
+                        headers: {
+                            accept: 'application/json',
+                            'content-type': 'application/json',
+                            Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
+                        },
+                        body: JSON.stringify({
+                            payment_type: 'bank_transfer',
+                            transaction_details: {
+                                order_id: idPesanan,
+                                gross_amount: grossAmount()
+                            },
+                            bank_transfer: {
+                                bank: 'bca',
+                                va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1]
+                            },
+                        })
+                    };
+
+                    
+
+                    const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
+                    transaksiMidtrans = await respon.json();
+
+                    promisesFunct.push(
+                        VA_Used.create({
+                            nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
+                            orderId: idPesanan,
+                            userId: req.user.id
+                        })
+                    )
+                    const formatHarga = total_tagihan.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                    const notifikasiNonSubsidi = await Notifikasi.create({
+                        userId: user._id,
+                        invoiceId: id_invoice_non_subsidi,
+                        jenis_invoice: "Non Subsidi",
+                        createdAt: new Date(),
+                    })
+
+                    const detailNotifNonSubsidi = await DetailNotifikasi.create({
+                        notifikasiId: notifikasiNonSubsidi._id,
+                        jenis: "Info",
+                        status: "Selesaikan pembayaranmu",
+                        message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera selesaikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`, 
+                        image_product: productNotif.image_product[0],
+                        createdAt: new Date() 
+                    })
+                    
+                    socket.emit("notif_selesaikan_pembayaran", {
+                        jenis: detailNotifNonSubsidi.jenis,
+                        userId: user._id,
+                        status: detailNotifNonSubsidi.status,
+                        message: detailNotifNonSubsidi.message,
+                        image: detailNotifNonSubsidi.image_product,
+                        tanggal: `${formatTanggal(detailNotifNonSubsidi.createdAt)}`,
+                    })
+                }
+            }else{
+                const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
+                const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
+                const kodeInvoice = `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
+                const ids=[]
+                for (const item of items) {
+                    productNotif = await Product.findById(item.product[0].productId).select("_id name_product image_product");
+                    const totalProdukSubsidi = item.product.reduce((acc, val) => acc + val.quantity, 0);
+                    const products = []
+                    for (const prod of item.product) {
+                        const product = await Product.findById(prod.productId).select('total_price').lean();
+                        total_tagihan += product.total_price * prod.quantity;
+                        detailBiayaTambahan.totalHargaProduk += product.total_price * prod.quantity
+                        if(biaya_asuransi){
+                            total_tagihan += prod.quantity * biaya_awal_asuransi
+                        }
+                        products.push({
+                            productId: prod.productId,
+                            quantity: prod.quantity
+                        })
+                    }
+                    const pengiriman = shipments.find(shp => {
+                        const shipProducts = shp.products.map(prod => prod.productId)
+                        return products.some(prd => shipProducts.includes(prd.productId))
+                    })
+                    const totalProduk = pengiriman.products.reduce((acc, prod) => acc + prod.quantity, 0);
+                    const baseOngkir = pengiriman.ongkir / totalProduk;
+                    const basePotonganOngkir = pengiriman.potongan_ongkir / totalProduk
+                    const potongan_ongkir = Math.round(basePotonganOngkir * totalProdukSubsidi)
+                    const ongkir = Math.round(baseOngkir * totalProdukSubsidi)
+                    const total_ongkir = ongkir - potongan_ongkir
+                    detailBiayaTambahan.totalOngkir += ongkir
+                    detailBiayaTambahan.totalPotonganOngkir += potongan_ongkir;
+                    detailBiayaTambahan.jumlahOngkir += total_ongkir
+
+                    promisesFunct.push(
+                        Pengiriman.create({
+                            orderId: dataOrder._id,
+                            distributorId: pengiriman.id_distributor,
+                            productToDelivers: products,
+                            waktu_pengiriman: item.deadline,
+                            total_ongkir,
+                            ongkir,
+                            potongan_ongkir,
+                            jenis_pengiriman: pengiriman.id_jenis_layanan,
+                            id_jenis_kendaraan: pengiriman.id_jenis_kendaraan,
+                            id_toko: pengiriman.id_toko_vendor,
+                            kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+                            invoice: id_invoice_non_subsidi
+                        }),
+                    );
+            
+                    total_tagihan += total_ongkir;
+
                     total_pengiriman += 1
                 }
                 const arrayProducts = await Product.find({_id: {$in: ids}}).populate({path: "userId", select: "_id role"}).populate('categoryId').lean()
                 
                 promisesFunct.push(
-                    Transaksi.create({
-                        _id: id_transaksi_subsidi,
-                        id_pesanan: dataOrder._id,
-                        jenis_transaksi: "keluar",
-                        status: "Menunggu Pembayaran",
-                        subsidi: true,
-                        detailBiaya: detailBiayaSubsidi,
-                        kode_transaksi: `TRX_${user.get('kode_role')}_OUT_SYS_${date}_${minutes}_${total_transaksi + 1}`
-                    }),
 
                     Transaksi.create({
                         _id: id_transaksi_non_subsidi,
@@ -1885,15 +2050,6 @@ module.exports = {
                     }),
 
                     Invoice.create({
-                        _id: id_invoice_subsidi,
-                        id_transaksi: id_transaksi_subsidi,
-                        userId: req.user.id,
-                        status: "Piutang",
-                        kode_invoice: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1}`
-                    }),
-
-        
-                    Invoice.create({
                         _id: id_invoice_non_subsidi,
                         id_transaksi: id_transaksi_non_subsidi,
                         userId: req.user.id,
@@ -1905,7 +2061,8 @@ module.exports = {
                         pesananId: dataOrder._id,
                         dataProduct: arrayProducts
                     })
-                )
+                );
+
                 const grossAmount = () => {
                     if (dp.isUsed && poin_terpakai) {
                         return (dp.value * Math.round(total_tagihan)) - poin_terpakai;
@@ -1939,41 +2096,9 @@ module.exports = {
                 
 
                 const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
-                transaksiMidtrans = await respon.json();
-
-                promisesFunct.push(
-                    VA_Used.create({
-                        nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
-                        orderId: idPesanan,
-                        userId: req.user.id
-                    })
-                )
-                const formatHarga = total_tagihan.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                const notifikasiNonSubsidi = await Notifikasi.create({
-                    userId: user._id,
-                    invoiceId: id_invoice_non_subsidi,
-                    jenis_invoice: "Non Subsidi",
-                    createdAt: new Date(),
-                })
-
-                const detailNotifNonSubsidi = await DetailNotifikasi.create({
-                    notifikasiId: notifikasiNonSubsidi._id,
-                    jenis: "Info",
-                    status: "Selesaikan pembayaranmu",
-                    message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera selesaikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`, 
-                    image_product: productNotif.image_product[0],
-                    createdAt: new Date() 
-                })
-                
-                socket.emit("notif_selesaikan_pembayaran", {
-                    jenis: detailNotifNonSubsidi.jenis,
-                    userId: user._id,
-                    status: detailNotifNonSubsidi.status,
-                    message: detailNotifNonSubsidi.message,
-                    image: detailNotifNonSubsidi.image_product,
-                    tanggal: `${formatTanggal(detailNotifNonSubsidi.createdAt)}`,
-                })
+                transaksiMidtrans = await respon.json();                
             }
+            
             await Promise.all(promisesFunct)
 
             return res.status(201).json({
@@ -1998,75 +2123,6 @@ module.exports = {
                     fields: error.fields,
                 });
             }
-            next(error)
-        }
-    },
-
-    update_shipments: async(req, res, next) => {
-        try {
-            const { 
-                old_id_toko_vendor, 
-                old_id_distributor, 
-                new_id_distributor, 
-                total_ongkir, 
-                potongan_ongkir, 
-                ongkir, 
-                id_jenis_kendaraan, 
-                jenis_pengiriman 
-            } = req.body
-
-            const updateFields = {
-                'shipments.$.id_distributor': new_id_distributor,
-                'shipments.$.total_ongkir': total_ongkir,
-                'shipments.$.ongkir': ongkir,
-                'shipments.$.potongan_ongkir': potongan_ongkir,
-                'shipments.$.id_jenis_kendaraan': id_jenis_kendaraan,
-                'shipments.$.jenis_pengiriman': jenis_pengiriman,
-            };
-
-            const order = await Orders.findOne(
-                { _id: req.params.id, userId: req.user.id, 'shipments.id_distributor': old_id_distributor, 'shipments.id_toko_vendor': old_id_toko_vendor, status: "Berlangsung" },
-            ).lean();
-            
-            if(!order) return res.status(404).json({message: "Tidak ditemukan order dan pengiriman"});
-
-            const filteredIndex = order.shipments.findIndex( item => {
-                return item.id_distributor.toString() === old_id_distributor && item.id_toko_vendor.toString() === old_id_toko_vendor
-            });
-            
-            const products = order.shipments[filteredIndex].products.map( item => {
-                return item.productId
-            });
-
-            const updatedOrder = await Orders.findOneAndUpdate(
-                { _id: req.params.id, userId: req.user.id, 'shipments.id_distributor': old_id_distributor, 'shipments.id_toko_vendor': old_id_toko_vendor },
-                { $set: updateFields },
-                { new: true }
-            )
-
-            const pengiriman = await Pengiriman.findOneAndUpdate(
-                {
-                    orderId: updatedOrder._id,
-                    productToDelivers: {
-                        $elemMatch: {
-                            productId: { $in: products }
-                        }
-                    }
-                },
-                {
-                    distributorId: new_id_distributor,
-                    rejected: false,
-                    total_ongkir,
-                    potongan_ongkir,
-                    ongkir,
-                    id_jenis_kendaraan,
-                    jenis_pengiriman
-                }
-            );
-
-            return res.status(200).json({data: updatedOrder, pengiriman})
-        } catch (error) {
-            console.log(error);
             next(error)
         }
     },
