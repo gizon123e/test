@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const modelInvoice = mongoose.Schema({
+const modelInvoice = new mongoose.Schema({
     id_transaksi: {
         type: mongoose.Types.ObjectId,
         ref: "Transaksi"

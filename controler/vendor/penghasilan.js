@@ -15,7 +15,7 @@ module.exports = {
             const products = (await Product.find({userId: req.user.id}).lean()).map(prod => prod._id);
             const salesReport = await SalesReport.find({productId: { $in: products }});
             let total_terjual = 0;
-            const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi === "masuk").reduce((acc, val)=> acc + val.jumlah, 0)
+            const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi === "masuk").reduce((acc, val)=> acc + val.jumlah, 0) - transaksis.filter(tr => tr.jenis_transaksi === "keluar").reduce((acc, val)=> acc + val.jumlah, 0)
 
             for(sp of salesReport){
                 sp.track.map(tr => total_terjual += tr.soldAtMoment)
