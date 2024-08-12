@@ -125,10 +125,14 @@ module.exports = {
 
     searchPanganByName: async (req, res, next) => {
         try {
-            const { nama } = req.query;
+            const { nama, jenis } = req.query;
+            if(!jenis || !nama) return res.status(400).json({message: "Kirimkan query jenis untuk search pangan"})
             const pangan = await Pangan.find({
                 nama_bahan: {
                     $regex: new RegExp(nama, 'i')
+                },
+                jenis_pangan: {
+                    $regex: new RegExp(jenis, 'i')
                 }
             }).select('kode_bahan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan').lean()
             if (pangan.length === 0) return res.status(404).json({ message: "Data tidak ditemukan" })
