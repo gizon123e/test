@@ -970,6 +970,8 @@ module.exports = {
           mayoritas_daerah_lokal: province,
           keterangan: req.body.long_description,
           jenis_makanan: 'makanan utama',
+          nama_makanan_lokal: req.body.name_product,
+          image_pangan: imgPaths[0],
           air: {
             value: tambah_seluruh_gizi.air,
           },
@@ -1125,6 +1127,8 @@ module.exports = {
           nama_makanan_lokal: req.body.nama_product,
           mayoritas_daerah_lokal: province,
           keterangan: req.body.long_description,
+          nama_makanan_lokal: req.body.name_product,
+          image_pangan: imgPaths[0],
           air: {
             value: tambah_seluruh_gizi.air,
           },
