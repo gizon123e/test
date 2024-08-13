@@ -102,6 +102,7 @@ app.use('/api/type-kendaraan', require('./routes/router-distributtor/router-type
 app.use('/api/proses-pengiriman', require('./routes/router-distributtor/router-prosesPengiriman'))
 app.use('/api/review-distributor', require('./routes/router-distributtor/router-reviewDistributor'))
 app.use('/api/rekening-distributor', require('./routes/router-distributtor/router-rekeningDistributor'))
+app.use('/api/penghasilan/distributor', require('./routes/router-distributtor/router-penghasilan'))
 
 // review produk
 app.use('/api/review-produk', require('./routes/router-review/router-reviewProduk'))
