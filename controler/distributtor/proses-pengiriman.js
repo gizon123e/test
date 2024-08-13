@@ -177,15 +177,15 @@ module.exports = {
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sudah dijemput", total_qty: total_qty }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
             const dataOneProsesPengirirman = await ProsesPengirimanDistributor.findOne({ _id: req.params.id, distributorId: distri._id })
 
-            console.log(dataOneProsesPengirirman)
-            await PelacakanDistributorKonsumen.create({
+            await PelacakanDistributorKonsumen.updateOne({
                 id_toko: dataOneProsesPengirirman.tokoId,
-                id_address,
-                latitude,
-                longitude,
                 id_distributor: distri._id,
                 id_pesanan: req.params.id,
                 id_konsumen,
+            }, {
+                id_address,
+                latitude,
+                longitude,
                 statusPengiriman: 'Pesanan sedang dalam perjalanan',
                 total_qty,
             })
@@ -349,7 +349,9 @@ module.exports = {
                 id_pesanan: req.params.id,
                 id_konsumen,
             }, {
-                image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}`
+                statusPengiriman: 'Pesanan telah diterima konsumen',
+                image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}`,
+                update_date_pesanan_selesai: new Date()
             })
 
             await Pengiriman.updateOne(

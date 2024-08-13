@@ -46,8 +46,12 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
     statusPengiriman: {
         type: String,
         required: false
+    },
+    update_date_pesanan_selesai: {
+        type: Date,
+        required: false,
+        default: null
     }
-
 }, { timestamps: true })
 
 const PelacakanDistributorKonsumen = mongoose.model('PelacakanDistributorDistributor', modulePelacakanDistributorKonsumen)
