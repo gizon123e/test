@@ -804,7 +804,7 @@ module.exports = {
             const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id, jenisKendaraan: prosesPengiriman.pengirimanId.id_jenis_kendaraan })
             if (kendaraaan.length === 0) return res.status(400).json({ message: 'belom ada yang tersedia kendaraanmu' })
 
-            const datas = kendaraaan.filter((item) => item._id === prosesPengiriman.id_kendaraan)
+            const datas = kendaraaan.filter((item) => item._id !== prosesPengiriman.id_kendaraan)
 
             res.status(200).json({
                 message: "get data Kendaraan success",

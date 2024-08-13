@@ -186,7 +186,7 @@ module.exports = {
                 if (item._id.equals(prosesPengiriman.id_pengemudi)) {
                     return {
                         ...item.toObject(),
-                        terseda_pengemudi: "sedang penjemputan"
+                        tidak_tersedia: "sedang penjemputan"
                     };
                 }
                 return item.toObject();
