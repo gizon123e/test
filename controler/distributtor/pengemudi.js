@@ -1,6 +1,7 @@
 const Distributtor = require('../../models/distributor/model-distributor')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
 const path = require('path')
+const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
 
 module.exports = {
     getPengemudiList: async (req, res, next) => {
@@ -163,6 +164,37 @@ module.exports = {
             res.status(200).json({
                 message: "update data success",
                 data
+            })
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    },
+
+    getAllPengemudiProsesPengiriman: async (req, res, next) => {
+        try {
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            if (!distributor) return res.status(404).json({ message: "distributor not found" })
+
+            const pengemudi = await Pengemudi.find({ id_distributor: distributor._id })
+            if (pengemudi.length === 0) return res.status(400).json({ message: "pengemudi saat ini belom tersedia" })
+
+            const prosesPengiriman = await ProsesPengirimanDistributor.findById(req.params.id)
+            if (!prosesPengiriman) return res.status(404).json({ message: "data proses pengiriman not found" })
+
+            const datas = pengemudi.filter((item) => {
+                if (item._id.equals(prosesPengiriman.id_kendaraan)) {
+                    return {
+                        ...item.toObject(),
+                        status: "sedang penjemputan"
+                    };
+                }
+                return item;
+            });
+
+            res.status(200).json({
+                message: "get data pengemudi success",
+                datas
             })
         } catch (error) {
             console.log(error)
