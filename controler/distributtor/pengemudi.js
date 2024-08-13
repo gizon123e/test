@@ -176,21 +176,29 @@ module.exports = {
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: "distributor not found" })
 
-            const pengemudi = await Pengemudi.find({ id_distributor: distributor._id })
-            if (pengemudi.length === 0) return res.status(400).json({ message: "pengemudi saat ini belom tersedia" })
+            const penentuanWaktu = await ProsesPengirimanDistributor.findById(req.params.id).populate('pengirimanId')
+            if (!penentuanWaktu) return res.status(404).json({ message: "proses pesanan not found" })
 
-            const prosesPengiriman = await ProsesPengirimanDistributor.findById(req.params.id)
-            if (!prosesPengiriman) return res.status(404).json({ message: "data proses pengiriman not found" })
+            const prosesPengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id }).populate('pengirimanId')
+            if (prosesPengiriman.length === 0) return res.status(404).json({ message: "proses pesanan saat ini kosong" })
 
-            const datas = pengemudi.map((item) => {
-                if (item._id.equals(prosesPengiriman.id_pengemudi)) {
-                    return {
-                        ...item.toObject(),
+            const totalWaktu = penentuanWaktu.optimasi_pengiriman * 2
+
+            const datas = []
+            for (let data of prosesPengiriman) {
+                const pengemudi = await Pengemudi.findOne({ _id: data.id_pengemudi })
+
+                const totalWaktuEstimasi = data.optimasi_pengiriman * 2
+
+                if (totalWaktu === totalWaktuEstimasi && pengemudi) {
+                    datas.push({
+                        ...pengemudi.toObject(),
                         tidak_tersedia: "sedang penjemputan"
-                    };
+                    })
+                } else if (pengemudi) {
+                    datas.push(pengemudi)
                 }
-                return item.toObject();
-            });
+            }
 
             res.status(200).json({
                 message: "get data pengemudi success",
