@@ -79,7 +79,6 @@ app.use("/api/report", require("./routes/router-laporan"));
 app.use("/api/produsen", require("./routes/router-produsen"));
 app.use("/api/comment", require("./routes/router-komentar"));
 app.use("/api/export", require("./routes/router-export"));
-app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
 app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
@@ -134,6 +133,10 @@ app.use('/api/user-system', require('./routes/router-system-user'));
 app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
+
+//Vendor
+app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
+app.use("/api/penghasilan/vendor", require('./routes/router-vendor/router-penghasilan'));
 
 // message
 app.use('/contak', require('./routes/router-message/router-message'))
