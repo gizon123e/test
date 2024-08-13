@@ -19,7 +19,10 @@ module.exports = {
             if (!toko) return res.status(404).json({ message: "toko vendor id not found" })
 
             const location = await PelacakanDistributorKonsumen.find({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengiriman._id, id_konsumen: id_sekolah })
-                .populate('id_toko').populate('id_distributor').populate('id_pesanan').populate('id_konsumen').populate('id_address')
+                .populate('id_toko').populate('id_distributor').populate('id_konsumen').populate('id_address').populate({
+                    path: 'id_pesanan',
+                    populate: "produk_pengiriman.productId"
+                })
 
             if (location.length === 0) {
                 return res.status(404).json({ message: 'Lokasi tidak ditemukan' });
