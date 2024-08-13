@@ -14,7 +14,7 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
     id_konsumen: {
         type: mongoose.Types.ObjectId,
         required: [true, "id_kosumen harus di isi"],
-        ref: "Konsumen"
+        ref: "Sekolah"
     },
     id_address: {
         type: mongoose.Types.ObjectId,
@@ -34,7 +34,7 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
     id_pesanan: {
         type: mongoose.Types.ObjectId,
         required: [true, "id_pesanan harus di isi"],
-        ref: "Pengiriman"
+        ref: "ProsesPengirimanDistributor"
     },
     total_qty: {
         type: Number,
