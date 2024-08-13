@@ -36,10 +36,6 @@ const modelTokoVendor = new mongoose.Schema({
         type: ObjectId,
         ref: "Vendor"
     },
-    pengikut: {
-        type: Number,
-        default: 0
-    },
     penilaian_produk: {
         type: Number,
         default: null

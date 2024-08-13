@@ -10,7 +10,7 @@ module.exports = {
             const user = await User.exists({_id: sellerUserId});
             if(!user) return res.status(400).json({message: "User tidak ditemukan"});
             const follow = await Follower.create({
-                userId: req.userId,
+                userId: req.user.id,
                 sellerUserId
             });
             return res.status(200).json({message: "Berhasil mengikuti seller", data: follow})
