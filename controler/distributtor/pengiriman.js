@@ -14,7 +14,7 @@ module.exports = {
 
     createPencarianUlangDistributor: async (req, res, next) => {
         try {
-            const { orderId, id_toko, kode_pengiriman, distributorId, id_jenis_kendaraan, id_jenis_layanan, potongan_ongkir } = req.body
+            const { orderId, id_toko, kode_pengiriman, distributorId, id_jenis_kendaraan, id_jenis_layanan, potongan_ongkir, ongkir } = req.body
 
             if (!orderId || !id_toko || !kode_pengiriman || !distributorId || !id_jenis_kendaraan, !id_jenis_layanan, !potongan_ongkir) {
                 return res.status(400).json({ message: "orderId, id_toko, kode_pengiriman, distributorId, id_jenis_kendaraan, id_jenis_layanan, potongan_ongkir harus di isi" })
@@ -30,7 +30,8 @@ module.exports = {
                 status_pengiriman: 'diproses',
                 id_jenis_kendaraan,
                 id_jenis_layanan,
-                potongan_ongkir
+                potongan_ongkir,
+                ongkir: parseInt(ongkir) - parseInt(potongan_ongkir)
             })
 
             res.status(200).json({ message: "update data success" })
