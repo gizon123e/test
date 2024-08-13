@@ -794,7 +794,7 @@ module.exports = {
 
     getAllpencarianKendaraDiProsesPengiriman: async (req, res, next) => {
         try {
-
+            console.log("user id ----->", req.user.id)
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: "distributor not found" })
 
@@ -804,7 +804,15 @@ module.exports = {
             const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id, jenisKendaraan: prosesPengiriman.pengirimanId.id_jenis_kendaraan })
             if (kendaraaan.length === 0) return res.status(400).json({ message: 'belom ada yang tersedia kendaraanmu' })
 
-            const datas = kendaraaan.filter((item) => item._id === prosesPengiriman.id_kendaraan)
+            const datas = kendaraaan.map((item) => {
+                if (item._id.equals(prosesPengiriman.id_kendaraan)) {
+                    return {
+                        ...item.toObject(),
+                        tidak_tersedia: "sedang penjemputan"
+                    };
+                }
+                return item.toObject();
+            });
 
             res.status(200).json({
                 message: "get data Kendaraan success",
