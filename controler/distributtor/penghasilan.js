@@ -1,17 +1,31 @@
 const Distributtor = require('../../models/distributor/model-distributor');
 const Pengiriman = require('../../models/model-pengiriman');
 const { Transaksi } = require('../../models/model-transaksi');
+const mongoose = require("mongoose")
 const now = new Date();
 const startOfToday = new Date(now.setHours(0, 0, 0, 0));
 const endOfToday = new Date(now.setHours(23, 59, 59, 999));
 
 module.exports = {
+    getTotalPenghasilan: async(req, res, next) => {
+        try {
+            const transaksis = await Transaksi.find({userId: req.user.id}).lean()
+            const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi == "masuk").reduce((acc, val)=> acc+val.jumlah, 0) - transaksis.filter(tr => tr.jenis_transaksi == "keluar").reduce((acc, val)=> acc+val.jumlah, 0)
+            return res.status(200).json({message: "Berhasil mendapatkan seluruh penghasilan", total_penghasilan})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     getPenghasilan: async(req, res, next) => {
         try {
             const { day, dateStart, dateEnd } = req.query
             const filter = {
                 userId: req.user.id
             }
+
+            if(!day) return res.status(400).json({message: "Kirimkan query day"})
 
             if(day === "Hari ini"){
                 filter.createdAt = {
@@ -54,45 +68,21 @@ module.exports = {
             
             const transaksis = await Transaksi.find(filter)
             .lean();
-
-            const products = (await Product.find({userId: req.user.id}).lean()).map(prod => prod._id);
-            const salesReport = await SalesReport.aggregate([
-                {
-                    $match: {
-                        productId: { $in: products },
-                    },
-                },
-                {
-                    $project: {
-                        productId: 1,
-                        track: {
-                            $filter: {
-                                input: "$track",
-                                as: "item",
-                                cond: {
-                                    $and: [
-                                        { $gte: ["$$item.time", filter.createdAt?.$gte] },
-                                        { $lte: ["$$item.time", filter.createdAt?.$lte] }
-                                    ],
-                                },
-                            },
-                        },
-                    },
-                },
-            ]).exec();
-
+            const distri = await Distributtor.exists({userId: req.user.id})
+            const shipments = await Pengiriman.find({distributorId: distri._id, createdAt: filter.createdAt}).lean();
             const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi === "masuk").reduce((acc, val)=> acc + val.jumlah, 0) - transaksis.filter(tr => tr.jenis_transaksi === "keluar").reduce((acc, val)=> acc + val.jumlah, 0)
             let total_produk = 0;
             let total_quantity = 0;
-            const addedProduct = new Set()
-            for(sp of salesReport){
-                total_quantity += sp.track.reduce((acc, val) => {
-                    if(!addedProduct.has(sp.productId)){
+            const addedShipment = new Set()
+            for(sp of shipments){
+                const total = sp.productToDelivers.reduce((acc, val)=> {
+                    if(!addedShipment.has(val.productId.toString())){
                         total_produk += 1;
-                        addedProduct.add(sp.productId)
+                        addedShipment.add(val.productId.toString())
                     }
-                    return acc + val.soldAtMoment
-                }, 0)
+                    return acc + val.quantity
+                },0)
+                total_quantity += total
             };
             
             return res.status(200).json({message: "Berhasil menampilkan penghasilan", total_penghasilan , total: { total_produk, total_quantity } })
