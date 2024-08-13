@@ -145,7 +145,10 @@ app.use('/contak', require('./routes/router-message/router-message'))
 app.use('/api/tarif', require('./routes/router-tarif'))
 
 // Campeni Profile
-app.use('/api/campeni-profile', require('./routes/router-campeniProfile/router-mbg'))
+app.use('/api/campeni-profile', require('./routes/router-campeniProfile/router-mbg'));
+
+// Wishlist
+app.use('/api/wishlist', require('./routes/router-wishlist'))
 
 // midelware error
 app.use(require("./midelware/error-midelware"));
