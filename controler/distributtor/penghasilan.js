@@ -25,7 +25,7 @@ module.exports = {
                 userId: req.user.id
             }
 
-            if(!day) return res.status(400).json({message: "Kirimkan query day"})
+            if(!day && (!dateStart && !dateEnd)) return res.status(400).json({message: "Kirimkan query day"})
 
             if(day === "Hari ini"){
                 filter.createdAt = {
