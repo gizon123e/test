@@ -48,10 +48,12 @@ module.exports = {
     getDetailLacakanDistributor: async (req, res, next) => {
         try {
             const lacak = await ProsesPengirimanDistributor.findOne({ _id: req.params.id })
-                .populate('id_toko').populate('id_distributor').populate('id_konsumen').populate('id_address').populate({
-                    path: 'id_pesanan',
-                    populate: "produk_pengiriman.productId"
+                .populate('pengirimanId').populate('produk_pengiriman.productId').populate({
+                    path: "id_kendaraan",
+                    populate: "jenisKendaraan",
+                    populate: "merekKendaraan"
                 })
+                .populate("id_pengemudi")
 
             if (!lacak) return res.status(404).json({ message: "data Lacak Not Found" })
 
