@@ -6,6 +6,7 @@ const fileType = require("../../midelware/file-type-middleware");
 const controllerVendor = require("../../controler/vendor/vendor");
 const controllerToko = require('../../controler/vendor/toko-vendor');
 const controllerPic = require('../../controler/vendor/pic-vendor')
+const controlerFollow = require("../../controler/follower/follower")
 
 const router = require("express").Router();
 
@@ -18,6 +19,7 @@ router.get('/toko/proses-pengiriman', authorization, controllerToko.getAllProses
 router.get('/notifikasi/rekomendasi', authorization, controllerToko.getNotifUpload);
 router.post("/create", controllerVendor.createVendor);
 router.post("/create/toko", controllerToko.createToko);
+router.post("/follow", authorization, controlerFollow.followSeller);
 router.post("/pic/create", controllerPic.createPic);
 router.put("/update", authorization, controllerVendor.updateVendor);
 router.put("/update/toko", authorization, controllerToko.updateDetailToko);

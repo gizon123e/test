@@ -7,12 +7,25 @@ const startOfToday = new Date(now.setHours(0, 0, 0, 0));
 const endOfToday = new Date(now.setHours(23, 59, 59, 999));
 
 module.exports = {
+    getTotalPenghasilan: async(req, res, next) => {
+        try {
+            const transaksis = await Transaksi.find({userId: req.user.id}).lean()
+            const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi == "masuk").reduce((acc, val)=> acc+val.jumlah, 0) - transaksis.filter(tr => tr.jenis_transaksi == "keluar").reduce((acc, val)=> acc+val.jumlah, 0)
+            return res.status(200).json({message: "Berhasil mendapatkan seluruh penghasilan", total_penghasilan})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    
     getPenghasilan: async(req, res, next) => {
         try {
             const { day, dateStart, dateEnd } = req.query
             const filter = {
                 userId: req.user.id
             }
+
+            if(!day && (!dateStart && !dateEnd)) return res.status(400).json({message: "Kirimkan query day"})
 
             if(day === "Hari ini"){
                 filter.createdAt = {
@@ -142,7 +155,7 @@ module.exports = {
                 }
             }
 
-            const transaksi = await Transaksi.find(filter);
+            const transaksi = await Transaksi.find(filter).sort({createdAt: -1});
             if(transaksi.length === 0) return res.status(200).json({message: `Tidak Ada Penghasilan di bulan ${bulan.charAt(0).toUpperCase() + bulan.slice(1).toLowerCase()}`})
             return res.status(200).json({message: "Berhasil menampilkan riwayat keuangan", data: transaksi })
         } catch (error) {

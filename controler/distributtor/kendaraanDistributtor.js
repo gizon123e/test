@@ -794,17 +794,32 @@ module.exports = {
 
     getAllpencarianKendaraDiProsesPengiriman: async (req, res, next) => {
         try {
-
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: "distributor not found" })
 
-            const prosesPengiriman = await ProsesPengirimanDistributor.findById(req.params.id).populate('pengirimanId')
-            if (!prosesPengiriman) return res.status(404).json({ message: "proses pesanan not found" })
+            const penentuanWaktu = await ProsesPengirimanDistributor.findById(req.params.id).populate('pengirimanId')
+            if (!penentuanWaktu) return res.status(404).json({ message: "proses pesanan not found" })
 
-            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id, jenisKendaraan: prosesPengiriman.pengirimanId.id_jenis_kendaraan })
-            if (kendaraaan.length === 0) return res.status(400).json({ message: 'belom ada yang tersedia kendaraanmu' })
+            const prosesPengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id }).populate('pengirimanId')
+            if (prosesPengiriman.length === 0) return res.status(404).json({ message: "proses pesanan saat ini kosong" })
 
-            const datas = kendaraaan.filter((item) => item._id === prosesPengiriman.id_kendaraan)
+            const totalWaktu = penentuanWaktu.optimasi_pengiriman * 2
+
+            const datas = []
+            for (let data of prosesPengiriman) {
+                const kendaraaan = await KendaraanDistributor.findOne({ id_distributor: distributor._id, jenisKendaraan: data.pengirimanId.id_jenis_kendaraan })
+
+                const totalWaktuEstimasi = data.optimasi_pengiriman * 2
+
+                if (totalWaktu === totalWaktuEstimasi) {
+                    datas.push({
+                        ...kendaraaan.toObject(),
+                        tidak_tersedia: "sedang penjemputan"
+                    })
+                } else {
+                    datas.push(kendaraaan)
+                }
+            }
 
             res.status(200).json({
                 message: "get data Kendaraan success",

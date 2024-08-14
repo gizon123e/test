@@ -9,6 +9,7 @@ const ProsesPengirimanDistributor = require('../../models/distributor/model-pros
 const TokoVendor = require('../../models/vendor/model-toko');
 const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders');
 const Vendor = require('../../models/vendor/model-vendor');
+const Follower = require('../../models/model-follower');
 
 
 module.exports = {
@@ -47,7 +48,7 @@ module.exports = {
     getDetailToko: async(req, res, next) => {
         try {
             const { bintang } = req.query
-            const dataToko = await Toko.findOne({userId: req.params.id}).populate('address');
+            const dataToko = await Toko.findOne({userId: req.params.id}).populate('address').lean();
             const query = { 
                 userId: req.params.id, 
                 'status.value': "terpublish",
@@ -57,14 +58,18 @@ module.exports = {
             .select("_id image_product total_stok name_product total_price poin_review")
             .sort({ total_stok: -1 })
             .lean();
+
+            const pengikut = await Follower.countDocuments({
+                sellerUserId: req.params.id
+            })
             
             for (const product of products) {
                 const record = await SalesReport.findOne({ productId: product._id });
                 const terjual = record ? record.track.reduce((acc, val) => acc + val.soldAtMoment, 0) : 0;
                 product.terjual = terjual;
-            }
+            };
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
-            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: dataToko, dataProduct: products})
+            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: { ...dataToko, pengikut }, dataProduct: products, pengikut});
         } catch (error) {
             console.log(error);
             next(error);

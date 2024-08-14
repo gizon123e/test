@@ -14,6 +14,8 @@ const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
 const fs = require('fs')
 const dotenv = require('dotenv')
+const Pengiriman = require('../../models/model-pengiriman')
+const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
 dotenv.config()
 
 module.exports = {
@@ -21,10 +23,23 @@ module.exports = {
         try {
             const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
+            console.log(dataDistributor._id)
+
+            const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
+            const total_pesanan = pesanan.length
+            const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak")
+            const total_dibatalkan = pesananBatal.length
+
+            const prosesPesanan = await ProsesPengirimanDistributor.find({ distributorId: dataDistributor._id })
+            const pesananDikirim = prosesPesanan.filter((item) => item.status_distributor === "Selesai")
+            const total_dijemput = pesananDikirim.length
 
             res.status(200).json({
                 message: "data profile success",
-                data: dataDistributor
+                data: dataDistributor,
+                total_pesanan,
+                total_dibatalkan,
+                total_dijemput
             })
         } catch (error) {
             console.log(error)
