@@ -802,106 +802,55 @@ module.exports = {
           if (item.nama_varian == "Topping") {
             nilai_varian = item.nilai_varian;
           }
+          nilai_varian;
         }
+        if (nilai_varian.length > 0) {
+          let gizi_varian = [];
 
-        let gizi_varian = [];
-
-        for (const item of nilai_varian) {
-          const gizi = await Pangan.findById(item.bahan).select(
-            "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
-          );
-          gizi_varian.push(gizi);
-        }
-
-        const gizi_nilai_varian = [];
-        for (let i = 0; i < gizi_varian.length; i++) {
-          const air = (nilai_varian[i].total_gram / 100) * gizi_varian[i].air.value;
-          const energi = (nilai_varian[i].total_gram / 100) * gizi_varian[i].energi.value;
-          const protein = (nilai_varian[i].total_gram / 100) * gizi_varian[i].protein.value;
-          const lemak = (nilai_varian[i].total_gram / 100) * gizi_varian[i].lemak.value;
-          const kh = (nilai_varian[i].total_gram / 100) * gizi_varian[i].lemak.value;
-          const serat = (nilai_varian[i].total_gram / 100) * gizi_varian[i].serat.value;
-          const kalsium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].kalsium.value;
-          const fosfor = (nilai_varian[i].total_gram / 100) * gizi_varian[i].fosfor.value;
-          const besi = (nilai_varian[i].total_gram / 100) * gizi_varian[i].besi.value;
-          const natrium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].besi.value;
-          const kalium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].kalium.value;
-          const tembaga = (nilai_varian[i].total_gram / 100) * gizi_varian[i].tembaga.value;
-          const thiamin = (nilai_varian[i].total_gram / 100) * gizi_varian[i].thiamin.value;
-          const riboflavin = (nilai_varian[i].total_gram / 100) * gizi_varian[i].riboflavin.value;
-          const vitc = (nilai_varian[i].total_gram / 100) * gizi_varian[i].riboflavin.value;
-
-          gizi_nilai_varian.push({
-            air: air,
-            energi: energi,
-            protein: protein,
-            lemak: lemak,
-            kh: kh,
-            serat: serat,
-            kalsium: kalsium,
-            fosfor: fosfor,
-            besi: besi,
-            natrium: natrium,
-            kalium: kalium,
-            tembaga: tembaga,
-            thiamin: thiamin,
-            riboflavin: riboflavin,
-            vitc: vitc,
-          });
-        }
-        const seluruh_gizi_varian = gizi_nilai_varian.reduce((accumulator, current) => {
-          for (let key in current) {
-            if (accumulator[key]) {
-              accumulator[key] += current[key];
-            } else {
-              accumulator[key] = current[key];
-            }
+          for (const item of nilai_varian) {
+            const gizi = await Pangan.findById(item.bahan).select(
+              "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
+            );
+            gizi_varian.push(gizi);
           }
-          return accumulator;
-        }, {});
 
-        Object.keys(seluruh_gizi_varian).forEach((key) => (seluruh_gizi_varian[key] = formatNumber(seluruh_gizi_varian[key])));
+          const gizi_nilai_varian = [];
+          for (let i = 0; i < gizi_varian.length; i++) {
+            const air = (nilai_varian[i].total_gram / 100) * gizi_varian[i].air.value;
+            const energi = (nilai_varian[i].total_gram / 100) * gizi_varian[i].energi.value;
+            const protein = (nilai_varian[i].total_gram / 100) * gizi_varian[i].protein.value;
+            const lemak = (nilai_varian[i].total_gram / 100) * gizi_varian[i].lemak.value;
+            const kh = (nilai_varian[i].total_gram / 100) * gizi_varian[i].lemak.value;
+            const serat = (nilai_varian[i].total_gram / 100) * gizi_varian[i].serat.value;
+            const kalsium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].kalsium.value;
+            const fosfor = (nilai_varian[i].total_gram / 100) * gizi_varian[i].fosfor.value;
+            const besi = (nilai_varian[i].total_gram / 100) * gizi_varian[i].besi.value;
+            const natrium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].besi.value;
+            const kalium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].kalium.value;
+            const tembaga = (nilai_varian[i].total_gram / 100) * gizi_varian[i].tembaga.value;
+            const thiamin = (nilai_varian[i].total_gram / 100) * gizi_varian[i].thiamin.value;
+            const riboflavin = (nilai_varian[i].total_gram / 100) * gizi_varian[i].riboflavin.value;
+            const vitc = (nilai_varian[i].total_gram / 100) * gizi_varian[i].riboflavin.value;
 
-        if (pangan?.length > 1) {
-          const nilai_gizi_pangan = [];
-          const totalBeratPangan = pangan.reduce((acc, val) => {
-            return acc + parseFloat(val?.berat);
-          }, 0);
-          for (const item of pangan) {
-            const air = (item.berat / totalBeratPangan) * parseFloat(item.panganId.air.value);
-            const energi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.energi.value);
-            const protein = (item.berat / totalBeratPangan) * parseFloat(item.panganId.protein.value);
-            const lemak = (item.berat / totalBeratPangan) * parseFloat(item.panganId.lemak.value);
-            const kh = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kh.value);
-            const serat = (item.berat / totalBeratPangan) * parseFloat(item.panganId.serat.value);
-            const kalsium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalsium.value);
-            const fosfor = (item.berat / totalBeratPangan) * parseFloat(item.panganId.fosfor.value);
-            const besi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.besi.value);
-            const natrium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.natrium.value);
-            const kalium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalium.value);
-            const tembaga = (item.berat / totalBeratPangan) * parseFloat(item.panganId.tembaga.value);
-            const thiamin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.thiamin.value);
-            const riboflavin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.riboflavin.value);
-            const vitc = (item.berat / totalBeratPangan) * parseFloat(item.panganId.vitc.value);
-            nilai_gizi_pangan.push({
-              air: formatNumber(air),
-              energi: formatNumber(energi),
-              protein: formatNumber(protein),
-              lemak: formatNumber(lemak),
-              kh: formatNumber(kh),
-              serat: formatNumber(serat),
-              kalsium: formatNumber(kalsium),
-              fosfor: formatNumber(fosfor),
-              besi: formatNumber(besi),
-              natrium: formatNumber(natrium),
-              kalium: formatNumber(kalium),
-              tembaga: formatNumber(tembaga),
-              thiamin: formatNumber(thiamin),
-              riboflavin: formatNumber(riboflavin),
-              vitc: formatNumber(vitc),
+            gizi_nilai_varian.push({
+              air: air,
+              energi: energi,
+              protein: protein,
+              lemak: lemak,
+              kh: kh,
+              serat: serat,
+              kalsium: kalsium,
+              fosfor: fosfor,
+              besi: besi,
+              natrium: natrium,
+              kalium: kalium,
+              tembaga: tembaga,
+              thiamin: thiamin,
+              riboflavin: riboflavin,
+              vitc: vitc,
             });
           }
-          const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
+          const seluruh_gizi_varian = gizi_nilai_varian.reduce((accumulator, current) => {
             for (let key in current) {
               if (accumulator[key]) {
                 accumulator[key] += current[key];
@@ -909,55 +858,108 @@ module.exports = {
                 accumulator[key] = current[key];
               }
             }
-            Object.keys(accumulator).map((key) => formatNumber(accumulator[key]));
             return accumulator;
           }, {});
 
-          Object.keys(tambah_seluruh_gizi).forEach((key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key])));
+          Object.keys(seluruh_gizi_varian).forEach((key) => (seluruh_gizi_varian[key] = formatNumber(seluruh_gizi_varian[key])));
 
-          nutrisi.energi = `${((parseFloat(tambah_seluruh_gizi?.energi) / 100) * totalBeratPangan + seluruh_gizi_varian?.energi).toFixed(1)} kkal`;
-          nutrisi.protein = `${((parseFloat(tambah_seluruh_gizi?.protein) / 100) * totalBeratPangan + seluruh_gizi_varian?.protein).toFixed(1)} g`;
-          nutrisi.lemak = `${((parseFloat(tambah_seluruh_gizi?.lemak) / 100) * totalBeratPangan + seluruh_gizi_varian?.lemak).toFixed(1)} g`;
-          nutrisi.karbohidrat = `${((parseFloat(tambah_seluruh_gizi?.kh) / 100) * totalBeratPangan + seluruh_gizi_varian?.kh).toFixed(1)} g`;
-          nutrisi.serat = `${((parseFloat(tambah_seluruh_gizi?.serat) / 100) * totalBeratPangan + seluruh_gizi_varian?.serat).toFixed(1)} mg`;
-          nutrisi.kalsium = `${((parseFloat(tambah_seluruh_gizi?.kalsium) / 100) * totalBeratPangan + seluruh_gizi_varian?.kalsium).toFixed(1)} mg`;
-          nutrisi.fosfor = `${((parseFloat(tambah_seluruh_gizi?.fosfor) / 100) * totalBeratPangan + seluruh_gizi_varian?.fosfor).toFixed(1)} mg`;
-          nutrisi.besi = `${((parseFloat(tambah_seluruh_gizi?.besi) / 100) * totalBeratPangan + seluruh_gizi_varian?.besi).toFixed(1)} mg`;
-          nutrisi.natrium = `${((parseFloat(tambah_seluruh_gizi?.natrium) / 100) * totalBeratPangan + seluruh_gizi_varian?.natrium).toFixed(1)} mg`;
-          nutrisi.kalium = `${((parseFloat(tambah_seluruh_gizi?.kalium) / 100) * totalBeratPangan + seluruh_gizi_varian?.kalium).toFixed(1)} mg`;
-          nutrisi.tembaga = `${((parseFloat(tambah_seluruh_gizi?.tembaga) / 100) * totalBeratPangan + seluruh_gizi_varian?.tembaga).toFixed(1)} mg`;
-          nutrisi.thiamin = `${((parseFloat(tambah_seluruh_gizi?.thiamin) / 100) * totalBeratPangan + seluruh_gizi_varian?.thiamin).toFixed(1)} mg`;
-          nutrisi.riboflavin = `${((parseFloat(tambah_seluruh_gizi?.riboflavin) / 100) * totalBeratPangan + seluruh_gizi_varian?.riboflavin).toFixed(1)} mg`;
-          nutrisi.vitamin_c = `${((parseFloat(tambah_seluruh_gizi?.vitc) / 100) * totalBeratPangan + seluruh_gizi_varian?.vitc).toFixed(1)} mg`;
-          nutrisi.takaran_saji = `${totalBeratPangan} g`;
-        } else {
-          pangan?.forEach((item) => {
-            nutrisi.energi = `${((parseFloat(item?.panganId?.energi?.value) / 100) * item?.berat + seluruh_gizi_varian?.energi).toFixed(1)} kkal`;
-            nutrisi.protein = `${((parseFloat(item?.panganId?.protein?.value) / 100) * item?.berat + seluruh_gizi_varian?.protein).toFixed(1)} g`;
-            nutrisi.lemak = `${((parseFloat(item?.panganId?.lemak?.value) / 100) * item?.berat + seluruh_gizi_varian?.lemak).toFixed(1)} g`;
-            nutrisi.karbohidrat = `${((parseFloat(item?.panganId?.kh?.value) / 100) * item?.berat + seluruh_gizi_varian?.kh).toFixed(1)} g`;
-            nutrisi.serat = `${((parseFloat(item?.panganId?.serat?.value) / 100) * item?.berat + seluruh_gizi_varian?.serat).toFixed(1)} mg`;
-            nutrisi.kalsium = `${((parseFloat(item?.panganId?.kalsium?.value) / 100) * item?.berat + seluruh_gizi_varian?.kalsium).toFixed(1)} mg`;
-            nutrisi.fosfor = `${((parseFloat(item?.panganId?.fosfor?.value) / 100) * item?.berat + seluruh_gizi_varian?.fosfor).toFixed(1)} mg`;
-            nutrisi.besi = `${((parseFloat(item?.panganId?.besi?.value) / 100) * item?.berat + seluruh_gizi_varian?.besi).toFixed(1)} mg`;
-            nutrisi.natrium = `${((parseFloat(item?.panganId?.natrium?.value) / 100) * item?.berat + seluruh_gizi_varian?.natrium).toFixed(1)} mg`;
-            nutrisi.kalium = `${((parseFloat(item?.panganId?.kalium?.value) / 100) * item?.berat + seluruh_gizi_varian?.kalium).toFixed(1)} mg`;
-            nutrisi.tembaga = `${((parseFloat(item?.panganId?.tembaga?.value) / 100) * item?.berat + seluruh_gizi_varian?.tembaga).toFixed(1)} mg`;
-            nutrisi.thiamin = `${((parseFloat(item?.panganId?.thiamin?.value) / 100) * item?.berat + seluruh_gizi_varian?.thiamin).toFixed(1)} mg`;
-            nutrisi.riboflavin = `${((parseFloat(item?.panganId?.riboflavin?.value) / 100) * item?.berat + seluruh_gizi_varian?.riboflavin).toFixed(1)} mg`;
-            nutrisi.vitamin_c = `${((parseFloat(item?.panganId?.vitc?.value) / 100) * item.berat + seluruh_gizi_varian?.vitc).toFixed(1)} mg`;
-            nutrisi.takaran_saji = `${item.berat} g`;
+          if (pangan?.length > 1) {
+            const nilai_gizi_pangan = [];
+            const totalBeratPangan = pangan.reduce((acc, val) => {
+              return acc + parseFloat(val?.berat);
+            }, 0);
+            for (const item of pangan) {
+              const air = (item.berat / totalBeratPangan) * parseFloat(item.panganId.air.value);
+              const energi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.energi.value);
+              const protein = (item.berat / totalBeratPangan) * parseFloat(item.panganId.protein.value);
+              const lemak = (item.berat / totalBeratPangan) * parseFloat(item.panganId.lemak.value);
+              const kh = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kh.value);
+              const serat = (item.berat / totalBeratPangan) * parseFloat(item.panganId.serat.value);
+              const kalsium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalsium.value);
+              const fosfor = (item.berat / totalBeratPangan) * parseFloat(item.panganId.fosfor.value);
+              const besi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.besi.value);
+              const natrium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.natrium.value);
+              const kalium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalium.value);
+              const tembaga = (item.berat / totalBeratPangan) * parseFloat(item.panganId.tembaga.value);
+              const thiamin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.thiamin.value);
+              const riboflavin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.riboflavin.value);
+              const vitc = (item.berat / totalBeratPangan) * parseFloat(item.panganId.vitc.value);
+              nilai_gizi_pangan.push({
+                air: formatNumber(air),
+                energi: formatNumber(energi),
+                protein: formatNumber(protein),
+                lemak: formatNumber(lemak),
+                kh: formatNumber(kh),
+                serat: formatNumber(serat),
+                kalsium: formatNumber(kalsium),
+                fosfor: formatNumber(fosfor),
+                besi: formatNumber(besi),
+                natrium: formatNumber(natrium),
+                kalium: formatNumber(kalium),
+                tembaga: formatNumber(tembaga),
+                thiamin: formatNumber(thiamin),
+                riboflavin: formatNumber(riboflavin),
+                vitc: formatNumber(vitc),
+              });
+            }
+            const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
+              for (let key in current) {
+                if (accumulator[key]) {
+                  accumulator[key] += current[key];
+                } else {
+                  accumulator[key] = current[key];
+                }
+              }
+              Object.keys(accumulator).map((key) => formatNumber(accumulator[key]));
+              return accumulator;
+            }, {});
+
+            Object.keys(tambah_seluruh_gizi).forEach((key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key])));
+
+            nutrisi.energi = `${((parseFloat(tambah_seluruh_gizi?.energi) / 100) * totalBeratPangan + seluruh_gizi_varian?.energi).toFixed(1)} kkal`;
+            nutrisi.protein = `${((parseFloat(tambah_seluruh_gizi?.protein) / 100) * totalBeratPangan + seluruh_gizi_varian?.protein).toFixed(1)} g`;
+            nutrisi.lemak = `${((parseFloat(tambah_seluruh_gizi?.lemak) / 100) * totalBeratPangan + seluruh_gizi_varian?.lemak).toFixed(1)} g`;
+            nutrisi.karbohidrat = `${((parseFloat(tambah_seluruh_gizi?.kh) / 100) * totalBeratPangan + seluruh_gizi_varian?.kh).toFixed(1)} g`;
+            nutrisi.serat = `${((parseFloat(tambah_seluruh_gizi?.serat) / 100) * totalBeratPangan + seluruh_gizi_varian?.serat).toFixed(1)} mg`;
+            nutrisi.kalsium = `${((parseFloat(tambah_seluruh_gizi?.kalsium) / 100) * totalBeratPangan + seluruh_gizi_varian?.kalsium).toFixed(1)} mg`;
+            nutrisi.fosfor = `${((parseFloat(tambah_seluruh_gizi?.fosfor) / 100) * totalBeratPangan + seluruh_gizi_varian?.fosfor).toFixed(1)} mg`;
+            nutrisi.besi = `${((parseFloat(tambah_seluruh_gizi?.besi) / 100) * totalBeratPangan + seluruh_gizi_varian?.besi).toFixed(1)} mg`;
+            nutrisi.natrium = `${((parseFloat(tambah_seluruh_gizi?.natrium) / 100) * totalBeratPangan + seluruh_gizi_varian?.natrium).toFixed(1)} mg`;
+            nutrisi.kalium = `${((parseFloat(tambah_seluruh_gizi?.kalium) / 100) * totalBeratPangan + seluruh_gizi_varian?.kalium).toFixed(1)} mg`;
+            nutrisi.tembaga = `${((parseFloat(tambah_seluruh_gizi?.tembaga) / 100) * totalBeratPangan + seluruh_gizi_varian?.tembaga).toFixed(1)} mg`;
+            nutrisi.thiamin = `${((parseFloat(tambah_seluruh_gizi?.thiamin) / 100) * totalBeratPangan + seluruh_gizi_varian?.thiamin).toFixed(1)} mg`;
+            nutrisi.riboflavin = `${((parseFloat(tambah_seluruh_gizi?.riboflavin) / 100) * totalBeratPangan + seluruh_gizi_varian?.riboflavin).toFixed(1)} mg`;
+            nutrisi.vitamin_c = `${((parseFloat(tambah_seluruh_gizi?.vitc) / 100) * totalBeratPangan + seluruh_gizi_varian?.vitc).toFixed(1)} mg`;
+            nutrisi.takaran_saji = `${totalBeratPangan} g`;
+          } else {
+            pangan?.forEach((item) => {
+              nutrisi.energi = `${((parseFloat(item?.panganId?.energi?.value) / 100) * item?.berat + seluruh_gizi_varian?.energi).toFixed(1)} kkal`;
+              nutrisi.protein = `${((parseFloat(item?.panganId?.protein?.value) / 100) * item?.berat + seluruh_gizi_varian?.protein).toFixed(1)} g`;
+              nutrisi.lemak = `${((parseFloat(item?.panganId?.lemak?.value) / 100) * item?.berat + seluruh_gizi_varian?.lemak).toFixed(1)} g`;
+              nutrisi.karbohidrat = `${((parseFloat(item?.panganId?.kh?.value) / 100) * item?.berat + seluruh_gizi_varian?.kh).toFixed(1)} g`;
+              nutrisi.serat = `${((parseFloat(item?.panganId?.serat?.value) / 100) * item?.berat + seluruh_gizi_varian?.serat).toFixed(1)} mg`;
+              nutrisi.kalsium = `${((parseFloat(item?.panganId?.kalsium?.value) / 100) * item?.berat + seluruh_gizi_varian?.kalsium).toFixed(1)} mg`;
+              nutrisi.fosfor = `${((parseFloat(item?.panganId?.fosfor?.value) / 100) * item?.berat + seluruh_gizi_varian?.fosfor).toFixed(1)} mg`;
+              nutrisi.besi = `${((parseFloat(item?.panganId?.besi?.value) / 100) * item?.berat + seluruh_gizi_varian?.besi).toFixed(1)} mg`;
+              nutrisi.natrium = `${((parseFloat(item?.panganId?.natrium?.value) / 100) * item?.berat + seluruh_gizi_varian?.natrium).toFixed(1)} mg`;
+              nutrisi.kalium = `${((parseFloat(item?.panganId?.kalium?.value) / 100) * item?.berat + seluruh_gizi_varian?.kalium).toFixed(1)} mg`;
+              nutrisi.tembaga = `${((parseFloat(item?.panganId?.tembaga?.value) / 100) * item?.berat + seluruh_gizi_varian?.tembaga).toFixed(1)} mg`;
+              nutrisi.thiamin = `${((parseFloat(item?.panganId?.thiamin?.value) / 100) * item?.berat + seluruh_gizi_varian?.thiamin).toFixed(1)} mg`;
+              nutrisi.riboflavin = `${((parseFloat(item?.panganId?.riboflavin?.value) / 100) * item?.berat + seluruh_gizi_varian?.riboflavin).toFixed(1)} mg`;
+              nutrisi.vitamin_c = `${((parseFloat(item?.panganId?.vitc?.value) / 100) * item.berat + seluruh_gizi_varian?.vitc).toFixed(1)} mg`;
+              nutrisi.takaran_saji = `${item.berat} g`;
+            });
+          }
+          return res.status(200).json({
+            datas: {
+              ...restOfProduct,
+              total_terjual: terjual ? total_terjual : 0,
+            },
+            toko,
+            seluruh_gizi_varian,
+            nutrisi,
           });
         }
-        return res.status(200).json({
-          datas: {
-            ...restOfProduct,
-            total_terjual: terjual ? total_terjual : 0,
-          },
-          toko,
-          seluruh_gizi_varian,
-          nutrisi,
-        });
       }
       const { pangan, ...restOfProduct } = dataProduct;
       const nutrisi = {
