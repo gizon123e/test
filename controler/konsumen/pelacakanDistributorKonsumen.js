@@ -55,6 +55,14 @@ module.exports = {
                     populate: "merekKendaraan"
                 })
                 .populate("id_pengemudi")
+                .populate({
+                    path: "tokoId",
+                    populate: "address"
+                })
+                .populate({
+                    path: "sekolahId",
+                    populate: "address"
+                })
 
             if (!lacak) return res.status(404).json({
                 message: "Link pengiriman pesanan tidak tersedia",
