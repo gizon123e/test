@@ -48,7 +48,8 @@ module.exports = {
     getDetailLacakanDistributor: async (req, res, next) => {
         try {
             const lacak = await ProsesPengirimanDistributor.findOne({ _id: req.params.id })
-                .populate('pengirimanId').populate('produk_pengiriman.productId').populate({
+                .populate('produk_pengiriman.productId')
+                .populate({
                     path: "id_kendaraan",
                     populate: "jenisKendaraan",
                     populate: "merekKendaraan"
