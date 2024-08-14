@@ -143,7 +143,7 @@ module.exports = {
 
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput" }, { new: true });
 
-            await PelacakanDistributorKonsumen.create({
+            const lacak = await PelacakanDistributorKonsumen.create({
                 id_toko: prosesPengiriman.tokoId,
                 id_address,
                 latitude,
@@ -161,7 +161,10 @@ module.exports = {
 
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
-            return res.status(200).json({ message: "Berhasil Memulai Penjemputan", });
+            return res.status(200).json({
+                message: "Berhasil Memulai Penjemputan",
+                lacak
+            });
         } catch (error) {
             console.log(error);
             next(error)
@@ -340,7 +343,7 @@ module.exports = {
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Selesai", image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}` }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
-            await PelacakanDistributorKonsumen.updateMany({
+            await PelacakanDistributorKonsumen.updateOne({
                 id_toko: prosesPengiriman.tokoId,
                 id_address,
                 latitude,
@@ -414,7 +417,9 @@ module.exports = {
                         tanggal: formatTanggal(detailNotifikasi.createdAt)
                     })
                 }
-                return res.status(200).json({ message: "Berhasil Menyelesaikan Pengiriman" });
+                return res.status(200).json({
+                    message: "Berhasil Menyelesaikan Pengiriman",
+                });
             }
         } catch (error) {
             console.log(error);

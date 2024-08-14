@@ -812,7 +812,7 @@ module.exports = {
                 day: '2-digit'
             });
 
-            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id })
+            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
             const datas = []
 

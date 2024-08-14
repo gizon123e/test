@@ -5,7 +5,7 @@ const TokoVendor = require('../../models/vendor/model-toko');
 const Sekolah = require('../../models/model-sekolah');
 
 module.exports = {
-    getTrekingDistributor: async (req, res) => {
+    getTrekingDistributor: async (req, res, next) => {
         try {
             const { id_toko, id_distributor, pengirimanId, id_sekolah } = req.params;
 
@@ -45,24 +45,19 @@ module.exports = {
         }
     },
 
-    createPelacakanDistributorKonsumen: async (req, res, next) => {
+    getDetailLacakanDistributor: async (req, res, next) => {
         try {
-            const { id_toko, id_address, latitude, longitude, id_distributor, id_pesanan, id_konsumen, } = req.body
+            const lacak = await PelacakanDistributorKonsumen.findOne({ _id: req.params.id })
+                .populate('id_toko').populate('id_distributor').populate('id_konsumen').populate('id_address').populate({
+                    path: 'id_pesanan',
+                    populate: "produk_pengiriman.productId"
+                })
 
-            const data = await PelacakanDistributorKonsumen.create({
-                id_toko,
-                id_address,
-                latitude,
-                longitude,
-                id_distributor,
-                id_pesanan,
-                id_konsumen,
-                statusPengiriman: 'Pesanan diserahkan ke distributor'
-            })
+            if (!lacak) return res.status(404).json({ message: "data Lacak Not Found" })
 
-            res.status(201).json({
-                message: "create data success",
-                data
+            res.status(200).json({
+                message: "get data lacak success",
+                data: lacak
             })
         } catch (error) {
             console.log(error)
@@ -76,5 +71,5 @@ module.exports = {
 
             next(error);
         }
-    },
+    }
 }
