@@ -232,28 +232,31 @@ module.exports = {
           },
         },
         {
-          $lookup:{
+          $lookup: {
             from: "salesreports",
             localField: "_id",
             foreignField: "productId",
-            as: "terjual"
-          }
+            as: "terjual",
+          },
         },
         {
-          $unwind: { path: "$terjual", preserveNullAndEmptyArrays: true }
+          $unwind: { path: "$terjual", preserveNullAndEmptyArrays: true },
         },
         {
           $addFields: {
             terjual: {
-              $ifNull: [{
-                $reduce: {
-                  input: { $ifNull: ["$terjual.track", []] },
-                  initialValue: 0,
-                  in: { $add: ["$$value", "$$this.soldAtMoment"] }
-                }
-              }, 0]
-            }
-          }
+              $ifNull: [
+                {
+                  $reduce: {
+                    input: { $ifNull: ["$terjual.track", []] },
+                    initialValue: 0,
+                    in: { $add: ["$$value", "$$this.soldAtMoment"] },
+                  },
+                },
+                0,
+              ],
+            },
+          },
         },
         {
           $project: { alamatToko: 0 },
@@ -292,13 +295,13 @@ module.exports = {
     try {
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
-      const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true});
+      const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
       const vendors = await TokoVendor.aggregate([
         {
           $lookup: {
             from: "addresses",
             let: { address: "$address" },
-            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } } ],
+            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
             as: "address",
           },
         },
@@ -406,28 +409,28 @@ module.exports = {
           },
         },
         {
-          $lookup:{
+          $lookup: {
             from: "salesreports",
             localField: "_id",
             foreignField: "productId",
-            as: "terjual"
-          }
+            as: "terjual",
+          },
         },
         {
-          $unwind:"$terjual"
+          $unwind: "$terjual",
         },
         {
           $addFields: {
             terjual: {
-              $reduce:{
+              $reduce: {
                 input: "$terjual.track",
                 initialValue: 0,
                 in: {
-                  $add: ["$$value", "$$this.soldAtMoment"]
-                }
-              }
-            }
-          }
+                  $add: ["$$value", "$$this.soldAtMoment"],
+                },
+              },
+            },
+          },
         },
         {
           $project: { alamatToko: 0 },
@@ -436,8 +439,8 @@ module.exports = {
           $project: { userData: 0 },
         },
         {
-          $sort: {poin_review: -1}
-        }
+          $sort: { poin_review: -1 },
+        },
       ]);
 
       const productIds = productWithRadius.map((item) => {
@@ -496,42 +499,41 @@ module.exports = {
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
       }
 
-      const nama_toko = await TokoVendor.find().populate('address').lean();
-      const list_product = await Product.find(handlerFilter)
-          .populate("userId", "-password")
-          .populate("categoryId")
-          .lean();
+      const nama_toko = await TokoVendor.find().populate("address").lean();
+      const list_product = await Product.find(handlerFilter).populate("userId", "-password").populate("categoryId").lean();
 
       req.user = auth();
       let datas = [];
 
       if (!req.user) {
-          datas = list_product.filter(data => data.userId && data.userId.role === "vendor");
+        datas = list_product.filter((data) => data.userId && data.userId.role === "vendor");
       } else {
-          datas = list_product.filter(data => {
-              if (!data.userId) return false;
+        datas = list_product
+          .filter((data) => {
+            if (!data.userId) return false;
 
-              switch (req.user.role) {
-                  case "konsumen":
-                      return data.userId.role === "vendor";
-                  case "vendor":
-                      return data.userId.role === "supplier";
-                  case "supplier":
-                      return data.userId.role === "produsen";
-                  default:
-                      return false;
-              }
-          }).map(product => {
-              const toko = nama_toko.find(toko => toko.userId.toString() === product.userId._id.toString());
-              return {
-                  ...product,
-                  toko
-              };
+            switch (req.user.role) {
+              case "konsumen":
+                return data.userId.role === "vendor";
+              case "vendor":
+                return data.userId.role === "supplier";
+              case "supplier":
+                return data.userId.role === "produsen";
+              default:
+                return false;
+            }
+          })
+          .map((product) => {
+            const toko = nama_toko.find((toko) => toko.userId.toString() === product.userId._id.toString());
+            return {
+              ...product,
+              toko,
+            };
           });
       }
 
       if ((!list_product || list_product.length === 0) && (!nama_toko || nama_toko.length === 0)) {
-          return res.status(404).json({ message: `Product dengan nama ${name} serta dengan kategori ${category} tidak ditemukan` });
+        return res.status(404).json({ message: `Product dengan nama ${name} serta dengan kategori ${category} tidak ditemukan` });
       }
 
       return res.status(200).json({ datas });
@@ -541,38 +543,38 @@ module.exports = {
     }
   },
 
-  filterProduk: async(req, res, next) => {
+  filterProduk: async (req, res, next) => {
     try {
-      const { minPrice, maxPrice, penilaian, main_cat, sub_cat } = req.query
+      const { minPrice, maxPrice, penilaian, main_cat, sub_cat } = req.query;
       const filter = {
         "status.value": "terpublish",
         total_stok: { $gt: 0 },
         $expr: { $gte: ["$total_stok", "$minimalOrder"] },
-      }
+      };
 
       if (minPrice) {
         filter.total_price = { ...filter.total_price, $gte: Number(minPrice) };
       }
-    
+
       if (maxPrice) {
         filter.total_price = { ...filter.total_price, $lte: Number(maxPrice) };
       }
-    
+
       if (penilaian) {
         filter.poin_ulasan = { ...filter.poin_ulasan, $gte: Number(penilaian) };
       }
-    
+
       if (main_cat) {
         filter.id_main_category = new mongoose.Types.ObjectId(main_cat);
       }
-    
+
       if (sub_cat) {
         filter.id_sub_category = new mongoose.Types.ObjectId(sub_cat);
       }
 
       const products = await Product.aggregate([
         {
-          $match: filter
+          $match: filter,
         },
         {
           $project: { description: 0, id_main_category: 0, id_sub_category: 0, categoryId: 0, pemasok: 0 },
@@ -650,28 +652,31 @@ module.exports = {
           },
         },
         {
-          $lookup:{
+          $lookup: {
             from: "salesreports",
             localField: "_id",
             foreignField: "productId",
-            as: "terjual"
-          }
+            as: "terjual",
+          },
         },
         {
-          $unwind: { path: "$terjual", preserveNullAndEmptyArrays: true }
+          $unwind: { path: "$terjual", preserveNullAndEmptyArrays: true },
         },
         {
           $addFields: {
             terjual: {
-              $ifNull: [{
-                $reduce: {
-                  input: { $ifNull: ["$terjual.track", []] },
-                  initialValue: 0,
-                  in: { $add: ["$$value", "$$this.soldAtMoment"] }
-                }
-              }, 0]
-            }
-          }
+              $ifNull: [
+                {
+                  $reduce: {
+                    input: { $ifNull: ["$terjual.track", []] },
+                    initialValue: 0,
+                    in: { $add: ["$$value", "$$this.soldAtMoment"] },
+                  },
+                },
+                0,
+              ],
+            },
+          },
         },
         {
           $project: { alamatToko: 0 },
@@ -679,18 +684,18 @@ module.exports = {
         {
           $project: { userData: 0 },
         },
-      ])
+      ]);
 
-      const productNotFlashSale = products.filter(prod => !prod.isFlashSale)
-      const productFlashSale = products.filter(prod => prod.isFlashSale)
+      const productNotFlashSale = products.filter((prod) => !prod.isFlashSale);
+      const productFlashSale = products.filter((prod) => prod.isFlashSale);
 
-      return res.status(200).json({productFlashSale, productNotFlashSale})
+      return res.status(200).json({ productFlashSale, productNotFlashSale });
     } catch (error) {
       console.log(error);
-      next(error)
+      next(error);
     }
   },
- 
+
   list_product_adminPanel: async (req, res, next) => {
     try {
       const data = await Product.find().populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId");
@@ -717,10 +722,14 @@ module.exports = {
     try {
       const data = await Product.find({ userId: req.user.id }).populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId").lean();
       const dataProds = [];
-      for(const produk of data){
-        const namaVendor = await TokoVendor.findOne({userId: produk.userId._id});
-        const terjual = await SalesReport.findOne({productId: produk._id})
-        const totalTerjual = terjual? terjual.track.reduce((accumulator, current)=> { return accumulator + current.soldAtMoment }, 0) : 0
+      for (const produk of data) {
+        const namaVendor = await TokoVendor.findOne({ userId: produk.userId._id });
+        const terjual = await SalesReport.findOne({ productId: produk._id });
+        const totalTerjual = terjual
+          ? terjual.track.reduce((accumulator, current) => {
+              return accumulator + current.soldAtMoment;
+            }, 0)
+          : 0;
         dataProds.push({
           ...produk,
           nama: namaVendor?.namaToko,
@@ -740,12 +749,22 @@ module.exports = {
 
   productDetail: async (req, res, next) => {
     try {
-      const dataProduct = await Product.findById(req.params.id).populate('categoryId').populate({
-        path: 'userId',
-        select: '-password -codeOtp -pin -saldo -poin'
-      }).populate('id_main_category').populate('id_sub_category').populate("pangan.panganId").lean()
-      const terjual = await SalesReport.findOne({productId: req.params.id}).lean()
-      const total_terjual = terjual? terjual.track.reduce((acc, val)=> { return acc + val.soldAtMoment }, 0) : 0
+      const dataProduct = await Product.findById(req.params.id)
+        .populate("categoryId")
+        .populate({
+          path: "userId",
+          select: "-password -codeOtp -pin -saldo -poin",
+        })
+        .populate("id_main_category")
+        .populate("id_sub_category")
+        .populate("pangan.panganId")
+        .lean();
+      const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
+      const total_terjual = terjual
+        ? terjual.track.reduce((acc, val) => {
+            return acc + val.soldAtMoment;
+          }, 0)
+        : 0;
       let toko;
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
       switch (dataProduct.userId.role) {
@@ -758,6 +777,187 @@ module.exports = {
         case "produsen":
           toko = await Produsen.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
+      }
+      if (dataProduct.bervarian == true) {
+        const { pangan, varian, ...restOfProduct } = dataProduct;
+        const nutrisi = {
+          takaran_saji: 0,
+          energi: 0,
+          protein: 0,
+          lemak: 0,
+          karbohidrat: 0,
+          serat: 0,
+          kalsium: 0,
+          fosfor: 0,
+          besi: 0,
+          natrium: 0,
+          kalium: 0,
+          tembaga: 0,
+          thiamin: 0,
+          riboflavin: 0,
+          vitamin_c: 0,
+        };
+        let nilai_varian = [];
+        for (const item of varian) {
+          if (item.nama_varian == "Topping") {
+            nilai_varian = item.nilai_varian;
+          }
+        }
+
+        let gizi_varian = [];
+
+        for (const item of nilai_varian) {
+          const gizi = await Pangan.findById(item.bahan).select(
+            "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
+          );
+          gizi_varian.push(gizi);
+        }
+
+        const gizi_nilai_varian = [];
+        for (let i = 0; i < gizi_varian.length; i++) {
+          const air = (nilai_varian[i].total_gram / 100) * gizi_varian[i].air.value;
+          const energi = (nilai_varian[i].total_gram / 100) * gizi_varian[i].energi.value;
+          const protein = (nilai_varian[i].total_gram / 100) * gizi_varian[i].protein.value;
+          const lemak = (nilai_varian[i].total_gram / 100) * gizi_varian[i].lemak.value;
+          const kh = (nilai_varian[i].total_gram / 100) * gizi_varian[i].lemak.value;
+          const serat = (nilai_varian[i].total_gram / 100) * gizi_varian[i].serat.value;
+          const kalsium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].kalsium.value;
+          const fosfor = (nilai_varian[i].total_gram / 100) * gizi_varian[i].fosfor.value;
+          const besi = (nilai_varian[i].total_gram / 100) * gizi_varian[i].besi.value;
+          const natrium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].besi.value;
+          const kalium = (nilai_varian[i].total_gram / 100) * gizi_varian[i].kalium.value;
+          const tembaga = (nilai_varian[i].total_gram / 100) * gizi_varian[i].tembaga.value;
+          const thiamin = (nilai_varian[i].total_gram / 100) * gizi_varian[i].thiamin.value;
+          const riboflavin = (nilai_varian[i].total_gram / 100) * gizi_varian[i].riboflavin.value;
+          const vitc = (nilai_varian[i].total_gram / 100) * gizi_varian[i].riboflavin.value;
+
+          gizi_nilai_varian.push({
+            air: air,
+            energi: energi,
+            protein: protein,
+            lemak: lemak,
+            kh: kh,
+            serat: serat,
+            kalsium: kalsium,
+            fosfor: fosfor,
+            besi: besi,
+            natrium: natrium,
+            kalium: kalium,
+            tembaga: tembaga,
+            thiamin: thiamin,
+            riboflavin: riboflavin,
+            vitc: vitc,
+          });
+        }
+        const seluruh_gizi_varian = gizi_nilai_varian.reduce((accumulator, current) => {
+          for (let key in current) {
+            if (accumulator[key]) {
+              accumulator[key] += current[key];
+            } else {
+              accumulator[key] = current[key];
+            }
+          }
+          return accumulator;
+        }, {});
+
+        Object.keys(seluruh_gizi_varian).forEach((key) => (seluruh_gizi_varian[key] = formatNumber(seluruh_gizi_varian[key])));
+
+        if (pangan?.length > 1) {
+          const nilai_gizi_pangan = [];
+          const totalBeratPangan = pangan.reduce((acc, val) => {
+            return acc + parseFloat(val?.berat);
+          }, 0);
+          for (const item of pangan) {
+            const air = (item.berat / totalBeratPangan) * parseFloat(item.panganId.air.value);
+            const energi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.energi.value);
+            const protein = (item.berat / totalBeratPangan) * parseFloat(item.panganId.protein.value);
+            const lemak = (item.berat / totalBeratPangan) * parseFloat(item.panganId.lemak.value);
+            const kh = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kh.value);
+            const serat = (item.berat / totalBeratPangan) * parseFloat(item.panganId.serat.value);
+            const kalsium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalsium.value);
+            const fosfor = (item.berat / totalBeratPangan) * parseFloat(item.panganId.fosfor.value);
+            const besi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.besi.value);
+            const natrium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.natrium.value);
+            const kalium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalium.value);
+            const tembaga = (item.berat / totalBeratPangan) * parseFloat(item.panganId.tembaga.value);
+            const thiamin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.thiamin.value);
+            const riboflavin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.riboflavin.value);
+            const vitc = (item.berat / totalBeratPangan) * parseFloat(item.panganId.vitc.value);
+            nilai_gizi_pangan.push({
+              air: formatNumber(air),
+              energi: formatNumber(energi),
+              protein: formatNumber(protein),
+              lemak: formatNumber(lemak),
+              kh: formatNumber(kh),
+              serat: formatNumber(serat),
+              kalsium: formatNumber(kalsium),
+              fosfor: formatNumber(fosfor),
+              besi: formatNumber(besi),
+              natrium: formatNumber(natrium),
+              kalium: formatNumber(kalium),
+              tembaga: formatNumber(tembaga),
+              thiamin: formatNumber(thiamin),
+              riboflavin: formatNumber(riboflavin),
+              vitc: formatNumber(vitc),
+            });
+          }
+          const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
+            for (let key in current) {
+              if (accumulator[key]) {
+                accumulator[key] += current[key];
+              } else {
+                accumulator[key] = current[key];
+              }
+            }
+            Object.keys(accumulator).map((key) => formatNumber(accumulator[key]));
+            return accumulator;
+          }, {});
+
+          Object.keys(tambah_seluruh_gizi).forEach((key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key])));
+
+          nutrisi.energi = `${((parseFloat(tambah_seluruh_gizi?.energi) / 100) * totalBeratPangan + seluruh_gizi_varian?.energi).toFixed(1)} kkal`;
+          nutrisi.protein = `${((parseFloat(tambah_seluruh_gizi?.protein) / 100) * totalBeratPangan + seluruh_gizi_varian?.protein).toFixed(1)} g`;
+          nutrisi.lemak = `${((parseFloat(tambah_seluruh_gizi?.lemak) / 100) * totalBeratPangan + seluruh_gizi_varian?.lemak).toFixed(1)} g`;
+          nutrisi.karbohidrat = `${((parseFloat(tambah_seluruh_gizi?.kh) / 100) * totalBeratPangan + seluruh_gizi_varian?.kh).toFixed(1)} g`;
+          nutrisi.serat = `${((parseFloat(tambah_seluruh_gizi?.serat) / 100) * totalBeratPangan + seluruh_gizi_varian?.serat).toFixed(1)} mg`;
+          nutrisi.kalsium = `${((parseFloat(tambah_seluruh_gizi?.kalsium) / 100) * totalBeratPangan + seluruh_gizi_varian?.kalsium).toFixed(1)} mg`;
+          nutrisi.fosfor = `${((parseFloat(tambah_seluruh_gizi?.fosfor) / 100) * totalBeratPangan + seluruh_gizi_varian?.fosfor).toFixed(1)} mg`;
+          nutrisi.besi = `${((parseFloat(tambah_seluruh_gizi?.besi) / 100) * totalBeratPangan + seluruh_gizi_varian?.besi).toFixed(1)} mg`;
+          nutrisi.natrium = `${((parseFloat(tambah_seluruh_gizi?.natrium) / 100) * totalBeratPangan + seluruh_gizi_varian?.natrium).toFixed(1)} mg`;
+          nutrisi.kalium = `${((parseFloat(tambah_seluruh_gizi?.kalium) / 100) * totalBeratPangan + seluruh_gizi_varian?.kalium).toFixed(1)} mg`;
+          nutrisi.tembaga = `${((parseFloat(tambah_seluruh_gizi?.tembaga) / 100) * totalBeratPangan + seluruh_gizi_varian?.tembaga).toFixed(1)} mg`;
+          nutrisi.thiamin = `${((parseFloat(tambah_seluruh_gizi?.thiamin) / 100) * totalBeratPangan + seluruh_gizi_varian?.thiamin).toFixed(1)} mg`;
+          nutrisi.riboflavin = `${((parseFloat(tambah_seluruh_gizi?.riboflavin) / 100) * totalBeratPangan + seluruh_gizi_varian?.riboflavin).toFixed(1)} mg`;
+          nutrisi.vitamin_c = `${((parseFloat(tambah_seluruh_gizi?.vitc) / 100) * totalBeratPangan + seluruh_gizi_varian?.vitc).toFixed(1)} mg`;
+          nutrisi.takaran_saji = `${totalBeratPangan} g`;
+        } else {
+          pangan?.forEach((item) => {
+            nutrisi.energi = `${((parseFloat(item?.panganId?.energi?.value) / 100) * item?.berat + seluruh_gizi_varian?.energi).toFixed(1)} kkal`;
+            nutrisi.protein = `${((parseFloat(item?.panganId?.protein?.value) / 100) * item?.berat + seluruh_gizi_varian?.protein).toFixed(1)} g`;
+            nutrisi.lemak = `${((parseFloat(item?.panganId?.lemak?.value) / 100) * item?.berat + seluruh_gizi_varian?.lemak).toFixed(1)} g`;
+            nutrisi.karbohidrat = `${((parseFloat(item?.panganId?.kh?.value) / 100) * item?.berat + seluruh_gizi_varian?.kh).toFixed(1)} g`;
+            nutrisi.serat = `${((parseFloat(item?.panganId?.serat?.value) / 100) * item?.berat + seluruh_gizi_varian?.serat).toFixed(1)} mg`;
+            nutrisi.kalsium = `${((parseFloat(item?.panganId?.kalsium?.value) / 100) * item?.berat + seluruh_gizi_varian?.kalsium).toFixed(1)} mg`;
+            nutrisi.fosfor = `${((parseFloat(item?.panganId?.fosfor?.value) / 100) * item?.berat + seluruh_gizi_varian?.fosfor).toFixed(1)} mg`;
+            nutrisi.besi = `${((parseFloat(item?.panganId?.besi?.value) / 100) * item?.berat + seluruh_gizi_varian?.besi).toFixed(1)} mg`;
+            nutrisi.natrium = `${((parseFloat(item?.panganId?.natrium?.value) / 100) * item?.berat + seluruh_gizi_varian?.natrium).toFixed(1)} mg`;
+            nutrisi.kalium = `${((parseFloat(item?.panganId?.kalium?.value) / 100) * item?.berat + seluruh_gizi_varian?.kalium).toFixed(1)} mg`;
+            nutrisi.tembaga = `${((parseFloat(item?.panganId?.tembaga?.value) / 100) * item?.berat + seluruh_gizi_varian?.tembaga).toFixed(1)} mg`;
+            nutrisi.thiamin = `${((parseFloat(item?.panganId?.thiamin?.value) / 100) * item?.berat + seluruh_gizi_varian?.thiamin).toFixed(1)} mg`;
+            nutrisi.riboflavin = `${((parseFloat(item?.panganId?.riboflavin?.value) / 100) * item?.berat + seluruh_gizi_varian?.riboflavin).toFixed(1)} mg`;
+            nutrisi.vitamin_c = `${((parseFloat(item?.panganId?.vitc?.value) / 100) * item.berat + seluruh_gizi_varian?.vitc).toFixed(1)} mg`;
+            nutrisi.takaran_saji = `${item.berat} g`;
+          });
+        }
+        return res.status(200).json({
+          datas: {
+            ...restOfProduct,
+            total_terjual: terjual ? total_terjual : 0,
+          },
+          toko,
+          seluruh_gizi_varian,
+          nutrisi,
+        });
       }
       const { pangan, ...restOfProduct } = dataProduct;
       const nutrisi = {
@@ -777,27 +977,27 @@ module.exports = {
         riboflavin: 0,
         vitamin_c: 0,
       };
-      if (pangan?.length > 1){
-        const nilai_gizi_pangan = [] 
-        const totalBeratPangan = pangan.reduce((acc, val) => { 
-          return acc + parseFloat(val?.berat) 
+      if (pangan?.length > 1) {
+        const nilai_gizi_pangan = [];
+        const totalBeratPangan = pangan.reduce((acc, val) => {
+          return acc + parseFloat(val?.berat);
         }, 0);
-        for (const item of pangan){
-          const air = (item.berat / totalBeratPangan) * parseFloat(item.panganId.air.value)
-          const energi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.energi.value)
-          const protein = (item.berat / totalBeratPangan) * parseFloat(item.panganId.protein.value)
-          const lemak = (item.berat / totalBeratPangan) * parseFloat(item.panganId.lemak.value)
-          const kh = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kh.value)
-          const serat = (item.berat / totalBeratPangan) * parseFloat(item.panganId.serat.value) 
-          const kalsium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalsium.value)
-          const fosfor = (item.berat / totalBeratPangan) * parseFloat(item.panganId.fosfor.value)
-          const besi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.besi.value)
-          const natrium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.natrium.value)
-          const kalium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalium.value)
-          const tembaga = (item.berat / totalBeratPangan) * parseFloat(item.panganId.tembaga.value)
-          const thiamin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.thiamin.value)
-          const riboflavin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.riboflavin.value)
-          const vitc = (item.berat / totalBeratPangan) * parseFloat(item.panganId.vitc.value)
+        for (const item of pangan) {
+          const air = (item.berat / totalBeratPangan) * parseFloat(item.panganId.air.value);
+          const energi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.energi.value);
+          const protein = (item.berat / totalBeratPangan) * parseFloat(item.panganId.protein.value);
+          const lemak = (item.berat / totalBeratPangan) * parseFloat(item.panganId.lemak.value);
+          const kh = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kh.value);
+          const serat = (item.berat / totalBeratPangan) * parseFloat(item.panganId.serat.value);
+          const kalsium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalsium.value);
+          const fosfor = (item.berat / totalBeratPangan) * parseFloat(item.panganId.fosfor.value);
+          const besi = (item.berat / totalBeratPangan) * parseFloat(item.panganId.besi.value);
+          const natrium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.natrium.value);
+          const kalium = (item.berat / totalBeratPangan) * parseFloat(item.panganId.kalium.value);
+          const tembaga = (item.berat / totalBeratPangan) * parseFloat(item.panganId.tembaga.value);
+          const thiamin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.thiamin.value);
+          const riboflavin = (item.berat / totalBeratPangan) * parseFloat(item.panganId.riboflavin.value);
+          const vitc = (item.berat / totalBeratPangan) * parseFloat(item.panganId.vitc.value);
           nilai_gizi_pangan.push({
             air: formatNumber(air),
             energi: formatNumber(energi),
@@ -814,66 +1014,65 @@ module.exports = {
             thiamin: formatNumber(thiamin),
             riboflavin: formatNumber(riboflavin),
             vitc: formatNumber(vitc),
-          })
-        }
-        const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
-            for (let key in current) {
-              if (accumulator[key]) {
-                accumulator[key] += current[key];
-              } else {
-                accumulator[key] = current[key];
-              }
-            }
-            Object.keys(accumulator).map(key => formatNumber(accumulator[key]))
-            return accumulator
-          }, {});
-          
-          Object.keys(tambah_seluruh_gizi).forEach(
-            (key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key]))
-          );
-
-          nutrisi.energi = `${(parseFloat(tambah_seluruh_gizi?.energi) / 100 * totalBeratPangan).toFixed(1)} kkal`;
-          nutrisi.protein = `${(parseFloat(tambah_seluruh_gizi?.protein) / 100 * totalBeratPangan).toFixed(1)} g`;
-          nutrisi.lemak = `${(parseFloat(tambah_seluruh_gizi?.lemak) / 100 * totalBeratPangan).toFixed(1)} g`;
-          nutrisi.karbohidrat = `${(parseFloat(tambah_seluruh_gizi?.kh) / 100 * totalBeratPangan).toFixed(1)} g`;
-          nutrisi.serat = `${(parseFloat(tambah_seluruh_gizi?.serat) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.kalsium = `${(parseFloat(tambah_seluruh_gizi?.kalsium) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.fosfor = `${(parseFloat(tambah_seluruh_gizi?.fosfor) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.besi = `${(parseFloat(tambah_seluruh_gizi?.besi) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.natrium = `${(parseFloat(tambah_seluruh_gizi?.natrium) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.kalium = `${(parseFloat(tambah_seluruh_gizi?.kalium) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.tembaga = `${(parseFloat(tambah_seluruh_gizi?.tembaga) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.thiamin = `${(parseFloat(tambah_seluruh_gizi?.thiamin) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.riboflavin = `${(parseFloat(tambah_seluruh_gizi?.riboflavin) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.vitamin_c = `${(parseFloat(tambah_seluruh_gizi?.vitc) / 100 * totalBeratPangan).toFixed(1)} mg`;
-          nutrisi.takaran_saji = `${totalBeratPangan} g`;
-        }else {
-          pangan?.forEach(item => {
-            nutrisi.energi = `${(parseFloat(item?.panganId?.energi?.value) / 100 * item?.berat).toFixed(1)} kkal`;
-            nutrisi.protein = `${(parseFloat(item?.panganId?.protein?.value) / 100 * item?.berat).toFixed(1)} g`;
-            nutrisi.lemak = `${(parseFloat(item?.panganId?.lemak?.value) / 100 * item?.berat).toFixed(1)} g`;
-            nutrisi.karbohidrat = `${(parseFloat(item?.panganId?.kh?.value) / 100 * item?.berat).toFixed(1)} g`;
-            nutrisi.serat = `${(parseFloat(item?.panganId?.serat?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.kalsium = `${(parseFloat(item?.panganId?.kalsium?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.fosfor = `${(parseFloat(item?.panganId?.fosfor?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.besi = `${(parseFloat(item?.panganId?.besi?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.natrium = `${(parseFloat(item?.panganId?.natrium?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.kalium = `${(parseFloat(item?.panganId?.kalium?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.tembaga = `${(parseFloat(item?.panganId?.tembaga?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.thiamin = `${(parseFloat(item?.panganId?.thiamin?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.riboflavin = `${(parseFloat(item?.panganId?.riboflavin?.value) / 100 * item?.berat).toFixed(1)} mg`;
-            nutrisi.vitamin_c = `${(parseFloat(item?.panganId?.vitc?.value) / 100 * item.berat).toFixed(1)} mg`;
-            nutrisi.takaran_saji = `${item.berat} g`;
           });
         }
+        const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
+          for (let key in current) {
+            if (accumulator[key]) {
+              accumulator[key] += current[key];
+            } else {
+              accumulator[key] = current[key];
+            }
+          }
+          Object.keys(accumulator).map((key) => formatNumber(accumulator[key]));
+          return accumulator;
+        }, {});
+
+        Object.keys(tambah_seluruh_gizi).forEach((key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key])));
+
+        nutrisi.energi = `${((parseFloat(tambah_seluruh_gizi?.energi) / 100) * totalBeratPangan).toFixed(1)} kkal`;
+        nutrisi.protein = `${((parseFloat(tambah_seluruh_gizi?.protein) / 100) * totalBeratPangan).toFixed(1)} g`;
+        nutrisi.lemak = `${((parseFloat(tambah_seluruh_gizi?.lemak) / 100) * totalBeratPangan).toFixed(1)} g`;
+        nutrisi.karbohidrat = `${((parseFloat(tambah_seluruh_gizi?.kh) / 100) * totalBeratPangan).toFixed(1)} g`;
+        nutrisi.serat = `${((parseFloat(tambah_seluruh_gizi?.serat) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.kalsium = `${((parseFloat(tambah_seluruh_gizi?.kalsium) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.fosfor = `${((parseFloat(tambah_seluruh_gizi?.fosfor) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.besi = `${((parseFloat(tambah_seluruh_gizi?.besi) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.natrium = `${((parseFloat(tambah_seluruh_gizi?.natrium) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.kalium = `${((parseFloat(tambah_seluruh_gizi?.kalium) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.tembaga = `${((parseFloat(tambah_seluruh_gizi?.tembaga) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.thiamin = `${((parseFloat(tambah_seluruh_gizi?.thiamin) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.riboflavin = `${((parseFloat(tambah_seluruh_gizi?.riboflavin) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.vitamin_c = `${((parseFloat(tambah_seluruh_gizi?.vitc) / 100) * totalBeratPangan).toFixed(1)} mg`;
+        nutrisi.takaran_saji = `${totalBeratPangan} g`;
+      } else {
+        pangan?.forEach((item) => {
+          nutrisi.energi = `${((parseFloat(item?.panganId?.energi?.value) / 100) * item?.berat).toFixed(1)} kkal`;
+          nutrisi.protein = `${((parseFloat(item?.panganId?.protein?.value) / 100) * item?.berat).toFixed(1)} g`;
+          nutrisi.lemak = `${((parseFloat(item?.panganId?.lemak?.value) / 100) * item?.berat).toFixed(1)} g`;
+          nutrisi.karbohidrat = `${((parseFloat(item?.panganId?.kh?.value) / 100) * item?.berat).toFixed(1)} g`;
+          nutrisi.serat = `${((parseFloat(item?.panganId?.serat?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.kalsium = `${((parseFloat(item?.panganId?.kalsium?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.fosfor = `${((parseFloat(item?.panganId?.fosfor?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.besi = `${((parseFloat(item?.panganId?.besi?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.natrium = `${((parseFloat(item?.panganId?.natrium?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.kalium = `${((parseFloat(item?.panganId?.kalium?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.tembaga = `${((parseFloat(item?.panganId?.tembaga?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.thiamin = `${((parseFloat(item?.panganId?.thiamin?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.riboflavin = `${((parseFloat(item?.panganId?.riboflavin?.value) / 100) * item?.berat).toFixed(1)} mg`;
+          nutrisi.vitamin_c = `${((parseFloat(item?.panganId?.vitc?.value) / 100) * item.berat).toFixed(1)} mg`;
+          nutrisi.takaran_saji = `${item.berat} g`;
+        });
+      }
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
-      return res.status(200).json({ 
-        datas: { 
-          ...restOfProduct, 
-          total_terjual: terjual ? total_terjual : 0
-        }, 
-        toko, 
-        nutrisi
+      return res.status(200).json({
+        datas: {
+          ...restOfProduct,
+          total_terjual: terjual ? total_terjual : 0,
+        },
+        toko,
+        // nilai_varian,
+        nutrisi,
       });
     } catch (error) {
       console.log(error);
@@ -934,12 +1133,12 @@ module.exports = {
           });
           imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`);
         }
-      };
+      }
 
       let newProduct;
 
-      if(req.user.role === "vendor"){
-        const dataToko = await TokoVendor.findOne({userId: req.user.id}).populate('address');
+      if (req.user.role === "vendor") {
+        const dataToko = await TokoVendor.findOne({ userId: req.user.id }).populate("address");
         const province = dataToko.address.province;
 
         let newPangan;
@@ -954,63 +1153,237 @@ module.exports = {
             pangan.push(item);
           });
 
-        const totalBeratPangan = pangan.reduce((acc, val) => { 
-            return acc + parseFloat(val?.berat) 
+          const totalBeratPangan = pangan.reduce((acc, val) => {
+            return acc + parseFloat(val?.berat);
           }, 0);
 
-        if (pangan.length === 1){
-          newProduct = await Product.create({
-            ...dataProduct,
-            isPublished: true,
-            pangan,
-            id_sub_category: subCategory._id,
-            id_main_category: mainCategory._id,
-          });
-          return res.status(201).json({
-            error: false,
-            message: "Upload Product Success",
-            newProduct,
-        });
-        }else {
-          const maxBeratPangan = pangan.reduce((max, current) => {
-            return current.berat > max.berat ? current : max;
-          }, { berat: -Infinity });
-          
-          const pangan_terbanyak = await Pangan.findById(maxBeratPangan.panganId)
-  
-          const Kelompok_pangan = pangan_terbanyak.kelompok_pangan
-          const kode_bahan = pangan_terbanyak.kode_bahan.substring(0,1);
-  
-          const kodeRegex = new RegExp(`${kode_bahan}P`)
-          
-          const pangan_terakhir = await Pangan.findOne({ kode_bahan: kodeRegex }).sort({kode_bahan: -1})
-          
-          const kode_bahan_terbaru = `${kode_bahan}P`+`${parseInt(pangan_terakhir.kode_bahan.substring(2, 5)) + 1}`;
-          
-          const nama_bahan = []
-          
-          for(const item of pangan){
-            const bahan = await Pangan.findById(item.panganId).select("air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value")
-            nama_bahan.push(bahan)
+          if (pangan.length === 1) {
+            newProduct = await Product.create({
+              ...dataProduct,
+              isPublished: true,
+              pangan,
+              id_sub_category: subCategory._id,
+              id_main_category: mainCategory._id,
+            });
+            return res.status(201).json({
+              error: false,
+              message: "Upload Product Success",
+              newProduct,
+            });
+          } else {
+            const maxBeratPangan = pangan.reduce(
+              (max, current) => {
+                return current.berat > max.berat ? current : max;
+              },
+              { berat: -Infinity }
+            );
+
+            const pangan_terbanyak = await Pangan.findById(maxBeratPangan.panganId);
+
+            const Kelompok_pangan = pangan_terbanyak.kelompok_pangan;
+            const kode_bahan = pangan_terbanyak.kode_bahan.substring(0, 1);
+
+            const kodeRegex = new RegExp(`${kode_bahan}P`);
+
+            const pangan_terakhir = await Pangan.findOne({ kode_bahan: kodeRegex }).sort({ kode_bahan: -1 });
+
+            const kode_bahan_terbaru = `${kode_bahan}P` + `${parseInt(pangan_terakhir.kode_bahan.substring(2, 5)) + 1}`;
+
+            const nama_bahan = [];
+
+            for (const item of pangan) {
+              const bahan = await Pangan.findById(item.panganId).select(
+                "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
+              );
+              nama_bahan.push(bahan);
+            }
+            const nilai_gizi_pangan = [];
+
+            for (let i = 0; i < pangan.length; i++) {
+              const air = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].air.value);
+              const energi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].energi.value);
+              const protein = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].protein.value);
+              const lemak = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].lemak.value);
+              const kh = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kh.value);
+              const serat = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].serat.value);
+              const kalsium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalsium.value);
+              const fosfor = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].fosfor.value);
+              const besi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].besi.value);
+              const natrium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].natrium.value);
+              const kalium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalium.value);
+              const tembaga = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].tembaga.value);
+              const thiamin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].thiamin.value);
+              const riboflavin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].riboflavin.value);
+              const vitc = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].vitc.value);
+              nilai_gizi_pangan.push({
+                air: formatNumber(air),
+                energi: formatNumber(energi),
+                protein: formatNumber(protein),
+                lemak: formatNumber(lemak),
+                kh: formatNumber(kh),
+                serat: formatNumber(serat),
+                kalsium: formatNumber(kalsium),
+                fosfor: formatNumber(fosfor),
+                besi: formatNumber(besi),
+                natrium: formatNumber(natrium),
+                kalium: formatNumber(kalium),
+                tembaga: formatNumber(tembaga),
+                thiamin: formatNumber(thiamin),
+                riboflavin: formatNumber(riboflavin),
+                vitc: formatNumber(vitc),
+              });
+            }
+
+            const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
+              for (let key in current) {
+                if (accumulator[key]) {
+                  accumulator[key] += current[key];
+                } else {
+                  accumulator[key] = current[key];
+                }
+              }
+              Object.keys(accumulator).map((key) => formatNumber(accumulator[key]));
+              return accumulator;
+            }, {});
+
+            Object.keys(tambah_seluruh_gizi).forEach((key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key])));
+
+            newProduct = await Product.create({
+              ...dataProduct,
+              isPublished: true,
+              pangan,
+              id_sub_category: subCategory._id,
+              id_main_category: mainCategory._id,
+            });
+
+            newPangan = await Pangan.create({
+              kode_bahan: kode_bahan_terbaru,
+              nama_bahan: req.body.name_product,
+              kelompok_pangan: Kelompok_pangan,
+              jenis_pangan: "makanan olahan",
+              nama_makanan_lokal: req.body.nama_product,
+              mayoritas_daerah_lokal: province,
+              keterangan: req.body.long_description,
+              jenis_makanan: "makanan utama",
+              nama_makanan_lokal: req.body.name_product,
+              image_pangan: imgPaths[0],
+              air: {
+                value: tambah_seluruh_gizi.air,
+              },
+              energi: {
+                value: tambah_seluruh_gizi.energi,
+              },
+              protein: {
+                value: tambah_seluruh_gizi.protein,
+              },
+              lemak: {
+                value: tambah_seluruh_gizi.lemak,
+              },
+              kh: {
+                value: tambah_seluruh_gizi.kh,
+              },
+              serat: {
+                value: tambah_seluruh_gizi.serat,
+              },
+              kalsium: {
+                value: tambah_seluruh_gizi.kalsium,
+              },
+              fosfor: {
+                value: tambah_seluruh_gizi.fosfor,
+              },
+              besi: {
+                value: tambah_seluruh_gizi.besi,
+              },
+              natrium: {
+                value: tambah_seluruh_gizi.natrium,
+              },
+              kalium: {
+                value: tambah_seluruh_gizi.kalium,
+              },
+              tembaga: {
+                value: tambah_seluruh_gizi.tembaga,
+              },
+              thiamin: {
+                value: tambah_seluruh_gizi.thiamin,
+              },
+              riboflavin: {
+                value: tambah_seluruh_gizi.riboflavin,
+              },
+              vitc: {
+                value: tambah_seluruh_gizi.vitc,
+              },
+            });
+            return res.status(201).json({
+              error: false,
+              message: "Upload Product Success",
+              datas: newProduct,
+              pangan: newPangan,
+            });
           }
-          const nilai_gizi_pangan = []
-  
-          for(let i = 0; i < pangan.length; i++) {
-            const air = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].air.value)
-            const energi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].energi.value)
-            const protein = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].protein.value)
-            const lemak = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].lemak.value)
-            const kh = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kh.value)
-            const serat = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].serat.value) 
-            const kalsium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalsium.value)
-            const fosfor = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].fosfor.value)
-            const besi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].besi.value)
-            const natrium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].natrium.value)
-            const kalium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalium.value)
-            const tembaga = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].tembaga.value)
-            const thiamin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].thiamin.value)
-            const riboflavin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].riboflavin.value)
-            const vitc = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].vitc.value)
+        } else {
+          if (!req.body.varian) return res.status(400).json({ message: "Kurang Body Request *varian*" });
+          const varian = [];
+          JSON.parse(req.body.varian).forEach((element) => {
+            varian.push(element);
+          });
+          JSON.parse(req.body.pangan).forEach((item) => {
+            pangan.push(item);
+          });
+
+          // if (varian.some((item) => item.nama_varian === "Topping")) {
+          // } else {
+          //   // return res.status(200).json({
+          //   //   sip: "MANTAP",
+          //   // });
+          // }
+          const totalBeratPangan = pangan.reduce((acc, val) => {
+            return acc + parseFloat(val?.berat);
+          }, 0);
+
+          const maxBeratPangan = pangan.reduce(
+            (max, current) => {
+              return current.berat > max.berat ? current : max;
+            },
+            { berat: -Infinity }
+          );
+
+          const pangan_terbanyak = await Pangan.findById(maxBeratPangan.panganId);
+
+          const Kelompok_pangan = pangan_terbanyak.kelompok_pangan;
+          const kode_bahan = pangan_terbanyak.kode_bahan.substring(0, 1);
+
+          const kodeRegex = new RegExp(`${kode_bahan}P`);
+
+          const pangan_terakhir = await Pangan.findOne({ kode_bahan: kodeRegex }).sort({ kode_bahan: -1 });
+
+          const kode_bahan_terbaru = `${kode_bahan}P` + `${parseInt(pangan_terakhir.kode_bahan.substring(2, 5)) + 1}`;
+
+          const nama_bahan = [];
+
+          for (const item of pangan) {
+            const bahan = await Pangan.findById(item.panganId).select(
+              "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
+            );
+            nama_bahan.push(bahan);
+          }
+          const nilai_gizi_pangan = [];
+
+          for (let i = 0; i < pangan.length || i < nama_bahan.length; i++) {
+            const air = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].air.value);
+            const energi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].energi.value);
+            const protein = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].protein.value);
+            const lemak = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].lemak.value);
+            const kh = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kh.value);
+            const serat = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].serat.value);
+            const kalsium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalsium.value);
+            const fosfor = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].fosfor.value);
+            const besi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].besi.value);
+            const natrium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].natrium.value);
+            const kalium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalium.value);
+            const tembaga = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].tembaga.value);
+            const thiamin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].thiamin.value);
+            const riboflavin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].riboflavin.value);
+            const vitc = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].vitc.value);
             nilai_gizi_pangan.push({
               air: formatNumber(air),
               energi: formatNumber(energi),
@@ -1026,8 +1399,8 @@ module.exports = {
               tembaga: formatNumber(tembaga),
               thiamin: formatNumber(thiamin),
               riboflavin: formatNumber(riboflavin),
-              vitc: formatNumber(vitc)
-            })
+              vitc: formatNumber(vitc),
+            });
           }
 
           const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
@@ -1038,178 +1411,32 @@ module.exports = {
                 accumulator[key] = current[key];
               }
             }
-            Object.keys(accumulator).map(key => formatNumber(accumulator[key]))
-            return accumulator
+            Object.keys(accumulator).map((key) => formatNumber(accumulator[key]));
+            return accumulator;
           }, {});
-          
-          Object.keys(tambah_seluruh_gizi).forEach(
-            (key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key]))
-          );
 
-          newProduct = await Product.create({
-            ...dataProduct,
-            isPublished: true,
-            pangan,
-            id_sub_category: subCategory._id,
-            id_main_category: mainCategory._id,
-          });
-  
-          newPangan = await Pangan.create({
-            kode_bahan: kode_bahan_terbaru,
-            nama_bahan: req.body.name_product,
-            kelompok_pangan: Kelompok_pangan,
-            jenis_pangan: 'makanan olahan',
-            nama_makanan_lokal: req.body.nama_product,
-            mayoritas_daerah_lokal: province,
-            keterangan: req.body.long_description,
-            jenis_makanan: 'makanan utama',
-            nama_makanan_lokal: req.body.name_product,
-            image_pangan: imgPaths[0],
-            air: {
-              value: tambah_seluruh_gizi.air,
-            },
-            energi: {
-              value: tambah_seluruh_gizi.energi,
-            },
-            protein: {
-              value: tambah_seluruh_gizi.protein,
-            },
-            lemak: {
-              value: tambah_seluruh_gizi.lemak,
-            },
-            kh: {
-              value: tambah_seluruh_gizi.kh
-            },
-            serat: {
-              value: tambah_seluruh_gizi.serat
-            },
-            kalsium: {
-              value: tambah_seluruh_gizi.kalsium
-            },
-            fosfor: {
-              value: tambah_seluruh_gizi.fosfor
-            },
-            besi: {
-              value: tambah_seluruh_gizi.besi
-            },
-            natrium: {
-              value: tambah_seluruh_gizi.natrium
-            },
-            kalium: {
-              value: tambah_seluruh_gizi.kalium
-            },
-            tembaga: {
-              value: tambah_seluruh_gizi.tembaga
-            },
-            thiamin: {
-              value: tambah_seluruh_gizi.thiamin
-            },
-            riboflavin: {
-              value: tambah_seluruh_gizi.riboflavin
-            },
-            vitc:{
-              value: tambah_seluruh_gizi.vitc
-            }
-          })
-          return res.status(201).json({
-            error: false,
-            message: "Upload Product Success",
-            datas: newProduct,
-            pangan: newPangan
-          });
-        }
-      } else {
-        if (!req.body.varian) return res.status(400).json({ message: "Kurang Body Request *varian*" });
-        const varian = [];
-        JSON.parse(req.body.varian).forEach((element) => {
-          varian.push(element);
-        });
-        JSON.parse(req.body.pangan).forEach((item) => {
-          pangan.push(item);
-        });
+          Object.keys(tambah_seluruh_gizi).forEach((key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key])));
+          // return res.status(200).json({data: tambah_seluruh_gizi})
 
-        const totalBeratPangan = pangan.reduce((acc, val) => { 
-            return acc + parseFloat(val?.berat) 
-          }, 0);
-        const nama_bahan = []
-
-            for(const item of pangan){
-              const bahan = await Pangan.findById(item.panganId).select("air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value")
-              nama_bahan.push(bahan)
-            }
-            const nilai_gizi_pangan = []
-
-        for(let i = 0; i < pangan.length || i < nama_bahan.length; i++) {
-          const air = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].air.value)
-            const energi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].energi.value)
-            const protein = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].protein.value)
-            const lemak = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].lemak.value)
-            const kh = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kh.value)
-            const serat = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].serat.value) 
-            const kalsium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalsium.value)
-            const fosfor = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].fosfor.value)
-            const besi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].besi.value)
-            const natrium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].natrium.value)
-            const kalium = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].kalium.value)
-            const tembaga = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].tembaga.value)
-            const thiamin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].thiamin.value)
-            const riboflavin = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].riboflavin.value)
-            const vitc = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].vitc.value)
-            nilai_gizi_pangan.push({
-              air: formatNumber(air),
-              energi: formatNumber(energi),
-              protein: formatNumber(protein),
-              lemak: formatNumber(lemak),
-              kh: formatNumber(kh),
-              serat: formatNumber(serat),
-              kalsium: formatNumber(kalsium),
-              fosfor: formatNumber(fosfor),
-              besi: formatNumber(besi),
-              natrium: formatNumber(natrium),
-              kalium: formatNumber(kalium),
-              tembaga: formatNumber(tembaga),
-              thiamin: formatNumber(thiamin),
-              riboflavin: formatNumber(riboflavin),
-              vitc: formatNumber(vitc)
-            })
-          }
-
-            const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
-              for (let key in current) {
-                if (accumulator[key]) {
-                  accumulator[key] += current[key];
-                } else {
-                  accumulator[key] = current[key];
-                }
-              }
-              Object.keys(accumulator).map(key => formatNumber(accumulator[key]))
-              return accumulator
-            }, {});
-
-            Object.keys(tambah_seluruh_gizi).forEach(
-              (key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key]))
-            );
-            // return res.status(200).json({data: tambah_seluruh_gizi})
-
-            // const detailVarian = [];
-            // req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)));
-            // if(detailVarian.length != varian[0].length * varian[1].length) return res.status(400).json({message: `Data yang dikirim tidak valid. Detail Varian panjangnya ${detailVarian.length} sedangkan varian panjangnya ${varian[0].nilai_varian.length * varian[1].nilai_varian.length}`})
-            // const final = detailVarian.map(item =>{
-            //   if(Array.isArray(req.files[item.varian])) return res.status(400).json({message: "Image per Varian hanya boleh Satu!"});
-            //   const namaImg = `${req.body.name_product}_${item.varian}_${path.extname(req.files[item.varian].name)}`;
-            //   const pathImg = path.join(__dirname, "../public", "img_products", namaImg);
-            //   req.files[item.varian].mv(pathImg, (err)=>{
-            //     if(err) return res.status(500).json({message: "Ada Kesalahan Saat Nyimpan Image, segera diperbaiki"})
-            //   })
-            //   return {
-            //     varian: item.varian,
-            //     price: item.price,
-            //     stok: item.stok,
-            //     harga_diskon: item.harga_diskon,
-            //     image: `${process.env.HOST}public/img_products/${namaImg}`
-            //   };
-            // });
-            if(pangan.length == 1){
+          // const detailVarian = [];
+          // req.body.detailVarian.forEach(item => detailVarian.push(JSON.parse(item)));
+          // if(detailVarian.length != varian[0].length * varian[1].length) return res.status(400).json({message: `Data yang dikirim tidak valid. Detail Varian panjangnya ${detailVarian.length} sedangkan varian panjangnya ${varian[0].nilai_varian.length * varian[1].nilai_varian.length}`})
+          // const final = detailVarian.map(item =>{
+          //   if(Array.isArray(req.files[item.varian])) return res.status(400).json({message: "Image per Varian hanya boleh Satu!"});
+          //   const namaImg = `${req.body.name_product}_${item.varian}_${path.extname(req.files[item.varian].name)}`;
+          //   const pathImg = path.join(__dirname, "../public", "img_products", namaImg);
+          //   req.files[item.varian].mv(pathImg, (err)=>{
+          //     if(err) return res.status(500).json({message: "Ada Kesalahan Saat Nyimpan Image, segera diperbaiki"})
+          //   })
+          //   return {
+          //     varian: item.varian,
+          //     price: item.price,
+          //     stok: item.stok,
+          //     harga_diskon: item.harga_diskon,
+          //     image: `${process.env.HOST}public/img_products/${namaImg}`
+          //   };
+          // });
+          if (pangan.length == 1) {
             delete req.body.varian;
             delete req.body.pangan;
             // delete req.body.detailVarian
@@ -1227,80 +1454,87 @@ module.exports = {
               error: false,
               message: "Upload Product Success",
               newProduct,
-          });
+            });
           } else {
             delete req.body.varian;
-              delete req.body.pangan;
-              // delete req.body.detailVarian
-              const dataProduct = {
-                ...req.body,
-                varian,
-                pangan,
-                id_main_category: mainCategory._id,
-                id_sub_category: subCategory._id,
-                userId: req.user.id,
-                image_product: imgPaths,
-              };
-              newProduct = await Product.create(dataProduct);
-              newPangan = await Pangan.create({
-                kode_bahan: kode_bahan_terbaru,
-                nama_bahan: req.body.name_product,
-                kelompok_pangan: Kelompok_pangan,
-                jenis_pangan: 'makanan olahan',
-                jenis_makanan: 'makanan utama',
-                nama_makanan_lokal: req.body.nama_product,
-                mayoritas_daerah_lokal: province,
-                keterangan: req.body.long_description,
-                nama_makanan_lokal: req.body.name_product,
-                image_pangan: imgPaths[0],
-                air: {
-                  value: tambah_seluruh_gizi.air,
-                },
-                energi: {
-                  value: tambah_seluruh_gizi.energi,
-                },
-                protein: {
-                  value: tambah_seluruh_gizi.protein,
-                },
-                lemak: {
-                  value: tambah_seluruh_gizi.lemak,
-                },
-                kh: {
-                  value: tambah_seluruh_gizi.kh
-                },
-                serat: {
-                  value: tambah_seluruh_gizi.serat
-                },
-                kalsium: {
-                  value: tambah_seluruh_gizi.kalsium
-                },
-                fosfor: {
-                  value: tambah_seluruh_gizi.fosfor
-                },
-                besi: {
-                  value: tambah_seluruh_gizi.besi
-                },
-                natrium: {
-                  value: tambah_seluruh_gizi.natrium
-                },
-                kalium: {
-                  value: tambah_seluruh_gizi.kalium
-                },
-                tembaga: {
-                  value: tambah_seluruh_gizi.tembaga
-                },
-                thiamin: {
-                  value: tambah_seluruh_gizi.thiamin
-                },
-                riboflavin: {
-                  value: tambah_seluruh_gizi.riboflavin
-                },
-                vitc:{
-                  value: tambah_seluruh_gizi.vitc
-                }
-              })
+            delete req.body.pangan;
+            // delete req.body.detailVarian
+            const dataProduct = {
+              ...req.body,
+              varian,
+              pangan,
+              id_main_category: mainCategory._id,
+              id_sub_category: subCategory._id,
+              userId: req.user.id,
+              image_product: imgPaths,
+            };
+            newProduct = await Product.create(dataProduct);
+            newPangan = await Pangan.create({
+              kode_bahan: kode_bahan_terbaru,
+              nama_bahan: req.body.name_product,
+              kelompok_pangan: Kelompok_pangan,
+              jenis_pangan: "makanan olahan",
+              jenis_makanan: "makanan utama",
+              nama_makanan_lokal: req.body.nama_product,
+              mayoritas_daerah_lokal: province,
+              keterangan: req.body.long_description,
+              nama_makanan_lokal: req.body.name_product,
+              image_pangan: imgPaths[0],
+              air: {
+                value: tambah_seluruh_gizi.air,
+              },
+              energi: {
+                value: tambah_seluruh_gizi.energi,
+              },
+              protein: {
+                value: tambah_seluruh_gizi.protein,
+              },
+              lemak: {
+                value: tambah_seluruh_gizi.lemak,
+              },
+              kh: {
+                value: tambah_seluruh_gizi.kh,
+              },
+              serat: {
+                value: tambah_seluruh_gizi.serat,
+              },
+              kalsium: {
+                value: tambah_seluruh_gizi.kalsium,
+              },
+              fosfor: {
+                value: tambah_seluruh_gizi.fosfor,
+              },
+              besi: {
+                value: tambah_seluruh_gizi.besi,
+              },
+              natrium: {
+                value: tambah_seluruh_gizi.natrium,
+              },
+              kalium: {
+                value: tambah_seluruh_gizi.kalium,
+              },
+              tembaga: {
+                value: tambah_seluruh_gizi.tembaga,
+              },
+              thiamin: {
+                value: tambah_seluruh_gizi.thiamin,
+              },
+              riboflavin: {
+                value: tambah_seluruh_gizi.riboflavin,
+              },
+              vitc: {
+                value: tambah_seluruh_gizi.vitc,
+              },
+            });
           }
         }
+
+        return res.status(201).json({
+          error: false,
+          message: "Upload Product Success",
+          datas: newProduct,
+          pangan: newPangan,
+        });
       } else {
         const dataProduct = req.body;
         dataProduct.image_product = imgPaths;
@@ -1312,15 +1546,19 @@ module.exports = {
           id_sub_category: subCategory._id,
           id_main_category: mainCategory._id,
         });
+        return res.status(201).json({
+          error: false,
+          message: "Upload Product Success",
+          datas: newProduct,
+        });
       }
-  
-      return res.status(201).json({
-        error: false,
-        message: "Upload Product Success",
-        datas: newProduct,
-        pangan: newPangan
-      });            
-    }catch (err) {
+      // return res.status(201).json({
+      //   error: false,
+      //   message: "Upload Product Success",
+      //   datas: newProduct,
+      //   pangan: newPangan,
+      // });
+    } catch (err) {
       if (err.name == "ValidationError") {
         return res.status(400).json({ error: true, message: err.message });
       }
@@ -1498,16 +1736,16 @@ module.exports = {
       const doneShipments = await Pengiriman.find({
         orderId: ordered._id,
         productToDelivers: {
-          $elemMatch:{
-            productId: productId
-          }
+          $elemMatch: {
+            productId: productId,
+          },
         },
-        isBuyerAccepted: true
-      })
+        isBuyerAccepted: true,
+      });
 
       if (status === "diarsipkan") {
         if (product.status.value === "diarsipkan") return res.status(400).json({ message: "Product sudah diarsipkan" });
-        if ((ordered.length > 0) && doneShipments.length === 0) return res.status(403).json({ message: "Tidak bisa mengarsipkan product karena ada orderan yang sedang aktif", data: ordered });
+        if (ordered.length > 0 && doneShipments.length === 0) return res.status(403).json({ message: "Tidak bisa mengarsipkan product karena ada orderan yang sedang aktif", data: ordered });
       }
 
       await Product.updateOne({ _id: productId }, { "status.value": status });
@@ -1563,7 +1801,7 @@ module.exports = {
             productId: productId,
           },
         },
-        isBuyerAccepted: false
+        isBuyerAccepted: false,
       }).lean();
 
       if (ordered.length > 0) return res.status(403).json({ message: "Tidak bisa menghapus product karena ada orderan yang sedang aktif", data: ordered });
