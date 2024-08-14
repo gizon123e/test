@@ -135,6 +135,9 @@ app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
 
+//Chat
+app.use('/api/chat', require('./routes/router-chat'));
+
 //Vendor
 app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
 app.use("/api/penghasilan/vendor", require('./routes/router-vendor/router-penghasilan'));
