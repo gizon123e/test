@@ -805,20 +805,40 @@ module.exports = {
 
             const totalWaktu = penentuanWaktu.optimasi_pengiriman * 2
 
+            const today = new Date(penentuanWaktu.waktu_pengiriman);
+            const formattedDate = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+
             const datas = []
-            for (let data of prosesPengiriman) {
-                const kendaraaan = await KendaraanDistributor.findOne({ id_distributor: distributor._id, jenisKendaraan: data.pengirimanId.id_jenis_kendaraan })
 
-                const totalWaktuEstimasi = data.optimasi_pengiriman * 2
+            for (let item of kendaraaan) {
+                let tidakTersedia = false;
 
-                if (totalWaktu === totalWaktuEstimasi) {
-                    datas.push({
-                        ...kendaraaan.toObject(),
-                        tidak_tersedia: "sedang penjemputan"
-                    })
-                } else {
-                    datas.push(kendaraaan)
+                for (let data of prosesPengiriman) {
+                    const totalWaktuEstimasi = data.optimasi_pengiriman * 2;
+
+                    const dateParameter = new Date(data.waktu_pengiriman);
+                    const dateSaatIni = dateParameter.toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+
+                    if (dateSaatIni === formattedDate && (totalWaktu === totalWaktuEstimasi || totalWaktu >= totalWaktuEstimasi) && item._id.equals(data.id_pengemudi)) {
+                        tidakTersedia = true;
+                        break; // Jika sudah ditemukan tidak tersedia, tidak perlu memeriksa lebih lanjut
+                    }
                 }
+
+                datas.push({
+                    ...item.toObject(),
+                    tidak_tersedia: tidakTersedia
+                });
             }
 
             res.status(200).json({

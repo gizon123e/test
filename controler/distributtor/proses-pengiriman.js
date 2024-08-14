@@ -117,33 +117,21 @@ module.exports = {
         }
     },
 
-    updatePerusahaanPenegmudiDanKendaraan: async (req, res, next) => {
-        try {
-            const { id_pengemudi, id_kendaraan } = req.body
-
-            const data = await ProsesPengirimanDistributor.findByIdAndUpdate({ _id: req.params.id }, { id_pengemudi, id_kendaraan }, { new: true })
-
-            res.status(200).json({
-                message: "update proses pengiriman distributor",
-                data
-            })
-
-        } catch (error) {
-            console.log(error)
-            next(error)
-        }
-    },
-
     mulaiPenjemputan: async (req, res, next) => {
         try {
-            const { id_address, latitude, longitude, id_konsumen } = req.body
+            const { id_address, latitude, longitude, id_konsumen, id_pengemudi, id_kendaraan } = req.body
 
             if (!id_address) return res.status(400).json({ message: 'id_address harus di isi' })
             const distri = await Distributtor.exists({ userId: req.user.id })
 
-            const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput" }, { new: true });
+            let prosesPengiriman
+            if (id_pengemudi && id_kendaraan) {
+                prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput", id_pengemudi, id_kendaraan }, { new: true });
+            } else {
+                prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput" }, { new: true });
+            }
 
-            await PelacakanDistributorKonsumen.create({
+            const lacak = await PelacakanDistributorKonsumen.create({
                 id_toko: prosesPengiriman.tokoId,
                 id_address,
                 latitude,
@@ -161,7 +149,10 @@ module.exports = {
 
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
-            return res.status(200).json({ message: "Berhasil Memulai Penjemputan", });
+            return res.status(200).json({
+                message: "Berhasil Memulai Penjemputan",
+                lacak
+            });
         } catch (error) {
             console.log(error);
             next(error)
@@ -340,7 +331,7 @@ module.exports = {
             const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Selesai", image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}` }, { new: true }).populate('pengirimanId').populate('produk_pengiriman.productId');
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
-            await PelacakanDistributorKonsumen.updateMany({
+            await PelacakanDistributorKonsumen.updateOne({
                 id_toko: prosesPengiriman.tokoId,
                 id_address,
                 latitude,
@@ -414,7 +405,9 @@ module.exports = {
                         tanggal: formatTanggal(detailNotifikasi.createdAt)
                     })
                 }
-                return res.status(200).json({ message: "Berhasil Menyelesaikan Pengiriman" });
+                return res.status(200).json({
+                    message: "Berhasil Menyelesaikan Pengiriman",
+                });
             }
         } catch (error) {
             console.log(error);
