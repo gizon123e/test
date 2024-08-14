@@ -61,10 +61,6 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
             required: [true, "quantity harus di isi"]
         }
     }],
-    waktu_pesanan: {
-        type: Date,
-        required: [true, "waktu_pesanan harus di isi"]
-    },
     jenisKendaraan: {
         type: mongoose.Types.ObjectId,
         ref: "JenisKendaraan",
@@ -75,7 +71,7 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         required: [true, "potongan_ongkir harus di isi"]
     },
     waktu_pengiriman: {
-        type: String,
+        type: Date,
         required: [true, "waktu_pengiriman harus di isi"]
     },
     total_berat: {

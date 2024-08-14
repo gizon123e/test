@@ -424,7 +424,6 @@ module.exports = {
                     kode_pengiriman: dataPengiriman.kode_pengiriman,
                     tarif_pengiriman: tarif_pengiriman,
                     produk_pengiriman: productToDelivers,
-                    waktu_pesanan: new Date(dataPengiriman.orderId.createdAt),
                     jenisKendaraan: dataPengiriman.id_jenis_kendaraan,
                     potongan_ongkir: dataPengiriman.potongan_ongkir,
                     waktu_pengiriman: new Date(dataPengiriman.waktu_pengiriman),

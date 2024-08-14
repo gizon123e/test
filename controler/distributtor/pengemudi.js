@@ -184,20 +184,69 @@ module.exports = {
 
             const totalWaktu = penentuanWaktu.optimasi_pengiriman * 2
 
+            const today = new Date(penentuanWaktu.waktu_pengiriman);
+            const formattedDate = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const pengemudi = await Pengemudi.find({ id_distributor: distributor._id })
+
             const datas = []
-            for (let data of prosesPengiriman) {
-                const pengemudi = await Pengemudi.findOne({ _id: data.id_pengemudi })
+            // for (let data of prosesPengiriman) {
 
-                const totalWaktuEstimasi = data.optimasi_pengiriman * 2
+            //     const totalWaktuEstimasi = data.optimasi_pengiriman * 2
 
-                if (totalWaktu === totalWaktuEstimasi && pengemudi) {
-                    datas.push({
-                        ...pengemudi.toObject(),
-                        tidak_tersedia: "sedang penjemputan"
-                    })
-                } else if (pengemudi) {
-                    datas.push(pengemudi)
+            //     const dateParameter = new Date(data.waktu_pengiriman);
+            //     const dateSaatIni = dateParameter.toLocaleDateString('id-ID', {
+            //         year: 'numeric',
+            //         month: '2-digit',
+            //         day: '2-digit'
+            //     });
+
+            //     for (let item of pengemudi) {
+            //         const existingItem = datas.find(d => d._id.equals(item._id));
+            //         console.log(existingItem)
+            //         if (!existingItem) {
+            //             if (totalWaktu === totalWaktuEstimasi || totalWaktu <= totalWaktuEstimasi && dateSaatIni === formattedDate && item._id.equals(penentuanWaktu.id_pengemudi)) {
+            //                 datas.push({
+            //                     ...item.toObject(),
+            //                     tidak_tersedia: true
+            //                 });
+            //             } else {
+            //                 datas.push({
+            //                     ...item.toObject(),
+            //                     tidak_tersedia: false
+            //                 });
+            //             }
+            //         }
+            //     }
+            // }
+
+            for (let item of pengemudi) {
+                let tidakTersedia = false;
+
+                for (let data of prosesPengiriman) {
+                    const totalWaktuEstimasi = data.optimasi_pengiriman * 2;
+
+                    const dateParameter = new Date(data.waktu_pengiriman);
+                    const dateSaatIni = dateParameter.toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+
+                    if (dateSaatIni === formattedDate && (totalWaktu === totalWaktuEstimasi || totalWaktu >= totalWaktuEstimasi) && item._id.equals(data.id_pengemudi)) {
+                        tidakTersedia = true;
+                        break; // Jika sudah ditemukan tidak tersedia, tidak perlu memeriksa lebih lanjut
+                    }
                 }
+
+                datas.push({
+                    ...item.toObject(),
+                    tidak_tersedia: tidakTersedia
+                });
             }
 
             res.status(200).json({
