@@ -51,8 +51,10 @@ module.exports = {
                 .populate('produk_pengiriman.productId')
                 .populate({
                     path: "id_kendaraan",
-                    populate: "jenisKendaraan",
-                    populate: "merekKendaraan"
+                    populate: [
+                        { path: "jenisKendaraan" },
+                        { path: "merekKendaraan" }
+                    ]
                 })
                 .populate("id_pengemudi")
                 .populate({
