@@ -56,7 +56,10 @@ module.exports = {
                 })
                 .populate("id_pengemudi")
 
-            if (!lacak) return res.status(404).json({ message: "data Lacak Not Found" })
+            if (!lacak) return res.status(404).json({
+                message: "Link pengiriman pesanan tidak tersedia",
+                text: "Silakan cek ulang link pengeriman pesanan yang sesuai untuk akses pengiriman"
+            })
 
             res.status(200).json({
                 message: "get data lacak success",
