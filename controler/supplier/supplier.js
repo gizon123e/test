@@ -5,7 +5,7 @@ const fs = require('fs')
 
 module.exports = {
 
-    getAllVendor: async (req, res, next) => {
+    getAllSupplier: async (req, res, next) => {
         try {
             const dataVendor = await Supplier.find().populate('userId', '-password').populate('addressId')
             return res.status(200).json({
@@ -24,7 +24,7 @@ module.exports = {
         }
     },
 
-    getDetailVendor: async (req, res, next) => {
+    getDetailSupplier: async (req, res, next) => {
         try {
             const dataKonsumen = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
             let pic;
@@ -61,7 +61,7 @@ module.exports = {
         }
     },
 
-    createVendor: async (req, res, next) => {
+    createSupplier: async (req, res, next) => {
         try {
             const samaUser = await Supplier.findOne({userId: req.body.id}).populate({
                 path: 'userId',
@@ -234,7 +234,7 @@ module.exports = {
         }
     },
 
-    updateVendor: async (req, res, next) => {
+    updateSupplier: async (req, res, next) => {
         try {
             const vendor = await Supplier.findOne({userId: req.user.id});
             if(!vendor) return res.status(404).json({message: `User belum mengisi detail`});
@@ -296,7 +296,7 @@ module.exports = {
         }
     },
 
-    deleteVendor: async (req, res, next) => {
+    deleteSupplier: async (req, res, next) => {
         try {
             const dataVendor = await Supplier.findByIdAndDelete(req.params.id)
             if (!dataVendor) {
