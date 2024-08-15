@@ -617,7 +617,7 @@ module.exports = {
 
             await fotoKendaraan.mv(imagePathProfile);
 
-            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            const distributor = await Distributtor.findOne({ userId: req.user.id, _id: req.params.id })
 
             const data = await KendaraanDistributor.updateOne({ id_distributor: distributor._id }, {
                 warna,

@@ -19,7 +19,7 @@ router.put('/update/:id', authorization, controlerKendaraanDistributtor.updateKe
 router.put('/tolak/:id', controlerKendaraanDistributtor.tolakKenendaraan)
 router.put('/aktif/:id', controlerKendaraanDistributtor.kendaraanDiAktifkan)
 router.put('/tidak-aktif/:id', controlerKendaraanDistributtor.kendaraanDiNonaktifkan)
-router.put('/update-individu', authorization, controlerKendaraanDistributtor.updateIndividuKendaraanPengemudi)
+router.put('/update-individu/:id', authorization, controlerKendaraanDistributtor.updateIndividuKendaraanPengemudi)
 router.delete('/delete/:id', controlerKendaraanDistributtor.deleteKendaraanDistributtor)
 
 module.exports = router
