@@ -22,6 +22,10 @@ const detailNotifikasiSchema = new mongoose.Schema({
           type: String,
           default: [true, "jenis harus di isi"]
      },
+     is_read: {
+          type: Boolean,
+          default: false
+     },   
      createdAt: {
       type: Date,
       default: new Date(),

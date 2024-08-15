@@ -80,8 +80,8 @@ module.exports = {
             const numberNPSN = parseInt(NPSN)
 
             const sudahAdaSekolah = await Address.findOne({userId: req.user.id, isSchool: true, isUsed: true});
+            let alamat
             if(sudahAdaSekolah){
-                let alamat
                 if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
                     alamat = await Address.create({
                         province,
@@ -102,7 +102,7 @@ module.exports = {
 
             await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
 
-            let alamat
+            // let alamat
             if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
                 alamat = await Address.create({
                     province,

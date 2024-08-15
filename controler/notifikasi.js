@@ -66,8 +66,7 @@ module.exports = {
                     {$project: {notif:0}},
                     {$sort: { createdAt: -1 }}
                ])
-               // const notifikasi = await Notifikasi.find({userId: req.user.id})
-               return res.status(200).json(notifikasi)
+               return res.status(200).json({total: notifikasi.length, notifikasi}) 
           }catch (error) {
             console.log(error);
             next(error)
@@ -115,11 +114,11 @@ module.exports = {
                     
                          const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
 
-                         const today = new Date()
-                         // today.setDate(today.getDate() + 7)
-                         today.setHours(today.getHours() + 9)
-                         today.setMinutes(today.getMinutes() + 6)
-                         console.log(today)
+                         // const today = new Date()
+                         // // today.setDate(today.getDate() + 7)
+                         // today.setHours(today.getHours() + 9)
+                         // today.setMinutes(today.getMinutes() + 6)
+                         // console.log(today)
                          
                          const now = new Date()
                          const notifikasi = await Notifikasi.findOne({invoiceId: invoice[0]._id}).sort({createdAt: -1}).populate('invoiceId');
@@ -144,22 +143,18 @@ module.exports = {
                                    image: detailNotifikasi.image_product,
                                    tanggal: formatTanggal(detailNotifikasi.createdAt),
                               })
-                         } else {
-                              console.log(`order_id: ${data._id}`);
-                              console.log(`waktu sekarang: ${new Date(now.setSeconds(0))}`);
-                              console.log(`waktu notif: ${new Date(waktuMunculNotif.setSeconds(0))}`)
-                         }
+                         } 
                     } else {
                          for(const item of invoice){
                               const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
                               
                               const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
 
-                              const today = new Date()
-                              // today.setDate(today.getDate() + )
-                              today.setHours(today.getHours() + 9)
-                              today.setMinutes(today.getMinutes() + 7)
-                              console.log(today)
+                              // const today = new Date()
+                              // // today.setDate(today.getDate() + )
+                              // today.setHours(today.getHours() + 9)
+                              // today.setMinutes(today.getMinutes() + 7)
+                              // console.log(today)
                               
                               const now = new Date()
                               const notifikasi = await Notifikasi.findOne({invoiceId: item.invoice._id}).sort({createdAt: -1}).populate('invoiceId');
@@ -183,10 +178,6 @@ module.exports = {
                                         image: detailNotifikasi.image_product,
                                         tanggal: formatTanggal(detailNotifikasi.createdAt),
                                    })
-                              } else {
-                                   console.log(`order_id: ${data._id}`);
-                                   console.log(`waktu sekarang: ${new Date(now.setSeconds(0))}`);
-                                   console.log(`waktu notif: ${new Date(waktuMunculNotif.setSeconds(0))}`)
                               }
                          }
                     }
@@ -194,7 +185,20 @@ module.exports = {
           }
           } catch (error) {
             console.log(error);
-          //   next(error)
+            next(error)
           }
-     }
+     },
+     
+     readNotifikasi: async(req, res, next) => {
+          try{
+               const detailNotifikasi = await DetailNotifikasi.findByIdAndUpdate(req.params.id, {is_read: true}, {new: true})
+               return res.status(200).json({
+                    message: "Notifikasi terbaca",
+                    detailNotifikasi
+               })   
+          } catch(error){
+               console.log(error)
+               next(error)
+          }
+     } 
 }

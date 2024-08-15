@@ -1403,8 +1403,9 @@ module.exports = {
         try {
             const today = new Date()
             today.setDate(today.getDate() + 7)
-            today.setMinutes(today.getMinutes() + 2)
+            today.setMinutes(today.getMinutes() + 20)
             console.log(today)
+            const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
             const {
                 metode_pembayaran,
                 total,
@@ -1461,6 +1462,7 @@ module.exports = {
             let VirtualAccount;
             let idPay;
             let nama;
+            let detailNotifikasiKonsumen;
 
             const splitted = metode_pembayaran.split(" / ");
             if (splitted[1].replace(/\u00A0/g, ' ') == "Virtual Account") {
@@ -1600,6 +1602,7 @@ module.exports = {
                         })
                     });
 
+                    let toko_vendor = []
                     for (let i = 0; i < dataOrder.shipments.length; i++) {
 
                         detailBiaya.totalOngkir += dataOrder.shipments[i].ongkir
@@ -1623,6 +1626,19 @@ module.exports = {
                             })
                         );
                         total_pengiriman += 1;
+
+                        for (const item of dataOrder.shipments[i].products) {
+                            const find_product = await Product.findOne({_id: item.productId})
+                            const total_harga_product = find_product.price * item.quantity
+                            const vendor = await TokoVendor.findById(dataOrder.shipments[i].id_toko_vendor).select("userId")
+                            toko_vendor.push({
+                                id_toko_vendor: dataOrder.shipments[i].id_toko_vendor,
+                                userId: vendor.userId,
+                                total_harga: total_harga_product,
+                                image_product: find_product.image_product[0]
+                            })
+                        }
+                        
                     };
 
                     const kode_transaksi = await Transaksi.create({
@@ -1652,31 +1668,59 @@ module.exports = {
 
                     const formatHarga = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
 
-                    const notifikasi = await Notifikasi.create({
+                    const notifikasiKonsumen = await Notifikasi.create({
                         userId: user._id,
                         invoiceId: invoice._id,
                         jenis_invoice: "Subsidi",
                         createdAt: new Date(),
                     })
                     
-
-                    const detailNotifikasi = await DetailNotifikasi.create({
-                        notifikasiId: notifikasi._id,
-                        jenis: "Info",
-                        status: "Pesanan Makanan Bergizi Gratis telah berhasil",
-                        message: `${invoice.kode_invoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
-                        image_product: products[0].image_product[0], 
-                        createdAt: new Date()
-                    })
+                    detailNotifikasiKonsumen = await DetailNotifikasi.create({
+                      notifikasiId: notifikasiKonsumen._id,
+                      jenis: "Info",
+                      status: "Pesanan Makanan Bergizi Gratis telah berhasil",
+                      message: `${invoice.kode_invoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                      image_product: products[0].image_product[0],
+                      createdAt: new Date(),
+                    });
                         
                     socket.emit('notif_pesanan_berhasil', {
-                        jenis: detailNotifikasi.jenis,
+                        jenis: detailNotifikasiKonsumen.jenis,
                         userId: user._id,
-                        status: detailNotifikasi.status,
-                        message: detailNotifikasi.message,
-                        image: detailNotifikasi.image_product,
-                        tanggal: `${formatTanggal(detailNotifikasi.createdAt)}`,
+                        status: detailNotifikasiKonsumen.status,
+                        message: detailNotifikasiKonsumen.message,
+                        image: detailNotifikasiKonsumen.image_product,
+                        tanggal: `${formatTanggal(detailNotifikasiKonsumen.createdAt)}`,
                     });
+
+                    for(let i = 0; i < toko_vendor.length; i++){
+                        const formatHarga = toko_vendor[i].total_harga.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                        
+                        const notifikasiVendor = await Notifikasi.create({
+                            userId: toko_vendor[i].userId,
+                            invoiceId: invoice._id,
+                            jenis_invoice: "Subsidi",
+                            createdAt: new Date(),
+                        })
+
+                        const detailNotifikasiVendor = await DetailNotifikasi.create({
+                            notifikasiId: notifikasiVendor._id,
+                            jenis: "Pesanan",
+                            status: `Ada ${totalQuantity} Pesanan Senilai Rp. ${formatHarga}`,
+                            message: `Segera terima pesanan ${invoice.kode_invoice} sebelum ${sixHoursAgo}`,
+                            image_product: toko_vendor[i].image_product,
+                            createdAt: new Date(),
+                        })
+
+                        socket.emit('notif_vendor_pesanan_masuk', {
+                            jenis: detailNotifikasiVendor.jenis,
+                            userId: toko_vendor[i].userId,
+                            status: detailNotifikasiVendor.status,
+                            message: detailNotifikasiVendor.message,
+                            image: detailNotifikasiVendor.image_product,
+                            tanggal: `${formatTanggal(detailNotifikasiVendor.createdAt)}`,
+                        })
+                    }
 
                 } else if (totalQuantity > sekolah.jumlahMurid) {
                     const id_transaksi_subsidi = new mongoose.Types.ObjectId();
@@ -1919,7 +1963,7 @@ module.exports = {
                         } else {
                             return Math.round(total_tagihan);
                         }
-                    };
+                    };x
 
                     const options = {
                         method: 'POST',
@@ -2105,6 +2149,7 @@ module.exports = {
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
                 datas: dataOrder,
                 nama,
+                detailNotifikasiKonsumen,
                 paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
                 VirtualAccount,
                 total_tagihan,
