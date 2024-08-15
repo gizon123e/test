@@ -97,8 +97,11 @@ module.exports = {
 
     myStore: async(req, res, next) => {
         try {
-            const store = await Toko.findOne({userId: req.user.id}).populate('address');
-            return res.status(200).json({data: store})
+            const store = await Toko.findOne({userId: req.user.id}).populate('address').lean();
+            const pengikut = await Follower.countDocuments({
+                sellerUserId: req.user.id
+            })
+            return res.status(200).json({data: {...store, pengikut}})
         } catch (error) {
             console.log(error);
             next(error)
