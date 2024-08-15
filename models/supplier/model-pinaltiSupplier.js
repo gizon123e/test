@@ -1,10 +1,10 @@
 const mongoose = require('mongoose')
 
-const modelPinaltiVendor = new mongoose.Schema({
-    id_user_vendor: {
+const modelPinaltiSupplier = new mongoose.Schema({
+    id_user_supplier: {
         type: mongoose.Types.ObjectId,
         ref: "User",
-        required: [true, "id_user_vendor harus di isi"]
+        required: [true, "id_user_supplier harus di isi"]
     },
     alasan_pinalti: {
         type: String,
@@ -16,6 +16,6 @@ const modelPinaltiVendor = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-const PinaltiVendor = mongoose.model('PinaltiVendor', modelPinaltiVendor)
+const PinaltiSupplier = mongoose.model('PinaltiSupplier', modelPinaltiSupplier)
 
-module.exports = PinaltiVendor
+module.exports = PinaltiSupplier

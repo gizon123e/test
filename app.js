@@ -142,6 +142,10 @@ app.use('/api/chat', require('./routes/router-chat'));
 app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
 app.use("/api/penghasilan/vendor", require('./routes/router-vendor/router-penghasilan'));
 
+//Supplier
+app.use("/api/supplier", require('./routes/router-supplier/router-supplier'));
+app.use("/api/penghasilan/supplier", require('./routes/router-supplier/router-penghasilan'));
+
 // message
 app.use('/contak', require('./routes/router-message/router-message'))
 
