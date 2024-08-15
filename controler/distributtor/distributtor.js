@@ -23,7 +23,6 @@ module.exports = {
         try {
             const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
-            console.log(dataDistributor._id)
 
             const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
             const total_pesanan = pesanan.length
@@ -34,12 +33,54 @@ module.exports = {
             const pesananDikirim = prosesPesanan.filter((item) => item.status_distributor === "Selesai")
             const total_dijemput = pesananDikirim.length
 
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            today.setDate(today.getDate() - 1);
+            const formattedDateHariKemarin = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const dataPesananHariLalu = []
+            const dataPesananSaatIni = []
+            const dataMap = pesanan.map((data) => {
+                const todayPesanan = new Date(data.createdAt);
+                const formattedDatePesanan = todayPesanan.toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+
+                if (formattedDate === formattedDatePesanan) dataPesananSaatIni.push(data)
+
+                if (formattedDateHariKemarin === formattedDatePesanan) dataPesananHariLalu.push(data)
+            })
+
+            const totalPesananHariIni = dataPesananSaatIni.length;
+            const totalPesananHariLalu = dataPesananHariLalu.length;
+
+            let kenaikanPesanan = 0;
+
+            if (totalPesananHariLalu > 0) {
+                kenaikanPesanan = ((totalPesananHariIni - totalPesananHariLalu) / totalPesananHariLalu) * 100;
+            } else if (totalPesananHariIni > 0) {
+                kenaikanPesanan = 100;
+            }
+
             res.status(200).json({
                 message: "data profile success",
                 data: dataDistributor,
                 total_pesanan,
                 total_dibatalkan,
-                total_dijemput
+                total_dijemput,
+                totalPesananHariIni,
+                kenaikanPesanan: `${kenaikanPesanan.toFixed(2)}%`,
             })
         } catch (error) {
             console.log(error)
