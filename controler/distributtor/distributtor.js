@@ -26,7 +26,7 @@ module.exports = {
 
             const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
             const total_pesanan = pesanan.length
-            const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak")
+            const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak" || item.status_distributor === "Kadaluwarsa")
             const total_dibatalkan = pesananBatal.length
 
             const prosesPesanan = await ProsesPengirimanDistributor.find({ distributorId: dataDistributor._id })
@@ -65,12 +65,29 @@ module.exports = {
             const totalPesananHariIni = dataPesananSaatIni.length;
             const totalPesananHariLalu = dataPesananHariLalu.length;
 
-            let kenaikanPesanan = 0;
+            let kenaikanPersentase = 0;
+            let penurunanPersentase = 0;
+            let statusKenaikan = false
 
             if (totalPesananHariLalu > 0) {
-                kenaikanPesanan = ((totalPesananHariIni - totalPesananHariLalu) / totalPesananHariLalu) * 100;
+                if (totalPesananHariIni >= totalPesananHariLalu) {
+                    kenaikanPersentase = ((totalPesananHariIni - totalPesananHariLalu) / totalPesananHariLalu) * 100;
+                    statusKenaikan = true
+                } else {
+                    penurunanPersentase = ((totalPesananHariLalu - totalPesananHariIni) / totalPesananHariLalu) * 100;
+                    statusKenaikan = false
+                }
             } else if (totalPesananHariIni > 0) {
-                kenaikanPesanan = 100;
+                kenaikanPersentase = 100;
+                statusKenaikan = true
+            }
+
+            let nilai_kenaikan = 0
+
+            if (kenaikanPersentase >= penurunanPersentase) {
+                nilai_kenaikan = kenaikanPersentase
+            } else {
+                nilai_kenaikan = penurunanPersentase
             }
 
             res.status(200).json({
@@ -80,7 +97,8 @@ module.exports = {
                 total_dibatalkan,
                 total_dijemput,
                 totalPesananHariIni,
-                kenaikanPesanan: `${kenaikanPesanan.toFixed(2)}%`,
+                kenaikanPesanan: `${nilai_kenaikan.toFixed(2)}%`,
+                statusKenaikan
             })
         } catch (error) {
             console.log(error)
