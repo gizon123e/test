@@ -56,6 +56,7 @@ module.exports = {
                         { path: "merekKendaraan" }
                     ]
                 })
+                .populate("jenisKendaraan")
                 .populate("id_pengemudi")
                 .populate({
                     path: "tokoId",

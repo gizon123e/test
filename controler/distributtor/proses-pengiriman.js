@@ -196,7 +196,7 @@ module.exports = {
             ])
 
             if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
-            // console.log(invoice.length)
+
             if (invoice.length == 1) {
                 const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id })
                 const detailNotifikasi = await DetailNotifikasi.create({
