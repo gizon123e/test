@@ -23,23 +23,82 @@ module.exports = {
         try {
             const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
-            console.log(dataDistributor._id)
 
             const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
             const total_pesanan = pesanan.length
-            const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak")
+            const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak" || item.status_distributor === "Kadaluwarsa")
             const total_dibatalkan = pesananBatal.length
 
             const prosesPesanan = await ProsesPengirimanDistributor.find({ distributorId: dataDistributor._id })
             const pesananDikirim = prosesPesanan.filter((item) => item.status_distributor === "Selesai")
             const total_dijemput = pesananDikirim.length
 
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            today.setDate(today.getDate() - 1);
+            const formattedDateHariKemarin = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const dataPesananHariLalu = []
+            const dataPesananSaatIni = []
+            const dataMap = pesanan.map((data) => {
+                const todayPesanan = new Date(data.createdAt);
+                const formattedDatePesanan = todayPesanan.toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+
+                if (formattedDate === formattedDatePesanan) dataPesananSaatIni.push(data)
+
+                if (formattedDateHariKemarin === formattedDatePesanan) dataPesananHariLalu.push(data)
+            })
+
+            const totalPesananHariIni = dataPesananSaatIni.length;
+            const totalPesananHariLalu = dataPesananHariLalu.length;
+
+            let kenaikanPersentase = 0;
+            let penurunanPersentase = 0;
+            let statusKenaikan = false
+
+            if (totalPesananHariLalu > 0) {
+                if (totalPesananHariIni >= totalPesananHariLalu) {
+                    kenaikanPersentase = ((totalPesananHariIni - totalPesananHariLalu) / totalPesananHariLalu) * 100;
+                    statusKenaikan = true
+                } else {
+                    penurunanPersentase = ((totalPesananHariLalu - totalPesananHariIni) / totalPesananHariLalu) * 100;
+                    statusKenaikan = false
+                }
+            } else if (totalPesananHariIni > 0) {
+                kenaikanPersentase = 100;
+                statusKenaikan = true
+            }
+
+            let nilai_kenaikan = 0
+
+            if (kenaikanPersentase >= penurunanPersentase) {
+                nilai_kenaikan = kenaikanPersentase
+            } else {
+                nilai_kenaikan = penurunanPersentase
+            }
+
             res.status(200).json({
                 message: "data profile success",
                 data: dataDistributor,
                 total_pesanan,
                 total_dibatalkan,
-                total_dijemput
+                total_dijemput,
+                totalPesananHariIni,
+                kenaikanPesanan: `${nilai_kenaikan.toFixed(2)}%`,
+                statusKenaikan
             })
         } catch (error) {
             console.log(error)

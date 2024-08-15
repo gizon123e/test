@@ -223,12 +223,7 @@
         const msg = document.getElementById("pesan").value;
 
         if (socket) {
-          socket.emit(
-            "send msg",
-            {
-              userEmail,
-              msg,
-            },
+          socket.emit("send msg", { userId: userEmail, msg },
             (res) => {
               console.log(res);
               msg.value = ''
@@ -243,8 +238,17 @@
         "msg",
         (msg) => {
           const text = document.createElement("p");
-          text.innerHTML = `${msg}`;
+          text.innerHTML = msg;
           document.body.appendChild(text);
+        },
+        (res) => {
+          console.log(res);
+        }
+      );
+      socket.on(
+        "error",
+        (msg) => {
+          alert(msg)
         },
         (res) => {
           console.log(res);

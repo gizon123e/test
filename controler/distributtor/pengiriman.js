@@ -29,7 +29,7 @@ module.exports = {
                 rejected: false,
                 status_pengiriman: 'diproses',
                 id_jenis_kendaraan,
-                id_jenis_layanan,
+                jenis_pengiriman: id_jenis_layanan,
                 potongan_ongkir,
                 ongkir: parseInt(ongkir) - parseInt(potongan_ongkir)
             })

@@ -1,4 +1,4 @@
-const Toko = require('../../models/vendor/model-toko');
+const Toko = require('../../models/supplier/model-toko');
 const Address = require('../../models/model-address');
 const BiayaTetap = require("../../models/model-biaya-tetap");
 const path = require('path');
@@ -6,9 +6,8 @@ const Product = require('../../models/model-product');
 const {Pangan} = require('../../models/model-pangan');
 const SalesReport = require('../../models/model-laporan-penjualan');
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman');
-const TokoVendor = require('../../models/vendor/model-toko');
+const TokoSupplier = require('../../models/supplier/model-toko');
 const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders');
-const Vendor = require('../../models/vendor/model-vendor');
 const Follower = require('../../models/model-follower');
 
 
@@ -97,11 +96,8 @@ module.exports = {
 
     myStore: async(req, res, next) => {
         try {
-            const store = await Toko.findOne({userId: req.user.id}).populate('address').lean();
-            const pengikut = await Follower.countDocuments({
-                sellerUserId: req.user.id
-            })
-            return res.status(200).json({data: {...store, pengikut}})
+            const store = await Toko.findOne({userId: req.user.id}).populate('address');
+            return res.status(200).json({data: store})
         } catch (error) {
             console.log(error);
             next(error)

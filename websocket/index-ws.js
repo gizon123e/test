@@ -1,5 +1,7 @@
 const { Server } = require("socket.io");
 const jwt = require("../utils/jwt");
+const Chat = require("../models/model-chat");
+const User = require("../models/model-auth-user");
 
 const io = new Server({
   cors: {
@@ -48,37 +50,45 @@ io.on("connection", (socket) => {
     console.log('ada yang logout dengan socket id: ', socket.id)
   });
 
-  socket.on("send msg", async (data, callback) => {
-    const { userEmail, msg } = data;
-    console.log(userConnected)
+  socket.on("send msg", async (data) => {
+    const { userId, ...contents } = data;
+    try {
+        const receiver = await User.findById(userId).select("role");
+        const senderRole = socket.user.role;
+        const receiverRole = receiver.role;
 
-    const foundUser = userConnected.find(
-      (user) => user.email.content == userEmail
-    );
+        if (senderRole !== 'distributor' && receiverRole !== 'distributor') {
+          return socket.emit("error", 'Anda hanya dapat mengirim pesan kepada distributor.');
+        }
 
-    // const chat = await Conversation.findOne({
-    //   participants: { $all: [foundUser.id, socket.id] },
-    // });
-    // if (!chat) {
-    //   await Conversation.create({
-    //     participants: [foundUser.id, socket.id],
-    //     messages: [
-    //       {
-    //         sender: socket.id,
-    //         content: msg,
-    //       },
-    //     ],
-    //   });
-    // } else {
-    //   chat.messages.push({
-    //     sender: socket.id,
-    //     content: msg,
-    //   });
-    //   await chat.save();
-    // }
-    if (foundUser) {
-      io.to(socket.id).emit("msg", msg);
-      io.to(foundUser.id).emit("msg", msg);
+        let chat = await Chat.findOne({
+          participants: { $all: [socket.user.id, userId] }
+        });
+
+        const message = {
+          sender: socket.user.id,
+          content: JSON.stringify(contents),
+          timestamp: Date.now()
+        };
+
+        if (chat) {
+          chat.messages.push(message);
+          chat.save().then(()=> console.log("Berhasil Menyimpan Chat")).catch((err)=> console.log("Gagal Menyimpan Chat", err));
+        } else {
+          chat = new Chat({
+            participants: [userId, socket.user.id],
+            messages: [message]
+          });
+          chat.save().then(()=> console.log("Berhasil Menyimpan Chat")).catch((err)=> console.log("Gagal Menyimpan Chat", err));
+        }
+
+        // Kirim pesan
+        io.to(socket.user.id).emit("msg", message.content);
+        io.to(userId).emit("msg", message.content);
+
+    } catch (err) {
+      console.log('Gagal menyimpan chat', err);
+      socket.emit("error", 'Terjadi kesalahan dalam mengirim pesan.');
     }
   });
 

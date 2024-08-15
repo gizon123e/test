@@ -7,7 +7,9 @@ const path = require('path');
 const dotenv = require('dotenv')
 dotenv.config()
 const fs = require('fs')
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const Follower = require('../../models/model-follower');
+const TokoVendor = require('../../models/vendor/model-toko');
 
 module.exports = {
 
@@ -28,6 +30,26 @@ module.exports = {
                 });
             };
             next(error);
+        }
+    },
+
+    tokoFavorit: async(req, res, next) => {
+        try {
+            const pengikut = await Follower.find({userId: req.user.id}).lean();
+            const data = await Promise.all(
+                pengikut.map(async (pgt) => {
+                    const { sellerUserId } = pgt;
+                    const detail = await TokoVendor.findOne({ userId: sellerUserId })
+                        .select("address profile_pict namaToko")
+                        .populate({path: "address", select: "province"})
+                        .lean();
+                    return detail;
+                })
+            );
+            return res.status(200).json({message: "Mendapatkan semua toko yang diikuti", data})
+        } catch (error) {
+            console.log(error);
+            next(error)
         }
     },
 

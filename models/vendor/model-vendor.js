@@ -95,10 +95,6 @@ const vendorModel = new mongoose.Schema({
     tanggal_lahir: {
         type: String,
         default: null
-    },
-    nilai_pinalti:{
-        type: Number,
-        default: 0
     }
 })
 

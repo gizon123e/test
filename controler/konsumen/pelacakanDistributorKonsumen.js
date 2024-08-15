@@ -47,13 +47,30 @@ module.exports = {
 
     getDetailLacakanDistributor: async (req, res, next) => {
         try {
-            const lacak = await PelacakanDistributorKonsumen.findOne({ _id: req.params.id })
-                .populate('id_toko').populate('id_distributor').populate('id_konsumen').populate('id_address').populate({
-                    path: 'id_pesanan',
-                    populate: "produk_pengiriman.productId"
+            const lacak = await ProsesPengirimanDistributor.findOne({ _id: req.params.id })
+                .populate('produk_pengiriman.productId')
+                .populate({
+                    path: "id_kendaraan",
+                    populate: [
+                        { path: "jenisKendaraan" },
+                        { path: "merekKendaraan" }
+                    ]
+                })
+                .populate("jenisKendaraan")
+                .populate("id_pengemudi")
+                .populate({
+                    path: "tokoId",
+                    populate: "address"
+                })
+                .populate({
+                    path: "sekolahId",
+                    populate: "address"
                 })
 
-            if (!lacak) return res.status(404).json({ message: "data Lacak Not Found" })
+            if (!lacak) return res.status(404).json({
+                message: "Link pengiriman pesanan tidak tersedia",
+                text: "Silakan cek ulang link pengeriman pesanan yang sesuai untuk akses pengiriman"
+            })
 
             res.status(200).json({
                 message: "get data lacak success",
