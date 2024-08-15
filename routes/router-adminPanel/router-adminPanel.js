@@ -16,7 +16,7 @@ router.get('/pembatalan', controlerAdminPanel.getAllPembatalan)
 router.get('/transaksi', controlerAdminPanel.getAllTransaksi)
 router.get('/invoice', controlerPenelInvoice.getAllInvoice)
 router.post('/register-panel', controlerAdminPanel.register)
-router.post('/login-panel', authorization, controlerAdminPanel.login)
+router.post('/login-panel', controlerAdminPanel.login)
 router.put("/tolak-document/:id", controlerAdminPanel.tolakVerivikasiDocument)
 router.put('/update-biaya-tetap/:id', controlerAdminPanel.updateBiayaTetap)
 
