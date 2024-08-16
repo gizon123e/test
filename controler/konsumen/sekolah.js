@@ -79,7 +79,7 @@ module.exports = {
             await logoSekolah.mv(imagePath);
             const numberNPSN = parseInt(NPSN)
 
-            const sudahAdaSekolah = await Address.findOne({userId: req.user.id, isSchool: true, isUsed: true});
+            const sudahAdaSekolah = await Address.findOne({userId: req.user.id, isUsed: true});
             let alamat
             if(sudahAdaSekolah){
                 if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
@@ -99,7 +99,6 @@ module.exports = {
                     });
                 }
             }
-
             await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
 
             // let alamat
