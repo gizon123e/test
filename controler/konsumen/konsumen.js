@@ -67,7 +67,7 @@ module.exports = {
       const biayaTetap = await BiayaTetap.findOne({}).select("radius")
       const pengikut = (await Follower.find({ userId: req.user.id }).lean()).map(fl => fl.sellerUserId);
       const toko = (await TokoVendor.find({userId: { $nin: pengikut }})
-        .select("address profile_pict namaToko")
+        .select("address profile_pict namaToko userId")
         .populate({path: "address", select: "province pinAlamat"}))
         .filter(toko => {
           const userLat = parseFloat(addressUsed?.pinAlamat?.lat);
