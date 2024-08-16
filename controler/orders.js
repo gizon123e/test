@@ -704,7 +704,7 @@ module.exports = {
                 });
                 
 
-                return res.status(200).json({ message: 'get data all Order success', data: dataOrders })
+                return res.status(200).json({ message: 'get data all Order success', data: filteredData })
             }
         } catch (error) {
             if (error && error.name === 'ValidationError') {
