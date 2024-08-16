@@ -82,6 +82,25 @@ module.exports = {
             const sudahAdaSekolah = await Address.findOne({userId: req.user.id, isUsed: true});
             let alamat
             if(sudahAdaSekolah){
+                if(addressId){
+                    const addressMain = await Address.findOne({ _id: addressId });
+                    alamat= await Address.create({
+                        province: addressMain.province,
+                        regency: addressMain.regency,
+                        district: addressMain.district,
+                        village: addressMain.village,
+                        code_pos: addressMain.code_pos,
+                        address_description: addressMain.address_description,
+                        pinAlamat: {
+                            long: addressMain.pinAlamat.long,
+                            lat: addressMain.pinAlamat.lat
+                        },
+                        userId: req.user.id,
+                        isSchool: true, 
+                        isUsed: true,
+                    });
+                }
+    
                 if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
                     alamat = await Address.create({
                         province,
@@ -98,26 +117,45 @@ module.exports = {
                         isSchool: true,
                     });
                 }
-            }
-            await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
-
-            // let alamat
-            if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
-                alamat = await Address.create({
-                    province,
-                    regency,
-                    district,
-                    village,
-                    code_pos,
-                    address_description,
-                    pinAlamat: {
-                        long: long_pin_alamat,
-                        lat: lat_pin_alamat
-                    },
-                    userId: req.user.id,
-                    isSchool: true,
-                    isUsed: true,
-                });
+            }else {
+                await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
+                
+                if(addressId){
+                    const addressMain = await Address.findOne({ _id: addressId });
+                    alamat= await Address.create({
+                        province: addressMain.province,
+                        regency: addressMain.regency,
+                        district: addressMain.district,
+                        village: addressMain.village,
+                        code_pos: addressMain.code_pos,
+                        address_description: addressMain.address_description,
+                        pinAlamat: {
+                            long: addressMain.pinAlamat.long,
+                            lat: addressMain.pinAlamat.lat
+                        },
+                        userId: req.user.id,
+                        isSchool: true, 
+                        isUsed: true,
+                    });
+                }
+                
+                if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
+                    alamat = await Address.create({
+                        province,
+                        regency,
+                        district,
+                        village,
+                        code_pos,
+                        address_description,
+                        pinAlamat: {
+                            long: long_pin_alamat,
+                            lat: lat_pin_alamat
+                        },
+                        userId: req.user.id,
+                        isSchool: true,
+                        isUsed: true,
+                    });
+                }
             }
 
             const dataKemendiknas = await SimulasiSekolah.findOne({ NPSN: numberNPSN })
@@ -153,22 +191,22 @@ module.exports = {
                     namaSekolah
                 });
             } else if (addressId) {
-                const addressMain = await Address.findOne({ _id: addressId })
-                const addressBaru = await Address.create({
-                    province: addressMain.province,
-                    regency: addressMain.regency,
-                    district: addressMain.district,
-                    village: addressMain.village,
-                    code_pos: addressMain.code_pos,
-                    address_description: addressMain.address_description,
-                    pinAlamat: {
-                        long: addressMain.pinAlamat.long,
-                        lat: addressMain.pinAlamat.lat
-                    },
-                    userId: req.user.id,
-                    isSchool: true,
-                    isUsed: true,
-                });
+                // const addressMain = await Address.findOne({ _id: addressId })
+                // const addressBaru = await Address.create({
+                //     province: addressMain.province,
+                //     regency: addressMain.regency,
+                //     district: addressMain.district,
+                //     village: addressMain.village,
+                //     code_pos: addressMain.code_pos,
+                //     address_description: addressMain.address_description,
+                //     pinAlamat: {
+                //         long: addressMain.pinAlamat.long,
+                //         lat: addressMain.pinAlamat.lat
+                //     },
+                //     userId: req.user.id,
+                //     isSchool: true,
+                //     isUsed: true,
+                // });
                 sekolah = await Sekolah.create({
                     userId: req.user.id,
                     detailId: dataKonsumen._id,
