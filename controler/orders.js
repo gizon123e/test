@@ -1404,7 +1404,7 @@ module.exports = {
     createOrder: async (req, res, next) => {
         try {
             const today = new Date()
-            today.setDate(today.getDate() + 7)
+            today.setDate(today.getDate() + 8)
             today.setMinutes(today.getMinutes() + 20)
             console.log(today)
             const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
@@ -2150,7 +2150,6 @@ module.exports = {
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
                 datas: dataOrder,
                 nama,
-                detailNotifikasiKonsumen,
                 paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
                 VirtualAccount,
                 total_tagihan,
