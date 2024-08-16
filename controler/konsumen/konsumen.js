@@ -46,7 +46,7 @@ module.exports = {
         pengikut.map(async (pgt) => {
           const { sellerUserId } = pgt;
           const detail = await TokoVendor.findOne({ userId: sellerUserId })
-            .select("address profile_pict namaToko")
+            .select("address profile_pict namaToko userId")
             .populate({ path: "address", select: "province" })
             .lean();
           return { ...detail, follow: true };
