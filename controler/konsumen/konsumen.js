@@ -70,18 +70,18 @@ module.exports = {
         .select("address profile_pict namaToko")
         .populate({path: "address", select: "province pinAlamat"}))
         .filter(toko => {
-        const userLat = parseFloat(addressUsed?.pinAlamat?.lat);
-        const userLong = parseFloat(addressUsed?.pinAlamat?.long);
-        const tokoLat = parseFloat(toko?.address?.pinAlamat?.lat);
-        const tokoLong = parseFloat(toko?.address?.pinAlamat?.long);
+          const userLat = parseFloat(addressUsed?.pinAlamat?.lat);
+          const userLong = parseFloat(addressUsed?.pinAlamat?.long);
+          const tokoLat = parseFloat(toko?.address?.pinAlamat?.lat);
+          const tokoLong = parseFloat(toko?.address?.pinAlamat?.long);
 
-        let jarak = null;
+          let jarak = null;
 
-        if (userLat && userLong && tokoLat && tokoLong) {
-          jarak = calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
-        }
-        return (jarak !== null) && (jarak <= biayaTetap.radius)
-      });
+          if (userLat && userLong && tokoLat && tokoLong) {
+            jarak = calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
+          }
+          return (jarak !== null) && (jarak <= biayaTetap.radius)
+        });
       return res.status(200).json({message: "Berhasil mendapatkan rekomendasi toko", data: toko})
     } catch (error) {
       console.log(error);

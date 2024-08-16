@@ -69,6 +69,7 @@ app.get('/failed', (req, res) => {
 app.use("/api/temporary", require('./routes/router-temporary'));
 // app.use("/api/temporary/seller", require('./routes/router-temporary-seller'));
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
+app.use('/api/terlarang', require('./routes/router-terlarang/router-pesanan-hapus-related'));
 app.use('/api/user', require('./routes/router-user'));
 app.use('/api/product', require('./routes/router-product'));
 app.use('/api/category', require('./routes/router-category'));
