@@ -1632,6 +1632,7 @@ module.exports = {
                             const find_product = await Product.findOne({_id: item.productId})
                             const total_harga_product = find_product.price * item.quantity
                             const vendor = await TokoVendor.findById(dataOrder.shipments[i].id_toko_vendor).select("userId")
+                            if(!vendor) return res.status(404).json({message: "id_toko_vendor di shipments tidak ditemukan, tolong cek lagi"})
                             toko_vendor.push({
                                 id_toko_vendor: dataOrder.shipments[i].id_toko_vendor,
                                 userId: vendor.userId,
