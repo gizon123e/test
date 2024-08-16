@@ -260,7 +260,14 @@
         document.body.appendChild(text);
       })
 
-      socket.on('notifikasi_pesanan_berhasil', (data)=> {
+      socket.on('notifikasi_vendor_pesanan_masuk', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);  
+      })
+
+      socket.on('notifikasi_vendor_distributor_menjemput', (data)=> {
         console.log(data);
         const text = document.createElement("p");
         text.innerHTML = `${JSON.stringify(data)}`;

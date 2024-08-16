@@ -97,6 +97,8 @@ io.on("connection", (socket) => {
     console.log(data)
     io.to(userId).emit('notifikasi_order', JSON.stringify({...rest}))
   })
+
+  // SOCKER NOTIFIKASI PADA KONSUMEN
   socket.on('notif_pesanan_selesai', async(data) => {
     const {userId, ...rest} = data
     console.log(data)
@@ -151,6 +153,23 @@ io.on("connection", (socket) => {
     const {userId, ...rest} = data
     console.log(data)
     io.to(userId).emit('notifikasi_pesanan_dibatalkan', JSON.stringify({...rest}));
+  })
+
+  // SOCKER NOTIFIKASI PADA VENDOR 
+  socket.on('notif_vendor_pesanan_masuk', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_vendor_pesanan_masuk', JSON.stringify({...rest}));
+  })
+  socket.on('notif_vendor_distributor_menjemput', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_vendor_distributor_menjemput', JSON.stringify({...rest}));
+  })
+  socket.on('notif_vendor_pesanan_dikirim', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_vendor_pesanan_dirikim', JSON.stringify({...rest}));
   })
 });
 
