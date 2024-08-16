@@ -84,10 +84,28 @@ module.exports = {
             let alamat
             if(sudahAdaDefault){
                 if(addressId){
-                    console.log("MASUK SINI")
+                    const addressMain = await Address.findOne({ _id: addressId });
+                    if (sudahAdaDefault.isSchool == true) {
+                        if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
+                            alamat = await Address.create({
+                                province,
+                                regency,
+                                district,
+                                village,
+                                code_pos,
+                                address_description,
+                                pinAlamat: {
+                                    long: long_pin_alamat,
+                                    lat: lat_pin_alamat
+                                },
+                                userId: req.user.id,
+                                isSchool: true,
+                            });
+                        }
+                    }
+                    
                     await Address.findOneAndUpdate({_id: addressId, isUsed: true}, {isUsed: false});
                     
-                    const addressMain = await Address.findOne({ _id: addressId });
                     alamat = await Address.create({
                         province: addressMain.province,
                         regency: addressMain.regency,
@@ -216,40 +234,8 @@ module.exports = {
                     logoSekolah: `${process.env.HOST}public/profil-sekolah/${imageName}`,
                     namaSekolah
                 });
-            } else if (addressId) {
-                console.log("SIP")
-                // const addressMain = await Address.findOne({ _id: addressId })
-                // const addressBaru = await Address.create({
-                //     province: addressMain.province,
-                //     regency: addressMain.regency,
-                //     district: addressMain.district,
-                //     village: addressMain.village,
-                //     code_pos: addressMain.code_pos,
-                //     address_description: addressMain.address_description,
-                //     pinAlamat: {
-                //         long: addressMain.pinAlamat.long,
-                //         lat: addressMain.pinAlamat.lat
-                //     },
-                //     userId: req.user.id,
-                //     isSchool: true,
-                //     isUsed: true,
-                // });
-                sekolah = await Sekolah.create({
-                    userId: req.user.id,
-                    detailId: dataKonsumen._id,
-                    address: addressBaru._id,
-                    NPSN: numberNPSN,
-                    jumlahMurid: dataKemendiknas.jumlahMurid,
-                    jenisPendidikan: dataKemendiknas.jenisPendidikan,
-                    statusSekolah: dataKemendiknas.statusSekolah,
-                    jenjangPendidikan: dataKemendiknas.jenjangPendidikan,
-                    satuanPendidikan: dataKemendiknas.satuanPendidikan,
-                    kelas,
-                    logoSekolah: `${process.env.HOST}public/profil-sekolah/${imageName}`,
-                    namaSekolah
-                });
             }
-
+            
             if (!sekolah) return res.status(400).json({ message: "kamu gagal masukin data sekolah" })
 
             return res.status(201).json({ message: "Berhasil Menambahkan Sekolah", data: sekolah })
