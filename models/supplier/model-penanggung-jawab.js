@@ -20,7 +20,7 @@ const modelPenanggungSupplier = mongoose.Schema({
     },
     detailId:{
         type: mongoose.Types.ObjectId,
-        ref:"Vendor",
+        ref:"Supplier",
         required: true
     },
     alamat_id: {
