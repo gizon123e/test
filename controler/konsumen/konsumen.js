@@ -63,19 +63,15 @@ module.exports = {
   rekomendasiToko: async (req, res, next) => {
     try {
       const addressUsed = await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}).select("pinAlamat");
-      console.log(addressUsed)
       const pengikut = (await Follower.find({ userId: req.user.id }).lean()).map(fl => fl.sellerUserId);
       const toko = (await TokoVendor.find({userId: { $nin: pengikut }}).populate({path: "address", select: "pinAlamat"})).map(toko => {
-        console.log(toko)
         const jarak = calculateDistance(
-          addressUsed?.pinAlamat?.lat,
-          addressUsed?.pinAlamaat?.long,
-          toko?.address?.pinAlamat?.lat,
-          toko?.address?.pinAlamat?.long,
+          parseFloat(addressUsed?.pinAlamat?.lat),
+          parseFloat(addressUsed?.pinAlamat?.long),
+          parseFloat(toko?.address?.pinAlamat?.lat),
+          parseFloat(toko?.address?.pinAlamat?.long),
           15
         );
-
-        if(jarak <= 15) return toko
       });
 
       return res.status(200).json({data: toko})
