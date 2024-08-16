@@ -29,7 +29,7 @@ module.exports = {
                     lat: req.body.lat_pin_alamat
                 },
                 userId: req.body.id,
-                isStore: true
+                isStore: true,
             })
             const newDataToko = await Toko.create({
                 userId: req.body.id,

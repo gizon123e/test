@@ -63,7 +63,52 @@ module.exports = {
                               "notif.userId": new mongoose.Types.ObjectId(req.user.id)
                          }
                     },
-                    {$project: {notif:0}},
+                    {
+                         $lookup: {
+                              from: "invoices",
+                              let: { id: "$notif.id_invoice"},
+                              pipeline: [
+                                   {
+                                        $match: {
+                                             $expr: { $eq: ["$id", "$$id"] }
+                                        }
+                                   }
+                              ],
+                              as: "invoice"
+                         }
+                    },
+                    {$unwind: "$invoice"},
+                    {
+                         $lookup: {
+                              from: "transaksis",
+                              let: { id: "$invoice.id_transaksi"},
+                              pipeline: [
+                                   {
+                                        $match: {
+                                             $expr: { $eq: ["$_id", "$$id"] }
+                                        }
+                                   }
+                              ],
+                              as: "transaksi"
+                         }
+                    },
+                    {$unwind: "$transaksi"},
+                    {
+                         $addFields: {
+                              id_pesanan: "$transaksi.id_pesanan"
+                         }
+                    },
+                    {$project: {
+                         _id: 1,
+                         notifikaisiId: 1,
+                         status: 1,
+                         message: 1,
+                         jenis: 1,
+                         image_product: 1,
+                         is_read: 1,
+                         createdAt: 1,
+                         id_pesanan: 1,
+                    }},
                     {$sort: { createdAt: -1 }}
                ])
                return res.status(200).json({total: notifikasi.length, notifikasi}) 
