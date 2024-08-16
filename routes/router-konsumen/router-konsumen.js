@@ -11,6 +11,7 @@ const router = require("express").Router();
 router.get('/listAll', authorization, controllerKonsumen.getAllKonsumen);
 router.get('/detail', authorization, controllerKonsumen.getDetailKonsumen);
 router.get("/toko-favorit", authorization, controllerKonsumen.tokoFavorit);
+router.get("/toko-rekomendasi", authorization, controllerKonsumen.rekomendasiToko);
 router.post("/create", controllerKonsumen.createKonsumen);
 router.put("/update", authorization, controllerKonsumen.updateKonsumen);
 router.delete("/delete/:id", authorization, controllerKonsumen.deleteKonsumen);
