@@ -61,7 +61,9 @@ module.exports = {
 
             const pengikut = await Follower.countDocuments({
                 sellerUserId: req.params.id
-            })
+            });
+
+            const followed = await Follower.findOne({userId: req.user.id, sellerUserId: req.params.id})
             
             for (const product of products) {
                 const record = await SalesReport.findOne({ productId: product._id });
@@ -69,7 +71,7 @@ module.exports = {
                 product.terjual = terjual;
             };
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
-            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: { ...dataToko, pengikut }, dataProduct: products, pengikut});
+            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: { ...dataToko, pengikut }, dataProduct: products, pengikut, followed: followed? true : false});
         } catch (error) {
             console.log(error);
             next(error);

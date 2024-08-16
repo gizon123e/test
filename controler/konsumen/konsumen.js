@@ -10,6 +10,7 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 const Follower = require("../../models/model-follower");
 const TokoVendor = require("../../models/vendor/model-toko");
+const { calculateDistance } = require("../../utils/menghitungJarak")
 
 module.exports = {
   getAllKonsumen: async (req, res, next) => {
@@ -61,6 +62,23 @@ module.exports = {
 
   rekomendasiToko: async (req, res, next) => {
     try {
+      const addressUsed = await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}).select("pinAlamat");
+      console.log(addressUsed)
+      const pengikut = (await Follower.find({ userId: req.user.id }).lean()).map(fl => fl.sellerUserId);
+      const toko = (await TokoVendor.find({userId: { $nin: pengikut }}).populate({path: "address", select: "pinAlamat"})).map(toko => {
+        console.log(toko)
+        const jarak = calculateDistance(
+          addressUsed?.pinAlamat?.lat,
+          addressUsed?.pinAlamaat?.long,
+          toko?.address?.pinAlamat?.lat,
+          toko?.address?.pinAlamat?.long,
+          15
+        );
+
+        if(jarak <= 15) return toko
+      });
+
+      return res.status(200).json({data: toko})
     } catch (error) {
       console.log(error);
       next(error);
