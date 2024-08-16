@@ -45,9 +45,11 @@ const modelAddress = new mongoose.Schema(
     },
     isStore: {
       type: Boolean,
+      default: false,
     },
     isSchool: {
       type: Boolean,
+      default: false,
     },
     isUsed: {
       type: Boolean,
