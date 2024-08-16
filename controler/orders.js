@@ -1669,61 +1669,76 @@ module.exports = {
 
                     const formatHarga = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
 
-                    const notifikasiKonsumen = await Notifikasi.create({
+                    const notifikasiKonsumenId = new mongoose.Types.ObjectId()
+                    
+                    Notifikasi.create({
+                        _id: notifikasiKonsumenId,
                         userId: user._id,
-                        invoiceId: invoice._id,
+                        invoiceId: idInvoiceSubsidi,
                         jenis_invoice: "Subsidi",
                         createdAt: new Date(),
                     })
+                    .then(() => console.log("Berhasil simpan notif konsumen"))
+                    .catch(() => console.log("Gagal simpan notif konsumen"))
                     
-                    const detailNotifikasiKonsumen = await DetailNotifikasi.create({
-                      notifikasiId: notifikasiKonsumen._id,
+                    DetailNotifikasi.create({
+                      notifikasiId: notifikasiKonsumenId,
                       jenis: "Info",
                       status: "Pesanan Makanan Bergizi Gratis telah berhasil",
-                      message: `${invoice.kode_invoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                      message: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
                       image_product: products[0].image_product[0],
                       createdAt: new Date(),
-                    });
+                    })
+                    .then(() => console.log("Berhasil simpan detail notif konsume"))
+                    .catch(() => console.log("Gagal simpan detail notif konsumen"));
                         
                     socket.emit('notif_pesanan_berhasil', {
-                        jenis: detailNotifikasiKonsumen.jenis,
+                        jenis: "Info",
                         userId: user._id,
-                        status: detailNotifikasiKonsumen.status,
-                        message: detailNotifikasiKonsumen.message,
-                        image: detailNotifikasiKonsumen.image_product,
-                        tanggal: `${formatTanggal(detailNotifikasiKonsumen.createdAt)}`,
+                        status: "Pesanan Makanan Bergizi Gratis telah berhasil",
+                        message: `INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                        image: products[0].image_product[0],
+                        tanggal: `${formatTanggal(new Date())}`,
                     });
 
                     for(let i = 0; i < toko_vendor.length; i++){
                         const formatHarga = toko_vendor[i].total_harga.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                        
-                        const notifikasiVendor = await Notifikasi.create({
+
+                        const notifikasi_vendor_id = new mongoose.Types.ObjectId()
+                        Notifikasi.create({
+                            _id: notifikasi_vendor_id,
                             userId: toko_vendor[i].userId,
-                            invoiceId: invoice._id,
+                            invoiceId: idInvoiceSubsidi,
                             jenis_invoice: "Subsidi",
                             createdAt: new Date(),
                         })
+                        .then(() => console.log("Berhasil simpan notif vendor"))
+                        .catch(() => console.log("Gagal simpan notif vendor"))
 
-                        const detailNotifikasiVendor = await DetailNotifikasi.create({
-                            notifikasiId: notifikasiVendor._id,
+                        DetailNotifikasi.create({
+                            notifikasiId: notifikasi_vendor_id,
                             jenis: "Pesanan",
                             status: `Ada ${totalQuantity} Pesanan Senilai Rp. ${formatHarga}`,
-                            message: `Segera terima pesanan ${invoice.kode_invoice} sebelum ${sixHoursAgo}`,
+                            message: `Segera terima pesanan INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1} sebelum ${sixHoursAgo}`,
                             image_product: toko_vendor[i].image_product,
                             createdAt: new Date(),
                         })
+                        .then(() => console.log("Berbayar simpan detail notif vendor"))
+                        .catch(() => console.log("Gagal simpan detail notif vendor"));
 
                         socket.emit('notif_vendor_pesanan_masuk', {
-                            jenis: detailNotifikasiVendor.jenis,
+                            jenis: "Pesanan",
                             userId: toko_vendor[i].userId,
-                            status: detailNotifikasiVendor.status,
-                            message: detailNotifikasiVendor.message,
-                            image: detailNotifikasiVendor.image_product,
-                            tanggal: `${formatTanggal(detailNotifikasiVendor.createdAt)}`,
+                            status: `Ada ${totalQuantity} Pesanan Senilai Rp. ${formatHarga}`,
+                            message: `Segera terima pesanan INV_${user.get('kode_role')}_${date}_${minutes}_${total_transaksi + 1} sebelum ${sixHoursAgo}`,
+                            image: toko_vendor[i].image_product,
+                            tanggal: `${formatTanggal(new Date())}`,
                         })
                     }
 
                 } else if (totalQuantity > sekolah.jumlahMurid) {
+                    const id_notif_non_subsidi = new mongoose.Types.ObjectId();
+                    const id_notif_subsidi = new mongoose.Types.ObjectId();
                     const id_transaksi_subsidi = new mongoose.Types.ObjectId();
                     const id_invoice_subsidi = new mongoose.Types.ObjectId()
                     const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
@@ -1840,31 +1855,37 @@ module.exports = {
 
                             const products = await Product.find({_id: {$in: productIds}})
                             .select("_id total_price name_product image_product")
-                            const formatHarga = total_subsidi.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                             
-                            const notifikasiSubdisi = await Notifikasi.create({
+                            const formatHarga = total_subsidi.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+
+                            Notifikasi.create({
+                                _id: id_notif_subsidi,
                                 userId: user._id,
                                 invoiceId: id_invoice_subsidi,
                                 jenis_invoice: "Subsidi",
                                 createdAt: new Date(),
                             })
+                            .then(() => console.log("Berhasil simpan notif subsidi konsumen"))
+                            .catch(() => console.log("Gagal simpan notif subsidi konsumen"))
 
-                            const detailNotifSubsidi = await DetailNotifikasi.create({
-                                notifikasiId: notifikasiSubdisi._id,
+                            DetailNotifikasi.create({
+                                notifikasiId: id_notif_subsidi,
                                 jenis: "Info",
                                 status: "Pesanan Makanan Bergizi Gratis telah berhasil",
                                 message: `${kodeInvoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
                                 image_product: products[0].image_product[0], 
                                 createdAt: new Date()
                             })
+                            .then(() => console.log("Berhasil simpan detail subsidi notif konsumen"))
+                            .catch(() => console.log("Gagal simpan detail subsidi notif konsumen"))
 
                             socket.emit('notif_pesanan_berhasil', {
-                                jenis: detailNotifSubsidi.jenis,
+                                jenis: "Info",
                                 userId: user._id,
-                                status: detailNotifSubsidi.status,
-                                message: detailNotifSubsidi.message,
-                                image: detailNotifSubsidi.image_product,
-                                tanggal: `${formatTanggal(detailNotifSubsidi.createdAt)}`,
+                                status: "Pesanan Makanan Bergizi Gratis telah berhasil",
+                                message: `${kodeInvoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
+                                image: products[0].image_product[0],
+                                tanggal: formatTanggal(new Date()),
                             })
                         }
 
@@ -1986,8 +2007,6 @@ module.exports = {
                         })
                     };
 
-                    
-
                     const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
                     transaksiMidtrans = await respon.json();
 
@@ -1999,29 +2018,35 @@ module.exports = {
                         })
                     )
                     const formatHarga = total_tagihan.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                    const notifikasiNonSubsidi = await Notifikasi.create({
+
+                    Notifikasi.create({
+                        _id: id_notif_non_subsidi,
                         userId: user._id,
                         invoiceId: id_invoice_non_subsidi,
                         jenis_invoice: "Non Subsidi",
                         createdAt: new Date(),
                     })
+                    .then(() => console.log("Berhasil simpan notif non subsidi konsumen"))
+                    .catch(() => console.log("Gagal simpan notif non subsidi konsumen"))
 
-                    const detailNotifNonSubsidi = await DetailNotifikasi.create({
-                        notifikasiId: notifikasiNonSubsidi._id,
+                    DetailNotifikasi.create({
+                        notifikasiId: id_notif_non_subsidi,
                         jenis: "Info",
                         status: "Selesaikan pembayaranmu",
                         message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera selesaikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`, 
                         image_product: productNotif.image_product[0],
                         createdAt: new Date() 
                     })
+                    .then(() => console.log("Berhasil simpan notif non subsidi konsumen"))
+                    .catch(() => console.log("Gagal simpan notif non subsidi konsumen"))
                     
                     socket.emit("notif_selesaikan_pembayaran", {
-                        jenis: detailNotifNonSubsidi.jenis,
+                        jenis: "Info",
                         userId: user._id,
-                        status: detailNotifNonSubsidi.status,
-                        message: detailNotifNonSubsidi.message,
-                        image: detailNotifNonSubsidi.image_product,
-                        tanggal: `${formatTanggal(detailNotifNonSubsidi.createdAt)}`,
+                        status: "Selesaikan pembayaranmu",
+                        message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera selesaikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`,
+                        image: productNotif.image_product[0],
+                        tanggal: `${formatTanggal(new Date())}`,
                     })
                 }
             }else{
