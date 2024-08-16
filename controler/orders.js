@@ -66,7 +66,7 @@ function formatWaktu(waktu){
     return `${hh}:${mn}:${ss}`
 }
 
-const socket = io('http://localhost:5000', {
+const socket = io(process.env.HOST, {
     auth: {
         fromServer: true
     }
@@ -1464,7 +1464,6 @@ module.exports = {
             let VirtualAccount;
             let idPay;
             let nama;
-            let detailNotifikasiKonsumen;
 
             const splitted = metode_pembayaran.split(" / ");
             if (splitted[1].replace(/\u00A0/g, ' ') == "Virtual Account") {
@@ -1677,7 +1676,7 @@ module.exports = {
                         createdAt: new Date(),
                     })
                     
-                    detailNotifikasiKonsumen = await DetailNotifikasi.create({
+                    const detailNotifikasiKonsumen = await DetailNotifikasi.create({
                       notifikasiId: notifikasiKonsumen._id,
                       jenis: "Info",
                       status: "Pesanan Makanan Bergizi Gratis telah berhasil",
