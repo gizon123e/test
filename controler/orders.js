@@ -1693,6 +1693,7 @@ module.exports = {
                     .catch(() => console.log("Gagal simpan detail notif konsumen"));
                         
                     socket.emit('notif_pesanan_berhasil', {
+                        orderId: dataOrder._id,
                         jenis: "Info",
                         userId: user._id,
                         status: "Pesanan Makanan Bergizi Gratis telah berhasil",
@@ -1723,7 +1724,7 @@ module.exports = {
                             image_product: toko_vendor[i].image_product,
                             createdAt: new Date(),
                         })
-                        .then(() => console.log("Berbayar simpan detail notif vendor"))
+                        .then(() => console.log("Berhasil simpan detail notif vendor"))
                         .catch(() => console.log("Gagal simpan detail notif vendor"));
 
                         socket.emit('notif_vendor_pesanan_masuk', {
@@ -1880,6 +1881,7 @@ module.exports = {
                             .catch(() => console.log("Gagal simpan detail subsidi notif konsumen"))
 
                             socket.emit('notif_pesanan_berhasil', {
+                                orderId: dataOrder._id,
                                 jenis: "Info",
                                 userId: user._id,
                                 status: "Pesanan Makanan Bergizi Gratis telah berhasil",
@@ -2041,6 +2043,7 @@ module.exports = {
                     .catch(() => console.log("Gagal simpan notif non subsidi konsumen"))
                     
                     socket.emit("notif_selesaikan_pembayaran", {
+                        orderId: dataOrder._id,
                         jenis: "Info",
                         userId: user._id,
                         status: "Selesaikan pembayaranmu",
@@ -2344,7 +2347,6 @@ module.exports = {
             
             const transaksi = await Transaksi.findById(pengiriman.invoice.id_transaksi);
             if(transaksi.subsidi == true){
-                
                 const totalQuantity = pengiriman.productToDelivers.reduce((accumulator, currentValue)=>{
                     return accumulator + currentValue.quantity
                 }, 0)
@@ -2377,7 +2379,7 @@ module.exports = {
                 const notifikasi = await Notifikasi.findOne({invoiceId: pengiriman.invoice._id}).lean();
                 if(!notifikasi) return res.status(404).json({message: `Tidak ada notifikasi dengan invoiceId ${pengiriman.invoice._id}`});
 
-                const detailNotifikasi = await DetailNotifikasi.create({
+                DetailNotifikasi.create({
                     notifikasiId: notifikasi._id,
                     status: "Pesanan telah dikonfirmasi",
                     message: `${pengiriman.invoice.kode_invoice} telah dikonfirmasi penjual dan akan segera dikemas`,
@@ -2385,15 +2387,18 @@ module.exports = {
                     image_product: pengiriman.productToDelivers[0].productId.image_product[0],
                     createdAt: new Date()
                 })
+                .then(() => console.log("Berhasil simpan detail notif konsumen"))
+                .catch(() => console.log("Gagal simpan detail notif konsumen"))
 
                 socket.emit('notif_pesanan_dikonfirmasi', {
-                    jenis: detailNotifikasi.jenis,
+                    jenis: "Pesanan",
                     userId: notifikasi.userId,
-                    status: detailNotifikasi.status,
-                    message: detailNotifikasi.message,
-                    image: detailNotifikasi.image_product,
-                    tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
+                    status: "Pesanan telah dikonfirmasi",
+                    message: `${pengiriman.invoice.kode_invoice} telah dikonfirmasi penjual dan akan segera dikemas`,
+                    image: pengiriman.productToDelivers[0].productId.image_product[0],
+                    tanggal: `${formatWaktu(new Date())}`
                 })
+
                 return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",pengemasan})
             }else {
                 const pengemasan = await Pengemasan.findOne({
@@ -2426,7 +2431,7 @@ module.exports = {
                 const notifikasi = await Notifikasi.findOne({invoiceId: pengiriman.invoice._id}).lean();
                 if(!notifikasi) return res.status(404).json({message: `Tidak ada notifikasi dengan invoiceId ${pengiriman.invoice._id}`});
 
-                const detailNotifikasi = await DetailNotifikasi.create({
+                DetailNotifikasi.create({
                     notifikasiId: notifikasi._id,
                     status: "Pesanan telah dikonfirmasi",
                     message: `${pengiriman.invoice.kode_invoice} telah dikonfirmasi penjual dan akan segera dikemas`,
@@ -2434,14 +2439,16 @@ module.exports = {
                     image_product: pengiriman.productToDelivers[0].productId.image_product[0],
                     createdAt: new Date()
                 })
+                .then(() => console.log("Berhasil simpan notif konsumen"))
+                .catch(() => console.log("Gagal simpan notif konsumen"))
 
                 socket.emit('notif_pesanan_dikonfirmasi', {
-                    jenis: detailNotifikasi.jenis,
+                    jenis: "Pesanan",
                     userId: notifikasi.userId,
-                    status: detailNotifikasi.status,
-                    message: detailNotifikasi.message,
-                    image: detailNotifikasi.image_product,
-                    tanggal: `${formatWaktu(detailNotifikasi.createdAt)}`
+                    status: "Pesanan telah dikonfirmasi",
+                    message: `${pengiriman.invoice.kode_invoice} telah dikonfirmasi penjual dan akan segera dikemas`,
+                    image: pengiriman.productToDelivers[0].productId.image_product[0],
+                    tanggal: `${formatWaktu(new Date())}`
                 })
                 return res.status(200).json({message: "Berhasil Mengkonfirmasi Pesanan",updatePengemasan})
             }

@@ -154,10 +154,26 @@ module.exports = {
                     namaSekolah
                 });
             } else if (addressId) {
+                const addressMain = await Address.findOne({ _id: addressId })
+                const addressBaru = await Address.create({
+                    province: addressMain.province,
+                    regency: addressMain.regency,
+                    district: addressMain.district,
+                    village: addressMain.village,
+                    code_pos: addressMain.code_pos,
+                    address_description: addressMain.address_description,
+                    pinAlamat: {
+                        long: addressMain.pinAlamat.long,
+                        lat: addressMain.pinAlamat.lat
+                    },
+                    userId: req.user.id,
+                    isSchool: true,
+                    isUsed: true,
+                });
                 sekolah = await Sekolah.create({
                     userId: req.user.id,
                     detailId: dataKonsumen._id,
-                    address: addressId,
+                    address: addressBaru._id,
                     NPSN: numberNPSN,
                     jumlahMurid: dataKemendiknas.jumlahMurid,
                     jenisPendidikan: dataKemendiknas.jenisPendidikan,
