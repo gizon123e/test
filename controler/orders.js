@@ -66,7 +66,7 @@ function formatWaktu(waktu){
     return `${hh}:${mn}:${ss}`
 }
 
-const socket = io('http://localhost:5000', {
+const socket = io(process.env.HOST, {
     auth: {
         fromServer: true
     }
@@ -1404,7 +1404,7 @@ module.exports = {
     createOrder: async (req, res, next) => {
         try {
             const today = new Date()
-            today.setDate(today.getDate() + 7)
+            today.setDate(today.getDate() + 8)
             today.setMinutes(today.getMinutes() + 20)
             console.log(today)
             const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
@@ -1464,7 +1464,6 @@ module.exports = {
             let VirtualAccount;
             let idPay;
             let nama;
-            let detailNotifikasiKonsumen;
 
             const splitted = metode_pembayaran.split(" / ");
             if (splitted[1].replace(/\u00A0/g, ' ') == "Virtual Account") {
@@ -1677,7 +1676,7 @@ module.exports = {
                         createdAt: new Date(),
                     })
                     
-                    detailNotifikasiKonsumen = await DetailNotifikasi.create({
+                    const detailNotifikasiKonsumen = await DetailNotifikasi.create({
                       notifikasiId: notifikasiKonsumen._id,
                       jenis: "Info",
                       status: "Pesanan Makanan Bergizi Gratis telah berhasil",
@@ -2151,7 +2150,6 @@ module.exports = {
                 message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
                 datas: dataOrder,
                 nama,
-                detailNotifikasiKonsumen,
                 paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
                 VirtualAccount,
                 total_tagihan,

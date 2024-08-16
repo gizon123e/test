@@ -37,7 +37,7 @@ function formatWaktu(waktu){
     return `${hh}:${mn}:${ss}`
 }
 
-const socket = io('http://localhost:5000', {
+const socket = io(process.env.HOST, {
     auth: {
         fromServer: true
     }
