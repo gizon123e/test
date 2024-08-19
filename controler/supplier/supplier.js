@@ -1,7 +1,8 @@
 const Supplier = require('../../models/supplier/model-supplier');
 const Address = require("../../models/model-address");
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs');
+const User = require('../../models/model-auth-user');
 
 module.exports = {
 
@@ -236,9 +237,9 @@ module.exports = {
 
     updateSupplier: async (req, res, next) => {
         try {
-            const vendor = await Supplier.findOne({userId: req.user.id});
-            if(!vendor) return res.status(404).json({message: `User belum mengisi detail`});
-            let filePath = vendor.profile_pict;
+            const supplier = await Supplier.findOne({userId: req.user.id});
+            if(!supplier) return res.status(404).json({message: `User belum mengisi detail`});
+            let filePath = supplier.profile_pict;
             
             // if(req.body.noTeleponKantor){
             //     const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
@@ -248,7 +249,7 @@ module.exports = {
             // }
 
             if(req.files && req.files.profile_pict){
-                const name = vendor.profile_pict ? vendor.profile_pict.split('/') : "notfound"
+                const name = supplier.profile_pict ? supplier.profile_pict.split('/') : "notfound"
                 if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
                     console.log('ada')
                     fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
@@ -259,7 +260,7 @@ module.exports = {
                         }
                     });
                 }
-                const profile_pict_file = `${vendor.namaBadanUsaha || vendor.nama}_${Date.now()}${path.extname(req.files.profile_pict.name)}`;
+                const profile_pict_file = `${supplier.namaBadanUsaha || supplier.nama}_${Date.now()}${path.extname(req.files.profile_pict.name)}`;
                     
                 const profile_pict = path.join(__dirname, '../../public', 'profile_picts', profile_pict_file);
                 filePath = `${process.env.HOST}public/profile_picts/${profile_pict_file}`;
@@ -281,7 +282,7 @@ module.exports = {
             }
 
             res.status(200).json({
-                message: 'Vendor updated successfully',
+                message: 'supplier updated successfully',
                 data: updatedData
             });
         } catch (error) {
