@@ -147,6 +147,38 @@ module.exports = {
     try {
       if (!new mongoose.Types.ObjectId(req.params.id)) return res.status(404).json({ message: `Invalid category id: ${req.params.id}` });
       const id = new mongoose.Types.ObjectId(req.params.id);
+      const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
+
+      const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
+      const vendors = await TokoVendor.aggregate([
+        {
+          $lookup: {
+            from: "addresses",
+            let: { address: "$address" },
+            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+            as: "address",
+          },
+        },
+        {
+          $unwind: "$address",
+        },
+      ]);
+
+      const longAlamatSekolah = parseFloat(alamatSekolah.pinAlamat.long);
+      const latAlamatSekolah = parseFloat(alamatSekolah.pinAlamat.lat);
+
+      let vendorDalamRadius = [];
+
+      for (let i = 0; i < vendors.length; i++) {
+        const distance = calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(vendors[i].address.pinAlamat.lat), parseFloat(vendors[i].address.pinAlamat.long), biayaTetap.radius);
+        if (distance <= biayaTetap.radius) {
+          vendorDalamRadius.push(vendors[i]);
+          vendors[i].jarakVendor = distance;
+        }
+      }
+
+      const idVendors = vendorDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
+      
       const dataProds = await Product.aggregate([
         {
           $match: {
@@ -154,6 +186,9 @@ module.exports = {
             "status.value": "terpublish",
             total_stok: { $gt: 0 },
             $expr: { $gte: ["$total_stok", "$minimalOrder"] },
+            userId: {
+              $in: idVendors
+            }
           },
         },
         {
