@@ -1,9 +1,7 @@
-const authorization = require("../midelware/authorization");
-//import middleware role clasification
-const roleClasification = require("../midelware/user-role-clasification");
+const authorization = require("../../../midelware/authorization");
 //import preventing empty data
-const emptyData = require("../midelware/emptyData");
-const controllerProdusen = require("../controler/produsen");
+const emptyData = require("../../../midelware/emptyData");
+const controllerProdusen = require("../../../controler/produsen/bahan/produsen");
 
 const router = require("express").Router();
 

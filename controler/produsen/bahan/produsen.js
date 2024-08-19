@@ -1,6 +1,6 @@
-const Produksi = require("../models/model-produksi")
-const Product = require("../models/model-product")
-const BahanBaku = require("../models/model-bahan-baku")
+const Produksi = require("../../../models/produsen/bahan/model-produksi")
+const Product = require("../../../models/model-product")
+const BahanBaku = require("../../../models/produsen/bahan/model-bahan-baku")
 
 
 module.exports = {

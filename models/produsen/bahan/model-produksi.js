@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-require("./model-product.js");
-require("./model-auth-user");
+require("../../model-product.js");
+require("../../model-auth-user.js");
 
 const produksiModels = mongoose.Schema({
     productId: {
