@@ -8,7 +8,7 @@ module.exports = {
     createPic: async(req, res, next)=>{
         try {
             const {nama, detailId, jabatan, id, province, regency, district, village, code_pos, address_description, nik, nomorNpwp, long_pin_alamat, lat_pin_alamat} = req.body
-            const picSupplier = await PicSupplier.findOne({detailId: req.body.detailId});
+            const picSupplier = await PicSupplier.exists({detailId: req.body.detailId});
             let missingFields = [];
             if (!nama) missingFields.push("nama");
             if (!detailId) missingFields.push("detailId");
@@ -46,7 +46,7 @@ module.exports = {
                     long: long_pin_alamat
                 }
             })
-            if(picVendor) return res.status(400).json({message:"Person in charge untuk konsumen id " + req.body.detailId + "sudah ada", data: picVendor})
+            if(picSupplier) return res.status(400).json({message:"Person in charge untuk supplier id " + req.body.detailId + "sudah ada", data: picSupplier})
             
             const{npwpFile, file_ktp} = req.files
             const npwp_file = `${Date.now()}_${nama}_PIC_${path.extname(npwpFile.name)}`;        
@@ -56,7 +56,7 @@ module.exports = {
             await file_ktp.mv(file_file_path)
             await npwpFile.mv(npwp_file_path);
 
-            const newPic = await PicVendor.create({
+            const newPic = await PicSupplier.create({
                 detailId,
                 userId: id,
                 nama,

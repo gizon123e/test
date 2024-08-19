@@ -14,7 +14,7 @@ dotenv.config();
 const { io } = require("socket.io-client");
 const Pengemudi = require("../../models/distributor/model-pengemudi");
 
-const socket = io("http://localhost:5000", {
+const socket = io(process.env.HOST, {
   auth: {
     fromServer: true,
   },
@@ -457,12 +457,12 @@ module.exports = {
           tanggal: formatTanggal(detailNotifikasi.createdAt),
         });
         
-        // const notifikasiVendor = await Notifikasi.findOne({ userId: toko_user_id}).populate("invoiceId")
+        const notifikasiVendor = await Notifikasi.findOne({ userId: toko_user_id}).populate("invoiceId")
 
-        // const detailNotifikasiVendor = await DetailNotifikasi.create({
-        //     notifikasiId: notifikasiVendor._id,
+        const detailNotifikasiVendor = await DetailNotifikasi.create({
+            notifikasiId: notifikasiVendor._id,
 
-        // })
+        })
         return res.status(200).json({ message: "Berhasil Menyelesaikan Pengiriman" });
       } else {
         for (const item of invoice) {

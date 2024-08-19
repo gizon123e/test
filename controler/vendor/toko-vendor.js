@@ -10,6 +10,7 @@ const TokoVendor = require('../../models/vendor/model-toko');
 const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders');
 const Vendor = require('../../models/vendor/model-vendor');
 const Follower = require('../../models/model-follower');
+const User = require('../../models/model-auth-user');
 
 
 module.exports = {
@@ -28,7 +29,7 @@ module.exports = {
                     lat: req.body.lat_pin_alamat
                 },
                 userId: req.body.id,
-                isStore: true
+                isStore: true,
             })
             const newDataToko = await Toko.create({
                 userId: req.body.id,
@@ -49,6 +50,7 @@ module.exports = {
         try {
             const { bintang } = req.query
             const dataToko = await Toko.findOne({userId: req.params.id}).populate('address').lean();
+            const bergabung = await User.findById(req.params.id).select("createdAt");
             const query = { 
                 userId: req.params.id, 
                 'status.value': "terpublish",
@@ -61,7 +63,9 @@ module.exports = {
 
             const pengikut = await Follower.countDocuments({
                 sellerUserId: req.params.id
-            })
+            });
+
+            const followed = await Follower.findOne({userId: req.user.id, sellerUserId: req.params.id})
             
             for (const product of products) {
                 const record = await SalesReport.findOne({ productId: product._id });
@@ -69,7 +73,17 @@ module.exports = {
                 product.terjual = terjual;
             };
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
-            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: { ...dataToko, pengikut }, dataProduct: products, pengikut});
+            return res.status(200).json({
+                message: "Berhasil Mendapatkan Data Toko", 
+                data: { 
+                    ...dataToko, 
+                    tanggal_bergabung: bergabung.createdAt,
+                    pengikut,
+                }, 
+                dataProduct: products,
+                total_produk_terjual: products.reduce((acc,prd) => acc + prd.terjual, 0),
+                followed: followed? true : false
+            });
         } catch (error) {
             console.log(error);
             next(error);

@@ -10,6 +10,8 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 const Follower = require("../../models/model-follower");
 const TokoVendor = require("../../models/vendor/model-toko");
+const { calculateDistance } = require("../../utils/menghitungJarak");
+const BiayaTetap = require("../../models/model-biaya-tetap");
 
 module.exports = {
   getAllKonsumen: async (req, res, next) => {
@@ -44,7 +46,7 @@ module.exports = {
         pengikut.map(async (pgt) => {
           const { sellerUserId } = pgt;
           const detail = await TokoVendor.findOne({ userId: sellerUserId })
-            .select("address profile_pict namaToko")
+            .select("address profile_pict namaToko userId")
             .populate({ path: "address", select: "province" })
             .lean();
           return { ...detail, follow: true };
@@ -61,6 +63,35 @@ module.exports = {
 
   rekomendasiToko: async (req, res, next) => {
     try {
+      const addressUsed = await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}).select("pinAlamat");
+      const biayaTetap = await BiayaTetap.findOne({}).select("radius")
+      const pengikut = (await Follower.find({ userId: req.user.id }).lean()).map(fl => fl.sellerUserId);
+      const toko = (await TokoVendor.find({userId: { $nin: pengikut }})
+        .select("address profile_pict namaToko userId")
+        .populate({path: "address", select: "province pinAlamat"})
+        .lean())
+        .filter(toko => {
+          const userLat = parseFloat(addressUsed?.pinAlamat?.lat);
+          const userLong = parseFloat(addressUsed?.pinAlamat?.long);
+          const tokoLat = parseFloat(toko?.address?.pinAlamat?.lat);
+          const tokoLong = parseFloat(toko?.address?.pinAlamat?.long);
+
+          let jarak = null;
+
+          if (userLat && userLong && tokoLat && tokoLong) {
+            jarak = calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
+          }
+          return (jarak !== null) && (jarak <= biayaTetap.radius)
+        })
+
+      const data = await Promise.all(toko.map((async(tk) => {
+        const followed = await Follower.exists({userId: req.user.id, sellerUserId: tk.userId});
+        return {
+          ...tk,
+          followed: followed? true : false
+        }
+      })));
+      return res.status(200).json({message: "Berhasil mendapatkan rekomendasi toko", data})
     } catch (error) {
       console.log(error);
       next(error);
