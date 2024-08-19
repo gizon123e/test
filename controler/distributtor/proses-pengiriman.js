@@ -150,8 +150,6 @@ module.exports = {
         .populate("tokoId")
         .populate("produk_pengiriman.productId");
 
-      // return res.status(200).json(prosesPengiriman);
-
       const lacak = await PelacakanDistributorKonsumen.create({
         id_toko: prosesPengiriman.tokoId,
         id_address,
@@ -242,7 +240,7 @@ module.exports = {
       ]);
 
       if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
-      // console.log(invoice.length)
+ 
       if (invoice.length == 1) {
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         const detailNotifikasi = await DetailNotifikasi.create({
