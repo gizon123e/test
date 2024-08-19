@@ -168,22 +168,24 @@ module.exports = {
 
       if (!notifikasi) return res.status(404).json({ message: "notifikasi tidak ditemukan" });
 
-      const detailNotifikasi = await DetailNotifikasi.create({
+      DetailNotifikasi.create({
         notifikasiId: notifikasi._id,
         status: "Distributor sedang dalam perjalanan menjemput pesanan",
         message: `Pesanan ${notifikasi.invoiceId.kode_invoice} akan segera dijemput oleh distributor ke lokasi anda`,
         jenis: "Pesanan",
         image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
         cretedAt: new Date(),
-      });
+      })
+      .then(() => console.log("Berhasil menambahkan notif"))
+      .catch(() => console.log("Gagal manambahkan notif"));
 
       socket.emit("notif_vendor_distributor_menjemput", {
-        jenis: detailNotifikasi.jenis,
+        jenis: "Pesanan",
         userId: toko_user_id,
-        status: detailNotifikasi.status,
-        message: detailNotifikasi.message,
-        image: detailNotifikasi.image_product,
-        waktu: `${formatTanggal(detailNotifikasi.createdAt)} ${formatWaktu(detailNotifikasi.createdAt)}`,
+        status: "Distributor sedang dalam perjalanan menjemput pesanan",
+        message: `Pesanan ${notifikasi.invoiceId.kode_invoice} akan segera dijemput oleh distributor ke lokasi anda`,
+        image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+        waktu: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
       });
 
       if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
