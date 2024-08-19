@@ -77,14 +77,16 @@ app.use('/api/cart', require('./routes/router-carts'));
 app.use('/api/address', require('./routes/router-address'));
 app.use('/api/order', require('./routes/router-order'));
 app.use("/api/report", require("./routes/router-laporan"));
-app.use("/api/produsen", require("./routes/router-produsen"));
 app.use("/api/comment", require("./routes/router-komentar"));
 app.use("/api/export", require("./routes/router-export"));
 app.use("/api/supplier", require('./routes/router-supplier'));
-app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
-app.use('/api/review-vendor', require('./routes/router-vendor/router-reviewVendor'))
+app.use('/api/review-vendor', require('./routes/router-vendor/router-reviewVendor'));
+
+//Produsen
+app.use("/api/produsen", require("./routes/router-produsen/bahan/router-bahan-produsen"));
+app.use("/api/produsen", require('./routes/router-produsen/router-produsen'));
 
 // router konsumen
 app.use("/api/treking", require('./routes/router-konsumen/router-pelacakan'))
