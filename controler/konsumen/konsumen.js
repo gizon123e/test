@@ -68,7 +68,8 @@ module.exports = {
       const pengikut = (await Follower.find({ userId: req.user.id }).lean()).map(fl => fl.sellerUserId);
       const toko = (await TokoVendor.find({userId: { $nin: pengikut }})
         .select("address profile_pict namaToko userId")
-        .populate({path: "address", select: "province pinAlamat"}))
+        .populate({path: "address", select: "province pinAlamat"})
+        .lean())
         .filter(toko => {
           const userLat = parseFloat(addressUsed?.pinAlamat?.lat);
           const userLong = parseFloat(addressUsed?.pinAlamat?.long);
@@ -81,8 +82,16 @@ module.exports = {
             jarak = calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
           }
           return (jarak !== null) && (jarak <= biayaTetap.radius)
-        });
-      return res.status(200).json({message: "Berhasil mendapatkan rekomendasi toko", data: toko})
+        })
+
+      const data = await Promise.all(toko.map((async(tk) => {
+        const followed = await Follower.exists({userId: req.user.id, sellerUserId: tk.userId});
+        return {
+          ...tk,
+          followed: followed? true : false
+        }
+      })))
+      return res.status(200).json({message: "Berhasil mendapatkan rekomendasi toko", data})
     } catch (error) {
       console.log(error);
       next(error);

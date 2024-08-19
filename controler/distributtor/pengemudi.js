@@ -194,35 +194,6 @@ module.exports = {
             const pengemudi = await Pengemudi.find({ id_distributor: distributor._id })
 
             const datas = []
-            // for (let data of prosesPengiriman) {
-
-            //     const totalWaktuEstimasi = data.optimasi_pengiriman * 2
-
-            //     const dateParameter = new Date(data.waktu_pengiriman);
-            //     const dateSaatIni = dateParameter.toLocaleDateString('id-ID', {
-            //         year: 'numeric',
-            //         month: '2-digit',
-            //         day: '2-digit'
-            //     });
-
-            //     for (let item of pengemudi) {
-            //         const existingItem = datas.find(d => d._id.equals(item._id));
-            //         console.log(existingItem)
-            //         if (!existingItem) {
-            //             if (totalWaktu === totalWaktuEstimasi || totalWaktu <= totalWaktuEstimasi && dateSaatIni === formattedDate && item._id.equals(penentuanWaktu.id_pengemudi)) {
-            //                 datas.push({
-            //                     ...item.toObject(),
-            //                     tidak_tersedia: true
-            //                 });
-            //             } else {
-            //                 datas.push({
-            //                     ...item.toObject(),
-            //                     tidak_tersedia: false
-            //                 });
-            //             }
-            //         }
-            //     }
-            // }
 
             for (let item of pengemudi) {
                 let tidakTersedia = false;

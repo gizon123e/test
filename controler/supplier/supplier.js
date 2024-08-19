@@ -1,7 +1,9 @@
 const Supplier = require('../../models/supplier/model-supplier');
 const Address = require("../../models/model-address");
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs');
+const User = require('../../models/model-auth-user');
+const PicSupplier = require('../../models/supplier/model-penanggung-jawab');
 
 module.exports = {
 
@@ -26,28 +28,28 @@ module.exports = {
 
     getDetailSupplier: async (req, res, next) => {
         try {
-            const dataKonsumen = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
+            const dataSupplier = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
             let pic;
-            if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
-            let modifiedDataKonsumen = dataKonsumen
-            const isIndividu = dataKonsumen.nama? true : false
+            if (!dataSupplier) return res.status(404).json({ error: `data supplier id :${req.user.id} not Found` });
+            let modifiedDataSupplier = dataSupplier
+            const isIndividu = dataSupplier.nama? true : false
             if(isIndividu){
                 pic = null
-                modifiedDataKonsumen = {
-                    ...modifiedDataKonsumen,
+                modifiedDataSupplier = {
+                    ...modifiedDataSupplier,
                     pic
                 }
             }
             if(!isIndividu){
-                pic = await PicVendor.findOne({userId: req.user.id, detailId: dataKonsumen._id})
-                const { namaBadanUsaha, ...rest } = dataKonsumen
-                modifiedDataKonsumen = {
+                pic = await PicSupplier.findOne({userId: req.user.id, detailId: dataSupplier._id})
+                const { namaBadanUsaha, ...rest } = dataSupplier
+                modifiedDataSupplier = {
                     ...rest,
                     nama: namaBadanUsaha,
                     pic
                 };
             }
-            return res.status(200).json({ message: 'success', datas: modifiedDataKonsumen, isIndividu })
+            return res.status(200).json({ message: 'success', datas: modifiedDataSupplier, isIndividu })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
@@ -236,9 +238,9 @@ module.exports = {
 
     updateSupplier: async (req, res, next) => {
         try {
-            const vendor = await Supplier.findOne({userId: req.user.id});
-            if(!vendor) return res.status(404).json({message: `User belum mengisi detail`});
-            let filePath = vendor.profile_pict;
+            const supplier = await Supplier.findOne({userId: req.user.id});
+            if(!supplier) return res.status(404).json({message: `User belum mengisi detail`});
+            let filePath = supplier.profile_pict;
             
             // if(req.body.noTeleponKantor){
             //     const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/
@@ -248,7 +250,7 @@ module.exports = {
             // }
 
             if(req.files && req.files.profile_pict){
-                const name = vendor.profile_pict ? vendor.profile_pict.split('/') : "notfound"
+                const name = supplier.profile_pict ? supplier.profile_pict.split('/') : "notfound"
                 if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
                     console.log('ada')
                     fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
@@ -259,7 +261,7 @@ module.exports = {
                         }
                     });
                 }
-                const profile_pict_file = `${vendor.namaBadanUsaha || vendor.nama}_${Date.now()}${path.extname(req.files.profile_pict.name)}`;
+                const profile_pict_file = `${supplier.namaBadanUsaha || supplier.nama}_${Date.now()}${path.extname(req.files.profile_pict.name)}`;
                     
                 const profile_pict = path.join(__dirname, '../../public', 'profile_picts', profile_pict_file);
                 filePath = `${process.env.HOST}public/profile_picts/${profile_pict_file}`;
@@ -281,7 +283,7 @@ module.exports = {
             }
 
             res.status(200).json({
-                message: 'Vendor updated successfully',
+                message: 'supplier updated successfully',
                 data: updatedData
             });
         } catch (error) {

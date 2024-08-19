@@ -58,7 +58,7 @@ module.exports = {
             if(bintang) query.poin_ulasan = bintang
             const products = await Product.find(query)
             .select("_id image_product total_stok name_product total_price poin_review")
-            .sort({ total_stok: -1 })
+            .sort({ poin_review: -1, total_stok: -1 }) // Sort by poin_review first, then total_stok
             .lean();
 
             const pengikut = await Follower.countDocuments({

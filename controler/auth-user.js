@@ -14,7 +14,7 @@ module.exports = {
 
       if(!email) return res.status(400).json({message:"Tidak ada email yang dikirimkan"});
 
-      const isEmailRegister = await User.exists({ 'email.content': email });
+      const isEmailRegister = await User.exists({ 'email.content': email.toLowerCase() });
 
       if (isEmailRegister) {
         return res.status(400).json({ message: "email sudah terdaftar" });
@@ -22,7 +22,7 @@ module.exports = {
       
       //temporary User
       
-      const temporaryUser = await TemporaryUser.findOne({ 'email.content': email });
+      const temporaryUser = await TemporaryUser.findOne({ 'email.content': email.toLowerCase() });
 
       let newTemporary;
 
@@ -36,7 +36,7 @@ module.exports = {
 
       if(!temporaryUser){
         newTemporary = await TemporaryUser.create({
-          'email.content': email,
+          'email.content': email.toLowerCase(),
           codeOtp
         });
       }else{
@@ -181,7 +181,7 @@ module.exports = {
       const { email, password, phone, pin } = req.body;
       let newUser;
       if(email && !phone){
-        newUser = await User.findOne({ 'email.content': email });
+        newUser = await User.findOne({ 'email.content': email.toLowerCase() });
         if(!newUser) return res.status(404).json({message: "Email yang dimasukkan tidak ditemukan"});
       }else if(phone && !email){
         const regexNoTelepon = /\+62\s\d{3}[-\.\s]??\d{3}[-\.\s]??\d{3,4}|\(0\d{2,3}\)\s?\d+|0\d{2,3}\s?\d{6,7}|\+62\s?361\s?\d+|\+62\d+|\+62\s?(?:\d{3,}-)*\d{3,5}/;
