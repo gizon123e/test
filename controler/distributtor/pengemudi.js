@@ -2,6 +2,7 @@ const Distributtor = require('../../models/distributor/model-distributor')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
 const path = require('path')
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
+require('dotenv').config()
 
 module.exports = {
     getPengemudiList: async (req, res, next) => {
