@@ -2,6 +2,7 @@ const path = require("path");
 const { Pangan, KelompokPangan, KebutuhanGizi } = require("../models/model-pangan");
 const fs = require('fs')
 const env = require('dotenv');
+const BiayaTetap = require("../models/model-biaya-tetap")
 env.config()
 module.exports = {
     uploadKelompokPangan: async (req, res, next) => {
@@ -165,6 +166,135 @@ module.exports = {
                 currentPage: page, // Menambahkan halaman saat ini
                 totalItems: totalItems
             })
+
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+    
+    getTopping: async (req, res, next) => {
+        try {
+            const { jenis_pangan } = req.query;
+
+            const biaya_tetap = await BiayaTetap.findOne({_id: "66456e44e21bfd96d4389c73"})
+            const topping = JSON.parse(biaya_tetap.kelompok_topping)
+            let pangan;
+            if (jenis_pangan == "bahan mentah"){
+                pangan = await Pangan.aggregate([
+                {
+                    $match: {
+                        kelompok_pangan: { $in: topping },
+                        jenis_pangan: { $regex: new RegExp(`^${jenis_pangan}$`, 'i') }
+                    }
+                },
+                {
+                    $addFields: {
+                        nutrisi: [
+                            "air",
+                            "energi",
+                            "protein",
+                            "lemak",
+                            "karbohidrat",
+                            "serat",
+                            "kalsium",
+                            "fosfor",
+                            "besi",
+                            "natrium",
+                            "kalium",
+                            "tembaga",
+                            "thiamin",
+                            "riboflavin",
+                            "vitamin_c"
+                        ]
+                    }
+                },
+                {
+                    $unset: [
+                        "air",
+                        "energi",
+                        "protein",
+                        "lemak",
+                        "kh",
+                        "serat",
+                        "kalsium",
+                        "fosfor",
+                        "besi",
+                        "natrium",
+                        "kalium",
+                        "tembaga",
+                        "thiamin",
+                        "riboflavin",
+                        "vitc",
+                        "__v"
+                    ]
+                },
+                {
+                    $project: {
+                        nama_bahan: 1,
+                        nutrisi: 1
+                    }
+                }
+            ]);
+            }else {
+                pangan = await Pangan.aggregate([
+                    {
+                        $match: {
+                            jenis_pangan: { $regex: new RegExp(`^${jenis_pangan}$`, 'i') }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            nutrisi: [
+                                "air",
+                                "energi",
+                                "protein",
+                                "lemak",
+                                "karbohidrat",
+                                "serat",
+                                "kalsium",
+                                "fosfor",
+                                "besi",
+                                "natrium",
+                                "kalium",
+                                "tembaga",
+                                "thiamin",
+                                "riboflavin",
+                                "vitamin_c"
+                            ]
+                        }
+                    },
+                    {
+                        $unset: [
+                            "air",
+                            "energi",
+                            "protein",
+                            "lemak",
+                            "kh",
+                            "serat",
+                            "kalsium",
+                            "fosfor",
+                            "besi",
+                            "natrium",
+                            "kalium",
+                            "tembaga",
+                            "thiamin",
+                            "riboflavin",
+                            "vitc",
+                            "__v"
+                        ]
+                    },
+                    {
+                        $project: {
+                            nama_bahan: 1,
+                            nutrisi: 1
+                        }
+                    }
+                ]);
+            }
+            if (!pangan) return res.status(400).json({ message: 'data saat ini masi kosong' })
+
+            return res.status(200).json({ message: "Berhasil Mendapatkan data", data: pangan });
 
         } catch (error) {
             console.log(error);

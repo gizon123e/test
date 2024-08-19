@@ -46,6 +46,9 @@ const modelBiayaTetap = mongoose.Schema({
   },
   fee_udinpay: {
     type: Number
+  },
+  kelompok_topping: {
+    type: String
   }
 });
 

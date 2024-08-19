@@ -66,11 +66,11 @@ module.exports = {
                     {
                          $lookup: {
                               from: "invoices",
-                              let: { id: "$notif.id_invoice"},
+                              let: { id: "$notif.invoiceId"},
                               pipeline: [
                                    {
                                         $match: {
-                                             $expr: { $eq: ["$id", "$$id"] }
+                                             $expr: { $eq: ["$_id", "$$id"] }
                                         }
                                    }
                               ],
@@ -171,7 +171,7 @@ module.exports = {
                          // console.log(notifikasi)
                          if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
                               // console.log("HAPPY NEW YEAR");
-                              const detailNotifikasi = await DetailNotifikasi.create({
+                              DetailNotifikasi.create({
                                    notifikasiId: notifikasi._id,
                                    status: "Pesanan sedang dikemas",
                                    message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
@@ -181,12 +181,12 @@ module.exports = {
                               })
 
                               socket.emit('notif_pesanan_dikemas', {
-                                   jenis: detailNotifikasi.jenis,
+                                   jenis: "Pesanan",
                                    userId: notifikasi.userId,
-                                   status: detailNotifikasi.status,
-                                   message: detailNotifikasi.message,
-                                   image: detailNotifikasi.image_product,
-                                   tanggal: formatTanggal(detailNotifikasi.createdAt),
+                                   status: "Pesanan sedang dikemas",
+                                   message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
+                                   image: product.image_product[0],
+                                   tanggal: formatTanggal(new Date()),
                               })
                          } 
                     } else {
@@ -206,7 +206,7 @@ module.exports = {
                               
                               if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
                                    // console.log("HAPPY NEW YEAR");
-                                   const detailNotifikasi = await DetailNotifikasi.create({
+                                   DetailNotifikasi.create({
                                         notifikasiId: notifikasi._id,
                                         status: "Pesanan sedang dikemas",
                                         message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
@@ -214,14 +214,16 @@ module.exports = {
                                         image_product: product.image_product[0],     
                                         createdAt: new Date(),
                                    })
+                                   .then(() => console.log("Berhasil menyimpan notif"))
+                                   .catch(() => console.log("Gagal menyimpan notif"));
 
                                    socket.emit('notif_pesanan_dikemas', {
-                                        jenis: detailNotifikasi.jenis,
+                                        jenis: "Pesanan",
                                         userId: notifikasi.userId,
-                                        status: detailNotifikasi.status,
-                                        message: detailNotifikasi.message,
-                                        image: detailNotifikasi.image_product,
-                                        tanggal: formatTanggal(detailNotifikasi.createdAt),
+                                        status: "Pesanan sedang dikemas",
+                                        message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
+                                        image: product.image_product[0],
+                                        tanggal: formatTanggal(new Date()),
                                    })
                               }
                          }
@@ -229,7 +231,7 @@ module.exports = {
                }
           }
           } catch (error) {
-            console.log(error);
+          console.log(error);
             next(error)
           }
      },

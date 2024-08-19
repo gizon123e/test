@@ -2617,28 +2617,31 @@ module.exports = {
 
             if (invoice.length == 1){
                 const notifikasi = await Notifikasi.findOne({invoiceId: invoice[0].invoice._id})
-                const detailNotifikasi = await DetailNotifikasi.create({
+                DetailNotifikasi.create({
                     notifikasiId: notifikasi._id,
                     status: "Pesanan telah selesai",
                     jenis: "Pesanan",
-                    message: `Klik untuk beri penilaian ${invoice[0].invoice.kode_invoice} `,
+                    message: `Klik untuk beri penilaian ${invoice[0].invoice.kode_invoice}`,
                     image_product: shipments[0].productToDelivers[0].productId.image_product[0],
                     createdAt: new Date()
     
                 })
+                .then(() => console.log("Berhasil menyimpan detail notifikasi"))
+                .catch(() => console.log("Gagal menyimpan detail notifikasi"))
+                
                 socket.emit('notif_pesanan_selesai', {
-                    jenis: detailNotifikasi.jenis,
+                    jenis: "Pesanan",
                     userId: notifikasi.userId,
-                    status: detailNotifikasi.status,
-                    message: detailNotifikasi.message,
-                    image: detailNotifikasi.image_product,
-                    tanggal: formatTanggal(detailNotifikasi.createdAt)
-                })
+                    status: "Pesanan telah selesai",
+                    message: `Klik untuk beri penilaian ${invoice[0].invoice.kode_invoice}`,
+                    image: shipments[0].productToDelivers[0].productId.image_product[0],
+                    tanggal: formatTanggal(new Date())
+                })  
                 return res.status(200).json({message: "Berhasil Menerima Order"});
             }else {
                 for(const item of invoice){
                     const notifikasi = await Notifikasi.findOne({invoiceId: item.invoice._id})
-                    const detailNotifikasi = await DetailNotifikasi.create({
+                    await DetailNotifikasi.create({
                         notifikasiId: notifikasi._id,
                         status: "Pesanan telah selesai",
                         jenis: "Pesanan",
@@ -2647,13 +2650,15 @@ module.exports = {
                         createdAt: new Date()
         
                     })
+                    .then(() => console.log("Berhasil menyimpan detail notifikasi "))
+                    .catch(() => console.log("Gagal menyimpan detail notifikasi"))
                     socket.emit('notif_pesanan_selesai', {
-                        jenis: detailNotifikasi.jenis,
+                        jenis: "Pesanan",
                         userId: notifikasi.userId,
-                        status: detailNotifikasi.status,
-                        message: detailNotifikasi.message,
-                        image: detailNotifikasi.image_product,
-                        tanggal: formatTanggal(detailNotifikasi.createdAt)
+                        status: "Pesanan telah selesai",
+                        message: `Klik untuk beri penilaian ${item.invoice.kode_invoice}`,
+                        image: shipments[0].productToDelivers[0].productId.image_product[0],
+                        tanggal: formatTanggal(new Date())
                     })
                 }
                 return res.status(200).json({message: "Berhasil Menerima Order"});
