@@ -41,7 +41,7 @@ module.exports = {
                 }
             }
             if(!isIndividu){
-                pic = await PicSupplier.findOne({userId: req.user.id, detailId: dataKonsumen._id})
+                pic = await PicSupplier.findOne({userId: req.user.id, detailId: dataSupplier._id})
                 const { namaBadanUsaha, ...rest } = dataKonsumen
                 modifiedDataSupplier = {
                     ...rest,
