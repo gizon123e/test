@@ -3,6 +3,7 @@ const Address = require("../../models/model-address");
 const path = require('path')
 const fs = require('fs');
 const User = require('../../models/model-auth-user');
+const PicSupplier = require('../../models/supplier/model-penanggung-jawab');
 
 module.exports = {
 
@@ -27,28 +28,28 @@ module.exports = {
 
     getDetailSupplier: async (req, res, next) => {
         try {
-            const dataKonsumen = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
+            const dataSupplier = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
             let pic;
-            if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
-            let modifiedDataKonsumen = dataKonsumen
-            const isIndividu = dataKonsumen.nama? true : false
+            if (!dataSupplier) return res.status(404).json({ error: `data supplier id :${req.user.id} not Found` });
+            let modifiedDataSupplier = dataSupplier
+            const isIndividu = dataSupplier.nama? true : false
             if(isIndividu){
                 pic = null
-                modifiedDataKonsumen = {
-                    ...modifiedDataKonsumen,
+                modifiedDataSupplier = {
+                    ...modifiedDataSupplier,
                     pic
                 }
             }
             if(!isIndividu){
-                pic = await PicVendor.findOne({userId: req.user.id, detailId: dataKonsumen._id})
+                pic = await PicSupplier.findOne({userId: req.user.id, detailId: dataKonsumen._id})
                 const { namaBadanUsaha, ...rest } = dataKonsumen
-                modifiedDataKonsumen = {
+                modifiedDataSupplier = {
                     ...rest,
                     nama: namaBadanUsaha,
                     pic
                 };
             }
-            return res.status(200).json({ message: 'success', datas: modifiedDataKonsumen, isIndividu })
+            return res.status(200).json({ message: 'success', datas: modifiedDataSupplier, isIndividu })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
