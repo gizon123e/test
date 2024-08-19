@@ -1988,7 +1988,7 @@ module.exports = {
                         } else {
                             return Math.round(total_tagihan);
                         }
-                    };x
+                    };
 
                     const options = {
                         method: 'POST',
