@@ -46,7 +46,7 @@ module.exports = {
                     long: long_pin_alamat
                 }
             })
-            if(picSupplier) return res.status(400).json({message:"Person in charge untuk supplier id " + req.body.detailId + "sudah ada", data: picVendor})
+            if(picSupplier) return res.status(400).json({message:"Person in charge untuk supplier id " + req.body.detailId + "sudah ada", data: picSupplier})
             
             const{npwpFile, file_ktp} = req.files
             const npwp_file = `${Date.now()}_${nama}_PIC_${path.extname(npwpFile.name)}`;        
@@ -56,7 +56,7 @@ module.exports = {
             await file_ktp.mv(file_file_path)
             await npwpFile.mv(npwp_file_path);
 
-            const newPic = await PicVendor.create({
+            const newPic = await PicSupplier.create({
                 detailId,
                 userId: id,
                 nama,
