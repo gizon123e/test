@@ -52,7 +52,7 @@ module.exports = {
             if(!productId) return res.status(400).json({message: "Kirimkan productId"});
             const added = await Wishlist.exists({userId: req.user.id, productId})
             if(added){
-                Wishlist.findByIdAndDelete(add._id)
+                Wishlist.findByIdAndDelete(added._id)
                 .then(()=> console.log("berhasil un-wishlist product"))
                 return res.status(201).json({message: "Berhasil menghapus produk dari wishlist"})
             }
