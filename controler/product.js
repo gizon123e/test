@@ -25,6 +25,7 @@ const { pipeline } = require("stream");
 const { vendor } = require("../midelware/user-role-clasification");
 const formatNumber = require("../utils/formatAngka");
 const Pengiriman = require("../models/model-pengiriman");
+const Wishlist = require("../models/model-wishlist");
 // const BahanBaku = require("../models/model-bahan-baku");
 
 module.exports = {
@@ -802,6 +803,7 @@ module.exports = {
         : 0;
       let toko;
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
+      const wishlisted = await Wishlist.exists({productId: req.params.id, userId: req.user?.id})
       switch (dataProduct.userId.role) {
         case "vendor":
           toko = await TokoVendor.findOne({ userId: dataProduct.userId._id }).populate("address");
@@ -1108,7 +1110,7 @@ module.exports = {
           total_terjual: terjual ? total_terjual : 0,
         },
         toko,
-        // nilai_varian,
+        wishlisted: wishlisted? true : false,
         nutrisi,
       });
     } catch (error) {

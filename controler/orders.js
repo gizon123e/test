@@ -34,6 +34,7 @@ const Distributtor = require("../models/distributor/model-distributor");
 const Vendor = require("../models/vendor/model-vendor");
 const IncompleteOrders = require("../models/pesanan/model-incomplete-orders");
 const PinaltiVendor = require("../models/vendor/model-pinaltiVendor");
+const PanduanPembayaran = require("../models/model-panduan-pembayaran");
 dotenv.config();
 
 const now = new Date();
@@ -1401,21 +1402,33 @@ module.exports = {
         }
     },
 
-    checkStatusPembayaran: async(req, res, next) => {
-        try {
-            const { order_id } = req.query
-            const resAxios = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
-                headers: {
-                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
-                }
-            });
-            if(!resAxios) return res.status(404).json({message: "order_id tidak ditemukan"})
-            return res.status(200).json({ message: "berhasil mendapatkan status pembayarana", paid: resAxios.data.transaction_status === "settlement"? true : false});
-        } catch (error) {
-            console.log(error);
-            next(error)
+  checkStatusPembayaran: async(req, res, next) => {
+    try {
+      const { order_id } = req.query
+      const pesanan = await Pesanan.exists({_id: order_id})
+      const detailPesanan = await DetailPesanan.findOne({id_pesanan: pesanan._id}).select("id_va").populate("id_va").lean();
+      if(!detailPesanan) return res.status(404).json({message: "pembayaran tidak ditemukan"})
+      const panduan = await PanduanPembayaran.findOne({bank_id: detailPesanan.id_va._id}).select('content')
+      if(!detailPesanan) return res.status(404).json({message: "order_id tidak ditemukan"})
+      const resAxios = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
+        headers: {
+          Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
         }
-    },
+      });
+      console.log(resAxios.data)
+      return res.status(200).json({ 
+        message: "berhasil mendapatkan status pembayaran", 
+        paid: resAxios.data.transaction_status === "settlement"? true : false, 
+        methodPembayaran: {
+          ...detailPesanan
+        },
+        panduan
+      });
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },  
 
     createOrder: async (req, res, next) => {
         try {

@@ -13,7 +13,7 @@ const router = require("express").Router();
 
 // router product management
 router.get("/search", controlerProduct.search);
-router.get("/detail/:id", controlerProduct.productDetail);
+router.get("/detail/:id", authorization, controlerProduct.productDetail);
 router.get('/filter', authorization, controlerProduct.filterProduk);
 router.get("/product_by_main_category/:id", authorization, controlerProduct.getProductWithMain);
 router.get("/all_product_by_main_category/:id", authorization, controlerProduct.getAllProductWithMain);
