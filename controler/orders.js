@@ -1401,6 +1401,22 @@ module.exports = {
         }
     },
 
+    checkStatusPembayaran: async(req, res, next) => {
+        try {
+            const { order_id } = req.query
+            const resAxios = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
+                headers: {
+                    Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
+                }
+            });
+            if(!resAxios) return res.status(404).json({message: "order_id tidak ditemukan"})
+            return res.status(200).json({ message: "berhasil mendapatkan status pembayarana", paid: resAxios.data.transaction_status === "settlement"? true : false});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     createOrder: async (req, res, next) => {
         try {
             const today = new Date()
