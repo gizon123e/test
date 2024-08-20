@@ -107,9 +107,6 @@ const modelOrder = new mongoose.Schema({
             type: Decimal128
         }
     },
-    expire: {
-        type: Date
-    },
     sekolahId:{
         type: mongoose.Types.ObjectId,
         ref: "Sekolah"

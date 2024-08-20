@@ -1,7 +1,50 @@
 const Wishlist = require("../models/model-wishlist");
 const Product = require("../models/model-product");
+const SalesReport = require("../models/model-laporan-penjualan");
+const TokoVendor = require("../models/vendor/model-toko");
+const TokoSupplier = require("../models/supplier/model-toko");
 
 module.exports = {
+    getAllWishlist: async(req, res, next) => {
+        try {
+            const listWishList = await Wishlist.find({userId: req.user.id})
+            .populate(
+                { 
+                    path: "productId", 
+                    select: "name_product total_price image_product poin_review userId",
+                    populate: {
+                        path: "userId",
+                        select: "role"
+                    }
+                })
+            .lean()
+            const data = await Promise.all(listWishList.map(async(wish)=> {
+                const terjual = await SalesReport.findOne({productId: wish.productId}).select("track")
+                let detailToko;
+                switch(wish.productId.userId.role){
+                    case "vendor":
+                        detailToko = await TokoVendor.findOne({userId: wish.productId.userId._id}).select("address userId namaToko profile_pict").populate({path: 'address', select: "regency"});
+                        break;
+                    case "supplier":
+                        detailToko = await TokoSupplier.findOne({userId: wish.productId.userId._id}).select("address userId namaToko profile_pict").populate({path: 'address', select: "regency"});
+                        break;
+                    default:
+                        detailToko = await TokoVendor.findOne({userId: wish.productId.userId._id}).select("address userId namaToko profile_pict").populate({path: 'address', select: "regency"});
+                        break;
+                };
+                return {
+                    ...wish,
+                    terjual: terjual ? terjual.track.reduce((acc, val)=> acc + val.soldAtMoment, 0) : 0,
+                    toko: detailToko
+                }
+            }))
+            return res.status(200).json({data})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     addWishlist: async(req, res, next) => {
         try {
             const { productId } = req.body;

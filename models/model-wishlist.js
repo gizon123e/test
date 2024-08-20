@@ -9,7 +9,7 @@ const modelWishlist = new mongoose.Schema({
         type: String,
         ref: "Product"
     }
-});
+}, { timestamps: true });
 
 const Wishlist = mongoose.model("Wishlist", modelWishlist);
 module.exports = Wishlist
