@@ -1405,7 +1405,9 @@ module.exports = {
   checkStatusPembayaran: async(req, res, next) => {
     try {
       const { order_id } = req.query
-      const detailPesanan = await DetailPesanan.findById(order_id).select("id_va").populate("id_va").lean();
+      const pesanan = await Pesanan.exists({_id: order_id})
+      const detailPesanan = await DetailPesanan.findOne({id_pesanan: pesanan._id}).select("id_va").populate("id_va").lean();
+      if(!detailPesanan) return res.status(404).json({message: "pembayaran tidak ditemukan"})
       const panduan = await PanduanPembayaran.findOne({bank_id: detailPesanan.id_va._id}).select('content')
       if(!detailPesanan) return res.status(404).json({message: "order_id tidak ditemukan"})
       const resAxios = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
