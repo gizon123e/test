@@ -170,7 +170,7 @@ app.listen(4000, () => {
   send_notif()
   batalPesanan()
   console.log("connection express success");
-  websocket.listen(5000, () => {
+  websocket.listen(8000, () => {
     console.log("Connection websocket success");
   });
 });

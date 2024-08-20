@@ -11,6 +11,14 @@ const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders')
 const Vendor = require('../../models/vendor/model-vendor');
 const Follower = require('../../models/model-follower');
 const User = require('../../models/model-auth-user');
+const dotenv = require('dotenv')
+const { io } = require("socket.io-client");
+dotenv.config()
+const socket = io(process.env.HOST, {
+    auth: {
+      fromServer: true,
+    },
+});
 
 
 module.exports = {
@@ -58,14 +66,21 @@ module.exports = {
             if(bintang) query.poin_ulasan = bintang
             const products = await Product.find(query)
             .select("_id image_product total_stok name_product total_price poin_review")
-            .sort({ poin_review: -1, total_stok: -1 }) // Sort by poin_review first, then total_stok
+            .sort({ poin_review: -1, total_stok: -1 })
             .lean();
 
             const pengikut = await Follower.countDocuments({
                 sellerUserId: req.params.id
             });
 
-            const followed = await Follower.findOne({userId: req.user.id, sellerUserId: req.params.id})
+            socket.emit('status_user', req.params.id)
+            let status_user 
+            
+            socket.on('status_user', (data) => {
+                status_user = data
+            })
+
+            const followed = await Follower.exists({userId: req.user.id, sellerUserId: req.params.id})
             
             for (const product of products) {
                 const record = await SalesReport.findOne({ productId: product._id });
@@ -82,7 +97,8 @@ module.exports = {
                 }, 
                 dataProduct: products,
                 total_produk_terjual: products.reduce((acc,prd) => acc + prd.terjual, 0),
-                followed: followed? true : false
+                followed: followed? true : false,
+                status_user
             });
         } catch (error) {
             console.log(error);
