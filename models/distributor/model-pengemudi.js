@@ -39,7 +39,7 @@ const ModelPengemudi = new mongoose.Schema({
         message: "{VALUE} is not supported",
         default: "Ditinjau"
     },
-    descriptionTolak: {
+    descriptionStatusPengemudi: {
         type: String,
         required: false,
         default: null

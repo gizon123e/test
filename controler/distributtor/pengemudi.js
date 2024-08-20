@@ -2,6 +2,7 @@ const Distributtor = require('../../models/distributor/model-distributor')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
 const path = require('path')
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
+require('dotenv').config()
 
 module.exports = {
     getPengemudiList: async (req, res, next) => {
@@ -137,29 +138,28 @@ module.exports = {
         }
     },
 
-    updateVerifikasi: async (req, res, next) => {
+    updateStatusPengemudi: async (req, res, next) => {
         try {
+            const { status, descriptionStatusPengemudi } = req.body
             const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
-
-            res.status(200).json({
-                message: "update data success",
-                data
-            })
-        } catch (error) {
-            console.log(error)
-            next(error)
-        }
-    },
-
-    tolakPengemudi: async (req, res, next) => {
-        try {
-            const dataPengemudi = await Pengemudi.findOne({ _id: req.params.id }).populate("id_distributor")
-            if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
-
-            const data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, status: 'Ditolak' }, { new: true })
+            let data
+            if (status === 'Aktif') {
+                data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
+            } else if (status === 'Disuspend') {
+                if (!descriptionStatusPengemudi) return res.status(400).json({ message: "descriptionStatusPengemudi harus di isi" })
+                data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusPengemudi, status: 'Disuspend' }, { new: true })
+            } else if (status === 'Diberhentikan') {
+                if (!descriptionStatusPengemudi) return res.status(400).json({ message: "descriptionStatusPengemudi harus di isi" })
+                data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusPengemudi, status: 'Diberhentikan' }, { new: true })
+            } else if (status === 'Ditolak') {
+                if (!descriptionStatusPengemudi) return res.status(400).json({ message: "descriptionStatusPengemudi harus di isi" })
+                data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusPengemudi, status: 'Ditolak' }, { new: true })
+            } else if (status === 'Diblokir') {
+                if (!descriptionStatusPengemudi) return res.status(400).json({ message: "descriptionStatusPengemudi harus di isi" })
+                data = await Pengemudi.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusPengemudi, status: 'Diblokir' }, { new: true })
+            }
 
             res.status(200).json({
                 message: "update data success",
@@ -228,5 +228,6 @@ module.exports = {
             console.log(error)
             next(error)
         }
-    }
+    },
+
 }

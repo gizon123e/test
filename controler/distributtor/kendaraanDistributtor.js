@@ -696,12 +696,25 @@ module.exports = {
         }
     },
 
-    tolakKenendaraan: async (req, res, next) => {
+    updateStatusKendaraan: async (req, res, next) => {
         try {
+            const { status, descriptionStatusKendaraan } = req.body
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, status: 'Ditolak' }, { new: true })
+            let data
+            if (status === 'Ditolak') {
+                if (!descriptionStatusKendaraan) return res.status(400).json({ message: "descriptionStatusKendaraan harus di isi" })
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, status: 'Ditolak' }, { new: true })
+            } else if (status === 'Dinonaktifkan') {
+                if (!descriptionStatusKendaraan) return res.status(400).json({ message: "descriptionStatusKendaraan harus di isi" })
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, status: 'Dinonaktifkan' }, { new: true })
+            } else if (status === 'Aktif') {
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
+            } else if (status === 'Diblokir') {
+                if (!descriptionStatusKendaraan) return res.status(400).json({ message: "descriptionStatusKendaraan harus di isi" })
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, status: 'Diblokir' }, { new: true })
+            }
 
             res.status(200).json({
                 message: "update data success",
@@ -720,53 +733,6 @@ module.exports = {
         }
     },
 
-    kendaraanDiNonaktifkan: async (req, res, next) => {
-        try {
-            const { descriptionStatusKendaraan } = req.body
-
-            const kendaraan = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, statusKendaraan: true }, { new: true })
-            if (!kendaraan) return res.status(404).json({ message: "data kendaraan Not found" })
-
-            res.status(201).json({
-                message: "update data success",
-                data: kendaraan
-            })
-        } catch (error) {
-            console.error(error);
-            if (error && error.name === 'ValidationError') {
-                return res.status(400).json({
-                    error: true,
-                    message: error.message,
-                    fields: error.fields
-                });
-            }
-            next(error);
-        }
-    },
-
-    kendaraanDiAktifkan: async (req, res, next) => {
-        try {
-            const { descriptionStatusKendaraan } = req.body
-
-            const kendaraan = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, statusKendaraan: false }, { new: true })
-            if (!kendaraan) return res.status(404).json({ message: "data kendaraan Not found" })
-
-            res.status(201).json({
-                message: "update data success",
-                data: kendaraan
-            })
-        } catch (error) {
-            console.error(error);
-            if (error && error.name === 'ValidationError') {
-                return res.status(400).json({
-                    error: true,
-                    message: error.message,
-                    fields: error.fields
-                });
-            }
-            next(error);
-        }
-    },
 
     detailKendaraan: async (req, res, next) => {
         try {

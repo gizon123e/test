@@ -112,7 +112,7 @@ module.exports = {
                 const minutes = `${hh}${mn}${ss}`
                 if (transaction_status === "settlement") {
                     pesanan = await Pesanan.findById(detailPesanan.id_pesanan).lean();
-                    const { items, ...restOfOrder } = pesanan;
+                    const { items, shipments,...restOfOrder } = pesanan;
 
                     promisesFunct.push(
                         Pesanan.updateOne({_id: detailPesanan.id_pesanan}, {
@@ -194,25 +194,29 @@ module.exports = {
                     )
 
                     const notifikasi = await Notifikasi.findOne({userId: pesanan.userId, jenis_invoice: "Non Subsidi"}).sort({createdAt: -1})
-                    const detailNotifikasi = await DetailNotifikasi.create({
+                    DetailNotifikasi.create({
                         notifikasiId: notifikasi._id,
                         jenis: "Info",
                         status: "Pembayaran berhasil",
-                        userId: pesanan.userId,
                         message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
                         image_product: dataProd.dataProduct[0].image_product[0],
                         createdAt: new Date()
                     })
+                    .then(() => console.log("notif pembayaran berhasil"))
+                    .catch(() => console.log("notif pembayaran gagal"))
 
                     socket.emit('notif_pembayaran_berhasil', {
-                        jenis: detailNotifikasi.jenis,
+                        jenis: "Info",
                         userId: notifikasi.userId,
-                        status: detailNotifikasi.status,
-                        message: detailNotifikasi.message,
-                        image: detailNotifikasi.image_product,
-                        tanggal: formatWaktu(detailNotifikasi.createdAt)
+                        status: "Pembayaran berhasil",
+                        message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
+                        image: dataProd.dataProduct[0].image_product[0],
+                        tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`
                     })
 
+                    // for(const shipment of shipments){
+                    //     const notifikasiVendor = await Notifikasi.findOne({userId: })
+                    // }
                     promisesFunct.push(
                         Transaksi2.create({
                             id_pesanan: pesanan._id,
