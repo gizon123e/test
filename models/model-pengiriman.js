@@ -91,7 +91,6 @@ modelPengiriman.pre(["findOneAndUpdate"], async function (next) {
         const ships = await this.model.find(this.getQuery()).exec();
 
         for (const ship of ships) {
-            console.log(ship._id)
             await Pembatalan.create({
                 pengirimanId: ship._id,
                 userId: this.getUpdate().userId,
@@ -100,7 +99,6 @@ modelPengiriman.pre(["findOneAndUpdate"], async function (next) {
             });
         }
     }
-    console.log(this.getQuery())
     next()
 })
 
