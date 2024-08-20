@@ -12,6 +12,7 @@ const Follower = require("../../models/model-follower");
 const TokoVendor = require("../../models/vendor/model-toko");
 const { calculateDistance } = require("../../utils/menghitungJarak");
 const BiayaTetap = require("../../models/model-biaya-tetap");
+const Product = require("../../models/model-product");
 
 module.exports = {
   getAllKonsumen: async (req, res, next) => {
@@ -63,41 +64,63 @@ module.exports = {
 
   rekomendasiToko: async (req, res, next) => {
     try {
-      const addressUsed = await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}).select("pinAlamat");
-      const biayaTetap = await BiayaTetap.findOne({}).select("radius")
-      const pengikut = (await Follower.find({ userId: req.user.id }).lean()).map(fl => fl.sellerUserId);
-      const toko = (await TokoVendor.find({userId: { $nin: pengikut }})
+      const addressUsed = await Address.findOneAndUpdate(
+        { userId: req.user.id, isUsed: true }
+      ).select("pinAlamat");
+      
+      const biayaTetap = await BiayaTetap.findOne({}).select("radius");
+  
+      const pengikut = (await Follower.find({ userId: req.user.id }).lean())
+        .map(fl => fl.sellerUserId);
+  
+      let toko = await TokoVendor.find({ userId: { $nin: pengikut } })
         .select("address profile_pict namaToko userId")
-        .populate({path: "address", select: "province pinAlamat"})
-        .lean())
-        .filter(toko => {
-          const userLat = parseFloat(addressUsed?.pinAlamat?.lat);
-          const userLong = parseFloat(addressUsed?.pinAlamat?.long);
-          const tokoLat = parseFloat(toko?.address?.pinAlamat?.lat);
-          const tokoLong = parseFloat(toko?.address?.pinAlamat?.long);
-
-          let jarak = null;
-
-          if (userLat && userLong && tokoLat && tokoLong) {
-            jarak = calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
-          }
-          return (jarak !== null) && (jarak <= biayaTetap.radius)
-        })
-
-      const data = await Promise.all(toko.map((async(tk) => {
-        const followed = await Follower.exists({userId: req.user.id, sellerUserId: tk.userId});
+        .populate({ path: "address", select: "province pinAlamat" })
+        .lean();
+  
+      toko = await Promise.all(toko.map(async (toko) => {
+        const userLat = parseFloat(addressUsed?.pinAlamat?.lat);
+        const userLong = parseFloat(addressUsed?.pinAlamat?.long);
+        const tokoLat = parseFloat(toko?.address?.pinAlamat?.lat);
+        const tokoLong = parseFloat(toko?.address?.pinAlamat?.long);
+        
+        const produks = await Product.countDocuments({
+          userId: toko.userId,  
+          'status.value': 'terpublish'
+        });
+        
+        let jarak = null;
+        if (userLat && userLong && tokoLat && tokoLong) {
+          jarak = calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
+        }
+  
+        // Return the toko object if it meets the conditions
+        if (!isNaN(jarak) && produks > 0) {
+          return toko;
+        } else {
+          return null;
+        }
+      }));
+  
+      // Filter out any null entries
+      toko = toko.filter(tk => tk !== null);
+  
+      // Add 'followed' status to each toko
+      const data = await Promise.all(toko.map(async (tk) => {
+        const followed = await Follower.exists({ userId: req.user.id, sellerUserId: tk.userId });
         return {
           ...tk,
-          followed: followed? true : false
-        }
-      })))
-      return res.status(200).json({message: "Berhasil mendapatkan rekomendasi toko", data})
+          followed: !!followed
+        };
+      }));
+  
+      return res.status(200).json({ message: "Berhasil mendapatkan rekomendasi toko", data });
     } catch (error) {
       console.log(error);
       next(error);
     }
   },
-
+  
   getDetailKonsumen: async (req, res, next) => {
     try {
       const dataKonsumen = await Konsumen.findOne({ userId: req.user.id })

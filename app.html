@@ -203,7 +203,7 @@
       }
 
       function initializeSocket(token) {
-        socket = io("http://localhost:5000",{
+        socket = io("http://localhost:8000",{
           transports: ['websocket'],
           auth: {
             token,

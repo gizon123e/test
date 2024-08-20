@@ -10,7 +10,7 @@ const io = new Server({
   allowedHeaders: ["Chat Header"],
 });
 
-io.use((socket, next) => {
+io.use(async(socket, next) => {
   try {
     if(socket.handshake.auth.fromServer){
       socket.user = { id: '1',  email: { content: null } }
@@ -21,6 +21,10 @@ io.use((socket, next) => {
     const verifyToken = jwt.verifyToken(token);
     if (!verifyToken) return next(new Error("Authentication error"));
     socket.user = verifyToken;
+    await User.updateOne(
+      { _id: socket.user.id },
+      { lastOnline: new Date() }
+    )
     socket.id = socket.user.id;
     next();
   } catch (error) {
@@ -32,7 +36,14 @@ const userConnected = [];
 
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
-  
+  socket.on("status_user", (data)=> {
+    console.log(data)
+    if(userConnected.some(usr => usr.id === data)){
+      socket.emit('status_user', { online: true })
+    }else{
+      socket.emit('status_user', { online: false })
+    }
+  })
   if(!userConnected.some(user => user.id === socket.id)) {
     userConnected.push(socket.user); 
   }
