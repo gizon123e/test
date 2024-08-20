@@ -168,7 +168,7 @@ module.exports = {
 
       if (!notifikasi) return res.status(404).json({ message: "notifikasi tidak ditemukan" });
 
-      DetailNotifikasi.create({
+    DetailNotifikasi.create({
         notifikasiId: notifikasi._id,
         status: "Distributor sedang dalam perjalanan menjemput pesanan",
         message: `Pesanan ${notifikasi.invoiceId.kode_invoice} akan segera dijemput oleh distributor ke lokasi anda`,
@@ -185,7 +185,7 @@ module.exports = {
         status: "Distributor sedang dalam perjalanan menjemput pesanan",
         message: `Pesanan ${notifikasi.invoiceId.kode_invoice} akan segera dijemput oleh distributor ke lokasi anda`,
         image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
-        waktu: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+        waktu: `${formatTanggal(new Date())} $.{formatWaktu(new Date())}`,
       });
 
       if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
