@@ -47,11 +47,6 @@ const kendaraanDistributorSchema = new mongoose.Schema({
         required: [true, 'tahun harus diisi'],
         default: false
     },
-    descriptionTolak: {
-        type: String,
-        required: false,
-        default: null
-    },
     descriptionStatusKendaraan: {
         type: String,
         default: null

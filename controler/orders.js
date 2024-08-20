@@ -798,30 +798,31 @@ module.exports = {
         const pengiriman = await Pengiriman.find({ orderId: order._id, sellerApproved: false }).populate("distributorId").lean();
         let detailToko;
 
-        const pesanan = {};
-        const kode_pesanan = new Set();
-        for (const item of order.items) {
-          let isApproved = item.isApproved;
-          const productSelected = dataProd?.dataProduct.find((prd) => item.product.productId.toString() === prd._id.toString());
-          if (!kode_pesanan.has(item.kode_pesanan)) {
-            kode_pesanan.add(item.kode_pesanan);
-          }
-          if (productSelected) {
-            const selectedPengiriman = pengiriman.filter((pgr) => {
-              return pgr.productToDelivers.some((prd) => prd.productId.toString() === productSelected._id.toString());
-            });
-
-            selectedPengiriman.map((pgr) => {
-              const pgrId = pgr._id.toString();
-              const isDistributtorApprovedCheck = () => {
-                if (item.isDistributtorApproved) {
-                  return true;
-                } else if (!item.isDistributtorApproved) {
-                  return null;
-                } else if (pgr.rejected) {
-                  return false;
-                }
-              };
+                const pesanan = {}
+                // const kode_pesanan = new Set()
+                for(const item of order.items){
+                    
+                    let isApproved = item.isApproved
+                    const productSelected = dataProd?.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
+                    // if(!kode_pesanan.has(item.kode_pesanan)){
+                    //     kode_pesanan.add(item.kode_pesanan)
+                    // }
+                    if(productSelected){
+                        const selectedPengiriman = pengiriman.filter(pgr => {
+                            return pgr.productToDelivers.some(prd => prd.productId.toString() === productSelected._id.toString())
+                        })
+                        
+                        selectedPengiriman.map(pgr => {
+                            const pgrId = pgr._id.toString()
+                            const isDistributtorApprovedCheck = () => {
+                                if(item.isDistributtorApproved){
+                                    return true
+                                }else if(!item.isDistributtorApproved){
+                                    return null
+                                }else if(pgr.rejected){
+                                    return false
+                                }
+                            };
 
               if (pgr.invoice.toString() === invoiceSubsidi._id.toString()) {
                 if (!pesanan[pgrId]) {
