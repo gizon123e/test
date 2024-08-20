@@ -1,4 +1,4 @@
-const Toko = require('../../models/vendor/model-toko');
+const Toko = require('../../models/supplier/model-toko');
 const Address = require('../../models/model-address');
 const BiayaTetap = require("../../models/model-biaya-tetap");
 const path = require('path');
@@ -6,11 +6,9 @@ const Product = require('../../models/model-product');
 const {Pangan} = require('../../models/model-pangan');
 const SalesReport = require('../../models/model-laporan-penjualan');
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman');
-const TokoVendor = require('../../models/vendor/model-toko');
+const TokoSupplier = require('../../models/supplier/model-toko');
 const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders');
-const Vendor = require('../../models/vendor/model-vendor');
 const Follower = require('../../models/model-follower');
-const User = require('../../models/model-auth-user');
 
 
 module.exports = {
@@ -29,7 +27,7 @@ module.exports = {
                     lat: req.body.lat_pin_alamat
                 },
                 userId: req.body.id,
-                isStore: true,
+                isStore: true
             })
             const newDataToko = await Toko.create({
                 userId: req.body.id,
@@ -50,7 +48,6 @@ module.exports = {
         try {
             const { bintang } = req.query
             const dataToko = await Toko.findOne({userId: req.params.id}).populate('address').lean();
-            const bergabung = await User.findById(req.params.id).select("createdAt");
             const query = { 
                 userId: req.params.id, 
                 'status.value': "terpublish",
@@ -58,14 +55,12 @@ module.exports = {
             if(bintang) query.poin_ulasan = bintang
             const products = await Product.find(query)
             .select("_id image_product total_stok name_product total_price poin_review")
-            .sort({ poin_review: -1, total_stok: -1 }) // Sort by poin_review first, then total_stok
+            .sort({ total_stok: -1 })
             .lean();
 
             const pengikut = await Follower.countDocuments({
                 sellerUserId: req.params.id
-            });
-
-            const followed = await Follower.findOne({userId: req.user.id, sellerUserId: req.params.id})
+            })
             
             for (const product of products) {
                 const record = await SalesReport.findOne({ productId: product._id });
@@ -73,17 +68,7 @@ module.exports = {
                 product.terjual = terjual;
             };
             if(!dataToko) return res.status(404).json({message: `Toko dengan userId: ${req.params.id} tidak ditemukan`});
-            return res.status(200).json({
-                message: "Berhasil Mendapatkan Data Toko", 
-                data: { 
-                    ...dataToko, 
-                    tanggal_bergabung: bergabung.createdAt,
-                    pengikut,
-                }, 
-                dataProduct: products,
-                total_produk_terjual: products.reduce((acc,prd) => acc + prd.terjual, 0),
-                followed: followed? true : false
-            });
+            return res.status(200).json({message: "Berhasil Mendapatkan Data Toko", data: { ...dataToko, pengikut }, dataProduct: products, pengikut});
         } catch (error) {
             console.log(error);
             next(error);
@@ -111,11 +96,8 @@ module.exports = {
 
     myStore: async(req, res, next) => {
         try {
-            const store = await Toko.findOne({userId: req.user.id}).populate('address').lean();
-            const pengikut = await Follower.countDocuments({
-                sellerUserId: req.user.id
-            })
-            return res.status(200).json({data: {...store, pengikut}})
+            const store = await Toko.findOne({userId: req.user.id}).populate('address');
+            return res.status(200).json({data: store})
         } catch (error) {
             console.log(error);
             next(error)

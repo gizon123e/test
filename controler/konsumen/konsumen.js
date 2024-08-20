@@ -90,7 +90,7 @@ module.exports = {
           ...tk,
           followed: followed? true : false
         }
-      })).slice(0,2))
+      })))
       return res.status(200).json({message: "Berhasil mendapatkan rekomendasi toko", data})
     } catch (error) {
       console.log(error);
