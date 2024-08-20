@@ -22,7 +22,7 @@ const ProsesPengirimanDistributor = require('../models/distributor/model-proses-
 
 dotenv.config();
 
-const socket = io('http://localhost:5000', {
+const socket = io(process.env.HOST, {
     auth: {
         fromServer: true
     }
@@ -110,6 +110,8 @@ module.exports = {
                 const ss = String(today.getSeconds()).padStart(2, '0');
                 const date = `${yyyy}${mm}${dd}`;
                 const minutes = `${hh}${mn}${ss}`
+                const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000));
+
                 if (transaction_status === "settlement") {
                     pesanan = await Pesanan.findById(detailPesanan.id_pesanan).lean();
                     const { items, shipments,...restOfOrder } = pesanan;
@@ -129,10 +131,45 @@ module.exports = {
                         user = await User.findById(pesanan.userId)
                     }
                     const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
-                    const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id})
+                    const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id}).select('_id kode_invoice')
                     const pengiriman = await Pengiriman.find({invoice: invoiceTambahan._id})
+                    .populate("id_toko")
+                    .populate("productToDelivers.productId")
+                    .populate("invoice")
 
                     for(const pgr of pengiriman){
+                        const id_notif_vendor = new mongoose.Types.ObjectId()
+                        const total_harga_vendor = (pgr.productToDelivers[0].productId.price * pgr.productToDelivers[0].quantity).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                        Notifikasi.create({
+                            _id: id_notif_vendor,
+                            userId: pgr.id_toko.userId,
+                            invoiceId: pgr.invoice,
+                            jenis_invoice: "Non Subsidi",
+                            createdAt: new Date()
+                        })
+                        .then(() => console.log("berhasil simpan notif vendor"))
+                        .catch(() => console.log("Gagal simpan notif vendor"))
+                       
+                        DetailNotifikasi.create({
+                            notifikasiId: id_notif_vendor,
+                            jenis: "Pesanan",
+                            status: `Ada ${pgr.productToDelivers[0].quantity} Pesanan Senilai Rp. ${total_harga_vendor}`,
+                            message: `Segera terima pesanan ${pgr.invoice.kode_invoice} sebelum ${sixHoursAgo}`,
+                            image_product: pgr.productToDelivers[0].productId.image_product[0],
+                            createdAt: new Date()
+                        })
+                        .then(() => console.log("Berhasil simpan detail notif vendor"))
+                        .catch((error) => console.log(error))
+
+                        socket.emit('notif_vendor_pesanan_masuk', {
+                            jenis: "Pesanan",
+                            userId: pgr.id_toko.userId,
+                            status: `Ada ${pgr.productToDelivers[0].quantity} Pesanan Senilai Rp. ${total_harga_vendor}`,
+                            message: `Segera terima pesanan ${pgr.invoice.kode_invoice} sebelum ${sixHoursAgo}`,
+                            image: pgr.productToDelivers[0].productId.image_product[0],
+                            tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+                        })
+
                         const proses = await ProsesPengirimanDistributor.findOne({kode_pengiriman: pgr.kode_pengiriman})
                         for(const prd of pgr.productToDelivers){
                             if(proses){
@@ -166,8 +203,8 @@ module.exports = {
                         return prod._id
                     })
                     const prodNotCopied = []
-
-                    items.map(item=>{
+                    
+                    items.map(item =>{
                         item.product.map(prod =>{
                             if(!ids.includes(prod.productId)) prodNotCopied.push(prod.productId)
                         })
@@ -192,14 +229,13 @@ module.exports = {
                         )
                         
                     )
-
                     const notifikasi = await Notifikasi.findOne({userId: pesanan.userId, jenis_invoice: "Non Subsidi"}).sort({createdAt: -1})
                     DetailNotifikasi.create({
                         notifikasiId: notifikasi._id,
                         jenis: "Info",
                         status: "Pembayaran berhasil",
-                        message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
-                        image_product: dataProd.dataProduct[0].image_product[0],
+                        message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} telah berhasil kamu bayar, pesanan akan segera diproses`,
+                        image_product: pengiriman[0].productToDelivers[0].productId.image_product[0],
                         createdAt: new Date()
                     })
                     .then(() => console.log("notif pembayaran berhasil"))
@@ -210,13 +246,10 @@ module.exports = {
                         userId: notifikasi.userId,
                         status: "Pembayaran berhasil",
                         message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
-                        image: dataProd.dataProduct[0].image_product[0],
+                        image: pengiriman[0].productToDelivers[0].productId.image_product[0],
                         tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`
                     })
 
-                    // for(const shipment of shipments){
-                    //     const notifikasiVendor = await Notifikasi.findOne({userId: })
-                    // }
                     promisesFunct.push(
                         Transaksi2.create({
                             id_pesanan: pesanan._id,
