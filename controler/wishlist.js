@@ -35,7 +35,8 @@ module.exports = {
                 return {
                     ...wish,
                     terjual: terjual ? terjual.track.reduce((acc, val)=> acc + val.soldAtMoment, 0) : 0,
-                    toko: detailToko
+                    toko: detailToko,
+                    wishlisted: true
                 }
             }))
             return res.status(200).json({data})
@@ -50,7 +51,11 @@ module.exports = {
             const { productId } = req.body;
             if(!productId) return res.status(400).json({message: "Kirimkan productId"});
             const added = await Wishlist.exists({userId: req.user.id, productId})
-            if(added) return res.status(403).json({message: "Produk ini sudah ditambahkan ke wishlist"})
+            if(added){
+                Wishlist.findByIdAndDelete(add._id)
+                .then(()=> console.log("berhasil un-wishlist product"))
+                return res.status(201).json({message: "Berhasil menghapus produk dari wishlist"})
+            }
             const prod = await Product.exists({_id: productId});
             if(!prod) return res.status(404).json({message: "Produk tidak ditemukan"})
             const wishlist = await Wishlist.create({

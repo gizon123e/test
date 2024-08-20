@@ -14,7 +14,7 @@ const User = require('../../models/model-auth-user');
 const dotenv = require('dotenv')
 const { io } = require("socket.io-client");
 dotenv.config()
-const socket = io(process.env.HOST, {
+const socket = io('http://localhost:8000', {
     auth: {
       fromServer: true,
     },

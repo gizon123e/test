@@ -36,12 +36,13 @@ const userConnected = [];
 
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
-  socket.on("status_user", (data)=> {
+  socket.on("status_user", async (data)=> {
     console.log(data)
     if(userConnected.some(usr => usr.id === data)){
-      socket.emit('status_user', { online: true })
+      socket.emit('status_user', { online: false, lastOnline: new Date() })
     }else{
-      socket.emit('status_user', { online: false })
+      const user = await User.findById(data).select("lastOnline")
+      socket.emit('status_user', { online: false, lastOnline: new Date(user.lastOnline) })
     }
   })
   if(!userConnected.some(user => user.id === socket.id)) {
