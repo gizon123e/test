@@ -807,14 +807,14 @@ module.exports = {
                 let detailToko;
 
                 const pesanan = {}
-                const kode_pesanan = new Set()
+                // const kode_pesanan = new Set()
                 for(const item of order.items){
                     
                     let isApproved = item.isApproved
                     const productSelected = dataProd?.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
-                    if(!kode_pesanan.has(item.kode_pesanan)){
-                        kode_pesanan.add(item.kode_pesanan)
-                    }
+                    // if(!kode_pesanan.has(item.kode_pesanan)){
+                    //     kode_pesanan.add(item.kode_pesanan)
+                    // }
                     if(productSelected){
                         const selectedPengiriman = pengiriman.filter(pgr => {
                             return pgr.productToDelivers.some(prd => prd.productId.toString() === productSelected._id.toString())
@@ -898,7 +898,7 @@ module.exports = {
                 }
             }
         } catch (error) {
-            console.log(error);
+            consosle.log(error);
         }
     },
 
@@ -1158,7 +1158,6 @@ module.exports = {
                 const pay = paymentMethod.find(item =>{ return item !== null })
                 const paymentNumber = await VirtualAccountUser.findOne({userId: req.user.id, nama_bank: pay._id}).select("nomor_va").lean()
                 Object.keys(store).forEach(key => {
-                    console.log(key)
                     data.push(store[key])
                 });
                 return res.status(200).json({ 
@@ -1244,7 +1243,6 @@ module.exports = {
                     pengiriman.filter(pgr => {
                         return pgr.productToDelivers.some(prd => prd.productId.toString() === productSummary?._id.toString()) && pgr.invoice.toString() === invoiceTambahan?._id.toString()
                     }).forEach(pgr =>{
-                        console.log(pgr.id_toko)
                         pgr.productToDelivers.forEach(prd => { 
                             if(prd.productId.toString() === productSummary._id.toString()){
                                 totalPriceVendorTambahan += prd.quantity * productSummary.total_price
@@ -1255,7 +1253,6 @@ module.exports = {
                     pengiriman.filter(pgr => {
                         return pgr.productToDelivers.some(prd => prd.productId.toString() === productSummary?._id.toString()) && pgr.invoice.toString() === invoiceSubsidi?._id.toString()
                     }).forEach(pgr =>{
-                        console.log(pgr.id_toko)
                         pgr.productToDelivers.forEach(prd => { 
                             if(prd.productId.toString() === productSummary._id.toString()){
                                 totalPriceVendorSubsidi += prd.quantity * productSummary.total_price
@@ -1422,7 +1419,6 @@ module.exports = {
             const today = new Date()
             today.setDate(today.getDate() + 8)
             today.setMinutes(today.getMinutes() + 20)
-            console.log(today)
             const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
             const {
                 metode_pembayaran,
@@ -1437,7 +1433,6 @@ module.exports = {
                 sekolahId,
                 biaya_awal_asuransi
             } = req.body
-            console.log(req.user)
 
             if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
             if(!sekolahId) return res.status(400).json({message: "Kirimkan Id Sekolah"})
