@@ -1489,43 +1489,19 @@ module.exports = {
 
       if (items.length !== shipments.length) return res.status(400).json({ message: "ama dengan dengan data pengiriman" });
 
-      let va_user;
-      let VirtualAccount;
-      let idPay;
-      let nama;
       let toko_vendor = [];
-
-      const splitted = metode_pembayaran.split(" / ");
-      if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
-        va_user = await VaUser.findOne({
-          nama_bank: splitted[0],
-          userId: req.user.id,
-        }).populate("nama_bank");
-        VirtualAccount = await VA.findById(splitted[0]);
-        if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
-        (idPay = va_user.nama_bank._id), (nama = va_user.nama_virtual_account);
-      } else {
-        paymentNumber = "123";
-      }
-
-      const va_used = await VA_Used.findOne({
-        nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
-        userId: req.user.id,
-      });
-
-      if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });
+      
       const decimalPattern = /^\d+\.\d+$/;
       if (decimalPattern.test(total)) return res.status(400).json({ message: `Total yang dikirimkan tidak boleh decimal. ${total}` });
       const idPesanan = new mongoose.Types.ObjectId();
 
-      const a_day_later = new Date(today.getTime() + 24 * 60 * 60 * 1000);
       const dataOrder = await Orders.create({
         ...req.body,
         userId: req.user.id,
         date_order: date,
         biaya_asuransi: biaya_asuransi ? true : false,
-        expire: a_day_later,
       });
+
       let total_pengiriman = await Pengiriman.countDocuments({
         createdAt: {
           $gte: now,
@@ -1766,6 +1742,30 @@ module.exports = {
             });
           }
         } else if (totalQuantity > sekolah.jumlahMurid) {
+          let va_user;
+          let VirtualAccount;
+          let idPay;
+          let nama;
+
+          const splitted = metode_pembayaran.split(" / ");
+          if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
+            va_user = await VaUser.findOne({
+              nama_bank: splitted[0],
+              userId: req.user.id,
+            }).populate("nama_bank");
+            VirtualAccount = await VA.findById(splitted[0]);
+            if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
+            (idPay = va_user.nama_bank._id), (nama = va_user.nama_virtual_account);
+          } else {
+            paymentNumber = "123";
+          }
+
+          const va_used = await VA_Used.findOne({
+            nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
+            userId: req.user.id,
+          });
+
+          if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });
           const id_notif_non_subsidi = new mongoose.Types.ObjectId();
           const id_notif_subsidi = new mongoose.Types.ObjectId();
           const id_transaksi_subsidi = new mongoose.Types.ObjectId();
