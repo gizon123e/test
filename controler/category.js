@@ -184,6 +184,7 @@ module.exports = {
     createCategory: async (req, res, next) => {
         try {
             const { main, sub, specific, showAt, forShow } = req.body;
+            if(!forShow) return res.status(400).json({message: "kirimkan forShow!"})
             let main_category;
             let sub_category
             let specific_category;
