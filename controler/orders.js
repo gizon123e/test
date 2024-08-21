@@ -1577,6 +1577,10 @@ module.exports = {
         biaya_jasa_aplikasi,
         biaya_layanan,
       };
+      let idPay;
+      let nama;
+      let va_user;
+      let VirtualAccount;
 
       if (req.user.role === "konsumen") {
         const sekolah = await Sekolah.findOne({ _id: sekolahId, userId: req.user.id });
@@ -1742,10 +1746,6 @@ module.exports = {
             });
           }
         } else if (totalQuantity > sekolah.jumlahMurid) {
-          let va_user;
-          let VirtualAccount;
-          let idPay;
-          let nama;
 
           const splitted = metode_pembayaran.split(" / ");
           if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
@@ -2237,9 +2237,9 @@ module.exports = {
       await Promise.all(promisesFunct);
 
       return res.status(201).json({
-        message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
+        message: `Berhasil membuat Pesanan`,
         datas: dataOrder,
-        nama,
+        nama: nama? nama : undefined,
         paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
         VirtualAccount,
         total_tagihan,
