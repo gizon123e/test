@@ -21,10 +21,6 @@ io.use(async(socket, next) => {
     const verifyToken = jwt.verifyToken(token);
     if (!verifyToken) return next(new Error("Authentication error"));
     socket.user = verifyToken;
-    await User.updateOne(
-      { _id: socket.user.id },
-      { lastOnline: new Date() }
-    )
     socket.id = socket.user.id;
     next();
   } catch (error) {
@@ -59,6 +55,12 @@ io.on("connection", (socket) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
     console.log('index nya: ',index)
     if (index > -1) userConnected.splice(index, 1);
+    User.updateOne(
+      { _id: socket.user.id },
+      { lastOnline: new Date() }
+    )
+    .then(()=>console.log("berhasil update last login"))
+    .catch((e)=> console.log("gagal update last login"))
     console.log('ada yang logout dengan socket id: ', socket.id)
   });
 
