@@ -575,7 +575,7 @@ module.exports = {
           const dataProd = await DataProductOrder.findOne({ pesananId: order._id });
           const transaksiSubsidi = await Transaksi.findOne({ id_pesanan: order._id, subsidi: true });
           const transaksiTambahan = await Transaksi.findOne({ id_pesanan: order._id, subsidi: false });
-          const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi._id });
+          const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
           const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksiTambahan?._id, status: "Lunas" });
           const pengiriman = await Pengiriman.find({ orderId: order._id }).populate("distributorId").lean();
           const proses = await ProsesPengirimanDistributor.exists({ pengirimanId: { $in: pengiriman.map((pgr) => pgr._id) }, status_distributor: { $ne: "Belum dijemput" } });
@@ -1081,7 +1081,7 @@ module.exports = {
       if ((dataOrder[0].status === "Belum Bayar" && status_order === "Belum Bayar") || dataOrder[0].status === "Dibatalkan") {
         const store = {};
         const pembatalan = await Pembatalan.findOne({ transaksiId: transaksi._id });
-        const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi._id, status: "Belum Lunas" });
+        const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }).lean();
         const pengiriman = await Pengiriman.find({
           orderId: req.params.id,
           invoice: invoiceTambahan._id,
@@ -1151,20 +1151,17 @@ module.exports = {
         });
         const paymentNumber = await VirtualAccountUser.findOne({ userId: req.user.id, nama_bank: pay._id }).select("nomor_va").lean();
         Object.keys(store).forEach((key) => {
-          console.log(key);
           data.push(store[key]);
         });
         return res.status(200).json({
           message: "get detail data order success",
           _id,
-          paymentMethod: pay,
-          paymentNumber,
           alamatUser: addressId,
           order_detail,
           total_pesanan: jumlah_uang,
           status: pembatalan ? "Dibatalkan" : status,
           dibatalkanOleh: pembatalan ? pembatalan.canceledBy : null,
-          invoice: invoiceTambahan,
+          invoice: { ...invoiceTambahan, paymentMethod: pay.nama_bank},
           ...restOfOrder,
           kode_transaksi: transaksi.kode_transaksi,
           biaya_layanan,
@@ -1175,6 +1172,9 @@ module.exports = {
       } else {
         const store = {};
         const transaksiOrder = await Transaksi.find({ id_pesanan: req.params.id });
+        const pay = paymentMethod.find((item) => {
+          return item !== null;
+        });
         const detailInvoiceTambahan = {
           product: [],
           totalHargaProduk: 0,
@@ -1184,6 +1184,7 @@ module.exports = {
           totalPotonganOngkir: 0,
           biaya_layanan: 0,
           biaya_jasa_aplikasi: 0,
+          paymentMethod: pay.nama_bank
         };
         const detailInvoiceSubsidi = {
           product: [],
@@ -1194,6 +1195,7 @@ module.exports = {
           totalPotonganOngkir: 0,
           biaya_layanan: 0,
           biaya_jasa_aplikasi: 0,
+          paymentMethod: "subsidi"
         };
         const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
         const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi?._id, status: "Lunas" });
@@ -1359,10 +1361,6 @@ module.exports = {
         });
         jumlah_uang += total_biaya_layanan + total_biaya_jasa_aplikasi;
         const pembatalan = await Pembatalan.findOne({ pesananId: _id, userId: req.user.id });
-        const pay = paymentMethod.find((item) => {
-          return item !== null;
-        });
-        const paymentNumber = await VirtualAccountUser.findOne({ userId: req.user.id, nama_bank: pay._id }).select("nomor_va").lean();
         const checkStatus = () => {
           if (pembatalan) {
             return "Dibatalkan";
@@ -1375,8 +1373,6 @@ module.exports = {
         const respon = {
           message: "get detail data order success",
           _id,
-          paymentMethod: pay,
-          paymentNumber,
           alamatUser: addressId,
           order_detail,
           total_pesanan: jumlah_uang,
@@ -1394,13 +1390,13 @@ module.exports = {
           data,
         };
 
-                return res.status(200).json(respon)
-            }
+          return res.status(200).json(respon)
+        }
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);
         }
-    },
+  },
 
   checkStatusPembayaran: async(req, res, next) => {
     try {
@@ -1478,6 +1474,8 @@ module.exports = {
         }))
       );
 
+      const a_day_later = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+
       const products = await Product.find({ _id: { $in: productIds.map((prd) => prd.productId) } }).select("_id name_product total_stok minimalOrder image_product");
 
       for (const prod of productIds) {
@@ -1489,43 +1487,19 @@ module.exports = {
 
       if (items.length !== shipments.length) return res.status(400).json({ message: "ama dengan dengan data pengiriman" });
 
-      let va_user;
-      let VirtualAccount;
-      let idPay;
-      let nama;
       let toko_vendor = [];
-
-      const splitted = metode_pembayaran.split(" / ");
-      if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
-        va_user = await VaUser.findOne({
-          nama_bank: splitted[0],
-          userId: req.user.id,
-        }).populate("nama_bank");
-        VirtualAccount = await VA.findById(splitted[0]);
-        if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
-        (idPay = va_user.nama_bank._id), (nama = va_user.nama_virtual_account);
-      } else {
-        paymentNumber = "123";
-      }
-
-      const va_used = await VA_Used.findOne({
-        nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
-        userId: req.user.id,
-      });
-
-      if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });
+      
       const decimalPattern = /^\d+\.\d+$/;
       if (decimalPattern.test(total)) return res.status(400).json({ message: `Total yang dikirimkan tidak boleh decimal. ${total}` });
       const idPesanan = new mongoose.Types.ObjectId();
 
-      const a_day_later = new Date(today.getTime() + 24 * 60 * 60 * 1000);
       const dataOrder = await Orders.create({
         ...req.body,
         userId: req.user.id,
         date_order: date,
         biaya_asuransi: biaya_asuransi ? true : false,
-        expire: a_day_later,
       });
+
       let total_pengiriman = await Pengiriman.countDocuments({
         createdAt: {
           $gte: now,
@@ -1534,22 +1508,6 @@ module.exports = {
       });
 
       const promisesFunct = [];
-
-      promisesFunct.push(
-        DetailPesanan.create({
-          _id: idPesanan,
-          id_pesanan: dataOrder._id,
-          total_price: total,
-          jumlah_dp: total * dp.value,
-          id_va: metode_pembayaran.includes("Virtual Account") ? idPay : null,
-          id_fintech: metode_pembayaran.includes("Fintech") ? idPay : null,
-          id_gerai_tunai: metode_pembayaran.includes("Gerai") ? idPay : null,
-          id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
-          biaya_jasa_aplikasi,
-          biaya_layanan,
-          biaya_asuransi,
-        })
-      );
 
       let total_transaksi = await Transaksi.countDocuments({
         createdAt: {
@@ -1601,6 +1559,10 @@ module.exports = {
         biaya_jasa_aplikasi,
         biaya_layanan,
       };
+      let idPay;
+      let nama;
+      let va_user;
+      let VirtualAccount;
 
       if (req.user.role === "konsumen") {
         const sekolah = await Sekolah.findOne({ _id: sekolahId, userId: req.user.id });
@@ -1778,6 +1740,26 @@ module.exports = {
             });
           }
         } else if (totalQuantity > sekolah.jumlahMurid) {
+
+          const splitted = metode_pembayaran.split(" / ");
+          if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
+            va_user = await VaUser.findOne({
+              nama_bank: splitted[0],
+              userId: req.user.id,
+            }).populate("nama_bank");
+            VirtualAccount = await VA.findById(splitted[0]);
+            if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
+            (idPay = va_user.nama_bank._id), (nama = va_user.nama_virtual_account);
+          } else {
+            paymentNumber = "123";
+          }
+
+          const va_used = await VA_Used.findOne({
+            nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
+            userId: req.user.id,
+          });
+
+          if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });
           const id_notif_non_subsidi = new mongoose.Types.ObjectId();
           const id_notif_subsidi = new mongoose.Types.ObjectId();
           const id_transaksi_subsidi = new mongoose.Types.ObjectId();
@@ -2062,7 +2044,6 @@ module.exports = {
               return Math.round(total_tagihan);
             }
           };
-
           const options = {
             method: "POST",
             headers: {
@@ -2077,7 +2058,7 @@ module.exports = {
                 gross_amount: grossAmount(),
               },
               bank_transfer: {
-                bank: "bca",
+                bank: VirtualAccount.nama_bank.toLowerCase(),
                 va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
               },
             }),
@@ -2246,12 +2227,30 @@ module.exports = {
         transaksiMidtrans = await respon.json();
       }
 
+      console.log(idPay)
+
+      promisesFunct.push(
+        DetailPesanan.create({
+          _id: idPesanan,
+          id_pesanan: dataOrder._id,
+          total_price: total,
+          jumlah_dp: total * dp.value,
+          id_va: metode_pembayaran.includes("Virtual Account") ? idPay : null,
+          id_fintech: metode_pembayaran.includes("Fintech") ? idPay : null,
+          id_gerai_tunai: metode_pembayaran.includes("Gerai") ? idPay : null,
+          id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
+          biaya_jasa_aplikasi,
+          biaya_layanan,
+          biaya_asuransi,
+        })
+      );
+
       await Promise.all(promisesFunct);
 
       return res.status(201).json({
-        message: `Berhasil membuat Pesanan dengan Pembayaran ${splitted[1]}`,
+        message: `Berhasil membuat Pesanan`,
         datas: dataOrder,
-        nama,
+        nama: nama? nama : undefined,
         paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
         VirtualAccount,
         total_tagihan,

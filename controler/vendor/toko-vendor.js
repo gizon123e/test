@@ -14,7 +14,7 @@ const User = require('../../models/model-auth-user');
 const dotenv = require('dotenv')
 const { io } = require("socket.io-client");
 dotenv.config()
-const socket = io('http://localhost:8000', {
+const socket = io("https://staging-backend.superdigitalapps.my.id/", {
     auth: {
       fromServer: true,
     },
@@ -65,18 +65,18 @@ module.exports = {
             }
             if(bintang) query.poin_ulasan = bintang
             const products = await Product.find(query)
-            .select("_id image_product total_stok name_product total_price poin_review")
+            .select("_id image_product total_stok name_product total_price poin_review price")
             .sort({ poin_review: -1, total_stok: -1 })
             .lean();
 
             const pengikut = await Follower.countDocuments({
                 sellerUserId: req.params.id
             });
-
             socket.emit('status_user', req.params.id)
             let status_user 
             
             socket.on('status_user', (data) => {
+                console.log(data)
                 status_user = data
             })
 

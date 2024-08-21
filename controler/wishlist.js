@@ -11,7 +11,7 @@ module.exports = {
             .populate(
                 { 
                     path: "productId", 
-                    select: "name_product total_price image_product poin_review userId",
+                    select: "name_product total_price image_product poin_review userId price",
                     populate: {
                         path: "userId",
                         select: "role"
@@ -54,7 +54,7 @@ module.exports = {
             if(added){
                 Wishlist.findByIdAndDelete(added._id)
                 .then(()=> console.log("berhasil un-wishlist product"))
-                return res.status(201).json({message: "Berhasil menghapus produk dari wishlist"})
+                return res.status(201).json({message: "Berhasil menghapus produk dari wishlist", wishlist: false})
             }
             const prod = await Product.exists({_id: productId});
             if(!prod) return res.status(404).json({message: "Produk tidak ditemukan"})
@@ -62,7 +62,7 @@ module.exports = {
                 userId: req.user.id,
                 productId
             });
-            return res.status(201).json({message: "Berhasil menambahkan produk ke dalam wishlist", data: wishlist})
+            return res.status(201).json({message: "Berhasil menambahkan produk ke dalam wishlist", data: wishlist, wishlist: true})
         } catch (error) {
             console.log(error);
             next(error)
