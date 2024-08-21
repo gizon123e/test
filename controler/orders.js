@@ -1478,6 +1478,8 @@ module.exports = {
         }))
       );
 
+      const a_day_later = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+
       const products = await Product.find({ _id: { $in: productIds.map((prd) => prd.productId) } }).select("_id name_product total_stok minimalOrder image_product");
 
       for (const prod of productIds) {
@@ -2034,10 +2036,6 @@ module.exports = {
               return Math.round(total_tagihan);
             }
           };
-          const bankPembayaran = () => {
-            
-          }
-
           const options = {
             method: "POST",
             headers: {
@@ -2052,7 +2050,7 @@ module.exports = {
                 gross_amount: grossAmount(),
               },
               bank_transfer: {
-                bank: "bca",
+                bank: VirtualAccount.nama_bank.toLowerCase(),
                 va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
               },
             }),
