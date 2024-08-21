@@ -1400,7 +1400,7 @@ module.exports = {
             console.error('Error fetching order:', error);
             next(error);
         }
-    },
+  },
 
   checkStatusPembayaran: async(req, res, next) => {
     try {
@@ -2034,6 +2034,9 @@ module.exports = {
               return Math.round(total_tagihan);
             }
           };
+          const bankPembayaran = () => {
+            
+          }
 
           const options = {
             method: "POST",
