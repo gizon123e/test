@@ -1081,7 +1081,7 @@ module.exports = {
       if ((dataOrder[0].status === "Belum Bayar" && status_order === "Belum Bayar") || dataOrder[0].status === "Dibatalkan") {
         const store = {};
         const pembatalan = await Pembatalan.findOne({ transaksiId: transaksi._id });
-        const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi._id, status: "Belum Lunas" });
+        const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi._id, status: "Belum Lunas" }).lean();
         const pengiriman = await Pengiriman.find({
           orderId: req.params.id,
           invoice: invoiceTambahan._id,
@@ -1156,14 +1156,12 @@ module.exports = {
         return res.status(200).json({
           message: "get detail data order success",
           _id,
-          paymentMethod: (pay && !transkasi) ? pay : null,
-          paymentNumber: (paymentNumber && !transkasi) ? paymentNumber : null,
           alamatUser: addressId,
           order_detail,
           total_pesanan: jumlah_uang,
           status: pembatalan ? "Dibatalkan" : status,
           dibatalkanOleh: pembatalan ? pembatalan.canceledBy : null,
-          invoice: invoiceTambahan,
+          invoice: { ...invoiceTambahan, paymentMethod: pay.nama_bank},
           ...restOfOrder,
           kode_transaksi: transaksi.kode_transaksi,
           biaya_layanan,
@@ -1174,6 +1172,9 @@ module.exports = {
       } else {
         const store = {};
         const transaksiOrder = await Transaksi.find({ id_pesanan: req.params.id });
+        const pay = paymentMethod.find((item) => {
+          return item !== null;
+        });
         const detailInvoiceTambahan = {
           product: [],
           totalHargaProduk: 0,
@@ -1183,6 +1184,7 @@ module.exports = {
           totalPotonganOngkir: 0,
           biaya_layanan: 0,
           biaya_jasa_aplikasi: 0,
+          paymentMethod: pay.nama_bank
         };
         const detailInvoiceSubsidi = {
           product: [],
@@ -1193,6 +1195,7 @@ module.exports = {
           totalPotonganOngkir: 0,
           biaya_layanan: 0,
           biaya_jasa_aplikasi: 0,
+          paymentMethod: "subsidi"
         };
         const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
         const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi?._id, status: "Lunas" });
@@ -1358,10 +1361,6 @@ module.exports = {
         });
         jumlah_uang += total_biaya_layanan + total_biaya_jasa_aplikasi;
         const pembatalan = await Pembatalan.findOne({ pesananId: _id, userId: req.user.id });
-        const pay = paymentMethod.find((item) => {
-          return item !== null;
-        });
-        const paymentNumber = await VirtualAccountUser.findOne({ userId: req.user.id, nama_bank: pay?._id }).select("nomor_va").lean();
         const checkStatus = () => {
           if (pembatalan) {
             return "Dibatalkan";

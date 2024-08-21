@@ -124,7 +124,8 @@ const userModels = new mongoose.Schema(
       default: false
     },
     lastOnline:{
-      type: Date
+      type: Date,
+      default: new Date(1999, 7, 1)
     }
   },
   { timestamps: true }
