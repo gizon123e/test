@@ -109,7 +109,7 @@ module.exports = {
 
   getOrders: async (req, res, next) => {
     try {
-      const { status, page = 1, limit = 2 } = req.query;
+      const { status, page = 2, limit = 2 } = req.query;
       const skip = (page - 1) * limit;
       let dataOrders;
       if (req.user.role === "konsumen") {
