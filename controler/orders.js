@@ -1410,17 +1410,17 @@ module.exports = {
       if(!detailPesanan) return res.status(404).json({message: "pembayaran tidak ditemukan"})
       const panduan = await PanduanPembayaran.findOne({bank_id: detailPesanan.id_va._id}).select('content')
       if(!detailPesanan) return res.status(404).json({message: "order_id tidak ditemukan"})
-      const resAxios = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
+      const resAxios = await axios.get(`https://api.sandbox.midtrans.com/v2/${detailPesanan._id}/status`, {
         headers: {
           Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
         }
       });
-      console.log(resAxios.data)
       return res.status(200).json({ 
         message: "berhasil mendapatkan status pembayaran", 
         paid: resAxios.data.transaction_status === "settlement"? true : false, 
         methodPembayaran: {
-          ...detailPesanan
+          ...detailPesanan,
+          paymenNumbers: resAxios.data.va_numbers[0].va_number
         },
         panduan
       });
@@ -1430,27 +1430,27 @@ module.exports = {
     }
   },  
 
-    createOrder: async (req, res, next) => {
-        try {
-            const today = new Date()
-            today.setDate(today.getDate() + 8)
-            today.setMinutes(today.getMinutes() + 20)
-            console.log(today)
-            const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
-            const {
-                metode_pembayaran,
-                total,
-                items,
-                shipments,
-                dp,
-                biaya_asuransi,
-                biaya_jasa_aplikasi,
-                biaya_layanan,
-                poin_terpakai,
-                sekolahId,
-                biaya_awal_asuransi
-            } = req.body
-            console.log(req.user)
+  createOrder: async (req, res, next) => {
+    try {
+      const today = new Date()
+      today.setDate(today.getDate() + 8)
+      today.setMinutes(today.getMinutes() + 20)
+      console.log(today)
+      const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
+      const {
+          metode_pembayaran,
+          total,
+          items,
+          shipments,
+          dp,
+          biaya_asuransi,
+          biaya_jasa_aplikasi,
+          biaya_layanan,
+          poin_terpakai,
+          sekolahId,
+          biaya_awal_asuransi
+      } = req.body
+      console.log(req.user)                         
 
       if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
       if (!sekolahId) return res.status(400).json({ message: "Kirimkan Id Sekolah" });

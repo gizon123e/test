@@ -187,7 +187,7 @@ module.exports = {
             let main_category;
             let sub_category
             let specific_category;
-            main_category = await MainCategory.findOne({ name: { $regex: new RegExp(`^${main}$`, 'i') } }).populate("contents");
+            main_category = await MainCategory.findOne({ name: { $regex: new RegExp(`^${main}$`, 'i') }, for: forShow }).populate("contents");
             if (req.files === undefined && !main_category && main) return res.status(400).json({ message: "Tidak ada file icon yang dikirimkan" })
             if (main && req.files) {
                 const { icon } = req.files;

@@ -56,6 +56,7 @@ module.exports = {
                                     $expr: {
                                         $eq: ["$userId", "$$userId"]
                                     },
+                                    'status.value': 'terpublish'
                                 }
                             },
                             {
