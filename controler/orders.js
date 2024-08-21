@@ -1375,8 +1375,8 @@ module.exports = {
         const respon = {
           message: "get detail data order success",
           _id,
-          paymentMethod: pay,
-          paymentNumber,
+          paymentMethod: (pay && !invoiceTambahan) ? pay : null,
+          paymentNumber: (paymentNumber && !invoiceTambahan) ? paymentNumber : null,
           alamatUser: addressId,
           order_detail,
           total_pesanan: jumlah_uang,
