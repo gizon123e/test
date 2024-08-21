@@ -1151,14 +1151,13 @@ module.exports = {
         });
         const paymentNumber = await VirtualAccountUser.findOne({ userId: req.user.id, nama_bank: pay._id }).select("nomor_va").lean();
         Object.keys(store).forEach((key) => {
-          console.log(key);
           data.push(store[key]);
         });
         return res.status(200).json({
           message: "get detail data order success",
           _id,
-          paymentMethod: pay,
-          paymentNumber,
+          paymentMethod: (pay && !invoiceTambahan) ? pay : null,
+          paymentNumber: (paymentNumber && !invoiceTambahan) ? paymentNumber : null,
           alamatUser: addressId,
           order_detail,
           total_pesanan: jumlah_uang,
@@ -1372,6 +1371,7 @@ module.exports = {
             return status;
           }
         };
+        console.log(paymentNumber && invoiceTambahan && status_order === "Belum Bayar")
         const respon = {
           message: "get detail data order success",
           _id,

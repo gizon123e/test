@@ -11,7 +11,7 @@ module.exports = {
             .populate(
                 { 
                     path: "productId", 
-                    select: "name_product total_price image_product poin_review userId",
+                    select: "name_product total_price image_product poin_review userId price",
                     populate: {
                         path: "userId",
                         select: "role"
