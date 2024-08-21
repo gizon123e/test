@@ -575,7 +575,7 @@ module.exports = {
           const dataProd = await DataProductOrder.findOne({ pesananId: order._id });
           const transaksiSubsidi = await Transaksi.findOne({ id_pesanan: order._id, subsidi: true });
           const transaksiTambahan = await Transaksi.findOne({ id_pesanan: order._id, subsidi: false });
-          const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi._id });
+          const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
           const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksiTambahan?._id, status: "Lunas" });
           const pengiriman = await Pengiriman.find({ orderId: order._id }).populate("distributorId").lean();
           const proses = await ProsesPengirimanDistributor.exists({ pengirimanId: { $in: pengiriman.map((pgr) => pgr._id) }, status_distributor: { $ne: "Belum dijemput" } });

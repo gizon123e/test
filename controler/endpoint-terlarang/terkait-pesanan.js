@@ -12,7 +12,7 @@ module.exports = async (req, res, next) => {
             Pengiriman.deleteMany({}),
             ProsesPengirimanDistributor.deleteMany({}),
             Transaksi.deleteMany({}),
-            Transaksi2.deteleMany({}),
+            Transaksi2.deleteMany({}),
             Invoice.deleteMany({})
         ]);
         return res.json({message: "berhasil"})
