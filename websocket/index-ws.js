@@ -33,9 +33,8 @@ const userConnected = [];
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
   socket.on("status_user", async (data)=> {
-    console.log(data)
     if(userConnected.some(usr => usr.id === data)){
-      socket.emit('status_user', { online: false, lastOnline: new Date() })
+      socket.emit('status_user', { online: true, lastOnline: new Date() })
     }else{
       const user = await User.findById(data).select("lastOnline")
       socket.emit('status_user', { online: false, lastOnline: new Date(user.lastOnline) })

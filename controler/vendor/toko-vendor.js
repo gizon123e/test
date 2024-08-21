@@ -14,7 +14,7 @@ const User = require('../../models/model-auth-user');
 const dotenv = require('dotenv')
 const { io } = require("socket.io-client");
 dotenv.config()
-const socket = io('http://localhost:8000', {
+const socket = io("https://staging-backend.superdigitalapps.my.id/", {
     auth: {
       fromServer: true,
     },
@@ -72,11 +72,11 @@ module.exports = {
             const pengikut = await Follower.countDocuments({
                 sellerUserId: req.params.id
             });
-
             socket.emit('status_user', req.params.id)
             let status_user 
             
             socket.on('status_user', (data) => {
+                console.log(data)
                 status_user = data
             })
 
