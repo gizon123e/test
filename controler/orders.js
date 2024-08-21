@@ -1362,7 +1362,7 @@ module.exports = {
         const pay = paymentMethod.find((item) => {
           return item !== null;
         });
-        const paymentNumber = await VirtualAccountUser.findOne({ userId: req.user.id, nama_bank: pay._id }).select("nomor_va").lean();
+        const paymentNumber = await VirtualAccountUser.findOne({ userId: req.user.id, nama_bank: pay?._id }).select("nomor_va").lean();
         const checkStatus = () => {
           if (pembatalan) {
             return "Dibatalkan";
@@ -1394,8 +1394,8 @@ module.exports = {
           data,
         };
 
-                return res.status(200).json(respon)
-            }
+          return res.status(200).json(respon)
+        }
         } catch (error) {
             console.error('Error fetching order:', error);
             next(error);
@@ -1510,22 +1510,6 @@ module.exports = {
       });
 
       const promisesFunct = [];
-
-      promisesFunct.push(
-        DetailPesanan.create({
-          _id: idPesanan,
-          id_pesanan: dataOrder._id,
-          total_price: total,
-          jumlah_dp: total * dp.value,
-          id_va: metode_pembayaran.includes("Virtual Account") ? idPay : null,
-          id_fintech: metode_pembayaran.includes("Fintech") ? idPay : null,
-          id_gerai_tunai: metode_pembayaran.includes("Gerai") ? idPay : null,
-          id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
-          biaya_jasa_aplikasi,
-          biaya_layanan,
-          biaya_asuransi,
-        })
-      );
 
       let total_transaksi = await Transaksi.countDocuments({
         createdAt: {
@@ -2233,6 +2217,24 @@ module.exports = {
         const respon = await fetch(`${process.env.MIDTRANS_URL}/charge`, options);
         transaksiMidtrans = await respon.json();
       }
+
+      console.log(idPay)
+
+      promisesFunct.push(
+        DetailPesanan.create({
+          _id: idPesanan,
+          id_pesanan: dataOrder._id,
+          total_price: total,
+          jumlah_dp: total * dp.value,
+          id_va: metode_pembayaran.includes("Virtual Account") ? idPay : null,
+          id_fintech: metode_pembayaran.includes("Fintech") ? idPay : null,
+          id_gerai_tunai: metode_pembayaran.includes("Gerai") ? idPay : null,
+          id_ewallet: metode_pembayaran.includes("E-Wallet") ? idPay : null,
+          biaya_jasa_aplikasi,
+          biaya_layanan,
+          biaya_asuransi,
+        })
+      );
 
       await Promise.all(promisesFunct);
 
