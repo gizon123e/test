@@ -535,7 +535,7 @@ module.exports = {
 
         socket.emit("notif_pesanan_dikirim", {
           jenis: "Pesanan",
-          userId: notifikasi.userId,
+          userId: notifikasiVendor.userId,
           status: "Pesanan telah diterima oleh konsumen",
           message: `${prosesPengiriman.kode_pengiriman} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
           image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
