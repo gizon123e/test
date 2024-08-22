@@ -63,8 +63,7 @@ function formatTanggal(tanggal) {
 function formatWaktu(waktu) {
   const hh = String(waktu.getHours()).padStart(2, "0");
   const mn = String(waktu.getMinutes()).padStart(2, "0");
-  const ss = String(waktu.getSeconds()).padStart(2, "0");
-  return `${hh}:${mn}:${ss}`;
+  return `${hh}:${mn}`;
 }
 
 function formatTanggalBulan(date) {
@@ -1444,8 +1443,10 @@ module.exports = {
     try {
       const today = new Date()
       today.setDate(today.getDate() + 8)
-      today.setMinutes(today.getMinutes() + 20)
-      // console.log(today)
+      console.log(today)
+
+      const tommorow = new Date()
+      tommorow.setDate(tommorow.getDate() + 1)
 
       const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
       const {
@@ -1684,8 +1685,8 @@ module.exports = {
             jenis_invoice: "Subsidi",
             createdAt: new Date(),
           })
-            .then(() => console.log("Berhasil simpan notif konsumen"))
-            .catch(() => console.log("Gagal simpan notif konsumen"));
+          .then(() => console.log("Berhasil simpan notif konsumen"))
+          .catch(() => console.log("Gagal simpan notif konsumen"));
 
           DetailNotifikasi.create({
             notifikasiId: notifikasiKonsumenId,
@@ -1695,13 +1696,9 @@ module.exports = {
             image_product: products[0].image_product[0],
             createdAt: new Date(),
           })
-            .then(() => console.log("Berhasil simpan detail notif konsume"))
-            .catch(() => console.log("Gagal simpan detail notif konsumen"));
-
-          // for (let a = 0; a < shipments.length; a++) {
-            
-          // }
-
+          .then(() => console.log("Berhasil simpan detail notif konsumen"))
+          .catch(() => console.log("Gagal simpan detail notif konsumen"));
+          
           socket.emit("notif_pesanan_berhasil", {
             orderId: dataOrder._id,
             jenis: "Info",
@@ -1713,9 +1710,39 @@ module.exports = {
           });
 
           for (let i = 0; i < toko_vendor.length; i++) {
+            const distributor = await Distributtor.findById(shipments[i].id_distributor);
+            const id_notif_distri = new mongoose.Types.ObjectId();
             const formatHarga = toko_vendor[i].total_harga.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
             const notifikasi_vendor_id = new mongoose.Types.ObjectId();
+           
+            Notifikasi.create({
+              _id: id_notif_distri,
+              userId: distributor.userId,
+              invoiceId: idInvoiceSubsidi,
+              jenis_invoice: "Subsidi",
+              createdAt: new Date(),
+            })
+            .then(() => console.log("Berhasil simpan notif distributtor"))
+            .catch(() => console.log("Gagal simpan notif distributtor"))
+
+            DetailNotifikasi.create({
+              notifikasiId: id_notif_distri,
+              jenis: "Pesanan",
+              status: "Ada pesanan terbaru yang harus dikirim",
+              message: `Terima pengiriman pesanan PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1} sebelum ${formatTanggalBulan(tommorow)} pukul ${formatWaktu(tommorow)}`,
+              image_product: products[0].image_product[0],
+              createdAt: new Date(),
+            })
+            .then(() => console.log("Berhasil simpan detail notif distributtor"))
+            .catch(() => console.log("Gagal simpan detail notif distributtor"));
+
+            socket.emit('notif_distri_pengiriman_baru', {
+              jenis: "Pesanan",
+              status: "Ada pesanan terbaru yang harus dikirim",
+              message: `Terima pengiriman pesanan PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1} sebelum ${formatTanggalBulan(tommorow)} pukul ${formatWaktu(tommorow)}`,
+              image_product: products[0].image_product[0],
+              tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+            })
             Notifikasi.create({
               _id: notifikasi_vendor_id,
               userId: toko_vendor[i].userId,
@@ -1730,7 +1757,7 @@ module.exports = {
               notifikasiId: notifikasi_vendor_id,
               jenis: "Pesanan",
               status: `Ada ${totalQuantity} Pesanan Senilai Rp. ${formatHarga}`,
-              message: `Segera terima pesanan INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1} sebelum ${sixHoursAgo}`,
+              message: `Segera terima pesanan INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1} sebelum jam ${sixHoursAgo}`,
               image_product: toko_vendor[i].image_product,
               createdAt: new Date(),
             })
@@ -1741,7 +1768,7 @@ module.exports = {
               jenis: "Pesanan",
               userId: toko_vendor[i].userId,
               status: `Ada ${totalQuantity} Pesanan Senilai Rp. ${formatHarga}`,
-              message: `Segera terima pesanan INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1} sebelum ${sixHoursAgo}`,
+              message: `Segera terima pesanan INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1} sebelum jam ${sixHoursAgo}`,
               image: toko_vendor[i].image_product,
               tanggal: `${formatTanggal(new Date())}`,
             });
@@ -2234,8 +2261,6 @@ module.exports = {
         transaksiMidtrans = await respon.json();
       }
 
-      console.log(idPay)
-
       promisesFunct.push(
         DetailPesanan.create({
           _id: idPesanan,
@@ -2251,7 +2276,6 @@ module.exports = {
           biaya_asuransi,
         })
       );
-
       await Promise.all(promisesFunct);
 
       return res.status(201).json({
