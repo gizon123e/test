@@ -35,6 +35,7 @@ const Vendor = require("../models/vendor/model-vendor");
 const IncompleteOrders = require("../models/pesanan/model-incomplete-orders");
 const PinaltiVendor = require("../models/vendor/model-pinaltiVendor");
 const PanduanPembayaran = require("../models/model-panduan-pembayaran");
+const PoinHistory = require("../models/model-poin")
 dotenv.config();
 
 const now = new Date();
@@ -2601,7 +2602,12 @@ module.exports = {
       });
       const countedSeller = new Set();
       const addedInv = new Set();
+      const from = []
       for (const shp of shipments) {
+        const sekolah = await ProsesPengirimanDistributor.findOne({pengirimanId: { $in: [shp._id]}})
+        .populate({path: "sekolahId", select: "userId"})
+        .lean()
+        if(sekolah.sekolahId.userId.toString() !== req.user.id.toString()) return res.status(403).json({message: "Tidak bisa mengubah punya orang lain"})
         const dataProduct = await DataProductOrder.findOne({ pesananId: shp.orderId });
         const incompleteOrder = await IncompleteOrders.findOne({ pengirimanId: shp._id });
         const inv = await Invoice.findOne({ _id: shp.invoice, status: "Lunas" }).populate("id_transaksi");
@@ -2609,6 +2615,7 @@ module.exports = {
         let total_harga_produk = 0;
         for (prd of shp.productToDelivers) {
           const selectedProduct = dataProduct.dataProduct.find((prod) => prod._id === prd.productId._id);
+          from.push(selectedProduct)
           console.log(selectedProduct);
           if (inv) {
             total_harga_produk += selectedProduct.total_price * prd.quantity;
@@ -2746,9 +2753,15 @@ module.exports = {
         });
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       } else {
+        PoinHistory.create({
+          userId: req.user.id,
+          jenis: "masuk",
+          value: biayaTetap.poinPembelian,
+          from
+        }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
         for (const item of invoice) {
           const notifikasi = await Notifikasi.findOne({ invoiceId: item.invoice._id });
-          await DetailNotifikasi.create({
+          DetailNotifikasi.create({
             notifikasiId: notifikasi._id,
             status: "Pesanan telah selesai",
             jenis: "Pesanan",
@@ -2756,8 +2769,8 @@ module.exports = {
             image_product: shipments[0].productToDelivers[0].productId.image_product[0],
             createdAt: new Date(),
           })
-            .then(() => console.log("Berhasil menyimpan detail notifikasi "))
-            .catch(() => console.log("Gagal menyimpan detail notifikasi"));
+          .then(() => console.log("Berhasil menyimpan detail notifikasi "))
+          .catch(() => console.log("Gagal menyimpan detail notifikasi"));
           socket.emit("notif_pesanan_selesai", {
             jenis: "Pesanan",
             userId: notifikasi.userId,

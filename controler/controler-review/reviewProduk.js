@@ -6,14 +6,16 @@ const ReviewDistributor = require('../../models/distributor/model-reviewDistribu
 const path = require('path')
 const User = require('../../models/model-auth-user')
 const Konsumen = require('../../models/konsumen/model-konsumen')
+const PoinHistory = require('../../models/model-poin')
+const BiayaTetap = require('../../models/model-biaya-tetap')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
         try {
             const { id_pengiriman, komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen } = req.body;
             const files = req.files;
+            const biayaTetap = await BiayaTetap.findOne({}).lean();
             const images = files ? files.images : [];
-
             // Memproses image files
             const imagePaths = [];
             if (Array.isArray(images)) {
@@ -122,6 +124,18 @@ module.exports = {
                 }, { new: true, useFindAndModify: false });
             }
 
+            PoinHistory.create({
+                userId: req.user.id,
+                jenis: "masuk",
+                value: biayaTetap.poinPembelian,
+                from: [
+                    {
+                        getFrom: "Review Product"
+                    }
+                ]
+            })
+            .then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+            
             res.status(200).json({
                 message: "create data review success",
                 data: savedReview
