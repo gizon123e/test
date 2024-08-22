@@ -12,6 +12,10 @@ const modelPengiriman = new mongoose.Schema({
     waktu_pengiriman: {
         type: String
     },
+    countdown_pengemasan_vendor: {
+      type: Date,
+      default: null
+    },
     jenis_pengiriman: {
         type: mongoose.Types.ObjectId,
         ref: "JenisJasaDistributor"

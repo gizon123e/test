@@ -1,4 +1,4 @@
-const Pesanan  = require('../models/pesanan/model-orders');
+const Pengiriman  = require('../models/model-pengiriman');
 const Notifikasi = require('../models/notifikasi/notifikasi');
 const Product = require('../models/model-product');
 const DetailNotifikasi = require('../models/notifikasi/detail-notifikasi');
@@ -119,107 +119,42 @@ module.exports = {
 
      sendNotifikasi: async(req, res, next) => {
         try{
-          const orders = await Pesanan.find({status: "Berlangsung"}).sort({createdAt: -1}).lean();
-          for (const data of orders){
-               // console.log(data);
-               for( const item of data.items){
-                    const deadline = item.deadline;
+          const shipments = await Pengiriman.find({sellerApproved: true, waktu_pengiriman: {$gte: now}}).sort({createdAt: -1}).populate("invoice").populate("productToDelivers.productId").lean();
+          for (const shipment of shipments){
+               const deadline = new Date(shipment.waktu_pengiriman);
+               const countdown_pengemasan_vendor = new Date(shipment.waktu_pengiriman).setHours(new Date(shipment.waktu_pengiriman).getHours() - 2);
+               const pengemasan = await Pengemasan.findOne({pengirimanId: shipment._id}).lean()
+               
+               const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
+               const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
+               const now = new Date()
 
-                    const product = await Product.findOne({_id: item.product[0].productId});
-                    const pengemasan = await Pengemasan.findOne({orderId: data._id}).lean()
-                    const invoice = await Transaksi.aggregate([
-                         {
-                              $match: {
-                                   id_pesanan: new mongoose.Types.ObjectId(data._id)
-                              }
-                         },
-                         {
-                              $project: {_id : 1}
-                         },
-                         {
-                              $lookup: {
-                                   from: "invoices",
-                                   let: { id_trasaksi: "$_id"},
-                                   pipeline: [
-                                        { $match: { 
-                                             $expr: { $eq: ["$id_transaksi", "$$id_trasaksi"] } } 
-                                        }
-                                   ],
-                                   as: "invoice"
-                              }
-                         },
-                         {
-                              $unwind: "$invoice"
-                         },
-                    ])
+               console.log(`sekarang ${now}`)
+               console.log(`muncul notif ${new Date(waktuMunculNotif.setSeconds(0,0))}`)
 
-                    if(invoice.length == 1){
-                         const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
-                    
-                         const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
-
-                         // const today = new Date()
-                         // today.setDate(today.getDate() + 7)
-                         // today.setHours(today.getHours() + 9)
-                         // today.setMinutes(today.getMinutes() + 6)
-                         // console.log(today)
-                         
-                         const now = new Date()
-                         const notifikasi = await Notifikasi.findOne({invoiceId: invoice[0]._id}).sort({createdAt: -1}).populate('invoiceId');
-                         // return res.status(200).json(notifikasi)
-                         // console.log(notifikasi)
-                         if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                              DetailNotifikasi.create({
-                                   notifikasiId: notifikasi._id,
-                                   status: "Pesanan sedang dikemas",
-                                   message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
-                                   jenis: "Pesanan",
-                                   image_product: product.image_product[0],
-                                   createdAt: new Date(),
-                              })
-
-                              socket.emit('notif_pesanan_dikemas', {
-                                   jenis: "Pesanan",
-                                   userId: notifikasi.userId,
-                                   status: "Pesanan sedang dikemas",
-                                   message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
-                                   image: product.image_product[0],
-                                   tanggal: formatTanggal(new Date()),
-                              })
-                         } 
-                    } else {
-                         for(const item of invoice){
-                              const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
-                              
-                              const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
-                              
-                              const now = new Date()
-                              const notifikasi = await Notifikasi.findOne({invoiceId: item.invoice._id}).sort({createdAt: -1}).populate('invoiceId');
-                              
-                              if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                                   DetailNotifikasi.create({
-                                        notifikasiId: notifikasi._id,
-                                        status: "Pesanan sedang dikemas",
-                                        message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
-                                        jenis: "Pesanan",
-                                        image_product: product.image_product[0],     
-                                        createdAt: new Date(),
-                                   })
-                                   .then(() => console.log("Berhasil menyimpan notif"))
-                                   .catch(() => console.log("Gagal menyimpan notif"));
-
-                                   socket.emit('notif_pesanan_dikemas', {
-                                        jenis: "Pesanan",
-                                        userId: notifikasi.userId,
-                                        status: "Pesanan sedang dikemas",
-                                        message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
-                                        image: product.image_product[0],
-                                        tanggal: formatTanggal(new Date()),
-                                   })
-                              }
-                         }
-                    }
-               }
+               const notifikasi = await Notifikasi.findOne({invoiceId: shipment.invoice._id}).sort({createdAt: -1});
+               if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
+                    console.log(countdown_pengemasan_vendor)
+                    await Pengiriman.findOneAndUpdate({ _id: shipment._id }, { countdown_pengemasan_vendor: countdown_pengemasan_vendor }, { new: true })
+                    DetailNotifikasi.create({
+                         notifikasiId: notifikasi._id,
+                         status: "Pesanan sedang dikemas",
+                         message: `${shipment.invoice.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
+                         jenis: "Pesanan",
+                         image_product: shipment.productToDelivers[0].productId.image_product[0],
+                         createdAt: new Date(),
+                    })
+                    .then(() => console.log("Berhasil simpan detail notif konsumen"))
+                    .catch(() => console.log("Gagal simpan detail notif konsumen"))
+                    socket.emit('notif_pesanan_dikemas', {
+                         jenis: "Pesanan",
+                         userId: notifikasi.userId,
+                         status: "Pesanan sedang dikemas",
+                         message: `${notifikasi.invoiceId.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
+                         image: shipment.productToDelivers[0].productId.image_product[0],
+                         tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+                    })
+               } 
           }
           } catch (error) {
                console.log(error);
