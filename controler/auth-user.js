@@ -339,6 +339,29 @@ module.exports = {
     }
   },
 
+  editPassword: async(req, res, next) =>{
+    try {
+      const { password, token } = req.body;
+      if(!password || password.trim().length === 0) return res.status(400).json({message: "Password Kosong"});
+      const regexPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%#?&])[A-Za-z\d@$!%#?&]{8,}$/;
+      if(!regexPassword.test(password)) return res.status(400).json({message: "Password tidak valid"})
+      const hashedPassword =  await bcrypt.hash(password, 10);
+      const verifyToken = jwt.verifyToken(token);
+
+      if(!verifyToken) return res.status(401).json({message: "Token Salah"});
+      if(verifyToken.userId !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Pin Orang Lain"});
+
+      await User.findByIdAndUpdate(req.user.id, {
+        password: hashedPassword
+      });
+      
+      return res.status(201).json({message: "Berhasil Mengubah Password"});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
   validateUser: async (req, res, next) => {
     try {
       const { phone, email } = req.body
