@@ -49,6 +49,12 @@ const modelBiayaTetap = mongoose.Schema({
   },
   kelompok_topping: {
     type: String
+  },
+  poinRating: {
+    type: Number
+  },
+  poinPembelian: {
+    type: Number
   }
 });
 

@@ -10,7 +10,7 @@ const io = new Server({
   allowedHeaders: ["Chat Header"],
 });
 
-io.use((socket, next) => {
+io.use(async(socket, next) => {
   try {
     if(socket.handshake.auth.fromServer){
       socket.user = { id: '1',  email: { content: null } }
@@ -32,7 +32,14 @@ const userConnected = [];
 
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
-  
+  socket.on("status_user", async (data)=> {
+    if(userConnected.some(usr => usr.id === data)){
+      socket.emit('status_user', { online: true, lastOnline: new Date() })
+    }else{
+      const user = await User.findById(data).select("lastOnline")
+      socket.emit('status_user', { online: false, lastOnline: new Date(user.lastOnline) })
+    }
+  })
   if(!userConnected.some(user => user.id === socket.id)) {
     userConnected.push(socket.user); 
   }
@@ -47,6 +54,12 @@ io.on("connection", (socket) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
     console.log('index nya: ',index)
     if (index > -1) userConnected.splice(index, 1);
+    User.updateOne(
+      { _id: socket.user.id },
+      { lastOnline: new Date() }
+    )
+    .then(()=>console.log("berhasil update last login"))
+    .catch((e)=> console.log("gagal update last login"))
     console.log('ada yang logout dengan socket id: ', socket.id)
   });
 
@@ -170,6 +183,12 @@ io.on("connection", (socket) => {
     const {userId, ...rest} = data
     console.log(data)
     io.to(userId).emit('notifikasi_vendor_pesanan_dirikim', JSON.stringify({...rest}));
+  })
+  // SOCKET NOTIFIKASI PADA DISTRIBUTOR
+  socket.on('notif_distri_pengiriman_baru', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_distri_pengiriman_baru', JSON.stringify({...rest}));
   })
 });
 

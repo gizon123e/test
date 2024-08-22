@@ -123,6 +123,10 @@ const userModels = new mongoose.Schema(
       required: false,
       default: false
     },
+    lastOnline:{
+      type: Date,
+      default: new Date(1999, 7, 1)
+    }
   },
   { timestamps: true }
 );

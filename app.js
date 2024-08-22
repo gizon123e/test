@@ -161,6 +161,11 @@ app.use('/api/campeni-profile', require('./routes/router-campeniProfile/router-m
 // Wishlist
 app.use('/api/wishlist', require('./routes/router-wishlist'))
 
+//Router PPOB
+app.use('/api/pulsa', require('./routes/router-ppob/router-pulsa/router-pulsa'));
+app.use('/api/data', require('./routes/router-ppob/router-data/router-data'));
+app.use('/api/listrik', require('./routes/router-ppob/router-listrik/router-listrik'))
+
 // midelware error
 app.use(require("./midelware/error-midelware"));
 
@@ -170,7 +175,7 @@ app.listen(4000, () => {
   send_notif()
   batalPesanan()
   console.log("connection express success");
-  websocket.listen(5000, () => {
+  websocket.listen(8000, () => {
     console.log("Connection websocket success");
   });
 });

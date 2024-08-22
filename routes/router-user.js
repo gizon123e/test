@@ -17,7 +17,9 @@ router.post("/add-pin", authorization, controlerAuthUser.addPin);
 router.post("/register/send_otp_email", controlerAuthUser.sendOtpWithEmail);
 router.post("/register/send_otp_phone", controlerAuthUser.sendOtpWithPhone);
 router.post("/check-pin", authorization, controlerAuthUser.verifyPin);
+router.post("/check-password", authorization, controlerAuthUser.verifyPassword);
 router.put("/update", authorization, controlerAuthUser.editUser);
 router.put("/edit-pin", authorization, controlerAuthUser.editPin);
+router.put("/edit-password", authorization, controlerAuthUser.editPassword);
 
 module.exports = router;

@@ -160,7 +160,7 @@ module.exports = {
                          const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
 
                          // const today = new Date()
-                         // // today.setDate(today.getDate() + 7)
+                         // today.setDate(today.getDate() + 7)
                          // today.setHours(today.getHours() + 9)
                          // today.setMinutes(today.getMinutes() + 6)
                          // console.log(today)
@@ -170,7 +170,6 @@ module.exports = {
                          // return res.status(200).json(notifikasi)
                          // console.log(notifikasi)
                          if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                              // console.log("HAPPY NEW YEAR");
                               DetailNotifikasi.create({
                                    notifikasiId: notifikasi._id,
                                    status: "Pesanan sedang dikemas",
@@ -194,18 +193,11 @@ module.exports = {
                               const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
                               
                               const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
-
-                              // const today = new Date()
-                              // // today.setDate(today.getDate() + )
-                              // today.setHours(today.getHours() + 9)
-                              // today.setMinutes(today.getMinutes() + 7)
-                              // console.log(today)
                               
                               const now = new Date()
                               const notifikasi = await Notifikasi.findOne({invoiceId: item.invoice._id}).sort({createdAt: -1}).populate('invoiceId');
                               
                               if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                                   // console.log("HAPPY NEW YEAR");
                                    DetailNotifikasi.create({
                                         notifikasiId: notifikasi._id,
                                         status: "Pesanan sedang dikemas",
@@ -231,11 +223,10 @@ module.exports = {
                }
           }
           } catch (error) {
-          console.log(error);
-            next(error)
+               console.log(error);
+               next(error)
           }
      },
-     
      readNotifikasi: async(req, res, next) => {
           try{
                const detailNotifikasi = await DetailNotifikasi.findByIdAndUpdate(req.params.id, {is_read: true}, {new: true})
