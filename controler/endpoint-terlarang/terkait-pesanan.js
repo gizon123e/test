@@ -6,6 +6,7 @@ const DetailNotifikasi = require("../../models/notifikasi/detail-notifikasi");
 const Notifikasi = require("../../models/notifikasi/notifikasi");
 const DataProductOrder = require("../../models/pesanan/model-data-product-order");
 const Pesanan = require("../../models/pesanan/model-orders");
+const Pengemasan = require("../../models/model-pengemasan");
 
 module.exports = async (req, res, next) => {
     try {
@@ -19,7 +20,8 @@ module.exports = async (req, res, next) => {
             Invoice.deleteMany({}),
             DetailNotifikasi.deleteMany({}),
             Notifikasi.deleteMany({}),
-            DataProductOrder.deleteMany({})
+            DataProductOrder.deleteMany({}),
+            Pengemasan.deleteMany({})
         ]);
         return res.json({message: "berhasil"})
     } catch (error) {

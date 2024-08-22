@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const modelPengemasan = new mongoose.Schema({
-     orderId: {
+     pengirimanId: {
          type: mongoose.Types.ObjectId,
-         ref: "Pesanan",
+         ref: "Pengiriman",
          required: true
      },
      total_quantity: {

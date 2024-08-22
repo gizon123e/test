@@ -1452,7 +1452,8 @@ module.exports = {
   createOrder: async (req, res, next) => {
     try {
       const today = new Date()
-      today.setDate(today.getDate() + 8)
+      // today.setHours(today.getHours() + 1)
+      today.setMinutes(today.getMinutes() + 28)
       console.log(today)
 
       const tommorow = new Date()
@@ -2478,7 +2479,7 @@ module.exports = {
         }
 
         const pengemasan = await Pengemasan.create({
-          orderId: pengiriman.orderId,
+          pengirimanId: pengiriman._id,
           total_quantity: totalQuantity,
           total_jarak: jarakTempuh,
           waktu_pengemasan: waktuPengemasan,
@@ -2564,7 +2565,7 @@ module.exports = {
           image: pengiriman.productToDelivers[0].productId.image_product[0],
           tanggal: `${formatWaktu(new Date())}`,
         });
-        return res.status(200).json({ message: "Berhasil Mengkonfirmasi Pesanan", updatePengemasan });
+        return res.status(200).json({ message: "Berhasil Mengkonfirmasi Pesanan",   updatePengemasan });
       }
     } catch (error) {
       console.log(error);
