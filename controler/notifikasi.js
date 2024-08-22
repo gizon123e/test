@@ -223,8 +223,8 @@ module.exports = {
                }
           }
           } catch (error) {
-          console.log(error);
-          next(error)
+               console.log(error);
+               next(error)
           }
      },
      readNotifikasi: async(req, res, next) => {
