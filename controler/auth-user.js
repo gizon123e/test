@@ -269,6 +269,29 @@ module.exports = {
     }
   },
 
+  verifyPassword: async(req, res, next) =>{
+    try {
+      const { password } = req.body
+      if(!password || password.trim().length === 0) return res.status(400).json({message: "password Kosong"})
+      const user = await User.findById(req.user.id);
+      const validatePw = await bcrypt.compare(
+        password,
+        user.password
+      );
+      if(!validatePw) return res.status(401).json({message: "Password Salah"});
+      const tokenPw = {
+        userId: req.user.id,
+        password: password
+      }
+
+      const token = jwt.createToken(tokenPw)
+      return res.status(200).json({message: "Pin Benar", token});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
   chekDuplicateNumberOrEmail: async(req, res, next) => {
     try {
       const { email , phone } = req.body;
