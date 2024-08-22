@@ -179,7 +179,7 @@ module.exports = {
       }
 
       const idVendors = vendorDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
-      
+
       const dataProds = await Product.aggregate([
         {
           $match: {
@@ -738,16 +738,37 @@ module.exports = {
       const dataProds = [];
       for (const produk of data) {
         const namaVendor = await Vendor.findOne({ userId: produk.userId });
-        dataProds.push({
-          ...produk.toObject(),
-          nama: namaVendor?.nama || namaVendor?.namaBadanUsaha,
-        });
+        if (namaVendor) {
+          dataProds.push({
+            ...produk.toObject(),
+            nama: namaVendor?.nama || namaVendor?.namaBadanUsaha,
+          });
+        }
       }
-      if (data && data.length > 0) {
-        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds });
-      } else {
-        return res.status(404).json({ message: "User tidak memiliki produk", data });
+      return res.status(200).json({ message: "get data succcess", data });
+
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
+  list_product_adminPanelSupplier: async (req, res, next) => {
+    try {
+      const data = await Product.find().populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId");
+      const dataProds = [];
+      for (const produk of data) {
+        const namaVendor = await Supplier.findOne({ userId: produk.userId });
+        if (namaVendor) {
+          dataProds.push({
+            ...produk.toObject(),
+            nama: namaVendor?.nama || namaVendor?.namaBadanUsaha,
+          });
+        }
       }
+
+      return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds });
+
     } catch (error) {
       console.log(error);
       next(error);
@@ -763,8 +784,8 @@ module.exports = {
         const terjual = await SalesReport.findOne({ productId: produk._id });
         const totalTerjual = terjual
           ? terjual.track.reduce((accumulator, current) => {
-              return accumulator + current.soldAtMoment;
-            }, 0)
+            return accumulator + current.soldAtMoment;
+          }, 0)
           : 0;
         dataProds.push({
           ...produk,
@@ -798,12 +819,12 @@ module.exports = {
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
       const total_terjual = terjual
         ? terjual.track.reduce((acc, val) => {
-            return acc + val.soldAtMoment;
-          }, 0)
+          return acc + val.soldAtMoment;
+        }, 0)
         : 0;
       let toko;
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
-      const wishlisted = await Wishlist.exists({productId: req.params.id, userId: req.user?.id})
+      const wishlisted = await Wishlist.exists({ productId: req.params.id, userId: req.user?.id })
       switch (dataProduct.userId.role) {
         case "vendor":
           toko = await TokoVendor.findOne({ userId: dataProduct.userId._id }).populate("address");
@@ -1110,7 +1131,7 @@ module.exports = {
           total_terjual: terjual ? total_terjual : 0,
         },
         toko,
-        wishlisted: wishlisted? true : false,
+        wishlisted: wishlisted ? true : false,
         nutrisi,
       });
     } catch (error) {
@@ -1372,7 +1393,7 @@ module.exports = {
           const totalBeratPangan = pangan.reduce((acc, val) => {
             return acc + parseFloat(val?.berat);
           }, 0);
-          
+
           if (pangan.length === 1) {
             delete req.body.varian;
             delete req.body.pangan;
@@ -1391,27 +1412,27 @@ module.exports = {
               message: "Upload Product Success",
               newProduct,
             });
-          }else {
+          } else {
             const maxBeratPangan = pangan.reduce(
               (max, current) => {
                 return current.berat > max.berat ? current : max;
               },
               { berat: -Infinity }
             );
-  
+
             const pangan_terbanyak = await Pangan.findById(maxBeratPangan.panganId);
-  
+
             const kelompok_pangan = pangan_terbanyak.kelompok_pangan;
             const kode_bahan = pangan_terbanyak.kode_bahan.substring(0, 1);
-  
+
             const kodeRegex = new RegExp(`${kode_bahan}P`);
-  
+
             const pangan_terakhir = await Pangan.findOne({ kode_bahan: kodeRegex }).sort({ kode_bahan: -1 });
-  
+
             const kode_bahan_terbaru = `${kode_bahan}P` + `${parseInt(pangan_terakhir.kode_bahan.substring(2, 5)) + 1}`;
-  
+
             const nama_bahan = [];
-  
+
             for (const item of pangan) {
               const bahan = await Pangan.findById(item.panganId).select(
                 "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
@@ -1419,7 +1440,7 @@ module.exports = {
               nama_bahan.push(bahan);
             }
             const nilai_gizi_pangan = [];
-  
+
             for (let i = 0; i < pangan.length || i < nama_bahan.length; i++) {
               const air = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].air.value);
               const energi = (pangan[i].berat / totalBeratPangan) * parseFloat(nama_bahan[i].energi.value);
@@ -1454,7 +1475,7 @@ module.exports = {
                 vitc: formatNumber(vitc),
               });
             }
-  
+
             const tambah_seluruh_gizi = nilai_gizi_pangan.reduce((accumulator, current) => {
               for (let key in current) {
                 if (accumulator[key]) {
@@ -1466,7 +1487,7 @@ module.exports = {
               Object.keys(accumulator).map((key) => formatNumber(accumulator[key]));
               return accumulator;
             }, {});
-  
+
             Object.keys(tambah_seluruh_gizi).forEach((key) => (tambah_seluruh_gizi[key] = formatNumber(tambah_seluruh_gizi[key])));
 
             delete req.body.varian;

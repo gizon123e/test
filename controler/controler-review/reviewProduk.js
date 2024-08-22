@@ -4,11 +4,13 @@ const ReviewVendor = require('../../models/vendor/model-reviewVendor')
 const TokoVendor = require('../../models/vendor/model-toko')
 const ReviewDistributor = require('../../models/distributor/model-reviewDistributor')
 const path = require('path')
+const User = require('../../models/model-auth-user')
+const Konsumen = require('../../models/konsumen/model-konsumen')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
         try {
-            const { komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen } = req.body;
+            const { id_pengiriman, komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen } = req.body;
             const files = req.files;
             const images = files ? files.images : [];
 
@@ -167,6 +169,31 @@ module.exports = {
                     reviews
                 }
             });
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
+    },
+
+    getHistoryReviews: async (req, res, next) => {
+        try {
+            const user = await Konsumen.findOne({ userId: req.user.id })
+            if (!user) return res.status(404).json({ message: "data user tidak di temukan" })
+
+            const reviews = await ReviewProduk.find({ id_konsumen: user._id }).populate("id_konsumen").populate('id_produk')
+            if (reviews.length === 0) return res.status(400).json({ message: 'saat ini kamo belom ada histroy review' })
+
+            res.status(200).json({
+                message: "get data success",
+                datas: reviews
+            })
         } catch (error) {
             console.log(error)
             if (error && error.name === 'ValidationError') {

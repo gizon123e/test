@@ -114,7 +114,6 @@ module.exports = {
                return res.status(200).json({total: notifikasi.length, notifikasi}) 
           }catch (error) {
             console.log(error);
-            next(error)
           }
      },
 
@@ -170,7 +169,6 @@ module.exports = {
                })   
           } catch(error){
                console.log(error)
-               next(error)
           }
      } 
 }

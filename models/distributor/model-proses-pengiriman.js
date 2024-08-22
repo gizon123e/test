@@ -11,11 +11,11 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         ref: "Sekolah",
         required: [true, "konsumenId harus di isi"]
     },
-    pengirimanId: {
+    pengirimanId: [{
         type: mongoose.Types.ObjectId,
         ref: "Pengiriman",
         required: [true, 'kirimkan pengirimanId']
-    },
+    }],
     tokoId: {
         type: mongoose.Types.ObjectId,
         ref: "TokoVendor",
