@@ -67,6 +67,19 @@ function formatWaktu(waktu) {
   return `${hh}:${mn}:${ss}`;
 }
 
+function formatTanggalBulan(date) {
+  const bulan = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  const tanggal = date.getDate();
+  const bulanIndex = date.getMonth();
+  const tahun = date.getFullYear();
+
+  return `${tanggal} ${bulan[bulanIndex]} ${tahun}`;
+}
+
 const socket = io(process.env.HOST, {
   auth: {
     fromServer: true,
@@ -111,6 +124,7 @@ module.exports = {
     try {
       const { status, page = 1, limit = 2 } = req.query;
       const skip = (page - 1) * limit;
+      console.log(req.user)
       let dataOrders;
       if (req.user.role === "konsumen") {
         const filter = {
@@ -1428,10 +1442,11 @@ module.exports = {
 
   createOrder: async (req, res, next) => {
     try {
-      // const today = new Date()
-      // today.setDate(today.getDate() + 8)
-      // today.setMinutes(today.getMinutes() + 20)
+      const today = new Date()
+      today.setDate(today.getDate() + 8)
+      today.setMinutes(today.getMinutes() + 20)
       // console.log(today)
+
       const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
       const {
           metode_pembayaran,
@@ -1601,19 +1616,7 @@ module.exports = {
             detailBiaya.totalOngkir += dataOrder.shipments[i].ongkir;
             detailBiaya.totalPotonganOngkir += dataOrder.shipments[i].potongan_ongkir;
             detailBiaya.jumlahOngkir += dataOrder.shipments[i].total_ongkir;
-            // const distributor = await Distributor.findOne(dataOrder.shipments[i].id_distributor)
-            // Notifikasi.create({
-            //   userId: distributor.userId,
-            //   invoiceId: idInvoiceSubsidi,
-            //   jenis_invoice: "Subsidi",
-            //   createdAt: new Date()
-            // })
-            // .then(() => console.log("berhasil simpan notif ditributor"))
-            // .catch(() => console.log("gagal simpan notif ditributor"));
-
-            // DetailNotifikasi.create({
-
-            // })
+            
             promisesFunct.push(
               Pengiriman.create({
                 orderId: dataOrder._id,
@@ -1694,6 +1697,10 @@ module.exports = {
           })
             .then(() => console.log("Berhasil simpan detail notif konsume"))
             .catch(() => console.log("Gagal simpan detail notif konsumen"));
+
+          // for (let a = 0; a < shipments.length; a++) {
+            
+          // }
 
           socket.emit("notif_pesanan_berhasil", {
             orderId: dataOrder._id,
