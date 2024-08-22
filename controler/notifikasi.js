@@ -227,7 +227,6 @@ module.exports = {
           next(error)
           }
      },
-     
      readNotifikasi: async(req, res, next) => {
           try{
                const detailNotifikasi = await DetailNotifikasi.findByIdAndUpdate(req.params.id, {is_read: true}, {new: true})

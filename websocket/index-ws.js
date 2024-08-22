@@ -184,6 +184,12 @@ io.on("connection", (socket) => {
     console.log(data)
     io.to(userId).emit('notifikasi_vendor_pesanan_dirikim', JSON.stringify({...rest}));
   })
+  // SOCKET NOTIFIKASI PADA DISTRIBUTOR
+  socket.on('notif_distri_pengiriman_baru', async(data) => {
+    const {userId, ...rest} = data
+    console.log(data)
+    io.to(userId).emit('notifikasi_distri_pengiriman_baru', JSON.stringify({...rest}));
+  })
 });
 
 module.exports = io;
