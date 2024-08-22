@@ -112,7 +112,6 @@ module.exports = {
       const { status, page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
       let dataOrders;
-      console.log(req.user)
       if (req.user.role === "konsumen") {
         const filter = {
           userId: new mongoose.Types.ObjectId(req.user.id),
