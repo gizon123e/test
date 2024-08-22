@@ -382,7 +382,7 @@ module.exports = {
 
         socket.emit("notif_vendor_pesanan_dikirim", {
           jenis: "Pesanan",
-          userId: toko_user_id,
+          userId: toko_vendor_id,
           status: "Pesanan sedang dalam pengiriman ke konsumen",
           message: `Pesanan ${prosesPengiriman.kode_pengiriman} sedang dalam perjalanan menuju alamat tujuan konsumen`,
           image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
