@@ -122,7 +122,7 @@ module.exports = {
 
   getOrders: async (req, res, next) => {
     try {
-      const { status, page = 1, limit = 2 } = req.query;
+      const { status, page = 2, limit = 2 } = req.query;
       const skip = (page - 1) * limit;
       console.log(req.user)
       let dataOrders;
