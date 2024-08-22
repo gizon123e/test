@@ -269,6 +269,29 @@ module.exports = {
     }
   },
 
+  verifyPassword: async(req, res, next) =>{
+    try {
+      const { password } = req.body
+      if(!password || password.trim().length === 0) return res.status(400).json({message: "password Kosong"})
+      const user = await User.findById(req.user.id);
+      const validatePw = await bcrypt.compare(
+        password,
+        user.password
+      );
+      if(!validatePw) return res.status(401).json({message: "Password Salah"});
+      const tokenPw = {
+        userId: req.user.id,
+        password: password
+      }
+
+      const token = jwt.createToken(tokenPw)
+      return res.status(200).json({message: "Password Benar", token});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
   chekDuplicateNumberOrEmail: async(req, res, next) => {
     try {
       const { email , phone } = req.body;
@@ -310,6 +333,29 @@ module.exports = {
       });
       
       return res.status(201).json({message: "Berhasil Mengubah Pin"});
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
+  editPassword: async(req, res, next) =>{
+    try {
+      const { password, token } = req.body;
+      if(!password || password.trim().length === 0) return res.status(400).json({message: "Password Kosong"});
+      const regexPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%#?&])[A-Za-z\d@$!%#?&]{8,}$/;
+      if(!regexPassword.test(password)) return res.status(400).json({message: "Password tidak valid"})
+      const hashedPassword =  await bcrypt.hash(password, 10);
+      const verifyToken = jwt.verifyToken(token);
+
+      if(!verifyToken) return res.status(401).json({message: "Token Salah"});
+      if(verifyToken.userId !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Password Orang Lain"});
+
+      await User.findByIdAndUpdate(req.user.id, {
+        password: hashedPassword
+      });
+      
+      return res.status(201).json({message: "Berhasil Mengubah Password"});
     } catch (error) {
       console.log(error);
       next(error);

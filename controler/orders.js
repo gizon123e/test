@@ -121,7 +121,7 @@ module.exports = {
 
   getOrders: async (req, res, next) => {
     try {
-      const { status, page = 2, limit = 2 } = req.query;
+      const { status, page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
       console.log(req.user)
       let dataOrders;
@@ -668,6 +668,11 @@ module.exports = {
 
             for (const key of Object.keys(pesanan)) {
               const pembatalan = await Pembatalan.findOne({ pengirimanId: pesanan[key].pengiriman._id });
+              const tidakMemenuhiSyarat = await IncompleteOrders.exists({
+                userIdSeller: req.user.id, 
+                pengirimanId: pesanan[key].pengiriman._id,
+                userIdKonsumen: restOfOrder.sekolah.userId
+              })
               const checkStatus = () => {
                 if (pesanan[key].pengiriman.isRequestedToPickUp && !pembatalan) {
                   return "Menunggu Distributor";
@@ -677,6 +682,8 @@ module.exports = {
                   return "Pesanan Terbaru";
                 } else if (pesanan[key].pengiriman.status_pengiriman === "dikirim" && !pembatalan) {
                   return "Sedang Penjemputan";
+                } else if (tidakMemenuhiSyarat){
+                  return "Tidak Memenuhi Syarat"
                 } else if (pembatalan) {
                   return "Kadaluarsa";
                 }
@@ -1197,7 +1204,7 @@ module.exports = {
           totalPotonganOngkir: 0,
           biaya_layanan: 0,
           biaya_jasa_aplikasi: 0,
-          paymentMethod: pay.nama_bank
+          paymentMethod: pay?.nama_bank
         };
         const detailInvoiceSubsidi = {
           product: [],
