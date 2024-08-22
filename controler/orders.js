@@ -677,22 +677,25 @@ module.exports = {
               const checkStatus = () => {
                 if (pesanan[key].pengiriman.isRequestedToPickUp && !pembatalan) {
                   return "Menunggu Distributor";
-                } else if (pesanan[key].pengiriman.sellerApproved && !pembatalan) {
+                }
+                if (pesanan[key].pengiriman.sellerApproved && !pembatalan) {
                   return "Dikemas";
-                } else if (!pesanan[key].pengiriman.sellerApproved && !pembatalan) {
+                }  
+                if (!pesanan[key].pengiriman.sellerApproved && !pembatalan) {
                   return "Pesanan Terbaru";
-                } else if (pesanan[key].pengiriman.status_pengiriman === "dikirim" && !pembatalan) {
+                }  
+                if (pesanan[key].pengiriman.status_pengiriman === "dikirim" && !pembatalan) {
                   return "Sedang Penjemputan";
-                } else if (tidakMemenuhiSyarat){
-                  return "Tidak Memenuhi Syarat"
-                } else if (pembatalan) {
+                }  
+                if (pembatalan) {
                   return "Kadaluarsa";
                 }
               };
               const checkCreatedAt = () => {
                 if (pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi._id.toString()) {
                   return createdAt;
-                } else if (pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan._id.toString()) {
+                }  
+                if (pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan._id.toString()) {
                   return updatedAt;
                 }
               };
@@ -715,7 +718,7 @@ module.exports = {
 
         let filteredData = data.filter((dt) => {
           if (!status) return true;
-          return dt.status === status;
+          return dt.status.toLowerCase() === status.toLowerCase();
         });
 
         return res.status(200).json({ message: "get data all Order success", data: filteredData });

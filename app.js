@@ -161,6 +161,11 @@ app.use('/api/campeni-profile', require('./routes/router-campeniProfile/router-m
 // Wishlist
 app.use('/api/wishlist', require('./routes/router-wishlist'))
 
+//Router PPOB
+app.use('/api/pulsa', require('./routes/router-ppob/router-pulsa/router-pulsa'));
+app.use('/api/data', require('./routes/router-ppob/router-data/router-data'));
+app.use('/api/listrik', require('./routes/router-ppob/router-listrik/router-listrik'))
+
 // midelware error
 app.use(require("./midelware/error-midelware"));
 
