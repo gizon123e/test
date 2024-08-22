@@ -165,6 +165,7 @@ module.exports = {
 
       const toko_user_id = prosesPengiriman.tokoId.userId;
       const notifikasi = await Notifikasi.findOne({ userId: toko_user_id }).populate("invoiceId");
+      console.log(notifikasi)
 
       if (!notifikasi) return res.status(404).json({ message: "notifikasi tidak ditemukan" });
 

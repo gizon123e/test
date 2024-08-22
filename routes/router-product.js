@@ -31,5 +31,6 @@ router.put("/arsipkan", authorization, controlerProduct.arsipkanProduct);
 router.put("/edit_reviewed", authorization, controlerProduct.editReviewed);
 router.delete("/delete/:productId", authorization, controlerProduct.delete);
 router.get("/product_with_radius_konsumen", authorization, controlerProduct.getProductWithRadiusKonsumen);
+router.get('/prod-supplier', controlerProduct.list_product_adminPanelSupplier)
 
 module.exports = router;
