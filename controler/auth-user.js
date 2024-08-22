@@ -285,7 +285,7 @@ module.exports = {
       }
 
       const token = jwt.createToken(tokenPw)
-      return res.status(200).json({message: "Pin Benar", token});
+      return res.status(200).json({message: "Password Benar", token});
     } catch (error) {
       console.log(error);
       next(error);
@@ -349,7 +349,7 @@ module.exports = {
       const verifyToken = jwt.verifyToken(token);
 
       if(!verifyToken) return res.status(401).json({message: "Token Salah"});
-      if(verifyToken.userId !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Pin Orang Lain"});
+      if(verifyToken.userId !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Password Orang Lain"});
 
       await User.findByIdAndUpdate(req.user.id, {
         password: hashedPassword
