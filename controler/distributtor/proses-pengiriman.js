@@ -65,7 +65,8 @@ module.exports = {
           populate: "categoryId",
         })
         .skip(skip)
-        .limit(parseInt(limit));
+        .limit(parseInt(limit))
+        .sort({ createdAt: -1 })
 
       if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" });
 
@@ -357,7 +358,7 @@ module.exports = {
 
         socket.emit("notif_vendor_pesanan_dikirim", {
           jenis: "Pesanan",
-          userId: toko_user_id,
+          userId: toko_vendor_id,
           status: "Pesanan sedang dalam pengiriman ke konsumen",
           message: `Pesanan ${prosesPengiriman.kode_pengiriman} sedang dalam perjalanan menuju alamat tujuan konsumen`,
           image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],

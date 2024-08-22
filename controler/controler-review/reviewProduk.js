@@ -8,7 +8,7 @@ const path = require('path')
 module.exports = {
     tambahUlasan: async (req, res, next) => {
         try {
-            const { komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen } = req.body;
+            const { id_pengiriman, komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen } = req.body;
             const files = req.files;
             const images = files ? files.images : [];
 
