@@ -4,6 +4,8 @@ const ReviewVendor = require('../../models/vendor/model-reviewVendor')
 const TokoVendor = require('../../models/vendor/model-toko')
 const ReviewDistributor = require('../../models/distributor/model-reviewDistributor')
 const path = require('path')
+const User = require('../../models/model-auth-user')
+const Konsumen = require('../../models/konsumen/model-konsumen')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
@@ -182,7 +184,10 @@ module.exports = {
 
     getHistoryReviews: async (req, res, next) => {
         try {
-            const reviews = await ReviewProduk.find({ id_konsumen: req.user.id }).populate("id_konsumen").populate('id_produk')
+            const user = await Konsumen.findOne({ userId: req.user.id })
+            if (!user) return res.status(404).json({ message: "data user tidak di temukan" })
+
+            const reviews = await ReviewProduk.find({ id_konsumen: user._id }).populate("id_konsumen").populate('id_produk')
             if (reviews.length === 0) return res.status(400).json({ message: 'saat ini kamo belom ada histroy review' })
 
             res.status(200).json({
