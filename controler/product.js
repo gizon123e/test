@@ -745,7 +745,7 @@ module.exports = {
           });
         }
       }
-      return res.status(404).json({ message: "User tidak memiliki produk", data });
+      return res.status(200).json({ message: "get data succcess", data });
 
     } catch (error) {
       console.log(error);
