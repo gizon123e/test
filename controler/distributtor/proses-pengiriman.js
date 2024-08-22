@@ -458,7 +458,7 @@ module.exports = {
         }
       );
 
-      await Pengiriman.updateOne({ _id: prosesPengiriman.pengirimanId }, { status_pengiriman: "pesanan selesai" });
+      await Pengiriman.updateMany({ _id: { $in: prosesPengiriman.pengirimanId } }, { status_pengiriman: "pesanan selesai" });
 
       const invoice = await Transaksi.aggregate([
         { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
