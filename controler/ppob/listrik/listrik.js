@@ -11,5 +11,15 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+    getBesaranKwh: async(req, res, next) => {
+        try {
+            const { tarifId, nominal } = req.query
+            const axiosRes = await axios.get(`${process.env.PPOB_HOST}/api/listrik/besaran?tarifId=${tarifId}&nominal=${nominal}`);
+            return res.status(200).json({ message: "berhasil menampilkan data" , ...axiosRes.data })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }
