@@ -178,5 +178,27 @@ module.exports = {
             }
             next(error)
         }
+    },
+
+    getHistoryReviews: async (req, res, next) => {
+        try {
+            const reviews = await ReviewProduk.find({ id_konsumen: req.user.id }).populate("id_konsumen").populate('id_produk')
+            if (reviews.length === 0) return res.status(400).json({ message: 'saat ini kamo belom ada histroy review' })
+
+            res.status(200).json({
+                message: "get data success",
+                datas: reviews
+            })
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
     }
 }

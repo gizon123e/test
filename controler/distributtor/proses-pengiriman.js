@@ -165,10 +165,11 @@ module.exports = {
       await Pengiriman.updateOne({ _id: prosesPengiriman.pengirimanId }, { status_pengiriman: "dikirim" });
 
       const toko_user_id = prosesPengiriman.tokoId.userId;
+
       const notifikasi = await Notifikasi.findOne({ userId: toko_user_id })
 
       if (!notifikasi) return res.status(404).json({ message: "notifikasi tidak ditemukan" });
-      
+
       DetailNotifikasi.create({
         notifikasiId: notifikasi._id,
         status: "Distributor sedang dalam perjalanan menjemput pesanan",
@@ -177,8 +178,8 @@ module.exports = {
         image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
         cretedAt: new Date(),
       })
-      .then(() => console.log("Berhasil menambahkan notif"))
-      .catch(() => console.log("Gagal manambahkan notif"));
+        .then(() => console.log("Berhasil menambahkan notif"))
+        .catch(() => console.log("Gagal manambahkan notif"));
 
       socket.emit("notif_vendor_distributor_menjemput", {
         jenis: "Pesanan",
@@ -243,7 +244,7 @@ module.exports = {
       ]);
 
       if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
- 
+
       if (invoice.length == 1) {
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         DetailNotifikasi.create({
@@ -550,16 +551,16 @@ module.exports = {
             image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
             createdAt: new Date(),
           })
-          .then(() => console.log("Berhasil menyimpan notif"))
-          .catch(() => console.log("Gagal menyimpan notif"));
-          
+            .then(() => console.log("Berhasil menyimpan notif"))
+            .catch(() => console.log("Gagal menyimpan notif"));
+
           socket.emit("notif_pesanan_diterima", {
             jenis: "Pesanan",
             userId: notifikasi.userId,
             status: "Pesanan telah diterima oleh konsumen",
             message: `${item.invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
             image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
-            tanggal: formatTanggal(new Date()), 
+            tanggal: formatTanggal(new Date()),
           });
         }
         return res.status(200).json({

@@ -179,7 +179,7 @@ module.exports = {
       }
 
       const idVendors = vendorDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
-      
+
       const dataProds = await Product.aggregate([
         {
           $match: {
@@ -754,6 +754,28 @@ module.exports = {
     }
   },
 
+  list_product_adminPanelSupplier: async (req, res, next) => {
+    try {
+      const data = await Product.find().populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId");
+      const dataProds = [];
+      for (const produk of data) {
+        const namaVendor = await Supplier.findOne({ userId: produk.userId });
+        if (namaVendor) {
+          dataProds.push({
+            ...produk.toObject(),
+            nama: namaVendor?.nama || namaVendor?.namaBadanUsaha,
+          });
+        }
+      }
+
+      return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds });
+
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  },
+
   list_all: async (req, res, next) => {
     try {
       const data = await Product.find({ userId: req.user.id }).populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId").lean();
@@ -763,8 +785,8 @@ module.exports = {
         const terjual = await SalesReport.findOne({ productId: produk._id });
         const totalTerjual = terjual
           ? terjual.track.reduce((accumulator, current) => {
-              return accumulator + current.soldAtMoment;
-            }, 0)
+            return accumulator + current.soldAtMoment;
+          }, 0)
           : 0;
         dataProds.push({
           ...produk,
@@ -798,8 +820,8 @@ module.exports = {
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
       const total_terjual = terjual
         ? terjual.track.reduce((acc, val) => {
-            return acc + val.soldAtMoment;
-          }, 0)
+          return acc + val.soldAtMoment;
+        }, 0)
         : 0;
       let toko;
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
