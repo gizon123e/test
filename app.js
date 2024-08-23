@@ -17,6 +17,8 @@ const websocket = require("./websocket/index-ws");
 const socketIo = require('socket.io')
 const initSocketIo = require('./utils/pelacakanDistributor')
 const initializeChatSocket = require('./controler/message/vendor-distributor/vendor-distributor');
+const UAParser = require('ua-parser-js');
+
 
 const dotenv = require('dotenv')
 dotenv.config()
@@ -58,6 +60,25 @@ app.use(fileUpload());
 // Middleware to add io to req object
 app.use((req, res, next) => {
   req.io = io;
+  next();
+});
+
+app.use((req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const parser = new UAParser();
+  const ua = parser.setUA(req.headers['user-agent']).getResult();
+
+  const accessInfo = {
+    ip: ip,
+    browser: ua.browser.name,
+    os: ua.os.name,
+    device: ua.device.type || 'Desktop',
+    timestamp: new Date()
+  };
+
+  // Simpan accessInfo ke database atau log
+  console.log('Access Info:', accessInfo);
+
   next();
 });
 
