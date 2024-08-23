@@ -3,6 +3,7 @@ const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen");
 const Vendor = require("../models/vendor/model-vendor");
 const TokoVendor = require("../models/vendor/model-toko");
+const TokoSupplier = require("../models/supplier/model-toko");
 const Address = require("../models/model-address");
 const BiayaTetap = require("../models/model-biaya-tetap");
 const { calculateDistance } = require("../utils/menghitungJarak");
@@ -151,34 +152,70 @@ module.exports = {
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
       const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
-      const vendors = await TokoVendor.aggregate([
-        {
-          $lookup: {
-            from: "addresses",
-            let: { address: "$address" },
-            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
-            as: "address",
-          },
-        },
-        {
-          $unwind: "$address",
-        },
-      ]);
+      let sellers;
+
+      switch(req.user.role){
+        case "konsumen":
+          sellers = await TokoVendor.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+        case "vendor":
+          sellers = await TokoSupplier.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+        default:
+          sellers = await TokoSupplier.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+      }
 
       const longAlamatSekolah = parseFloat(alamatSekolah.pinAlamat.long);
       const latAlamatSekolah = parseFloat(alamatSekolah.pinAlamat.lat);
 
-      let vendorDalamRadius = [];
+      let sellerDalamRadius = [];
 
-      for (let i = 0; i < vendors.length; i++) {
-        const distance = calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(vendors[i].address.pinAlamat.lat), parseFloat(vendors[i].address.pinAlamat.long), biayaTetap.radius);
+      for (let i = 0; i < sellers.length; i++) {
+        const distance = calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
         if (distance <= biayaTetap.radius) {
-          vendorDalamRadius.push(vendors[i]);
-          vendors[i].jarakVendor = distance;
+          sellerDalamRadius.push(sellers[i]);
+          sellers[i].jarakVendor = distance;
         }
       }
 
-      const idVendors = vendorDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
+      const idSellers = sellerDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
 
       const dataProds = await Product.aggregate([
         {
@@ -188,7 +225,7 @@ module.exports = {
             total_stok: { $gt: 0 },
             $expr: { $gte: ["$total_stok", "$minimalOrder"] },
             userId: {
-              $in: idVendors
+              $in: idSellers
             }
           },
         },
@@ -216,9 +253,9 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "suppliers",
+            from: "tokosuppliers",
             let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "supplierData",
           },
         },
