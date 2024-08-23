@@ -325,6 +325,10 @@ module.exports = {
       const hashedPin =  await bcrypt.hash(pin, 10);
       const verifyToken = jwt.verifyToken(token);
 
+      const user = await User.findById(req.user.id);
+      const pinValid = await bcrypt.compare(pin, user.pin)
+      if(pinValid) return res.status(403).json({message: "tidak boleh memakai pin sebelumnya"})
+
       if(!verifyToken) return res.status(401).json({message: "Token Salah"});
       if(verifyToken.userId !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Pin Orang Lain"});
 
@@ -347,7 +351,9 @@ module.exports = {
       if(!regexPassword.test(password)) return res.status(400).json({message: "Password tidak valid"})
       const hashedPassword =  await bcrypt.hash(password, 10);
       const verifyToken = jwt.verifyToken(token);
-
+      const user = await User.findById(req.user.id);
+      const passwordValid = await bcrypt.compare(password, user.password)
+      if(passwordValid) return res.status(403).json({message: "tidak boleh memakai password sebelumnya"})
       if(!verifyToken) return res.status(401).json({message: "Token Salah"});
       if(verifyToken.userId !== req.user.id) return res.status(403).json({message: "Tidak Bisa Mengubah Password Orang Lain"});
 
