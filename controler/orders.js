@@ -1648,17 +1648,23 @@ module.exports = {
               })
             );
             total_pengiriman += 1;
+            const addedToko = new Set()
             for (const item of dataOrder.shipments[i].products) {
+              const idToko = dataOrder.shipments[i].id_toko_vendor
               const find_product = await Product.findOne({ _id: item.productId });
               const total_harga_product = find_product.price * item.quantity;
               const vendor = await TokoVendor.findById(dataOrder.shipments[i].id_toko_vendor).select("userId");
               if (!vendor) return res.status(404).json({ message: "id_toko_vendor di shipments tidak ditemukan, tolong cek lagi" });
-              toko_vendor.push({
-                id_toko_vendor: dataOrder.shipments[i].id_toko_vendor,
-                userId: vendor.userId,
-                total_harga: total_harga_product,
-                image_product: find_product.image_product[0],
-              });
+              if(!addedToko.has(idToko.toString())){
+                toko_vendor.push({
+                  id_toko_vendor: dataOrder.shipments[i].id_toko_vendor,
+                  userId: vendor.userId,
+                  total_harga: total_harga_product,
+                  image_product: find_product.image_product[0],
+                });
+                addedToko.add(idToko.toString())
+              }
+              
             }
           }
 
@@ -1723,6 +1729,7 @@ module.exports = {
           });
 
           for (let i = 0; i < toko_vendor.length; i++) {
+            console.log(shipments[i], toko_vendor[i], i)
             const distributor = await Distributtor.findById(shipments[i].id_distributor);
             const id_notif_distri = new mongoose.Types.ObjectId();
             const formatHarga = toko_vendor[i].total_harga.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
