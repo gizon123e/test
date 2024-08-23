@@ -121,6 +121,20 @@ const userModels = new mongoose.Schema(
     lastOnline:{
       type: Date,
       default: new Date(1999, 7, 1)
+    },
+    token: {
+      value: {
+        type: String,
+        default: null
+      },
+      expired: {
+        type: Date,
+        default: null
+      },
+      verified: {
+        type: Boolean,
+        default: false
+      }
     }
   },
   { timestamps: true }

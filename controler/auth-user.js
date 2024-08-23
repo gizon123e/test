@@ -446,12 +446,60 @@ module.exports = {
 
   resetPassword: async(req, res, next) => {
     try {
-      const { password, userId } = req.body
+      const { password, userId, token_reset } = req.body
       const regexPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%#?&])[A-Za-z\d@$!%#?&]{8,}$/;
-      if(!regexPassword.test(password)) return res.status(400).json({message: "Password tidak valid"})
+      if(!regexPassword.test(password)) return res.status(400).json({message: "Password tidak valid"});
       const password_baru = await bcrypt.hash(password, 10);
-      await User.findByIdAndUpdate(userId, { password: password_baru });
+      const user = await User.findOne({
+        _id: userId,
+        'token.value': token_reset,
+        'token.verified': true
+      });
+      if(!user) return res.status(404).json({message: "Permintaan tidak valid"});
+      const passwordValid = await bcrypt.compare(password, user.password)
+      if(passwordValid) return res.status(403).json({message: "tidak boleh memakai password sebelumnya"})
+      User.findByIdAndUpdate(
+        userId,
+        {
+          password: password_baru
+        }
+      )
+      .then(async(user)=> {
+        console.log('berhasil edit password')
+        await User.updateOne({_id: user._id}, {'token.value': null, 'token.verified': false, 'token.expired': null})
+      })
+      .catch((e) => console.log("error: ", e))
       return res.status(201).json({message: "Berhasil Mengubah Password"});
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
+  },
+
+  resetPin: async(req, res, next) => {
+    try {
+      const { pin, userId, token_reset } = req.body
+      const pin_baru = await bcrypt.hash(pin, 10);
+      const user = await User.findOne({
+        _id: userId,
+        'token.value': token_reset,
+        'token.verified': true
+      });
+      if(!user) return res.status(404).json({message: "Permintaan tidak valid"});
+      const pinValid = await bcrypt.compare(pin, user.pin)
+      if(pinValid) return res.status(403).json({message: "tidak boleh memakai pin sebelumnya"})
+      User.findByIdAndUpdate(
+        userId,
+        {
+          pin: pin_baru
+        }
+      )
+      .then(async(user)=> {
+        console.log('berhasil edit pin')
+        await User.updateOne({_id: user._id}, {'token.value': null, 'token.verified': false, 'token.expired': null})
+      })
+      .catch((e) => console.log("error: ", e))
+      return res.status(201).json({message: "Berhasil Mengubah Pin"});
     } catch (error) {
       console.log(error);
       next(error)
