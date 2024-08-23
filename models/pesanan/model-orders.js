@@ -33,14 +33,14 @@ const modelOrder = new mongoose.Schema({
         }],
         deadline: {
             type: Date,
-            validate: {
-                validator: (date) => {
-                    const currentDate = new Date();
-                    const minDate = new Date(currentDate.setDate(currentDate.getDate() + 7));
-                    return date.getTime() >= minDate.getTime()
-                },
-                message: "Deadline minimal 7 hari ke depan"
-            },
+            // validate: {
+            //     validator: (date) => {
+            //         const currentDate = new Date();
+            //         const minDate = new Date(currentDate.setDate(currentDate.getDate() + 7));
+            //         return date.getTime() >= minDate.getTime()
+            //     },
+            //     message: "Deadline minimal 7 hari ke depan"
+            // },
             required: true
         },
         kode_pesanan: {
