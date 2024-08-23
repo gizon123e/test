@@ -20,6 +20,30 @@ const socket = io("https://staging-backend.superdigitalapps.my.id/", {
     },
 });
 
+function mergeObjectsByStoreId(arr) {
+    let mergedObject = {};
+
+    arr.forEach(item => {
+        if (mergedObject.id_toko && mergedObject.id_toko.equals(item.id_toko)) {
+
+            mergedObject.productToDelivers = [
+                ...mergedObject.productToDelivers,
+                ...item.productToDelivers
+            ];
+            
+            mergedObject.total_ongkir += item.total_ongkir;
+            
+            mergedObject.ongkir += item.ongkir;
+            
+            mergedObject.amountCapable += item.amountCapable;
+        } else {
+            mergedObject = { ...item };
+        }
+    });
+
+    return mergedObject;
+}
+
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -163,7 +187,8 @@ module.exports = {
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
             const data = dataProsesPengirimanDistributor.map(pgr => {
-                const { waktu_pengiriman, status_distributor, ...restOfPgr } = pgr
+                const { waktu_pengiriman, status_distributor, pengirimanId , ...restOfPgr } = pgr;
+                
                 const generateStatus = () => {
                     
                     if(status_distributor === "Sedang dijemput"){
@@ -185,6 +210,7 @@ module.exports = {
                 
                 return {
                     ...restOfPgr,
+                    pengirimanId: mergeObjectsByStoreId(pengirimanId),
                     status_distributor: generateStatus(),
                     waktu_pengiriman: new Date(waktu_pengiriman)
                 }
