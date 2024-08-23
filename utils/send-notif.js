@@ -3,7 +3,7 @@ const sendNotifikasi = require('../controler/notifikasi').sendNotifikasi
 
 module.exports = async() => {
      try{
-          cron.schedule('* * * * *', () => {
+          cron.schedule('* * * * * *', () => {
                console.log('Running schedule taks: sendNotifikasi');
                sendNotifikasi()
           })
