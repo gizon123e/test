@@ -128,7 +128,8 @@ const userModels = new mongoose.Schema(
         default: null
       },
       expired: {
-        type: Date
+        type: Date,
+        default: null
       },
       verified: {
         type: Boolean,

@@ -168,6 +168,7 @@ app.use('/api/listrik', require('./routes/router-ppob/router-listrik/router-list
 
 //Router Forget Credential
 app.use('/api/forget/password', require('./routes/router-forgot-credential/router-password'));
+app.use('/api/forget/pin', require('./routes/router-forgot-credential/router-pin'));
 
 // midelware error
 app.use(require("./midelware/error-midelware"));

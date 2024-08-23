@@ -466,7 +466,7 @@ module.exports = {
       )
       .then(async(user)=> {
         console.log('berhasil edit password')
-        await User.updateOne({_id: user._id}, {'token.value': null, 'token.verified': false, 'token.expired': false})
+        await User.updateOne({_id: user._id}, {'token.value': null, 'token.verified': false, 'token.expired': null})
       })
       .catch((e) => console.log("error: ", e))
       return res.status(201).json({message: "Berhasil Mengubah Password"});
@@ -495,8 +495,8 @@ module.exports = {
         }
       )
       .then(async(user)=> {
-        console.log('berhasil edit password')
-        await User.updateOne({_id: user._id}, {'token.value': null, 'token.verified': false, 'token.expired': false})
+        console.log('berhasil edit pin')
+        await User.updateOne({_id: user._id}, {'token.value': null, 'token.verified': false, 'token.expired': null})
       })
       .catch((e) => console.log("error: ", e))
       return res.status(201).json({message: "Berhasil Mengubah Pin"});
