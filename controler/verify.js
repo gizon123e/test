@@ -58,5 +58,26 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+
+    verifyResetCredentials: async(req, res, next) => {
+        try {
+            const { token_reset, id, kode_otp } = req.body
+            if(!token_reset || !id ) return res.status(400).json({message: "kirimkan body token_reset dan id!"})
+            const user = await User.findOne({_id: id, 'token.value': token_reset}).select("token");
+            if(!user) return res.status(404).json({message: "Tidak Ditemukan"});
+            if(user.codeOtp.expire < new Date() || user.token.expired < new Date()) return res.status(401).json({message: "Sudah Kadaluarsa"});
+            const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
+            if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
+            User.findByIdAndUpdate(user._id, {
+                'token.verified': true
+            })
+            .then(()=>console.log("berhasil update"))
+            .catch((e)=> console.log('error: ', e))
+            return res.status(200).json({message: "User Terverifikasi"})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const User = require('../../models/model-auth-user');
 const sendOtp = require("../../utils/sendOtp");
 const bcrypt = require("bcrypt")
+const generateToken = () => crypto.randomBytes(32).toString('hex');
             
 module.exports = {
     
@@ -29,7 +30,6 @@ module.exports = {
                 await sendOtp.sendOtp(email, kode_random, "lupa_password")
             }
             const user = await User.exists(filter)
-            const generateToken = () => crypto.randomBytes(32).toString('hex');
             const value_token = generateToken();
             User.findOneAndUpdate(
                 filter,

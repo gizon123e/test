@@ -446,11 +446,24 @@ module.exports = {
 
   resetPassword: async(req, res, next) => {
     try {
-      const { password, userId } = req.body
+      const { password, userId, token_reset } = req.body
       const regexPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%#?&])[A-Za-z\d@$!%#?&]{8,}$/;
       if(!regexPassword.test(password)) return res.status(400).json({message: "Password tidak valid"})
       const password_baru = await bcrypt.hash(password, 10);
-      await User.findByIdAndUpdate(userId, { password: password_baru });
+      const user = await User.exists({
+        _id: userId,
+        'token.value': token_reset,
+        'token.verified': true
+      });
+      if(!user) return res.status(404).json({message: "Permintaan tidak valid"});
+      User.findByIdAndUpdate(
+        userId,
+        {
+          password: password_baru
+        }
+      )
+      .then(()=> console.log('berhasil edit password'))
+      .catch((e) => console.log("error: ", e))
       return res.status(201).json({message: "Berhasil Mengubah Password"});
     } catch (error) {
       console.log(error);

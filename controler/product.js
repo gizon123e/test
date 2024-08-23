@@ -867,10 +867,10 @@ module.exports = {
           toko = await TokoVendor.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
         case "supplier":
-          toko = await Supplier.findOne({ userId: dataProduct.userId._id }).populate("address");
+          toko = await TokoSupplier.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
-        case "produsen":
-          toko = await Produsen.findOne({ userId: dataProduct.userId._id }).populate("address");
+        default:
+          toko = await TokoSupplier.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
       }
       if (dataProduct.bervarian == true) {
