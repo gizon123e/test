@@ -12,6 +12,7 @@ const Vendor = require('../../models/vendor/model-vendor');
 const Follower = require('../../models/model-follower');
 const User = require('../../models/model-auth-user');
 const dotenv = require('dotenv')
+const mergeObjectsByStoreId = require('../../utils/merginPengirimanId')
 const { io } = require("socket.io-client");
 dotenv.config()
 const socket = io("https://staging-backend.superdigitalapps.my.id/", {
@@ -19,31 +20,6 @@ const socket = io("https://staging-backend.superdigitalapps.my.id/", {
       fromServer: true,
     },
 });
-
-function mergeObjectsByStoreId(arr) {
-    let mergedObject = {};
-
-    arr.forEach(item => {
-        if (mergedObject.id_toko && mergedObject.id_toko.equals(item.id_toko)) {
-
-            mergedObject.productToDelivers = [
-                ...mergedObject.productToDelivers,
-                ...item.productToDelivers
-            ];
-            
-            mergedObject.total_ongkir += item.total_ongkir;
-            
-            mergedObject.ongkir += item.ongkir;
-            
-            mergedObject.amountCapable += item.amountCapable;
-        } else {
-            mergedObject = { ...item };
-        }
-    });
-
-    return mergedObject;
-}
-
 
 module.exports = {
     createToko: async(req, res, next) => {
