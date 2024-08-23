@@ -64,7 +64,7 @@ module.exports = {
         try {
             const { token_reset, id, kode_otp } = req.body
             if(!token_reset || !id ) return res.status(400).json({message: "kirimkan body token_reset dan id!"})
-            const user = await User.findOne({_id: id, 'token.value': token_reset}).select("token");
+            const user = await User.findOne({_id: id, 'token.value': token_reset}).select("token codeOtp");
             if(!user) return res.status(404).json({message: "Tidak Ditemukan"});
             if(user.codeOtp.expire < new Date() || user.token.expired < new Date()) return res.status(401).json({message: "Sudah Kadaluarsa"});
             const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);

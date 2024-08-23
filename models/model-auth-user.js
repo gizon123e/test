@@ -124,7 +124,8 @@ const userModels = new mongoose.Schema(
     },
     token: {
       value: {
-        type: String
+        type: String,
+        default: null
       },
       expired: {
         type: Date

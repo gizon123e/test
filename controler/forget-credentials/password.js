@@ -30,6 +30,7 @@ module.exports = {
                 await sendOtp.sendOtp(email, kode_random, "lupa_password")
             }
             const user = await User.exists(filter)
+            if(!user) return res.status(404).json({message: "User tidak ditemukan"})
             const value_token = generateToken();
             User.findOneAndUpdate(
                 filter,
