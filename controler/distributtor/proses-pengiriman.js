@@ -304,7 +304,8 @@ module.exports = {
       const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim" }, { new: true })
         .populate("pengirimanId")
         .populate("tokoId")
-        .populate("produk_pengiriman.productId");
+        .populate("produk_pengiriman.productId")
+        .populate("id_pengemudi");
       const invoice = await Transaksi.aggregate([
         { $match: { id_pesanan: new mongoose.Types.ObjectId(prosesPengiriman.pengirimanId.orderId) } },
         {
