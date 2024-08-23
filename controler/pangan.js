@@ -104,16 +104,29 @@ module.exports = {
     try {
       const { nama, jenis } = req.query;
       if (!jenis || !nama) return res.status(400).json({ message: "Kirimkan query jenis untuk search pangan" });
-      const pangan = await Pangan.find({
-        nama_bahan: {
-          $regex: new RegExp(nama, "i"),
+      
+      const pangan = await Pangan.aggregate([
+        {
+          $match: {
+            nama_bahan: { $regex: new RegExp(`${nama}`, "i") },
+            jenis_pangan: { $regex: new RegExp(`^${jenis}$`, "i") },
+          },
         },
-        jenis_pangan: {
-          $regex: new RegExp(jenis, "i"),
+        {
+          $addFields: {
+            nutrisi: ["air", "energi", "protein", "lemak", "karbohidrat", "serat", "kalsium", "fosfor", "besi", "natrium", "kalium", "tembaga", "thiamin", "riboflavin", "vitamin_c"],
+          },
         },
-      })
-        .select("kode_bahan nama_bahan kelompok_pangan jenis_pangan nama_makanan_lokal mayoritas_daerah_lokal keterangan")
-        .lean();
+        {
+          $unset: ["air", "energi", "protein", "lemak", "kh", "serat", "kalsium", "fosfor", "besi", "natrium", "kalium", "tembaga", "thiamin", "riboflavin", "vitc", "__v"],
+        },
+        {
+          $project: {
+            nama_bahan: 1,
+            nutrisi: 1,
+          },
+        },
+      ])
       if (pangan.length === 0) return res.status(404).json({ message: "Data tidak ditemukan" });
       return res.status(200).json({ message: "Berhasil mendapatkan data", data: pangan });
     } catch (error) {
