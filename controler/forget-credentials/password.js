@@ -28,6 +28,7 @@ module.exports = {
                 }
                 await sendOtp.sendOtp(email, kode_random, "lupa_password")
             }
+            const user = await User.exists(filter)
             const generateToken = () => crypto.randomBytes(32).toString('hex');
             const value_token = generateToken();
             User.findOneAndUpdate(
@@ -45,7 +46,7 @@ module.exports = {
                 console.log("Berhasil Updte User Lupa Password", user)
             });
 
-            return res.status(200).json({message: "Berhasil Request Lupa Password", token: value_token})
+            return res.status(200).json({message: "Berhasil Request Lupa Password", token: value_token, id: user._id})
         } catch (error) {
             console.log(error);
             next(error)

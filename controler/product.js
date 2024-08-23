@@ -876,21 +876,21 @@ module.exports = {
       if (dataProduct.bervarian == true) {
         const { pangan, varian, ...restOfProduct } = dataProduct;
         const nutrisi = {
-          takaran_saji: 0,
-          energi: 0,
-          protein: 0,
-          lemak: 0,
-          karbohidrat: 0,
-          serat: 0,
-          kalsium: 0,
-          fosfor: 0,
-          besi: 0,
-          natrium: 0,
-          kalium: 0,
-          tembaga: 0,
-          thiamin: 0,
-          riboflavin: 0,
-          vitamin_c: 0,
+          takaran_saji: "0",
+          energi: "0",
+          protein: "0",
+          lemak: "0",
+          karbohidrat: "0",
+          serat: "0",
+          kalsium: "0",
+          fosfor: "0",
+          besi: "0",
+          natrium: "0",
+          kalium: "0",
+          tembaga: "0",
+          thiamin: "0",
+          riboflavin: "0",
+          vitamin_c: "0",
         };
         let nilai_varian = [];
         for (const item of varian) {
@@ -1058,21 +1058,21 @@ module.exports = {
       }
       const { pangan, ...restOfProduct } = dataProduct;
       const nutrisi = {
-        takaran_saji: 0,
-        energi: 0,
-        protein: 0,
-        lemak: 0,
-        karbohidrat: 0,
-        serat: 0,
-        kalsium: 0,
-        fosfor: 0,
-        besi: 0,
-        natrium: 0,
-        kalium: 0,
-        tembaga: 0,
-        thiamin: 0,
-        riboflavin: 0,
-        vitamin_c: 0,
+        takaran_saji: "0",
+        energi: "0",
+        protein: "0",
+        lemak: "0",
+        karbohidrat: "0",
+        serat: "0",
+        kalsium: "0",
+        fosfor: "0",
+        besi: "0",
+        natrium: "0",
+        kalium: "0",
+        tembaga: "0",
+        thiamin: "0",
+        riboflavin: "0",
+        vitamin_c: "0",
       };
       if (pangan?.length > 1) {
         const nilai_gizi_pangan = [];

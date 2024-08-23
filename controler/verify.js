@@ -50,9 +50,9 @@ module.exports = {
             const jwtToken = jwt.createToken(tokenPayload);
 
             return res.status(200).json({message: "Verifikasi Berhasil", data: {
-                    ...tokenPayload, 
-                    token: jwtToken
-                }
+                ...tokenPayload, 
+                token: jwtToken
+            }
             });
         } catch (error) {
             console.log(error);
