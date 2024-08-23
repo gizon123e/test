@@ -119,7 +119,7 @@ module.exports = {
 
      sendNotifikasi: async(req, res, next) => {
         try{
-          const shipments = await Pengiriman.find({sellerApproved: true, waktu_pengiriman: {$gte: now}}).sort({createdAt: -1}).populate("invoice").populate("productToDelivers.productId").lean();
+          const shipments = await Pengiriman.find({sellerApproved: true}).sort({createdAt: -1}).populate("invoice").populate("productToDelivers.productId").populate("distributorId").lean();
           for (const shipment of shipments){
                const deadline = new Date(shipment.waktu_pengiriman);
                const countdown_pengemasan_vendor = new Date(shipment.waktu_pengiriman).setHours(new Date(shipment.waktu_pengiriman).getHours() - 2);
@@ -128,14 +128,54 @@ module.exports = {
                const total_pengemasan_pengiriman = pengemasan?.total_pengemasan_pengiriman * 1000;
                const waktuMunculNotif = new Date(deadline.getTime() - total_pengemasan_pengiriman);
                const now = new Date()
+               
+               const yesterdayDeadline = new Date(deadline);
+               yesterdayDeadline.setDate(yesterdayDeadline.getDate() - 1);
 
                console.log(`sekarang ${now}`)
                console.log(`muncul notif ${new Date(waktuMunculNotif.setSeconds(0,0))}`)
 
+               const notifikasiDistri =  await Notifikasi.findOne({userId: shipment.distributorId.userId})
+               
+               console.log(`NOW => ${formatTanggal(now)} ${formatWaktu(now)}`)
+               console.log(`DEADLINE => ${formatTanggal(deadline)} ${formatWaktu(deadline)}`)
+               console.log(`YESTERDAY DEADLINE => ${formatTanggal(yesterdayDeadline)} ${formatWaktu(yesterdayDeadline)}`)
+               if(now.setSeconds(0,0) == yesterdayDeadline.setSeconds(0,0)){
+                    DetailNotifikasi.create({
+                         notifikasiId: notifikasiDistri._id,
+                         status: "Ada pesanan yang harus dikirim besok",
+                         message: `Yuk jangan lupa ada pengiriman pesanan ${shipment.kode_pengiriman} yang harus dikirim besok`,
+                         jenis: "Pesanan",
+                         image_product: shipment.productToDelivers[0].productId.image_product[0],
+                         createdAt: new Date()
+                    })
+                    .then(() => console.log("Berhasil simpan detail notif distributor"))
+                    .catch(() => consol.log("Gagal simpan detail notif distributor"))
+
+                    socket.emit('notif_distri_h-1_pengiriman', {
+                         jenis: "Pesanan",
+                         userId: shipment.distributorId.userId,
+                         status: "Ada pesanan yang harus dikirim besok",
+                         message: `Yuk jangan lupa ada pengiriman pesanan ${shipment.kode_pengiriman} yang harus dikirim besok`,
+                         image: shipment.productToDelivers[0].productId.image_product[0],
+                         tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+                    })
+               }
+
                const notifikasi = await Notifikasi.findOne({invoiceId: shipment.invoice._id}).sort({createdAt: -1});
                if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                    console.log(countdown_pengemasan_vendor)
                     await Pengiriman.findOneAndUpdate({ _id: shipment._id }, { countdown_pengemasan_vendor: countdown_pengemasan_vendor }, { new: true })
+                    DetailNotifikasi.create({
+                         notifikasiId: notifikasiDistri._id,
+                         status: "Pesanan yang akan dikirim sedang dikemas",
+                         message: `Pengiriman pesanan ${shipment.kode_pengiriman} sedang dikemas oleh penjual dan akan segera kamu kirim ke konsumen`,
+                         jenis: "Pesanan", 
+                         image_product: shipment.productToDelivers[0].productId.image_product[0],
+                         createdAt: new Date()
+                    })
+                    .then(() => console.log("Berhasil simpan notif distri"))
+                    .catch(() => console.log("Gagal simpan notif distri"))
+
                     DetailNotifikasi.create({
                          notifikasiId: notifikasi._id,
                          status: "Pesanan sedang dikemas",
@@ -146,6 +186,15 @@ module.exports = {
                     })
                     .then(() => console.log("Berhasil simpan detail notif konsumen"))
                     .catch(() => console.log("Gagal simpan detail notif konsumen"))
+
+                    socket.emit('notif_distri_pesanan_dikemas', {
+                         jenis: "Pesanan",
+                         userId: notifikasiDistri._id,
+                         status: "Pesanan yang akan dikirim sedang dikemas",
+                         message: `Pengiriman pesanan ${shipment.kode_pengiriman} sedang dikemas olej penjual dan akan segera kamu kirim ke konsumen`,
+                         image: shipment.productToDelivers[0].productId.image_product[0],
+                         tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+                    })
                     socket.emit('notif_pesanan_dikemas', {
                          jenis: "Pesanan",
                          userId: notifikasi.userId,
@@ -160,6 +209,7 @@ module.exports = {
                console.log(error);
           }
      },
+     
      readNotifikasi: async(req, res, next) => {
           try{
                const detailNotifikasi = await DetailNotifikasi.findByIdAndUpdate(req.params.id, {is_read: true}, {new: true})
