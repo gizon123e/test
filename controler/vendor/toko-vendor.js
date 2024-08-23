@@ -12,6 +12,7 @@ const Vendor = require('../../models/vendor/model-vendor');
 const Follower = require('../../models/model-follower');
 const User = require('../../models/model-auth-user');
 const dotenv = require('dotenv')
+const mergeObjectsByStoreId = require('../../utils/merginPengirimanId')
 const { io } = require("socket.io-client");
 dotenv.config()
 const socket = io("https://staging-backend.superdigitalapps.my.id/", {
@@ -19,7 +20,6 @@ const socket = io("https://staging-backend.superdigitalapps.my.id/", {
       fromServer: true,
     },
 });
-
 
 module.exports = {
     createToko: async(req, res, next) => {
@@ -163,7 +163,8 @@ module.exports = {
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
             const data = dataProsesPengirimanDistributor.map(pgr => {
-                const { waktu_pengiriman, status_distributor, ...restOfPgr } = pgr
+                const { waktu_pengiriman, status_distributor, pengirimanId , ...restOfPgr } = pgr;
+                
                 const generateStatus = () => {
                     
                     if(status_distributor === "Sedang dijemput"){
@@ -185,6 +186,7 @@ module.exports = {
                 
                 return {
                     ...restOfPgr,
+                    pengirimanId: mergeObjectsByStoreId(pengirimanId),
                     status_distributor: generateStatus(),
                     waktu_pengiriman: new Date(waktu_pengiriman)
                 }

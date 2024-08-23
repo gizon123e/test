@@ -35,7 +35,8 @@ const Vendor = require("../models/vendor/model-vendor");
 const IncompleteOrders = require("../models/pesanan/model-incomplete-orders");
 const PinaltiVendor = require("../models/vendor/model-pinaltiVendor");
 const PanduanPembayaran = require("../models/model-panduan-pembayaran");
-const PoinHistory = require("../models/model-poin")
+const PoinHistory = require("../models/model-poin");
+const JenisJasaDistributor = require("../models/distributor/jenisJasaDistributor");
 dotenv.config();
 
 const now = new Date();
@@ -1630,7 +1631,8 @@ module.exports = {
             detailBiaya.totalOngkir += dataOrder.shipments[i].ongkir;
             detailBiaya.totalPotonganOngkir += dataOrder.shipments[i].potongan_ongkir;
             detailBiaya.jumlahOngkir += dataOrder.shipments[i].total_ongkir;
-            
+            const jenisJasa = await JenisJasaDistributor.exists({_id: dataOrder.shipments[i].id_jenis_layanan});
+            if(!jenisJasa) return res.status(404).json({message: "Tidak ada jenis pengiriman dengan id " + dataOrder.shipments[i].id_jenis_layanan})
             promisesFunct.push(
               Pengiriman.create({
                 orderId: dataOrder._id,
