@@ -182,6 +182,9 @@ module.exports = {
             .filter(pn => pn.jenis === "keluar")
             .reduce((acc, val)=> acc + val.value, 0)
         : 0
+      
+      dataKonsumen.userId.pin = dataKonsumen.userId.pin? "Ada" : null;
+      
       const isIndividu = dataKonsumen.nama ? true : false;
       if (isIndividu) {
         pic = null;

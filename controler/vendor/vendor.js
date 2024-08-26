@@ -39,7 +39,7 @@ module.exports = {
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
             const poin = await PoinHistory.find({userId: req.user.id});
             let modifiedDataKonsumen = dataKonsumen
-            dataSupplier.userId.poin = poin.length > 0 ? 
+            dataKonsumen.userId.poin = poin.length > 0 ? 
                 poin
                     .filter(pn => pn.jenis === "masuk")
                     .reduce((acc, val)=> acc + val.value, 0) - 
@@ -47,6 +47,8 @@ module.exports = {
                     .filter(pn => pn.jenis === "keluar")
                     .reduce((acc, val)=> acc + val.value, 0)
                 : 0
+
+            dataKonsumen.userId.pin = dataKonsumen.userId.pin? "Ada" : null;
             const isIndividu = dataKonsumen.nama? true : false
             if(isIndividu){
                 pic = null
