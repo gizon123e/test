@@ -9,6 +9,7 @@ const Follower = require('../../models/model-follower');
 const BiayaTetap = require('../../models/model-biaya-tetap');
 const Product = require('../../models/model-product');
 const { calculateDistance } = require("../../utils/menghitungJarak");
+const PoinHistory = require("../../models/model-poin");
 
 
 module.exports = {

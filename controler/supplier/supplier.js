@@ -4,6 +4,7 @@ const path = require('path')
 const fs = require('fs');
 const User = require('../../models/model-auth-user');
 const PicSupplier = require('../../models/supplier/model-penanggung-jawab');
+const PoinHistory = require("../../models/model-poin");
 
 module.exports = {
 
