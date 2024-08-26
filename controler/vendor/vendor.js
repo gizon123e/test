@@ -7,6 +7,9 @@ const path = require('path')
 const fs = require('fs');
 const Follower = require('../../models/model-follower');
 const BiayaTetap = require('../../models/model-biaya-tetap');
+const Product = require('../../models/model-product');
+const { calculateDistance } = require("../../utils/menghitungJarak");
+
 
 module.exports = {
 
