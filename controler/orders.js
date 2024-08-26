@@ -1552,7 +1552,7 @@ module.exports = {
       console.log(req.user)                         
 
       if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
-      if (!sekolahId) return res.status(400).json({ message: "Kirimkan Id Sekolah" });
+      if (!sekolahId && req.user.role === "konsumen") return res.status(400).json({ message: "Kirimkan Id Sekolah" });
       if (!req.body["items"]) return res.status(404).json({ message: "Tidak ada data items yang dikirimkan, tolong kirimkan data items yang akan dipesan" });
       if (!Array.isArray(req.body["items"])) return res.status(400).json({ message: "Body items bukan array, kirimkan array" });
 
