@@ -203,7 +203,7 @@
       }
 
       function initializeSocket(token) {
-        socket = io("https://staging-backend.superdigitalapps.my.id/",{
+        socket = io("http://localhost:8000",{
           transports: ['websocket'],
           auth: {
             token,
@@ -272,6 +272,27 @@
         const text = document.createElement("p");
         text.innerHTML = `${JSON.stringify(data)}`;
         document.body.appendChild(text);  
+      })
+
+      socket.on('notifikasi_distri_pengiriman_baru', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);
+      })
+
+      socket.on('notifikasi_distri_h-1_pengiriman', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);
+      })
+
+      socket.on('notifikasi_distri_sudah_dikemas', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);
       })
     </script>
   </body>

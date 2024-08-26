@@ -166,7 +166,8 @@ module.exports = {
 
                const notifikasi = await Notifikasi.findOne({invoiceId: shipment.invoice._id}).sort({createdAt: -1});
                if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                    await Pengiriman.findOneAndUpdate({ _id: shipment._id }, { countdown_pengemasan_vendor: countdown_pengemasan_vendor }, { new: true })
+                    console.log(`countdown => ${new Date(countdown_pengemasan_vendor)}`)
+                    await Pengiriman.findOneAndUpdate({ _id: shipment._id }, { countdown_pengemasan_vendor: new Date(countdown_pengemasan_vendor) }, { new: true })
                     DetailNotifikasi.create({
                          notifikasiId: notifikasiDistri._id,
                          status: "Pesanan yang akan dikirim sedang dikemas",
@@ -191,7 +192,7 @@ module.exports = {
 
                     socket.emit('notif_distri_pesanan_dikemas', {
                          jenis: "Pesanan",
-                         userId: notifikasiDistri._id,
+                         userId: notifikasiDistri.userId,
                          status: "Pesanan yang akan dikirim sedang dikemas",
                          message: `Pengiriman pesanan ${shipment.kode_pengiriman} sedang dikemas olej penjual dan akan segera kamu kirim ke konsumen`,
                          image: shipment.productToDelivers[0].productId.image_product[0],
