@@ -368,7 +368,12 @@ module.exports = {
     try {
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
-      const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
+      const alamatDefault = await Address.findOne({ userId: req.user.id, isUsed: true });
+      if (!alamatDefault) {
+        return res.status(500).json({
+          message: "Alamat default"
+        })
+      }
       const vendors = await TokoVendor.aggregate([
         {
           $lookup: {
@@ -383,13 +388,13 @@ module.exports = {
         },
       ]);
 
-      const longAlamatSekolah = parseFloat(alamatSekolah.pinAlamat.long);
-      const latAlamatSekolah = parseFloat(alamatSekolah.pinAlamat.lat);
+      const longalamatDefault = parseFloat(alamatDefault.pinAlamat.long);
+      const latalamatDefault = parseFloat(alamatDefault.pinAlamat.lat);
 
       let vendorDalamRadius = [];
 
       for (let i = 0; i < vendors.length; i++) {
-        const distance = calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(vendors[i].address.pinAlamat.lat), parseFloat(vendors[i].address.pinAlamat.long), biayaTetap.radius);
+        const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(vendors[i].address.pinAlamat.lat), parseFloat(vendors[i].address.pinAlamat.long), biayaTetap.radius);
         if (distance <= biayaTetap.radius) {
           vendorDalamRadius.push(vendors[i]);
           vendors[i].jarakVendor = distance;
