@@ -701,7 +701,7 @@ module.exports = {
                 }
               };
               const { pengiriman, ...restOfPesanan } = pesanan[key];
-              const { waktu_pengiriman, ...restOfPengiriman } = pengiriman;
+              const { waktu_pengiriman, countdown_pengemasan_vendor,...restOfPengiriman } = pengiriman;
               data.push({
                 ...restOfOrder,
                 createdAt: checkCreatedAt(),
@@ -709,6 +709,7 @@ module.exports = {
                 id_pesanan: Array.from(kode_pesanan)[0],
                 pengiriman: {
                   ...restOfPengiriman,
+                  countdown_pengemasan_vendor: new Date(countdown_pengemasan_vendor),
                   waktu_pengiriman: new Date(waktu_pengiriman),
                 },
                 ...restOfPesanan,
