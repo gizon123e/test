@@ -220,11 +220,10 @@ productModels.pre("save", function (next) {
   }
 
   if (minimalDp === 0) this.minimalDp = null
-  // if(this.bervarian === true || this.bervarian === "true" && this.detail_varian){
-  //   this.detail_varian.forEach(element => {
-  //     this.total_stok += element.stok
-  //   });
-  // }
+  
+  if(this.bervarian === true && !this.varian){
+    return next(new Error("produk bervarian harus ada varian!"))
+  }
 
   // if(this.bervarian && this.minimalOrder){
   //   next("Atur minimal order per varian di properti objek varian")
