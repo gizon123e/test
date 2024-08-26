@@ -38,6 +38,8 @@ const PanduanPembayaran = require("../models/model-panduan-pembayaran");
 const PoinHistory = require("../models/model-poin");
 const JenisJasaDistributor = require("../models/distributor/jenisJasaDistributor");
 const TokoSupplier = require("../models/supplier/model-toko");
+const TokoProdusen = require("../models/produsen/model-toko");
+const Supplier = require("../models/supplier/model-supplier");
 dotenv.config();
 
 const now = new Date();
@@ -461,10 +463,10 @@ module.exports = {
                   detailToko = await TokoVendor.findOne({ userId: storeId }).select("namaToko");
                   break;
                 case "supplier":
-                  detailToko = await Supplier.findOne({ userId: storeId });
+                  detailToko = await TokoSupplier.findOne({ userId: storeId });
                   break;
                 case "produsen":
-                  detailToko = await Produsen.findOne({ userId: storeId });
+                  detailToko = await TokoProdusen.findOne({ userId: storeId });
                   break;
               }
 
@@ -585,6 +587,7 @@ module.exports = {
       const productIds = products.map((item) => {
         return item._id;
       });
+      console.log(productIds)
       const filter = {
         items: {
           $elemMatch: {
@@ -597,7 +600,7 @@ module.exports = {
         },
       };
 
-      dataOrders = await Pesanan.aggregate([
+      const pipeline = [
         { $match: filter },
         { $unwind: "$items" },
         {
@@ -623,15 +626,24 @@ module.exports = {
           },
         },
         { $unwind: "$alamat" },
-        {
-          $lookup: {
-            from: "sekolahs",
-            foreignField: "_id",
-            localField: "sekolahId",
-            as: "sekolah",
+      ]
+
+      if(req.user.role === "vendor"){
+        console.log('vendor')
+        pipeline.push(
+          {
+            $lookup: {
+              from: "sekolahs",
+              foreignField: "_id",
+              localField: "sekolahId",
+              as: "sekolah",
+            },
           },
-        },
-        { $unwind: "$sekolah" },
+          { $unwind: "$sekolah" }
+        )
+      }
+
+      pipeline.push(
         {
           $group: {
             _id: "$_id",
@@ -657,7 +669,9 @@ module.exports = {
             createdAt: -1,
           },
         },
-      ])
+      )
+
+      dataOrders = await Pesanan.aggregate(pipeline)
         .skip(skip)
         .limit(parseInt(limit));
 
@@ -672,20 +686,21 @@ module.exports = {
         const pengiriman = await Pengiriman.find({ orderId: order._id }).populate("distributorId").lean();
         const proses = await ProsesPengirimanDistributor.exists({ pengirimanId: { $in: pengiriman.map((pgr) => pgr._id) }, status_distributor: { $ne: "Belum dijemput" } });
         if (!proses) {
-          let detailToko;
-          switch (req.user.role) {
+          let detailBuyer;
+          const detailUserBuyer = await User.findById(order.alamat.userId);
+          switch (detailUserBuyer.role) {
             case "vendor":
-              detailToko = await TokoVendor.findOne({ userId: req.user.id });
+              detailBuyer = await Vendor.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
               break;
-            default:
-              detailToko = await TokoVendor.findOne({ userId: req.user.id });
+            case "supplier":
+              detailBuyer = await Supplier.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
               break;
           }
           const pesanan = {};
           const kode_pesanan = new Set();
           for (const item of order.items) {
             let isApproved = item.isApproved;
-            const productSelected = dataProd.dataProduct.find((prd) => item.product.productId.toString() === prd._id.toString());
+            const productSelected = dataProd?.dataProduct.find((prd) => item.product.productId.toString() === prd._id.toString());
             if (!kode_pesanan.has(item.kode_pesanan)) {
               kode_pesanan.add(item.kode_pesanan);
             }
@@ -706,7 +721,7 @@ module.exports = {
                   }
                 };
 
-                if (pgr.invoice.toString() === invoiceSubsidi._id.toString()) {
+                if (pgr.invoice.toString() === invoiceSubsidi?._id.toString()) {
                   if (!pesanan[pgrId]) {
                     pesanan[pgrId] = {
                       pengiriman: pgr,
@@ -750,7 +765,7 @@ module.exports = {
             const tidakMemenuhiSyarat = await IncompleteOrders.exists({
               userIdSeller: req.user.id, 
               pengirimanId: pesanan[key].pengiriman._id,
-              userIdKonsumen: restOfOrder.sekolah.userId
+              userIdKonsumen: restOfOrder?.sekolah?.userId
             })
             const checkStatus = () => {
               if (pesanan[key].pengiriman.isRequestedToPickUp && !pembatalan) {
@@ -770,10 +785,10 @@ module.exports = {
               }
             };
             const checkCreatedAt = () => {
-              if (pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi._id.toString()) {
+              if (pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi?._id.toString()) {
                 return createdAt;
               }  
-              if (pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan._id.toString()) {
+              if (pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan?._id.toString()) {
                 return updatedAt;
               }
             };
@@ -784,6 +799,7 @@ module.exports = {
               createdAt: checkCreatedAt(),
               status: checkStatus(),
               id_pesanan: Array.from(kode_pesanan)[0],
+              detailBuyer,
               pengiriman: {
                 ...restOfPengiriman,
                 countdown_pengemasan_vendor: countdown_pengemasan_vendor ? new Date(countdown_pengemasan_vendor) : null,
@@ -1203,10 +1219,10 @@ module.exports = {
               detailToko = await TokoVendor.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean();
               break;
             case "supplier":
-              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).lean();
+              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
               break;
             case "produsen":
-              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).lean();
+              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
               break;
           }
           const user = await User.findById(productId.userId._id).select("email phone").lean();
@@ -1321,7 +1337,7 @@ module.exports = {
               detailToko = await TokoVendor.findOne({ userId: sellerId }).select("namaToko address").populate("address").lean();
               break;
             case "supplier":
-              detailToko = await Supplier.findOne({ userId: sellerId }).lean();
+              detailToko = await TokoSupplier.findOne({ userId: sellerId }).lean();
               break;
             case "produsen":
               detailToko = await Produsen.findOne({ userId: sellerId }).lean();
@@ -1341,7 +1357,6 @@ module.exports = {
               return pgr.productToDelivers.some((prd) => prd.productId.toString() === productSummary?._id.toString()) && pgr.invoice.toString() === invoiceTambahan?._id.toString();
             })
             .forEach((pgr) => {
-              console.log(pgr.id_toko);
               pgr.productToDelivers.forEach((prd) => {
                 if (prd.productId.toString() === productSummary._id.toString()) {
                   totalPriceVendorTambahan += prd.quantity * productSummary.total_price;
@@ -1354,7 +1369,6 @@ module.exports = {
               return pgr.productToDelivers.some((prd) => prd.productId.toString() === productSummary?._id.toString()) && pgr.invoice.toString() === invoiceSubsidi?._id.toString();
             })
             .forEach((pgr) => {
-              console.log(pgr.id_toko);
               pgr.productToDelivers.forEach((prd) => {
                 if (prd.productId.toString() === productSummary._id.toString()) {
                   totalPriceVendorSubsidi += prd.quantity * productSummary.total_price;
@@ -1549,7 +1563,6 @@ module.exports = {
           sekolahId,
           biaya_awal_asuransi
       } = req.body
-      console.log(req.user)                         
 
       if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
       if (!sekolahId && req.user.role === "konsumen") return res.status(400).json({ message: "Kirimkan Id Sekolah" });
@@ -1718,6 +1731,7 @@ module.exports = {
                 jenis_pengiriman: dataOrder.shipments[i].id_jenis_layanan,
                 id_jenis_kendaraan: dataOrder.shipments[i].id_jenis_kendaraan,
                 id_toko: dataOrder.shipments[i].id_toko_vendor,
+                tokoType: "TokoVendor",
                 kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
                 invoice: idInvoiceSubsidi,
               })
@@ -2034,6 +2048,7 @@ module.exports = {
                   jenis_pengiriman: pengirimanSubsidi.id_jenis_layanan,
                   id_jenis_kendaraan: pengirimanSubsidi.id_jenis_kendaraan,
                   id_toko: pengirimanSubsidi.id_toko_vendor,
+                  tokoType: "TokoVendor",
                   kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
                   invoice: id_invoice_subsidi,
                 })
@@ -2109,6 +2124,7 @@ module.exports = {
                   jenis_pengiriman: pengirimanNonSubsidi.id_jenis_layanan,
                   id_jenis_kendaraan: pengirimanNonSubsidi.id_jenis_kendaraan,
                   id_toko: pengirimanNonSubsidi.id_toko_vendor,
+                  tokoType: "TokoVendor",
                   kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
                   invoice: id_invoice_non_subsidi,
                 })
@@ -2292,6 +2308,15 @@ module.exports = {
           detailBiayaTambahan.totalPotonganOngkir += potongan_ongkir;
           detailBiayaTambahan.jumlahOngkir += total_ongkir;
 
+          let tokoType;
+          switch(req.user.role){
+            case "vendor":
+              tokoType = "TokoSupplier";
+              break;
+            case "supplier":
+              tokoType = "TokoProdusen"
+          }
+
           promisesFunct.push(
             Pengiriman.create({
               orderId: dataOrder._id,
@@ -2304,6 +2329,7 @@ module.exports = {
               jenis_pengiriman: pengiriman.id_jenis_layanan,
               id_jenis_kendaraan: pengiriman.id_jenis_kendaraan,
               id_toko: pengiriman.id_toko_vendor,
+              tokoType,
               kode_pengiriman: `PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
               invoice: id_invoice_non_subsidi,
             })
@@ -2625,11 +2651,11 @@ module.exports = {
           return accumulator + currentValue.quantity;
         }, 0);
 
-        const totalQuantityUpdate = pengemasan.total_quantity + totalQuantity;
+        const totalQuantityUpdate = pengemasan?.total_quantity + totalQuantity;
 
         const waktuPengemasan = totalQuantity * avgPengemasan * 60;
 
-        let totalPengemasanPengiriman = pengemasan.total_pengemasan_pengiriman + waktuPengemasan;
+        let totalPengemasanPengiriman = pengemasan?.total_pengemasan_pengiriman + waktuPengemasan;
 
         if (totalPengemasanPengiriman > maxPengemasanPengiriman) {
           totalPengemasanPengiriman = maxPengemasanPengiriman;
@@ -2640,8 +2666,8 @@ module.exports = {
             orderId: pengiriman.orderId,
           },
           {
-            total_quantity: totalQuantityUpdate,
-            total_pengemasan_pengiriman: totalPengemasanPengiriman,
+            total_quantity: totalQuantityUpdate || 0,
+            total_pengemasan_pengiriman: totalPengemasanPengiriman || 0,
           },
           {
             new: true,

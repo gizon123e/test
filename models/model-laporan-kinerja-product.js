@@ -8,8 +8,13 @@ const performanceReport = new mongoose.Schema({
         required: [true, "productId harus diisi"],
         index: true
     },
-    
+    userId: {
+        type: mongoose.Types.ObjectId,
+        ref:"User",
+        required: [true, "productId harus diisi"],
+        index: true
+    }
 }) 
 
-const PerformanceReport = mongoose.model("PerformanceReport", performanceReport)
-module.exports = PerformanceReport
+const ProductPerformanceReport = mongoose.model("ProductPerformanceReport", performanceReport)
+module.exports = ProductPerformanceReport

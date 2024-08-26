@@ -1,4 +1,4 @@
-const Toko = require('../../models/supplier/model-toko');
+const Toko = require('../../models/produsen/model-toko');
 const Address = require('../../models/model-address');
 const BiayaTetap = require("../../models/model-biaya-tetap");
 const path = require('path');
@@ -6,7 +6,6 @@ const Product = require('../../models/model-product');
 const {Pangan} = require('../../models/model-pangan');
 const SalesReport = require('../../models/model-laporan-penjualan');
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman');
-const TokoSupplier = require('../../models/supplier/model-toko');
 const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders');
 const Follower = require('../../models/model-follower');
 

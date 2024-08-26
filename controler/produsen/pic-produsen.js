@@ -1,4 +1,4 @@
-const PicSupplier = require('../../models/supplier/model-penanggung-jawab');
+const PicSupplier = require('../../models/produsen/model-penanggung-jawab');
 const Address = require('../../models/model-address');
 const dotenv = require('dotenv')
 const path = require('path')
