@@ -117,10 +117,11 @@ module.exports = {
           }
      },
 
-     sendNotifikasi: async(req, res, next) => {
+          sendNotifikasi: async(req, res, next) => {
         try{
           const shipments = await Pengiriman.find({sellerApproved: true}).sort({createdAt: -1}).populate("invoice").populate("productToDelivers.productId").populate("distributorId").lean();
-          for (const shipment of shipments){
+          for (const shipment of shipments){      
+               console.log(shipment._id)
                const deadline = new Date(shipment.waktu_pengiriman);
                const countdown_pengemasan_vendor = new Date(shipment.waktu_pengiriman).setHours(new Date(shipment.waktu_pengiriman).getHours() - 2);
                const pengemasan = await Pengemasan.findOne({pengirimanId: shipment._id}).lean()
@@ -134,6 +135,7 @@ module.exports = {
 
                console.log(`sekarang ${now}`)
                console.log(`muncul notif ${new Date(waktuMunculNotif.setSeconds(0,0))}`)
+               console.log(`countdown ${new Date(countdown_pengemasan_vendor)}`)
 
                const notifikasiDistri =  await Notifikasi.findOne({userId: shipment.distributorId.userId})
                

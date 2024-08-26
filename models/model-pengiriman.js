@@ -13,7 +13,7 @@ const modelPengiriman = new mongoose.Schema({
         type: String
     },
     countdown_pengemasan_vendor: {
-      type: Date,
+      type: String,
       default: null
     },
     jenis_pengiriman: {

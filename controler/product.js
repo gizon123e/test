@@ -847,7 +847,7 @@ module.exports = {
         .populate("categoryId")
         .populate({
           path: "userId",
-          select: "-password -codeOtp -pin -saldo -poin",
+          select: "role",
         })
         .populate("id_main_category")
         .populate("id_sub_category")
@@ -906,6 +906,7 @@ module.exports = {
             const gizi = await Pangan.findById(item.bahan).select(
               "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
             );
+            if(!item.bahan) return res.status(400).json({message: "Produk anomali"})
             gizi_varian.push(gizi);
           }
 
@@ -1049,6 +1050,7 @@ module.exports = {
             datas: {
               ...restOfProduct,
               total_terjual: terjual ? total_terjual : 0,
+              varian,
             },
             toko,
             seluruh_gizi_varian,

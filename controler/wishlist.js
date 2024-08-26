@@ -56,8 +56,21 @@ module.exports = {
                 .then(()=> console.log("berhasil un-wishlist product"))
                 return res.status(201).json({message: "Berhasil menghapus produk dari wishlist", wishlist: false})
             }
-            const prod = await Product.exists({_id: productId});
+            const prod = await Product.findOne({_id: productId}).select("userId").populate({path: "userId", select: "role"});
             if(!prod) return res.status(404).json({message: "Produk tidak ditemukan"})
+            let accepted;
+            switch(req.user.role){
+                case "konsumen":
+                    accepted = "vendor";
+                    break;
+                case "vendor":
+                    accepted = "supplier";
+                    break;
+                case "supplier":
+                    accepted = 'produsen';
+                    break;
+            }
+            if(accepted !== prod.userId.role) return res.status(403).json({message: "Permintaan tidak valid"});
             const wishlist = await Wishlist.create({
                 userId: req.user.id,
                 productId
