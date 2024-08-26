@@ -121,6 +121,7 @@ module.exports = {
         try{
           const shipments = await Pengiriman.find({sellerApproved: true}).sort({createdAt: -1}).populate("invoice").populate("productToDelivers.productId").populate("distributorId").lean();
           for (const shipment of shipments){
+               console.log(shipment._id)
                const deadline = new Date(shipment.waktu_pengiriman);
                const countdown_pengemasan_vendor = new Date(shipment.waktu_pengiriman).setHours(new Date(shipment.waktu_pengiriman).getHours() - 2);
                const pengemasan = await Pengemasan.findOne({pengirimanId: shipment._id}).lean()
