@@ -304,6 +304,7 @@ module.exports = {
       const distri = await Distributtor.exists({ userId: req.user.id });
 
       const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dikirim" }, { new: true })
+        .populate("distributorId")
         .populate("pengirimanId")
         .populate("tokoId")
         .populate("produk_pengiriman.productId")
@@ -324,6 +325,27 @@ module.exports = {
       const toko_vendor_id = prosesPengiriman.tokoId.userId;
 
       if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
+
+      const notifDistributor = await Notifikasi.findOne({ userId: prosesPengiriman.distributorId.userId }).sort({ createdAt: -1 });
+      DetailNotifikasi.create({
+        notifikasiId: notifDistributor._id,
+        status: `Pesanan sedang dikirim ke alamat tujuan oleh pengemudi ${prosesPengiriman.id_pengemudi.name}`,
+        jenis: "Pesanan",
+        message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} sedang dikirim ke alamat tujuan konsumen`,
+        image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+        createdAt: new Date(), 
+      })
+        .then(() => console.log("Berbayar simpan notif distributor"))
+        .catch(() => console.log("Gagal simpan notif distributor"));
+      
+      socket.emit("notif_distri_pesanan_dikirim", {
+        jenis: "Pesanan",
+        userId: notifDistributor.userId,
+        status: `Pesanan sedang dikirim ke alamat tujuan oleh pengemudi ${prosesPengiriman.id_pengemudi.name}`,
+        message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} sedang dikirim ke alamat tujuan konsumen`,
+        image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+        Waktu: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+      })
 
       if (invoice.length == 1) {
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
@@ -438,7 +460,8 @@ module.exports = {
         { _id: req.params.id, distributorId: distri._id },
         { status_distributor: "Selesai", image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}` },
         { new: true }
-      )
+      ) 
+        .populate("distributorId")
         .populate("pengirimanId")
         .populate("tokoId")
         .populate("produk_pengiriman.productId");
@@ -476,6 +499,27 @@ module.exports = {
         { $unwind: "$invoice" },
       ]);
 
+      const notifDistributor = await Notifikasi.findOne({userId: prosesPengiriman.distributorId._id}).sort({createdAt: -1});
+
+      DetailNotifikasi.create({
+        notifikasiId: notifDistributor.id,
+        status: "Pesanan telah selesai dikirim",
+        jenis: "Pesanan", 
+        message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} telah dikirim ke alamat tujuan`,
+        image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+        createdAt: new Date(),
+      })
+        .then(() => console.log("Berhasil simpan notif distributor"))
+        .catch(() => console.log("Gagal simpan notif distributor"))
+
+      socket.emit('notif_distri_pesanan_selesai', {
+        jenis: "Pesanan",
+        userId: notifDistributor.userId,
+        status: "Pesanan telah selesai dikirim",
+        message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} telah dikirim ke alamat tujuan`,
+        image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
+        tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
+      })
       const toko_user_id = prosesPengiriman.tokoId.userId;
       if (!prosesPengiriman) return res.status(404).json({ message: "Proses pengiriman tidak ditemukan" });
 
@@ -573,6 +617,6 @@ module.exports = {
     } catch (error) {
       console.log(error);
       next(error);
-    }
+    } 
   },
 };
