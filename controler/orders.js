@@ -2613,6 +2613,7 @@ module.exports = {
         },
       });
       const countedSeller = new Set();
+      const countedDistri = new Set()
       const addedInv = new Set();
       const from = []
       for (const shp of shipments) {
@@ -2628,12 +2629,17 @@ module.exports = {
         for (prd of shp.productToDelivers) {
           const selectedProduct = dataProduct.dataProduct.find((prod) => prod._id === prd.productId._id);
           from.push(selectedProduct)
-          console.log(selectedProduct);
           if (inv) {
             total_harga_produk += selectedProduct.total_price * prd.quantity;
 
             if (!countedSeller.has(user?._id.toString())) {
               user = await User.findById(selectedProduct.userId);
+              PoinHistory.create({
+                userId: user._id,
+                jenis: "masuk",
+                value: biayaTetap.poinPembelian,
+                from
+              }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
               countedSeller.add(user._id.toString());
             }
           }
@@ -2641,6 +2647,17 @@ module.exports = {
         if (inv) {
           const distri = await Distributtor.findById(shp.distributorId).select("userId");
           const userDistri = await User.findById(distri.userId);
+          
+          if (!countedDistri.has(userDistri?._id.toString())) {
+            user = await User.findById(selectedProduct.userId);
+            PoinHistory.create({
+              userId: userDistri._id,
+              jenis: "masuk",
+              value: biayaTetap.poinPembelian,
+              from
+            }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+            countedDistri.add(userDistri._id.toString());
+          }
 
           if (!addedInv.has(inv._id.toString())) {
             promisesFunction.push(

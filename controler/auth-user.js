@@ -322,6 +322,7 @@ module.exports = {
     try {
       const { pin, token } = req.body;
       if(!pin || pin.trim().length === 0) return res.status(400).json({message: "Pin Kosong"});
+      if(pin.trim().length > 6) return res.status(400).json({message: "Pin maksimal 6 digit"})
       const hashedPin =  await bcrypt.hash(pin, 10);
       const verifyToken = jwt.verifyToken(token);
 
@@ -485,6 +486,8 @@ module.exports = {
   resetPin: async(req, res, next) => {
     try {
       const { pin, userId, token_reset } = req.body
+      if(!pin || pin.trim().length === 0) return res.status(400).json({message: "Pin Kosong"});
+      if(pin.trim().length > 6) return res.status(400).json({message: "Pin maksimal 6 digit"})
       const pin_baru = await bcrypt.hash(pin, 10);
       const user = await User.findOne({
         _id: userId,
