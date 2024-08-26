@@ -105,7 +105,8 @@ module.exports = {
                     long: long_pin_alamat,
                     lat: lat_pin_alamat
                 },
-                isMain: true
+                isMain: true,
+                isUsed: true,
             };
             
             if (registerAs === "not_individu") {
