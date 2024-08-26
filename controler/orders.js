@@ -709,7 +709,7 @@ module.exports = {
                 id_pesanan: Array.from(kode_pesanan)[0],
                 pengiriman: {
                   ...restOfPengiriman,
-                  countdown_pengemasan_vendor: new Date(countdown_pengemasan_vendor),
+                  countdown_pengemasan_vendor: countdown_pengemasan_vendor ? new Date(countdown_pengemasan_vendor) : null,
                   waktu_pengiriman: new Date(waktu_pengiriman),
                 },
                 ...restOfPesanan,
