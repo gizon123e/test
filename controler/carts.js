@@ -3,6 +3,7 @@ const Product = require('../models/model-product');
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
 const TokoVendor = require('../models/vendor/model-toko');
+const TokoSupplier = require('../models/supplier/model-toko');
 
 module.exports = {
 
@@ -76,10 +77,10 @@ module.exports = {
                         detailToko = await TokoVendor.findOne({userId: storeMap[key].id}).select('namaToko userId');
                         break;
                     case "supplier":
-                        detailToko = await Supplier.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await TokoSupplier.findOne({userId: storeMap[key].id}).select('namaToko userId');
                         break;
                     case "produsen":
-                        detailToko = await Produsen.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await TokoSupplier.findOne({userId: storeMap[key].id}).select('namaToko userId');
                         break;
                 }
                 finalData.push({
