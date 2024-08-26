@@ -1833,6 +1833,7 @@ module.exports = {
 
             socket.emit('notif_distri_pengiriman_baru', {
               jenis: "Pesanan",
+              userId: distributor.userId,
               status: "Ada pesanan terbaru yang harus dikirim",
               message: `Terima pengiriman pesanan PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1} sebelum ${formatTanggalBulan(tommorow)} pukul ${formatWaktu(tommorow)}`,
               image_product: products[0].image_product[0],
