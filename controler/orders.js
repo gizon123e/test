@@ -2237,6 +2237,7 @@ module.exports = {
           });
         }
       } else {
+        if(req.body.sekolahId) return res.status(400).json({message: "Gak usah ada sekolahId"})
         const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
         const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
         const splitted = metode_pembayaran.split(" / ");
