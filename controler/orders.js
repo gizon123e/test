@@ -228,7 +228,7 @@ module.exports = {
         const transaksi = await Transaksi.exists({ id_pesanan: order._id, subsidi: false });
         const transaksiSubsidi = await Transaksi.exists({ id_pesanan: order._id, subsidi: true });
         const sekolah = await Sekolah.findOne({ _id: order.sekolahId, userId: req.user.id }).select("jumlahMurid").lean();
-        if (!sekolah) return res.status(404).json({ message: "Sekolah tidak ditemukan, akan segera diperbaiki" });
+        if (!sekolah && req.user.role === "konsumen") return res.status(404).json({ message: "Sekolah tidak ditemukan, akan segera diperbaiki" });
         let sisaSubsidi = sekolah.jumlahMurid;
         const addedPengiriman = new Set();
         const dataProduct = await DataProductOrder.findOne({ pesananId: order._id });
