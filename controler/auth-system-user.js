@@ -261,10 +261,7 @@ module.exports = {
                     isVerifikasiDocument: false
                 }, { new: true });
             } else if (verify) {
-                user = await User.findByIdAndUpdate(req.params.id, {
-                    isDetailVerified: true,
-                    isVerifikasiDocument: true
-                }, { new: true });
+                user = await User.findById(req.params.id);
 
                 if (user.isDetailVerified) {
                     const virtualAccounts = await VA.find();
@@ -288,6 +285,10 @@ module.exports = {
                                 break;
                         };
                         if (!detailUser.tanggal_lahir) return res.status(403).json({ message: "User Belum Mengisi Tanggal Lahir!" });
+                        user = await User.findByIdAndUpdate(req.params.id, {
+                            isDetailVerified: true,
+                            isVerifikasiDocument: true
+                        }, {new: true})
 
                         const tanggalLahir = detailUser.tanggal_lahir.replace(/[\/?]/g, '');
                         const jumlahUserPerBank = await Va_User.find({

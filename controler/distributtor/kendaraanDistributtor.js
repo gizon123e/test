@@ -16,6 +16,8 @@ const path = require('path')
 const fs = require('fs')
 const dotenv = require('dotenv')
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
+const User = require('../../models/model-auth-user')
+const TokoSupplier = require('../../models/supplier/model-toko')
 dotenv.config()
 
 module.exports = {
@@ -134,10 +136,23 @@ module.exports = {
                 const total = volumeProduct / dataBiayaTetap.constanta_volume
                 hargaTotalVolume = total
             }
+            const user = await User.findById(userId).select("role");
 
-            const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
-            const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+            let addressDetail;
+
+            switch(user.role){
+                case "vendor":
+                    addressDetail = await TokoVendor.findOne({ userId: userId }).populate('address');
+                    break;
+                case "supplier":
+                    addressDetail = await TokoSupplier.findOne({ userId: userId }).populate('address');
+                    break
+                default:
+                    addressDetail = await TokoSupplier.findOne({ userId: userId }).populate('address');
+                    break
+            }
+            const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
+            const longDetaik = parseFloat(addressDetail.address.pinAlamat.long)
 
             let distance
 
@@ -145,7 +160,7 @@ module.exports = {
 
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
-            distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latitudeVebdor, longitudeVendor, 100);
+            distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
 
             if (isNaN(distance)) {
                 return res.status(400).json({
@@ -179,8 +194,6 @@ module.exports = {
                     })
                     .populate("jenisKendaraan")
                     .lean()
-
-                console.log("dataLayanan", dataLayanan)
 
                 for (let data of dataLayanan) {
                     const dataParsingLayananDistributor = await LayananKendaraanDistributor.findOne({ _id: data._id })
