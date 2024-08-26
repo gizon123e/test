@@ -146,7 +146,7 @@ module.exports = {
     try {
       const { id_address, latitude, longitude, id_konsumen, id_pengemudi, id_kendaraan } = req.body;
 
-      if (!id_address) return res.status(400).json({ message: "id_address harus di isi" });
+      if (!id_address, latitude, longitude, id_konsumen, id_pengemudi, id_kendaraan) return res.status(400).json({ message: "id_address, latitude, longitude, id_konsumen, id_pengemudi, id_kendaraan harus di isi" });
       const distri = await Distributtor.exists({ userId: req.user.id });
 
       const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput", id_pengemudi, id_kendaraan }, { new: true })
@@ -333,11 +333,11 @@ module.exports = {
         jenis: "Pesanan",
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} sedang dikirim ke alamat tujuan konsumen`,
         image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
-        createdAt: new Date(), 
+        createdAt: new Date(),
       })
         .then(() => console.log("Berbayar simpan notif distributor"))
         .catch(() => console.log("Gagal simpan notif distributor"));
-      
+
       socket.emit("notif_distri_pesanan_dikirim", {
         jenis: "Pesanan",
         userId: notifDistributor.userId,
@@ -460,7 +460,7 @@ module.exports = {
         { _id: req.params.id, distributorId: distri._id },
         { status_distributor: "Selesai", image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}` },
         { new: true }
-      ) 
+      )
         .populate("distributorId")
         .populate("pengirimanId")
         .populate("tokoId")
@@ -499,12 +499,12 @@ module.exports = {
         { $unwind: "$invoice" },
       ]);
 
-      const notifDistributor = await Notifikasi.findOne({userId: prosesPengiriman.distributorId._id}).sort({createdAt: -1});
+      const notifDistributor = await Notifikasi.findOne({ userId: prosesPengiriman.distributorId._id }).sort({ createdAt: -1 });
 
       DetailNotifikasi.create({
         notifikasiId: notifDistributor.id,
         status: "Pesanan telah selesai dikirim",
-        jenis: "Pesanan", 
+        jenis: "Pesanan",
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} telah dikirim ke alamat tujuan`,
         image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
         createdAt: new Date(),
@@ -617,6 +617,6 @@ module.exports = {
     } catch (error) {
       console.log(error);
       next(error);
-    } 
+    }
   },
 };

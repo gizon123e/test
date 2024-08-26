@@ -109,7 +109,8 @@ const modelOrder = new mongoose.Schema({
     },
     sekolahId:{
         type: mongoose.Types.ObjectId,
-        ref: "Sekolah"
+        ref: "Sekolah",
+        default: null
     },
     shipments: [
         {

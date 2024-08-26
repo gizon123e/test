@@ -374,34 +374,70 @@ module.exports = {
           message: "Alamat default"
         })
       }
-      const vendors = await TokoVendor.aggregate([
-        {
-          $lookup: {
-            from: "addresses",
-            let: { address: "$address" },
-            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
-            as: "address",
-          },
-        },
-        {
-          $unwind: "$address",
-        },
-      ]);
+      let sellers;
+
+      switch(req.user.role){
+        case "konsumen":
+          sellers = await TokoVendor.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+        case "vendor":
+          sellers = await TokoSupplier.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+        default:
+          sellers = await TokoSupplier.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+      }
 
       const longalamatDefault = parseFloat(alamatDefault.pinAlamat.long);
       const latalamatDefault = parseFloat(alamatDefault.pinAlamat.lat);
 
-      let vendorDalamRadius = [];
+      let sellerDalamRadius = [];
 
-      for (let i = 0; i < vendors.length; i++) {
-        const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(vendors[i].address.pinAlamat.lat), parseFloat(vendors[i].address.pinAlamat.long), biayaTetap.radius);
+      for (let i = 0; i < sellers.length; i++) {
+        const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
         if (distance <= biayaTetap.radius) {
-          vendorDalamRadius.push(vendors[i]);
-          vendors[i].jarakVendor = distance;
+          sellerDalamRadius.push(sellers[i]);
+          sellers[i].jarakVendor = distance;
         }
       }
 
-      const idVendors = vendorDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
+      const idVendors = sellerDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
 
       const productWithRadius = await Product.aggregate([
         {
@@ -822,7 +858,18 @@ module.exports = {
       const data = await Product.find({ userId: req.user.id }).populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId").lean();
       const dataProds = [];
       for (const produk of data) {
-        const namaVendor = await TokoVendor.findOne({ userId: produk.userId._id });
+        let detailToko;
+        switch(produk.userId.role){
+          case "vendor": 
+            detailToko = await TokoVendor.findOne({ userId: produk.userId._id });
+            break;
+          case "supplier": 
+            detailToko = await TokoSupplier.findOne({ userId: produk.userId._id });
+            break;
+          default:
+            detailToko = await TokoSupplier.findOne({ userId: produk.userId._id });
+            break;
+        }
         const terjual = await SalesReport.findOne({ productId: produk._id });
         const totalTerjual = terjual
           ? terjual.track.reduce((accumulator, current) => {
@@ -831,7 +878,7 @@ module.exports = {
           : 0;
         dataProds.push({
           ...produk,
-          nama: namaVendor?.namaToko,
+          nama: detailToko?.namaToko,
           totalTerjual,
         });
       }
