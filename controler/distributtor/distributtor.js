@@ -16,6 +16,9 @@ const fs = require('fs')
 const dotenv = require('dotenv')
 const Pengiriman = require('../../models/model-pengiriman')
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
+const Vendor = require('../../models/vendor/model-vendor')
+const Supplier = require('../../models/supplier/model-supplier')
+const TokoSupplier = require('../../models/supplier/model-toko')
 dotenv.config()
 
 module.exports = {
@@ -119,7 +122,18 @@ module.exports = {
             const { product = [] } = req.body
 
             // const dataProduct = await Product.findOne({ _id: req.params.id }).populate('userId')
-            const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
+            const userDetail = await User.findById(req.params.id).select('role')
+
+            let addressDetail;
+            switch(userDetail.role){
+                case "vendor":
+                    addressDetail = await TokoVendor.findOne({ userId: req.params.id }).populate("address");
+                    break;
+                case "supplier":
+                    addressDetail = await TokoSupplier.findOne({ userId: req.params.id }).populate("address");
+                    break;
+            }
+            
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
 
             let ukuranVolumeProduct = 0
@@ -163,13 +177,13 @@ module.exports = {
                 hargaVolumeBeratProduct = total
             }
 
-            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+            const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
+            const longDetail = parseFloat(addressDetail.address.pinAlamat.long)
 
             const addressCustom = await Address.findById(idAddress)
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-            const ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+            const ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
 
             if (isNaN(ongkir)) {
                 return res.status(400).json({
@@ -186,7 +200,7 @@ module.exports = {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
-                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latDetail, longDetail, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
 
@@ -367,9 +381,20 @@ module.exports = {
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
 
-            const konsumenAddress = await Konsumen.findOne({ userId: req.user.id }).populate("address")
-            const latitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.lat)
-            const longitudeKonsumen = parseFloat(konsumenAddress.address.pinAlamat.long)
+            let detailUser;
+            switch(req.user.role){
+                case "konsumen":
+                    detailUser = await Konsumen.findOne({ userId: req.user.id }).populate("address");
+                    break;
+                case "vendor":
+                    detailUser = await Vendor.findOne({ userId: req.user.id }).populate("address");
+                    break;
+                case "supplier":
+                    detailUser = await Supplier.findOne({ userId: req.user.id }).populate("address");
+                    break;
+            }
+            const latDetail = parseFloat(detailUser.address.pinAlamat.lat)
+            const longDetail = parseFloat(detailUser.address.pinAlamat.long)
 
             if (addressId) {
                 const addressCustom = await Address.findById(addressId)
@@ -383,7 +408,7 @@ module.exports = {
                     });
                 }
             } else {
-                const jarakVendorKonsumen = calculateDistance(parseFloat(latitudeKonsumen), parseFloat(longitudeKonsumen), parseFloat(latitudeVendor), parseFloat(longitudeVendor), 100);
+                const jarakVendorKonsumen = calculateDistance(parseFloat(latDetail), parseFloat(longDetail), parseFloat(latitudeVendor), parseFloat(longitudeVendor), 100);
                 console.log("address konsumen", jarakVendorKonsumen)
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
