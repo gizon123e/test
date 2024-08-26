@@ -132,7 +132,7 @@ module.exports = {
         .select(
           "-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha"
         )
-        .populate("userId", "-password")
+        .populate("userId", "-password -codeOtp -pin")
         .populate("address")
         .lean();
       const defaultAddress = await Sekolah.aggregate([
@@ -173,9 +173,8 @@ module.exports = {
         return res
           .status(404)
           .json({ error: `data Konsumen id :${req.user.id} not Found` });
-      let modifiedDataKonsumen = { 
-        ...dataKonsumen, 
-        poin: poin.length > 0 ? 
+      let modifiedDataKonsumen = dataKonsumen
+      dataKonsumen.userId.poin = poin.length > 0 ? 
           poin
             .filter(pn => pn.jenis === "masuk")
             .reduce((acc, val)=> acc + val.value, 0) - 
@@ -183,7 +182,6 @@ module.exports = {
             .filter(pn => pn.jenis === "keluar")
             .reduce((acc, val)=> acc + val.value, 0)
         : 0
-      };
       const isIndividu = dataKonsumen.nama ? true : false;
       if (isIndividu) {
         pic = null;
