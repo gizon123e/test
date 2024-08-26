@@ -8,6 +8,7 @@ const User = require('../../models/model-auth-user')
 const Konsumen = require('../../models/konsumen/model-konsumen')
 const PoinHistory = require('../../models/model-poin')
 const BiayaTetap = require('../../models/model-biaya-tetap')
+const Pengiriman = require('../../models/model-pengiriman')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
@@ -134,8 +135,8 @@ module.exports = {
                     }
                 ]
             })
-            .then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
-            
+                .then(() => console.log('berhasil mencatat poin history')).catch((e) => console.log("gagal mencatat history poin"))
+
             res.status(200).json({
                 message: "create data review success",
                 data: savedReview
@@ -219,5 +220,40 @@ module.exports = {
             }
             next(error)
         }
+    },
+
+    getHistoryBelomDiReview: async (req, res, next) => {
+        try {
+            const dataPesanan = await Pengiriman.find({ status_pengiriman: "pesanan selesai" }).populate('productToDelivers.productId')
+
+            const produk = []
+
+            for (const data of dataPesanan) {
+                for (const item of data.productToDelivers) {
+                    const validateData = await ReviewProduk.findOne({ id_produk: item.productId._id, userId: req.user.id })
+
+                    // Jika tidak ada review untuk produk tersebut, tambahkan ke array `produk`
+                    if (!validateData) {
+                        produk.push(item)
+                    }
+                }
+            }
+
+            res.status(200).json({
+                message: "get data success",
+                datas: produk
+            })
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
     }
+
 }
