@@ -7,6 +7,7 @@ const Invoice = require("../../models/model-invoice");
 const Notifikasi = require("../../models/notifikasi/notifikasi");
 const DetailNotifikasi = require("../../models/notifikasi/detail-notifikasi");
 const mergeObjectsByStoreId = require('../../utils/merginPengirimanId')
+const User = require('../../models/model-auth-user')
 const mongoose = require("mongoose");
 const path = require("path");
 const dotenv = require("dotenv");
@@ -143,12 +144,12 @@ module.exports = {
 
   mulaiPenjemputan: async (req, res, next) => {
     try {
-      const { id_address, latitude, longitude, id_konsumen } = req.body;
+      const { id_address, latitude, longitude, id_konsumen, id_pengemudi, id_kendaraan } = req.body;
 
       if (!id_address) return res.status(400).json({ message: "id_address harus di isi" });
       const distri = await Distributtor.exists({ userId: req.user.id });
 
-      const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput" }, { new: true })
+      const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput", id_pengemudi, id_kendaraan }, { new: true })
         .populate("tokoId")
         .populate("produk_pengiriman.productId");
 
