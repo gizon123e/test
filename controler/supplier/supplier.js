@@ -28,7 +28,11 @@ module.exports = {
 
     getDetailSupplier: async (req, res, next) => {
         try {
-            const dataSupplier = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
+            const dataSupplier = await Supplier.findOne({userId: req.user.id})
+            .select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha")
+            .populate("userId", "-password -codeOtp")
+            .populate('address')
+            .lean()
             let pic;
             if (!dataSupplier) return res.status(404).json({ error: `data supplier id :${req.user.id} not Found` });
             const poin = await PoinHistory.find({userId: req.user.id});

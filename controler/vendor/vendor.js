@@ -34,7 +34,10 @@ module.exports = {
 
     getDetailVendor: async (req, res, next) => {
         try {
-            const dataKonsumen = await Vendor.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
+            const dataKonsumen = await Vendor.findOne({userId: req.user.id})
+            .select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha")
+            .populate("userId", "-password -codeOtp")
+            .populate('address').lean()
             let pic;
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
             const poin = await PoinHistory.find({userId: req.user.id});

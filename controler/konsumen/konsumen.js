@@ -132,7 +132,7 @@ module.exports = {
         .select(
           "-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha"
         )
-        .populate("userId", "-password -codeOtp -pin")
+        .populate("userId", "-password -codeOtp")
         .populate("address")
         .lean();
       const defaultAddress = await Sekolah.aggregate([
