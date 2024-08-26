@@ -31,7 +31,19 @@ module.exports = {
             const dataSupplier = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
             let pic;
             if (!dataSupplier) return res.status(404).json({ error: `data supplier id :${req.user.id} not Found` });
-            let modifiedDataSupplier = dataSupplier
+            const poin = await PoinHistory.find({userId: req.user.id});
+
+            let modifiedDataSupplier = {
+                ...dataSupplier,
+                poin: poin.length > 0 ? 
+                    poin
+                    .filter(pn => pn.jenis === "masuk")
+                    .reduce((acc, val)=> acc + val.value, 0) - 
+                    poin
+                    .filter(pn => pn.jenis === "keluar")
+                    .reduce((acc, val)=> acc + val.value, 0)
+                : 0
+            }
             const isIndividu = dataSupplier.nama? true : false
             if(isIndividu){
                 pic = null
