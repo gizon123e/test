@@ -9,7 +9,7 @@ const BiayaTetap = require('../../models/model-biaya-tetap')
 const User = require('../../models/model-auth-user')
 const LayananKendaraanDistributor = require('../../models/distributor/layananKendaraanDistributor')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
-
+const Toko = require('../../models/supplier/model-toko')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
 const fs = require('fs')
@@ -353,8 +353,16 @@ module.exports = {
                 totalUkuranVolumeProduct += ukuranVolumeProduct;
                 totalUkuranBeratProduct += ukuranBeratProduct;
             }
+            const userData = await User.findOne({ _id: req.params.id })
 
-            const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
+            let addressVendor
+            if (userData.role === 'vendor') {
+                const tokoVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
+                addressVendor = tokoVendor
+            } else if (userData.role === 'supplier') {
+                const tokoSupplier = await Toko.findOne({ userId: req.params.id }).populate('address')
+                addressVendor = tokoSupplier
+            }
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
             const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
@@ -368,12 +376,7 @@ module.exports = {
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
                 const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
                 const jarakVendorKonsumen = calculateDistance(parseFloat(latitudeAddressCustom), parseFloat(longitudeAddressCustom), parseFloat(latitudeVendor), parseFloat(longitudeVendor), 100);
-                console.log("address custom", {
-                    latA: parseFloat(latitudeAddressCustom),
-                    longA: parseFloat(longitudeAddressCustom),
-                    latB: parseFloat(latitudeVendor),
-                    longB: parseFloat(longitudeVendor)
-                })
+
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
                         message: "Jarak antara konsumen dan vendor melebihi 100 km"

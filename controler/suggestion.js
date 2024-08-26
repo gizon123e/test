@@ -1,6 +1,7 @@
 const Address = require("../models/model-address");
 const BiayaTetap = require("../models/model-biaya-tetap");
 const Suggestion = require("../models/model-suggestion");
+const TokoSupplier = require("../models/supplier/model-toko");
 const TokoVendor = require("../models/vendor/model-toko");
 const { calculateDistance } = require("../utils/menghitungJarak");
 
@@ -16,64 +17,190 @@ module.exports = {
 
             const biayaTetap = await BiayaTetap.findById("66456e44e21bfd96d4389c73").select("radius")
 
-            const toko = await TokoVendor.aggregate([
-                {
-                    $match: {
-                        namaToko: { $regex: new RegExp(name, "i") }
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'addresses',
-                        let: { address: "$address" },
-                        pipeline: [
-                            {
-                                $match: {
-                                    $expr: {
-                                        $eq: ["$_id", "$$address"]
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    pinAlamat: 1
-                                }
+            let toko;
+
+            switch(req.user.role){
+                case "konsumen":
+                    toko = await TokoVendor.aggregate([
+                        {
+                            $match: {
+                                namaToko: { $regex: new RegExp(name, "i") }
                             }
-                        ],
-                        as: 'address_detail'
-                    }
-                },
-                {
-                    $unwind: "$address_detail"
-                },
-                {
-                    $lookup: {
-                        from: 'products',
-                        let: { userId: "$userId" },
-                        pipeline: [
-                            {
-                                $match: {
-                                    $expr: {
-                                        $eq: ["$userId", "$$userId"]
+                        },
+                        {
+                            $lookup: {
+                                from: 'addresses',
+                                let: { address: "$address" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$_id", "$$address"]
+                                            }
+                                        }
                                     },
-                                    'status.value': 'terpublish'
-                                }
-                            },
-                            {
-                                $project: {
-                                    _id: 1
-                                }
+                                    {
+                                        $project: {
+                                            pinAlamat: 1
+                                        }
+                                    }
+                                ],
+                                as: 'address_detail'
                             }
-                        ],
-                        as: 'products'
-                    }
-                },
-                {
-                    $match: {
-                        products: { $ne: [] }
-                    }
-                }
-            ]);
+                        },
+                        {
+                            $unwind: "$address_detail"
+                        },
+                        {
+                            $lookup: {
+                                from: 'products',
+                                let: { userId: "$userId" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$userId", "$$userId"]
+                                            },
+                                            'status.value': 'terpublish'
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            _id: 1
+                                        }
+                                    }
+                                ],
+                                as: 'products'
+                            }
+                        },
+                        {
+                            $match: {
+                                products: { $ne: [] }
+                            }
+                        }
+                    ]);
+                    break;
+                case "vendor":
+                    toko = await TokoSupplier.aggregate([
+                        {
+                            $match: {
+                                namaToko: { $regex: new RegExp(name, "i") }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'addresses',
+                                let: { address: "$address" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$_id", "$$address"]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            pinAlamat: 1
+                                        }
+                                    }
+                                ],
+                                as: 'address_detail'
+                            }
+                        },
+                        {
+                            $unwind: "$address_detail"
+                        },
+                        {
+                            $lookup: {
+                                from: 'products',
+                                let: { userId: "$userId" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$userId", "$$userId"]
+                                            },
+                                            'status.value': 'terpublish'
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            _id: 1
+                                        }
+                                    }
+                                ],
+                                as: 'products'
+                            }
+                        },
+                        {
+                            $match: {
+                                products: { $ne: [] }
+                            }
+                        }
+                    ]);
+                    break
+                default:
+                    toko = await TokoVendor.aggregate([
+                        {
+                            $match: {
+                                namaToko: { $regex: new RegExp(name, "i") }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'addresses',
+                                let: { address: "$address" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$_id", "$$address"]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            pinAlamat: 1
+                                        }
+                                    }
+                                ],
+                                as: 'address_detail'
+                            }
+                        },
+                        {
+                            $unwind: "$address_detail"
+                        },
+                        {
+                            $lookup: {
+                                from: 'products',
+                                let: { userId: "$userId" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $eq: ["$userId", "$$userId"]
+                                            },
+                                            'status.value': 'terpublish'
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            _id: 1
+                                        }
+                                    }
+                                ],
+                                as: 'products'
+                            }
+                        },
+                        {
+                            $match: {
+                                products: { $ne: [] }
+                            }
+                        }
+                    ]);
+                    break;
+            }
 
             const data = toko.filter(toko => {
                 const jarak = calculateDistance(
