@@ -304,6 +304,7 @@ module.exports = {
 
     tokoFavorit: async (req, res, next) => {
         try {
+            if(req.user.role !== 'vendor') return res.status(400).json({message: "vendor only endpoint"})
           const pengikut = await Follower.find({ userId: req.user.id }).lean();
           const data = await Promise.all(
             pengikut.map(async (pgt) => {
@@ -326,6 +327,7 @@ module.exports = {
     
     rekomendasiToko: async (req, res, next) => {
         try {
+            if(req.user.role !== 'vendor') return res.status(400).json({message: "vendor only endpoint"})
           const addressUsed = await Address.findOneAndUpdate(
             { userId: req.user.id, isUsed: true }
           ).select("pinAlamat");

@@ -37,6 +37,7 @@ const PinaltiVendor = require("../models/vendor/model-pinaltiVendor");
 const PanduanPembayaran = require("../models/model-panduan-pembayaran");
 const PoinHistory = require("../models/model-poin");
 const JenisJasaDistributor = require("../models/distributor/jenisJasaDistributor");
+const TokoSupplier = require("../models/supplier/model-toko");
 dotenv.config();
 
 const now = new Date();
@@ -229,11 +230,11 @@ module.exports = {
         const transaksiSubsidi = await Transaksi.exists({ id_pesanan: order._id, subsidi: true });
         const sekolah = await Sekolah.findOne({ _id: order.sekolahId, userId: req.user.id }).select("jumlahMurid").lean();
         if (!sekolah && req.user.role === "konsumen") return res.status(404).json({ message: "Sekolah tidak ditemukan, akan segera diperbaiki" });
-        let sisaSubsidi = sekolah.jumlahMurid;
+        let sisaSubsidi = sekolah?.jumlahMurid;
         const addedPengiriman = new Set();
         const dataProduct = await DataProductOrder.findOne({ pesananId: order._id });
         if (order.status === "Belum Bayar" || order.status === "Dibatalkan") {
-          if (transaksi && transaksiSubsidi) {
+          if (transaksi && transaksiSubsidi && req.user.role === 'konsumen') {
             if (transaksiSubsidi) {
               const store = {};
               const invoice = await Invoice.findOne({ id_transaksi: transaksiSubsidi._id }).lean();
@@ -329,7 +330,7 @@ module.exports = {
                     detailToko = await TokoVendor.findOne({ userId: storeId }).select("namaToko");
                     break;
                   case "supplier":
-                    detailToko = await Supplier.findOne({ userId: storeId });
+                    detailToko = await TokoSupplier.findOne({ userId: storeId });
                     break;
                   case "produsen":
                     detailToko = await Produsen.findOne({ userId: storeId });
@@ -376,6 +377,69 @@ module.exports = {
               data.push({ ...rest, total_pesanan: jumlah_uang, status: "Belum Bayar", orders });
             }
           }
+
+          if(req.user.role !== 'konsumen'){
+            const invoice = await Invoice.findOne({ id_transaksi: transaksi._id });
+            let jumlah_uang = order.biaya_layanan + order.biaya_jasa_aplikasi;
+            const pengiriman = await Pengiriman.find({ invoice: invoice._id }).populate("distributorId").populate("id_jenis_kendaraan").lean();
+            const store = {};
+            for (const item of order.items) {
+              const { productId, quantity, ...restOfProduct } = item.product;
+              let detailToko;
+              const storeId = item.product.productId.userId._id.toString();
+
+              switch (item.product.productId.userId.role) {
+                case "vendor":
+                  detailToko = await TokoVendor.findOne({ userId: storeId }).select("namaToko");
+                  break;
+                case "supplier":
+                  detailToko = await TokoSupplier.findOne({ userId: storeId });
+                  break;
+                case "produsen":
+                  detailToko = await Produsen.findOne({ userId: storeId });
+                  break;
+              }
+
+              const selectedPengiriman = pengiriman.find((pgr) => {
+                const found = pgr.productToDelivers.some((prd) => {
+                  return item.product.productId._id.toString() === prd.productId.toString();
+                });
+                return found;
+              });
+
+              if (!selectedPengiriman) {
+                continue;
+              }
+
+              const totalQuantity = selectedPengiriman.productToDelivers.find((ship) => ship.productId.toString() === item.product.productId._id.toString());
+              let itemTotal = item.product.productId.total_price * totalQuantity.quantity;
+              if (order.biaya_asuransi) jumlah_uang += order.biaya_awal_asuransi * totalQuantity.quantity;
+              jumlah_uang += itemTotal;
+              if (!addedPengiriman.has(selectedPengiriman._id.toString())) {
+                jumlah_uang += selectedPengiriman.total_ongkir;
+                addedPengiriman.add(selectedPengiriman._id.toString());
+              }
+
+              if (!store[storeId]) {
+                store[storeId] = {
+                  seller: {
+                    _id: item.product.productId.userId._id,
+                    idToko: detailToko._id,
+                    namaToko: detailToko.namaToko,
+                  },
+                  status_pengiriman: selectedPengiriman,
+                  arrayProduct: [],
+                };
+              }
+
+              store[storeId].arrayProduct.push({ productId: item.product.productId, ...restOfProduct, quantity: totalQuantity.quantity });
+            }
+            const orders = Object.keys(store).map((key) => {
+              return store[key];
+            });
+            data.push({ ...rest, total_pesanan: jumlah_uang, status: "Belum Bayar", orders });    
+          }
+
         } else {
           let jumlah_uang = 0;
           const store = {};
@@ -930,7 +994,8 @@ module.exports = {
   getOrderDetail: async (req, res, next) => {
     try {
       const { sellerId, status_order } = req.query;
-      const dataOrder = await Orders.aggregate([
+      const isKonsumen = req.user.role === 'konsumen'
+      const pipeline = [
         {
           $match: {
             _id: new mongoose.Types.ObjectId(req.params.id),
@@ -963,7 +1028,10 @@ module.exports = {
           $lookup: {
             from: "products",
             let: { productId: "$items.product.productId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$productId"] } } }, { $project: { name_product: 1, image_product: 1, userId: 1, total_price: 1 } }],
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$productId"] } } },
+              { $project: { name_product: 1, image_product: 1, userId: 1, total_price: 1 } }
+            ],
             as: "product_detail",
           },
         },
@@ -974,7 +1042,10 @@ module.exports = {
           $lookup: {
             from: "users",
             let: { userId: "$items.product.productId.userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, { $project: { role: 1, _id: 1 } }],
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
+              { $project: { role: 1, _id: 1 } }
+            ],
             as: "user_detail",
           },
         },
@@ -989,42 +1060,37 @@ module.exports = {
             as: "alamat",
           },
         },
-        {
-          $unwind: "$alamat",
-        },
-        {
-          $addFields: {
-            addressId: "$alamat",
-          },
-        },
+        { $unwind: "$alamat" },
+        { $addFields: { addressId: "$alamat" } },
         { $project: { alamat: 0 } },
-        {
-          $lookup: {
-            from: "sekolahs",
-            foreignField: "_id",
-            localField: "sekolahId",
-            as: "sekolahId",
+      ];
+      
+      // Conditionally add the sekolah lookup stages if the user role is 'konsumen'
+      if (isKonsumen) {
+        pipeline.push(
+          {
+            $lookup: {
+              from: "sekolahs",
+              foreignField: "_id",
+              localField: "sekolahId",
+              as: "sekolahId",
+            },
           },
-        },
-        {
-          $unwind: "$sekolahId",
-        },
-        {
-          $lookup: {
-            from: "addresses",
-            foreignField: "_id",
-            localField: "sekolahId.address",
-            as: "alamatSekolah",
+          { $unwind: "$sekolahId" },
+          {
+            $lookup: {
+              from: "addresses",
+              foreignField: "_id",
+              localField: "sekolahId.address",
+              as: "alamatSekolah",
+            },
           },
-        },
-        {
-          $unwind: "$alamatSekolah",
-        },
-        {
-          $addFields: {
-            "sekolahId.address": "$alamatSekolah",
-          },
-        },
+          { $unwind: "$alamatSekolah" },
+          { $addFields: { "sekolahId.address": "$alamatSekolah" } }
+        );
+      }
+      
+      pipeline.push(
         {
           $group: {
             _id: "$_id",
@@ -1071,10 +1137,10 @@ module.exports = {
             },
           },
         },
-        {
-          $replaceRoot: { newRoot: "$data" },
-        },
-      ]);
+        { $replaceRoot: { newRoot: "$data" } }
+      );
+      const dataOrder = await Orders.aggregate(pipeline)
+      // return res.status(200).json({dataOrder})
       if (!dataOrder[0]) return res.status(404).json({ message: `Order dengan id: ${req.params.id} tidak ditemukan` });
       const { _id, items, order_detail, addressId, status, biaya_layanan, biaya_jasa_aplikasi, biaya_asuransi, ...restOfOrder } = dataOrder[0];
 
@@ -1137,10 +1203,10 @@ module.exports = {
               detailToko = await TokoVendor.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean();
               break;
             case "supplier":
-              detailToko = await Supplier.findOne({ userId: productId.userId._id }).lean();
+              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).lean();
               break;
             case "produsen":
-              detailToko = await Produsen.findOne({ userId: productId.userId._id }).lean();
+              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).lean();
               break;
           }
           const user = await User.findById(productId.userId._id).select("email phone").lean();
