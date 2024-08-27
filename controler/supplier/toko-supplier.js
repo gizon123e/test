@@ -216,7 +216,7 @@ module.exports = {
             const tayangan_product = await ProductPerformanceReport.countDocuments({productId: { $in: products}})
             const total_wishlist = await Wishlist.countDocuments({productId: { $in: products }});
 
-            return res.status(200).json({ message: "Berhasil menampilkan ringkasan", kunjungan_toko, total_penjualan: { total_produk, total_quantity }, daftar_keinginana: total_wishlist, tayangan_product })
+            return res.status(200).json({ message: "Berhasil menampilkan ringkasan", kunjungan_toko, total_penjualan: { total_produk, total_quantity }, daftar_keinginan: total_wishlist, tayangan_product })
         } catch (error) {
             console.log(error);
             next(error)
