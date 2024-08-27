@@ -7,6 +7,10 @@ const path = require('path')
 const fs = require('fs');
 const Follower = require('../../models/model-follower');
 const BiayaTetap = require('../../models/model-biaya-tetap');
+const Product = require('../../models/model-product');
+const { calculateDistance } = require("../../utils/menghitungJarak");
+const PoinHistory = require("../../models/model-poin");
+
 
 module.exports = {
 
@@ -31,10 +35,24 @@ module.exports = {
 
     getDetailVendor: async (req, res, next) => {
         try {
-            const dataKonsumen = await Vendor.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
+            const dataKonsumen = await Vendor.findOne({userId: req.user.id})
+            .select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha")
+            .populate("userId", "-password -codeOtp")
+            .populate('address').lean()
             let pic;
             if (!dataKonsumen) return res.status(404).json({ error: `data Konsumen id :${req.user.id} not Found` });
+            const poin = await PoinHistory.find({userId: req.user.id});
             let modifiedDataKonsumen = dataKonsumen
+            dataKonsumen.userId.poin = poin.length > 0 ? 
+                poin
+                    .filter(pn => pn.jenis === "masuk")
+                    .reduce((acc, val)=> acc + val.value, 0) - 
+                poin
+                    .filter(pn => pn.jenis === "keluar")
+                    .reduce((acc, val)=> acc + val.value, 0)
+                : 0
+
+            dataKonsumen.userId.pin = dataKonsumen.userId.pin? "Ada" : null;
             const isIndividu = dataKonsumen.nama? true : false
             if(isIndividu){
                 pic = null
@@ -304,6 +322,7 @@ module.exports = {
 
     tokoFavorit: async (req, res, next) => {
         try {
+            if(req.user.role !== 'vendor') return res.status(400).json({message: "vendor only endpoint"})
           const pengikut = await Follower.find({ userId: req.user.id }).lean();
           const data = await Promise.all(
             pengikut.map(async (pgt) => {
@@ -326,6 +345,7 @@ module.exports = {
     
     rekomendasiToko: async (req, res, next) => {
         try {
+            if(req.user.role !== 'vendor') return res.status(400).json({message: "vendor only endpoint"})
           const addressUsed = await Address.findOneAndUpdate(
             { userId: req.user.id, isUsed: true }
           ).select("pinAlamat");

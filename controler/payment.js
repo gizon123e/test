@@ -231,7 +231,7 @@ module.exports = {
                     )
                     const notifikasi = await Notifikasi.findOne({userId: pesanan.userId, jenis_invoice: "Non Subsidi"}).sort({createdAt: -1})
                     DetailNotifikasi.create({
-                        notifikasiId: notifikasi._id,
+                        notifikasiId: notifikasi?._id,
                         jenis: "Info",
                         status: "Pembayaran berhasil",
                         message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} telah berhasil kamu bayar, pesanan akan segera diproses`,
@@ -243,7 +243,7 @@ module.exports = {
 
                     socket.emit('notif_pembayaran_berhasil', {
                         jenis: "Info",
-                        userId: notifikasi.userId,
+                        userId: notifikasi?.userId,
                         status: "Pembayaran berhasil",
                         message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount} telah berhasil kamu bayar, pesanan akan segera diproses`,
                         image: pengiriman[0].productToDelivers[0].productId.image_product[0],

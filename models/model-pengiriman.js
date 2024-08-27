@@ -35,7 +35,12 @@ const modelPengiriman = new mongoose.Schema({
     },
     id_toko: {
         type: mongoose.Types.ObjectId,
-        ref: "TokoVendor"
+        refPath: "tokoType"
+    },
+    tokoType: {
+        type: String,
+        required: true,
+        enum: ["TokoVendor", "TokoSupplier", "TokoProdusen"]
     },
     productToDelivers: [{
         _id: false,

@@ -4,6 +4,7 @@ const path = require('path')
 const fs = require('fs');
 const User = require('../../models/model-auth-user');
 const PicSupplier = require('../../models/supplier/model-penanggung-jawab');
+const PoinHistory = require("../../models/model-poin");
 
 module.exports = {
 
@@ -28,10 +29,25 @@ module.exports = {
 
     getDetailSupplier: async (req, res, next) => {
         try {
-            const dataSupplier = await Supplier.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
+            const dataSupplier = await Supplier.findOne({userId: req.user.id})
+            .select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha")
+            .populate("userId", "-password -codeOtp")
+            .populate('address')
+            .lean()
             let pic;
             if (!dataSupplier) return res.status(404).json({ error: `data supplier id :${req.user.id} not Found` });
+            const poin = await PoinHistory.find({userId: req.user.id});
+
             let modifiedDataSupplier = dataSupplier
+            dataSupplier.userId.poin = poin.length > 0 ? 
+                poin
+                .filter(pn => pn.jenis === "masuk")
+                .reduce((acc, val)=> acc + val.value, 0) - 
+                poin
+                .filter(pn => pn.jenis === "keluar")
+                .reduce((acc, val)=> acc + val.value, 0)
+            : 0
+            dataSupplier.userId.pin = dataSupplier.userId.pin? "Ada" : null;
             const isIndividu = dataSupplier.nama? true : false
             if(isIndividu){
                 pic = null

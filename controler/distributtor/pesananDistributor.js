@@ -12,6 +12,8 @@ const { Transaksi } = require('../../models/model-transaksi')
 
 const { calculateDistance } = require('../../utils/menghitungJarak');
 const Invoice = require("../../models/model-invoice");
+const Vendor = require("../../models/vendor/model-vendor");
+const Supplier = require("../../models/supplier/model-supplier");
 
 function formatTanggal(tanggal) {
     const dd = String(tanggal.getDate()).padStart(2, '0');
@@ -48,6 +50,10 @@ module.exports = {
                             path: "sekolahId",
                             select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
                             populate: "address"
+                        },
+                        {
+                            path: "userId",
+                            select: ["role"],
                         }
                     ]
                 })
@@ -89,8 +95,17 @@ module.exports = {
                 const { productToDelivers, total_ongkir, ongkir, potongan_ongkir, ...restOfShipment } = data
                 const storeId = `${data.id_toko._id.toString()}-${data.orderId._id.toString()}`
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
+                let detailBuyer;
+                switch(data.orderId.userId.role){
+                    case "vendor":
+                        detailBuyer = await Vendor.findOne({userId: data.orderId.userId._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                    case "supplier":
+                        detailBuyer = await Supplier.findOne({userId: data.orderId.userId._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                }
 
-                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, });
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)?._id, });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
 
                 productToDelivers.forEach(prod => {
@@ -109,6 +124,7 @@ module.exports = {
                     if (!pengiriman[storeId]) {
                         pengiriman[storeId] = {
                             ...restOfShipment,
+                            detailBuyer,
                             total_ongkir: 0,
                             potongan_ongkir: 0,
                             ongkir: 0
@@ -124,6 +140,7 @@ module.exports = {
                     if (!pengiriman[storeId]) {
                         pengiriman[storeId] = {
                             ...restOfShipment,
+                            detailBuyer,
                             total_ongkir: 0,
                             potongan_ongkir: 0,
                             ongkir: 0
@@ -137,6 +154,7 @@ module.exports = {
             const mergedProduct = Object.keys(foundedProduct).map(key => foundedProduct[key])
             const finalData = Object.keys(pengiriman).map(key => {
                 const { waktu_pengiriman, ...restOfPgr } = pengiriman[key]
+                console.log(restOfPgr)
                 return {
                     ...restOfPgr,
                     waktu_pengiriman: new Date(waktu_pengiriman),
@@ -203,6 +221,10 @@ module.exports = {
                             path: "sekolahId",
                             select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
                             populate: "address"
+                        },
+                        {
+                            path: 'userId',
+                            select: "role"
                         }
                     ]
                 })
@@ -238,9 +260,18 @@ module.exports = {
 
             for (const data of dataPengiriman) {
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
+                let detailBuyer;
+                switch(data.orderId.userId.role){
+                    case "vendor":
+                        detailBuyer = await Vendor.findOne({userId: data.orderId.userId._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                    case "supplier":
+                        detailBuyer = await Supplier.findOne({userId: data.orderId.userId._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                }
 
-                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
-                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false), status: "Lunas" });
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)?._id, status: "Piutang" });
+                const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
                     for (const item of data.productToDelivers) {
@@ -259,6 +290,7 @@ module.exports = {
                     id: data._id,
                     distributorId: data.distributorId._id,
                     orderId: data.orderId,
+                    detailBuyer,
                     id_toko: data.id_toko,
                     waktu_pengiriman: data.waktu_pengiriman,
                     jenis_pengiriman: data.jenis_pengiriman,
@@ -268,7 +300,6 @@ module.exports = {
                     kode_pengiriman: data.kode_pengiriman,
                     status_distributor: data.status_distributor,
                     productToDelivers
-
                 }
             }
 
