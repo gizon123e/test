@@ -5,6 +5,6 @@ const reviewProdukController = require('../../controler/controler-review/reviewP
 router.post('/reviews', authorization, reviewProdukController.tambahUlasan);
 router.get('/reviews/:id_produk', reviewProdukController.getUlasanByProductId);
 router.get('/history', authorization, reviewProdukController.getHistoryReviews)
-router.get('/belom-dinila', authorization, reviewProdukController.getHistoryBelomDiReview)
+router.get('/belom-dinilai', authorization, reviewProdukController.getHistoryBelomDiReview)
 
 module.exports = router

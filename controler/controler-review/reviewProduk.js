@@ -224,23 +224,19 @@ module.exports = {
 
     getHistoryBelomDiReview: async (req, res, next) => {
         try {
-            const dataPesanan = await Pengiriman.find({ status_pengiriman: "diproses" })
+            const dataPesanan = await Pengiriman.find({ status_pengiriman: "pesanan selesai" })
                 .populate('productToDelivers.productId')
                 .populate('orderId')
-
-            console.log('==========================================================================>', req.user.id)
 
             const produk = []
 
             for (const data of dataPesanan) {
-                console.log(data.orderId.userId.toString())
                 if (data.orderId.userId.toString() === req.user.id) {
-                    console.log('==========================================================================>', req.user.id)
-                }
-                for (const item of data.productToDelivers) {
-                    const validateData = await ReviewProduk.findOne({ id_produk: item.productId._id, userId: req.user.id })
-                    if (!validateData) {
-                        produk.push(item)
+                    for (const item of data.productToDelivers) {
+                        const validateData = await ReviewProduk.findOne({ id_produk: item.productId._id, userId: req.user.id })
+                        if (!validateData) {
+                            produk.push(item)
+                        }
                     }
                 }
             }
