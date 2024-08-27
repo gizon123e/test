@@ -228,6 +228,7 @@ module.exports = {
                 .populate('productToDelivers.productId')
                 .populate('orderId')
                 .populate('id_toko')
+                .populate('distributorId')
 
             const produk = []
 
