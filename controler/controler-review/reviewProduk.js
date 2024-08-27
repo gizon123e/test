@@ -227,6 +227,7 @@ module.exports = {
             const dataPesanan = await Pengiriman.find({ status_pengiriman: "pesanan selesai" })
                 .populate('productToDelivers.productId')
                 .populate('orderId')
+                .populate('id_toko')
 
             const produk = []
 
@@ -235,7 +236,7 @@ module.exports = {
                     for (const item of data.productToDelivers) {
                         const validateData = await ReviewProduk.findOne({ id_produk: item.productId._id, userId: req.user.id })
                         if (!validateData) {
-                            produk.push(item)
+                            produk.push(data)
                         }
                     }
                 }
