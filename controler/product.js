@@ -1874,29 +1874,14 @@ module.exports = {
 
   updateProductPerformance: async (req, res, next) => {
     try {
-      const { views, impressions } = req.query;
-
-      if (!views && !impressions) return res.status(400).json({ message: "Harus ada query views atau impressionss" });
-
       if (!req.body.productId) return res.status(400).json({ message: "Dibutuh kan payload productId" });
 
-      const kinerja = await Performance.findOne({ productId: req.body.productId }).populate("productId");
-
-      if (!kinerja) return res.status(404).json({ message: `Tidak ditemukan product dengan id: ${req.body.productId}` });
-
-      if (views && parseInt(views) !== NaN) {
-        for (perform of kinerja.views) {
-          perform.time.getDate() == new Date().getDate() ? (perform.amount += parseInt(views)) : kinerja.views.push({ time: new Date(), amount: views });
-        }
+      const kinerja = await Performance.findOne({ productId: req.body.productId, userId: req.user.id });
+      if(!kinerja){
+        Performance.create({ productId: req.body.productId, userId: req.user.id })
+        .then(()=>console.log("berhasil simpan performance produk"))
+        .catch((e)=>console.log("gagal simpan performance produk ", e))
       }
-
-      if (impressions && parseInt(impressions) !== NaN) {
-        for (perform of kinerja.impressions) {
-          perform.time.getDate() == new Date().getDate() ? (perform.amount += parseInt(impressions)) : kinerja.impressions.push({ time: new Date(), amount: impressions });
-        }
-      }
-
-      await kinerja.save({ new: true });
 
       return res.status(200).json({ message: "Berhasil update performance product!", data: kinerja });
     } catch (error) {
