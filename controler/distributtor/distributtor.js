@@ -19,6 +19,7 @@ const ProsesPengirimanDistributor = require('../../models/distributor/model-pros
 const Vendor = require('../../models/vendor/model-vendor')
 const Supplier = require('../../models/supplier/model-supplier')
 const TokoSupplier = require('../../models/supplier/model-toko')
+const TokoProdusen = require('../../models/produsen/model-toko')
 dotenv.config()
 
 module.exports = {
@@ -376,6 +377,9 @@ module.exports = {
             } else if (userData.role === 'supplier') {
                 const tokoSupplier = await Toko.findOne({ userId: req.params.id }).populate('address')
                 addressVendor = tokoSupplier
+            } else if (userData.role === 'produsen') {
+                const tokoProdusen = await TokoProdusen.findOne({ userId: req.params.id }).populate('address')
+                addressVendor = tokoProdusen
             }
 
             const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat).toFixed(7)

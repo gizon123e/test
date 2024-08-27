@@ -1345,10 +1345,10 @@ module.exports = {
               detailToko = await TokoVendor.findOne({ userId: sellerId }).select("namaToko address").populate("address").lean();
               break;
             case "supplier":
-              detailToko = await TokoSupplier.findOne({ userId: sellerId }).lean();
+              detailToko = await TokoSupplier.findOne({ userId: sellerId }).select("namaToko address").populate("address").lean();
               break;
             case "produsen":
-              detailToko = await Produsen.findOne({ userId: sellerId }).lean();
+              detailToko = await TokoProdusen.findOne({ userId: sellerId }).select("namaToko address").populate("address").lean();
               break;
           }
 
@@ -1498,7 +1498,7 @@ module.exports = {
           total_pesanan: jumlah_uang,
           status: checkStatus(),
           dibatalkanOleh: pembatalan ? pembatalan.canceledBy : null,
-          invoice: invoiceSubsidi,
+          invoice: invoiceSubsidi? invoiceSubsidi : null,
           invoiceTambahan: invoiceTambahan ? invoiceTambahan : null,
           detailInvoiceSubsidi,
           detailInvoiceTambahan,

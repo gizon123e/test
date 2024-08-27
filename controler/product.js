@@ -27,6 +27,7 @@ const { vendor } = require("../midelware/user-role-clasification");
 const formatNumber = require("../utils/formatAngka");
 const Pengiriman = require("../models/model-pengiriman");
 const Wishlist = require("../models/model-wishlist");
+const TokoProdusen = require("../models/produsen/model-toko");
 // const BahanBaku = require("../models/model-bahan-baku");
 
 module.exports = {
@@ -186,8 +187,8 @@ module.exports = {
             },
           ]);
           break;
-        default:
-          sellers = await TokoSupplier.aggregate([
+        case "supplier":
+          sellers = await TokoProdusen.aggregate([
             {
               $lookup: {
                 from: "addresses",
@@ -262,9 +263,9 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "produsens",
+            from: "tokoprodusens",
             let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "produsenDatas",
           },
         },
@@ -943,8 +944,8 @@ module.exports = {
         case "supplier":
           toko = await TokoSupplier.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
-        default:
-          toko = await TokoSupplier.findOne({ userId: dataProduct.userId._id }).populate("address");
+        case "produsen":
+          toko = await TokoProdusen.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
       }
       if (dataProduct.bervarian == true) {
