@@ -82,6 +82,7 @@ module.exports = {
 
     updateDetailToko: async(req, res, next) => {
         try {
+            console.log(req.body)
             if(req.files && req.files.profilePict){
                 const nameImg = `${new Date().getTime()}_${req.user.id}${path.extname(req.files.profilePict.name)}`
                 const imgPath = path.join(__dirname, "../../public", "profile-picts-store", nameImg)
@@ -90,7 +91,7 @@ module.exports = {
                 })
                 req.body.profile_pict = `${process.env.HOST}public/profile-picts-store/${nameImg}`
             }
-            const updatedToko = await Toko.findOneAndUpdate({userId: req.user.id}, req.body, { new: true });
+            const updatedToko = await TokoSupplier.findOneAndUpdate({userId: req.user.id}, req.body, { new: true });
             if(!updatedToko) return res.status(404).json({message: "Kamu tidak mempunyai Toko"});
             return res.status(201).json({message: "Berhasil Memperbarui Data Toko", data: updatedToko})
         } catch (error) {

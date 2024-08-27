@@ -102,7 +102,6 @@ app.use('/api/order', require('./routes/router-order'));
 app.use("/api/report", require("./routes/router-laporan"));
 app.use("/api/comment", require("./routes/router-komentar"));
 app.use("/api/export", require("./routes/router-export"));
-app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
 app.use('/api/review-vendor', require('./routes/router-vendor/router-reviewVendor'));
