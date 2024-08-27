@@ -263,7 +263,7 @@ module.exports = {
             } else if (verify) {
                 user = await User.findById(req.params.id);
 
-                if (user.isDetailVerified) {
+                if (!user.isDetailVerified) {
                     const virtualAccounts = await VA.find();
                     for (const va of virtualAccounts) {
                         let detailUser;

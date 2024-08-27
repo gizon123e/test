@@ -152,6 +152,7 @@ module.exports = {
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
       const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
+      console.log(alamatSekolah, req.user.id)
       let sellers;
 
       switch(req.user.role){
