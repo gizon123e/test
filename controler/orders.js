@@ -402,7 +402,7 @@ module.exports = {
                   detailToko = await TokoSupplier.findOne({ userId: storeId }).select("namaToko");
                   break;
                 case "produsen":
-                  detailToko = await Produsen.findOne({ userId: storeId });
+                  detailToko = await TokoProdusen.findOne({ userId: storeId }).select("namaToko");
                   break;
               }
 
@@ -1230,7 +1230,7 @@ module.exports = {
               detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
               break;
             case "produsen":
-              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
+              detailToko = await TokoProdusen.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
               break;
           }
           const user = await User.findById(productId.userId._id).select("email phone").lean();

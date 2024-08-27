@@ -133,6 +133,9 @@ module.exports = {
                 case "supplier":
                     addressDetail = await TokoSupplier.findOne({ userId: req.params.id }).populate("address");
                     break;
+                case "produsen":
+                    addressDetail = await TokoProdusen.findOne({ userId: req.params.id }).populate("address");
+                    break;
             }
 
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
