@@ -125,7 +125,7 @@ module.exports = {
             const userDetail = await User.findById(req.params.id).select('role')
 
             let addressDetail;
-            switch(userDetail.role){
+            switch (userDetail.role) {
                 case "vendor":
                     addressDetail = await TokoVendor.findOne({ userId: req.params.id }).populate("address");
                     break;
@@ -133,7 +133,7 @@ module.exports = {
                     addressDetail = await TokoSupplier.findOne({ userId: req.params.id }).populate("address");
                     break;
             }
-            
+
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
 
             let ukuranVolumeProduct = 0
@@ -378,11 +378,11 @@ module.exports = {
                 addressVendor = tokoSupplier
             }
 
-            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat).toFixed(7)
+            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long).toFixed(7)
 
             let detailUser;
-            switch(req.user.role){
+            switch (req.user.role) {
                 case "konsumen":
                     detailUser = await Konsumen.findOne({ userId: req.user.id }).populate("address");
                     break;
@@ -398,8 +398,9 @@ module.exports = {
 
             if (addressId) {
                 const addressCustom = await Address.findById(addressId)
-                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
-                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
+                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat).toFixed(7)
+                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long).toFixed(7)
+
                 const jarakVendorKonsumen = calculateDistance(parseFloat(latitudeAddressCustom), parseFloat(longitudeAddressCustom), parseFloat(latitudeVendor), parseFloat(longitudeVendor), 100);
 
                 if (isNaN(jarakVendorKonsumen)) {
@@ -503,9 +504,6 @@ module.exports = {
             if (id_toko.length === 2) {
                 const toko1 = await TokoVendor.findOne({ _id: id_toko[0] }).populate('address');
                 const toko2 = await TokoVendor.findOne({ _id: id_toko[1] }).populate('address');
-
-                console.log("toko1", toko1)
-                console.log("toko2", toko2)
 
                 const latitudeToko1 = parseFloat(toko1.address.pinAlamat.lat)
                 const longitudeToko1 = parseFloat(toko1.address.pinAlamat.long)
@@ -630,6 +628,7 @@ module.exports = {
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
                 const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
                 const jarakVendorKonsumen = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
                         message: "Jarak antara konsumen dan vendor melebihi 100 km"
