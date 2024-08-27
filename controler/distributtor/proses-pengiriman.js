@@ -53,7 +53,7 @@ module.exports = {
 
       const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find(query)
         .populate({
-          path: "id_toko",
+          path: "tokoId",
           populate: "address",
         })
         .populate({
