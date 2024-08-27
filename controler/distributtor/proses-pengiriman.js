@@ -207,7 +207,7 @@ module.exports = {
   sudahDiJemput: async (req, res, next) => {
     try {
       const { id_address, latitude, longitude, id_konsumen, total_qty } = req.body;
-      if (!total_qty || !id_address) return res.status(400).json({ message: "data total_qty dan id_address harus di isi" });
+      if (!total_qty || !id_address || !latitude || !longitude || !id_konsumen) return res.status(400).json({ message: "data total_qty, latitude, longitude, id_konsumen dan id_address harus di isi" });
 
       const distri = await Distributtor.exists({ userId: req.user.id });
       const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sudah dijemput", total_qty: total_qty }, { new: true })
@@ -448,6 +448,8 @@ module.exports = {
       const { id_address, latitude, longitude, id_konsumen } = req.body;
       const files = req.files;
       const images = files ? files.images : null;
+
+      if (!id_address || !latitude || !longitude || !id_konsumen) return res.status(400).json({ message: "id_address, latitude, longitude, id_konsumen data harus di isi" });
 
       const imageNameProfile = `${Date.now()}${path.extname(images.name)}`;
       const imagePathProfile = path.join(__dirname, "../../public/ulasan-produk", imageNameProfile);
