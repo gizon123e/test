@@ -40,6 +40,7 @@ const JenisJasaDistributor = require("../models/distributor/jenisJasaDistributor
 const TokoSupplier = require("../models/supplier/model-toko");
 const TokoProdusen = require("../models/produsen/model-toko");
 const Supplier = require("../models/supplier/model-supplier");
+const Konsumen = require("../models/konsumen/model-konsumen");
 dotenv.config();
 
 const now = new Date();
@@ -128,6 +129,7 @@ module.exports = {
     try {
       const { status, page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
+      console.log(req.user.id)
       const filter = {
         userId: new mongoose.Types.ObjectId(req.user.id),
       };
@@ -218,6 +220,8 @@ module.exports = {
       ])
         .skip(skip)
         .limit(parseInt(limit));
+      
+      // return res.status(200).json({ dataOrders });
 
       if (!dataOrders || dataOrders.length < 1) {
         return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` });
@@ -381,9 +385,9 @@ module.exports = {
           }
 
           if(req.user.role !== 'konsumen'){
-            const invoice = await Invoice.findOne({ id_transaksi: transaksi._id });
+            const invoice = await Invoice.findOne({ id_transaksi: transaksi?._id });
             let jumlah_uang = order.biaya_layanan + order.biaya_jasa_aplikasi;
-            const pengiriman = await Pengiriman.find({ invoice: invoice._id }).populate("distributorId").populate("id_jenis_kendaraan").lean();
+            const pengiriman = await Pengiriman.find({ invoice: invoice ._id }).populate("distributorId").populate("id_jenis_kendaraan").lean();
             const store = {};
             for (const item of order.items) {
               const { productId, quantity, ...restOfProduct } = item.product;
@@ -395,7 +399,7 @@ module.exports = {
                   detailToko = await TokoVendor.findOne({ userId: storeId }).select("namaToko");
                   break;
                 case "supplier":
-                  detailToko = await TokoSupplier.findOne({ userId: storeId });
+                  detailToko = await TokoSupplier.findOne({ userId: storeId }).select("namaToko");
                   break;
                 case "produsen":
                   detailToko = await Produsen.findOne({ userId: storeId });
@@ -587,7 +591,7 @@ module.exports = {
       const productIds = products.map((item) => {
         return item._id;
       });
-      console.log(productIds)
+
       const filter = {
         items: {
           $elemMatch: {
@@ -629,7 +633,6 @@ module.exports = {
       ]
 
       if(req.user.role === "vendor"){
-        console.log('vendor')
         pipeline.push(
           {
             $lookup: {
@@ -677,6 +680,7 @@ module.exports = {
 
       const data = [];
       for (const order of dataOrders) {
+        console.log(order._id)
         const { createdAt, updatedAt, status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order;
         const dataProd = await DataProductOrder.findOne({ pesananId: order._id });
         const transaksiSubsidi = await Transaksi.findOne({ id_pesanan: order._id, subsidi: true });
@@ -689,6 +693,9 @@ module.exports = {
           let detailBuyer;
           const detailUserBuyer = await User.findById(order.alamat.userId);
           switch (detailUserBuyer.role) {
+            case "konsumen":
+              detailBuyer = await Konsumen.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
+              break;
             case "vendor":
               detailBuyer = await Vendor.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
               break;
@@ -696,6 +703,7 @@ module.exports = {
               detailBuyer = await Supplier.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
               break;
           }
+          console.log(order.alamat.userId)
           const pesanan = {};
           const kode_pesanan = new Set();
           for (const item of order.items) {

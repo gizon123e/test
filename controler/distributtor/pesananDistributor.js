@@ -154,7 +154,6 @@ module.exports = {
             const mergedProduct = Object.keys(foundedProduct).map(key => foundedProduct[key])
             const finalData = Object.keys(pengiriman).map(key => {
                 const { waktu_pengiriman, ...restOfPgr } = pengiriman[key]
-                console.log(restOfPgr)
                 return {
                     ...restOfPgr,
                     waktu_pengiriman: new Date(waktu_pengiriman),
@@ -361,6 +360,10 @@ module.exports = {
                             path: "sekolahId",
                             select: ['-kelas', '-NPSN', '-userId', '-detailId', '-jumlahMurid', '-jenisPendidikan', '-statusSekolah', '-jenjangPendidikan', '-logoSekolah'],
                             populate: "address"
+                        },
+                        {
+                            path: 'userId',
+                            select: "role"
                         }
                     ]
                 })
@@ -393,10 +396,34 @@ module.exports = {
 
             let productToDelivers = []
             let tarif_pengiriman = 0
+            let dataCreate = {}
             for (const data of payLoadDataPengiriman) {
+                if(data.orderId.userId.role === "vendor"){
+                    const vendor = await Vendor.exists({userId: data.orderId.userId._id});
+                    dataCreate = {
+                        buyerId: vendor._id,
+                        buyerType: "Vendor"
+                    }
+                }
+
+                if(data.orderId.userId.role === "supplier"){
+                    const supplier = await Supplier.exists({userId: data.orderId.userId._id});
+                    dataCreate = {
+                        buyerId: supplier._id,
+                        buyerType: "Supplier"
+                    }
+                }
+
+                if(data.orderId.sekolahId){
+                    dataCreate = {
+                        buyerId: data.orderId.sekolahId,
+                        buyerType: "Sekolah"
+                    }
+                }
+
                 const transaksi = await Transaksi.find({ id_pesanan: data.orderId._id });
 
-                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)._id, status: "Piutang" });
+                const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == true)?._id, status: "Piutang" });
                 const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi.find(tr => tr.subsidi == false)?._id, status: "Lunas" });
 
                 if (data.invoice.toString() === invoiceSubsidi?._id.toString() || data.invoice.toString() === invoiceTambahan?._id.toString()) {
@@ -443,12 +470,12 @@ module.exports = {
                 await Distributtor.findByIdAndUpdate({ _id: dataPengiriman.distributorId }, { tolak_pesanan: dataDistributor.tolak_pesanan + 1, date_tolak: currentDate }, { new: true })
             } else {
                 await Pengiriman.updateMany({ id_toko, distributorId, orderId, kode_pengiriman }, { status_distributor: status, });
-
-                await ProsesPengirimanDistributor.create({
+                const finalDataCreate = {
+                    ...dataCreate,
                     distributorId: dataPengiriman.distributorId,
-                    sekolahId: dataPengiriman.orderId.sekolahId,
-                    pengirimanId: payLoadDataPengiriman.map(pgr => pgr._id),
                     tokoId: dataPengiriman.id_toko._id,
+                    tokoType: dataPengiriman.tokoType,
+                    pengirimanId: payLoadDataPengiriman.map(pgr => pgr._id),
                     jarakPengiriman: jarakOngkir,
                     jenisPengiriman: dataPengiriman.jenis_pengiriman,
                     optimasi_pengiriman: timeInSeconds,
@@ -459,7 +486,9 @@ module.exports = {
                     potongan_ongkir: dataPengiriman.potongan_ongkir,
                     waktu_pengiriman: new Date(dataPengiriman.waktu_pengiriman),
                     total_berat: total_berat
-                })
+                }
+
+                await ProsesPengirimanDistributor.create(finalDataCreate)
             }
             res.status(201).json({ message: "update data success" })
         } catch (error) {
