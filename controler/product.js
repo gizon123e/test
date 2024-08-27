@@ -886,7 +886,7 @@ module.exports = {
       let finalData;
       if(!status) finalData = dataProds;
       if(status){
-        finalData = dataProds.filter(prd => prd.status.value() === status.toLowerCase())
+        finalData = dataProds.filter(prd => prd.status.value.toLowerCase() === status.toLowerCase())
       }
       if (data && data.length > 0) {
         return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data: finalData });
