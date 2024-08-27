@@ -6,10 +6,13 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
         ref: "Distributtor",
         required: [true, "distributorId harus di isi"]
     },
-    sekolahId: {
+    buyerId: {
         type: mongoose.Types.ObjectId,
-        ref: "Sekolah",
-        required: [true, "konsumenId harus di isi"]
+        refPath: "buyerType",
+    },
+    buyerType: {
+        type: String,
+        enum: ['Sekolah', "Vendor", "Supplier"]
     },
     pengirimanId: [{
         type: mongoose.Types.ObjectId,
@@ -18,8 +21,12 @@ const modelProsesPengirimanDistributor = new mongoose.Schema({
     }],
     tokoId: {
         type: mongoose.Types.ObjectId,
-        ref: "TokoVendor",
-        required: [true, "tokoId harus di isi"]
+        refPath: "tokoType"
+    },
+    tokoType: {
+        type: String,
+        required: true,
+        enum: ["TokoVendor", "TokoSupplier", "TokoProdusen"]
     },
     jarakPengiriman: {
         type: Number,
