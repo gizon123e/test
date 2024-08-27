@@ -57,7 +57,7 @@ module.exports = {
           populate: "address",
         })
         .populate({
-          path: "sekolahId",
+          path: "buyerId",
           populate: "address",
         })
         .populate("jenisPengiriman")
