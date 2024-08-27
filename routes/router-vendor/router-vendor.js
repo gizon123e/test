@@ -16,6 +16,9 @@ router.get('/detail', authorization, controllerVendor.getDetailVendor)
 router.get('/detail/my-store', authorization, controllerToko.myStore)
 router.get('/detail/toko/:id', authorization, controllerToko.getDetailToko);
 router.get('/toko/proses-pengiriman', authorization, controllerToko.getAllProsesPengiriman);
+router.get('/toko/analisis/ringkasan', authorization, controllerToko.getRingkasan);
+router.get('/toko/analisis/grafik-performa', authorization, controllerToko.grafikPerforma);
+router.get('/toko/analisis/produk-populer', authorization, controllerToko.getProdukPopuler);
 router.get("/toko-favorit", authorization, controllerVendor.tokoFavorit);
 router.get("/toko-rekomendasi", authorization, controllerVendor.rekomendasiToko);
 router.get('/notifikasi/rekomendasi', authorization, controllerToko.getNotifUpload);

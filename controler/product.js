@@ -884,7 +884,9 @@ module.exports = {
         });
       }
       let finalData;
-      if(!status) finalData = dataProds;
+      if(!status){
+        finalData = dataProds;
+      };
       if(status){
         finalData = dataProds.filter(prd => prd.status.value.toLowerCase() === status.toLowerCase())
       }
@@ -911,6 +913,20 @@ module.exports = {
         .populate("id_sub_category")
         .populate("pangan.panganId")
         .lean();
+      let accepted;
+      switch(req.user.role){
+        case "konsumen":
+          accepted = "vendor";
+          break;
+        case "vendor":
+          accepted = "supplier";
+          break;
+        case "supplier":
+          accepted = 'produsen';
+          break;
+      }
+      if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
+      if(accepted !== dataProduct.userId.role) return res.status(403).json({message: "Invalid Request"});
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
       const total_terjual = terjual
         ? terjual.track.reduce((acc, val) => {
@@ -918,7 +934,6 @@ module.exports = {
         }, 0)
         : 0;
       let toko;
-      if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
       const wishlisted = await Wishlist.exists({ productId: req.params.id, userId: req.user?.id })
       switch (dataProduct.userId.role) {
         case "vendor":
@@ -1881,7 +1896,8 @@ module.exports = {
   updateProductPerformance: async (req, res, next) => {
     try {
       if (!req.body.productId) return res.status(400).json({ message: "Dibutuh kan payload productId" });
-
+      const prod = await Product.findOne({_id: req.body.productId});
+      if(!prod) return res.status(404).json({message: "Produk dengan id: " + req.body.productId + " tidak ditemukan"})
       const kinerja = await Performance.findOne({ productId: req.body.productId, userId: req.user.id });
       if(!kinerja){
         Performance.create({ productId: req.body.productId, userId: req.user.id })
@@ -1889,7 +1905,7 @@ module.exports = {
         .catch((e)=>console.log("gagal simpan performance produk ", e))
       }
 
-      return res.status(200).json({ message: "Berhasil update performance product!", data: kinerja });
+      return res.status(200).json({ message: "Berhasil update performance product!" });
     } catch (error) {
       console.log(error);
       next(error);
