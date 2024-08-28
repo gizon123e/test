@@ -266,8 +266,11 @@ module.exports = {
                 dateStart = today.setHours(0, 0, 0, 0), 
                 dateEnd = tomorrow.setHours(0, 0, 0, 0) 
             } = req.query;
-            if(dateStart instanceof Date === false || dateEnd instanceof Date === false ) return res.status(400).json({message: "Invalid Request Query"})
-            const startDate = new Date(dateStart);
+            const iso8601WithTimezoneRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+            if (!iso8601WithTimezoneRegex.test(dateStart) || !iso8601WithTimezoneRegex.test(dateEnd)) {
+                return res.status(400).json({ message: 'Bad Request: dateStart and dateEnd must be in ISO 8601 format with timezone (e.g., 2024-02-01T07:58:32.000Z).' });
+            }
+                    const startDate = new Date(dateStart);
             const endDate = new Date(dateEnd);
             endDate.setMonth(endDate.getMonth(), 0); // Set to the last day of the current month
             const products = (await Product.find({ userId: req.user.id }).lean()).map(prd => prd._id);

@@ -928,7 +928,7 @@ module.exports = {
           break;
       }
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
-      if(accepted !== dataProduct.userId.role) return res.status(403).json({message: "Invalid Request"});
+      if((accepted !== dataProduct.userId.role) && (dataProduct.userId._id.toString() !== req.user.id.toString()) ) return res.status(403).json({message: "Invalid Request"});
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
       const total_terjual = terjual
         ? terjual.track.reduce((acc, val) => {
