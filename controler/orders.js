@@ -2761,14 +2761,14 @@ module.exports = {
 
             if (!countedSeller.has(user?._id.toString())) {
               user = await User.findById(selectedProduct.userId);
-                promisesFunction.push(
-                  PoinHistory.create({
+              promisesFunction.push(
+                PoinHistory.create({
                   userId: user._id,
                   jenis: "masuk",
                   value: biayaTetap.poinPembelian,
                   from
                 })
-              )
+              )    
               countedSeller.add(user._id.toString());
             }
           }
@@ -2887,8 +2887,6 @@ module.exports = {
         }
       }
       await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { isBuyerAccepted: true });
-      await Promise.all(promisesFunction);
-
       if (invoice.length == 1) {
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         DetailNotifikasi.create({
@@ -2912,12 +2910,14 @@ module.exports = {
         });
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       } else {
-        PoinHistory.create({
-          userId: req.user.id,
-          jenis: "masuk",
-          value: biayaTetap.poinPembelian,
-          from
-        }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+        promisesFunction.push(
+          PoinHistory.create({
+            userId: req.user.id,
+            jenis: "masuk",
+            value: biayaTetap.poinPembelian,
+            from
+          })
+        )
         for (const item of invoice) {
           const notifikasi = await Notifikasi.findOne({ invoiceId: item.invoice._id });
           DetailNotifikasi.create({
@@ -2939,6 +2939,8 @@ module.exports = {
             tanggal: formatTanggal(new Date()),
           });
         }
+        await Promise.all(promisesFunction);
+        
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       }
     } catch (error) {
