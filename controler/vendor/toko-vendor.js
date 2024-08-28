@@ -270,6 +270,13 @@ module.exports = {
             const startDate = new Date(dateStart);
             const endDate = new Date(dateEnd);
 
+            const month = endDate.getMonth();
+            endDate.setMonth(month + 1, 0);
+
+            if (endDate.getDate() < Number(req.query.dateEnd.split('-')[2])) {
+                endDate = new Date(endDate.getFullYear(), month, endDate.getDate());
+            }
+
             const products = (await Product.find({ userId: req.user.id }).lean()).map(prd => prd._id);
 
             const kunjungan_produk = await ProductPerformanceReport.aggregate([
