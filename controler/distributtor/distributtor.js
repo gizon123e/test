@@ -20,6 +20,7 @@ const Vendor = require('../../models/vendor/model-vendor')
 const Supplier = require('../../models/supplier/model-supplier')
 const TokoSupplier = require('../../models/supplier/model-toko')
 const TokoProdusen = require('../../models/produsen/model-toko')
+const PoinHistory = require('../../models/model-poin')
 dotenv.config()
 
 module.exports = {
@@ -27,7 +28,16 @@ module.exports = {
         try {
             const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
-
+            const poin = await PoinHistory.find({userId: req.user.id});
+            dataDistributor.userId.poin = poin.length > 0 ? 
+                poin
+                    .filter(pn => pn.jenis === "masuk")
+                    .reduce((acc, val)=> acc + val.value, 0) - 
+                poin
+                    .filter(pn => pn.jenis === "keluar")
+                    .reduce((acc, val)=> acc + val.value, 0)
+                : 0
+            dataDistributor.userId.pin = dataKonsumen.userId.pin? "Ada" : null;
             const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
             const total_pesanan = pesanan.length
             const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak" || item.status_distributor === "Kadaluwarsa")
