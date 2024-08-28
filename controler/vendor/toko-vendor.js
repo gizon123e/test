@@ -266,7 +266,7 @@ module.exports = {
                 dateStart = today.setHours(0, 0, 0, 0), 
                 dateEnd = tomorrow.setHours(0, 0, 0, 0) 
             } = req.query;
-
+            if(dateStart instanceof Date === false || dateEnd instanceof Date === false ) return res.status(400).json({message: "Invalid Request Query"})
             const startDate = new Date(dateStart);
             const endDate = new Date(dateEnd);
             endDate.setMonth(endDate.getMonth(), 0); // Set to the last day of the current month
