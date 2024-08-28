@@ -1,7 +1,8 @@
 const router = require('express').Router()
 const authorization = require('../../midelware/authorization')
-const { getAllDasboard } = require('../../controler/distributtor/dasboard')
+const { getAllDasboard, getGrafikPerforma } = require('../../controler/distributtor/dasboard')
 
-router.get('/', authorization, getAllDasboard)
+router.get('/dasboard', authorization, getAllDasboard)
+router.get('/grafik-performa', authorization, getGrafikPerforma);
 
 module.exports = router

@@ -1,5 +1,6 @@
 const Distributtor = require("../../models/distributor/model-distributor")
 const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
+const JenisJasaDistributor = require('../../models/distributor/jenisJasaDistributor')
 const Pengiriman = require("../../models/model-pengiriman")
 
 module.exports = {
@@ -33,7 +34,7 @@ module.exports = {
 
             let totalProduk = 0
             let quantity = 0
-            const dataMapPengiriman = pengiriman.map((data) => {
+            pengiriman.map((data) => {
                 const datePesanan = new Date(data.createdAt);
                 const formattedDatePesanan = datePesanan.toLocaleDateString('id-ID', {
                     year: 'numeric',
@@ -79,10 +80,48 @@ module.exports = {
 
             })
 
+            const listRataRataPengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id })
+            const pesananDistributor = await Pengiriman.find({ distributorId: distributor._id })
+
+            const pervomaPengirimanSuccess = []
+            const pervomaPengirimanDibatalkan = []
+            const dataLayananHemat = []
+            const dataLayananExpress = []
+            for (let data of listRataRataPengiriman) {
+                if (data.status_distributor === 'Selesai') {
+                    pervomaPengirimanSuccess.push(data)
+                }
+
+                const layanan = await JenisJasaDistributor.findOne({ _id: data.jenisPengiriman })
+                if (layanan.nama === 'Hemat') {
+                    dataLayananHemat.push(data)
+                } else if (layanan.nama === 'Express') {
+                    dataLayananExpress.push(data)
+                }
+            }
+
+            for (let data of pesananDistributor) {
+                if (data.status_distributor === 'Ditolak') {
+                    pervomaPengirimanDibatalkan.push(data)
+                }
+            }
+
+            let data_layanan_distributor
+            if (dataLayananHemat.length > dataLayananExpress.length) {
+                data_layanan_distributor = dataLayananHemat
+            } else {
+                data_layanan_distributor = dataLayananExpress
+            }
+
+            const totalPengiriman = pervomaPengirimanSuccess.length + pervomaPengirimanDibatalkan.length
+            const perfoma_pesanan = totalPengiriman > 0 ? (pervomaPengirimanSuccess.length / totalPengiriman) * 100 : 0
+
             res.status(200).json({
                 message: "get data dasboard success",
                 totalProduk,
-                quantity
+                rata_rata_pengiriman: quantity,
+                perfoma_pesanan,
+                data_layanan_distributor
             })
         } catch (error) {
             console.log(error)
@@ -90,10 +129,49 @@ module.exports = {
                 return res.status(400).json({
                     error: true,
                     message: error.message,
-                    fields: error.fields
+                    fields: error.fields,
                 })
             }
             next(error)
         }
+    },
+
+    getGrafikPerforma: async (req, res, next) => {
+        try {
+            const { startDate, endDate } = req.query;
+            const distributorId = req.user.id;
+
+            // Tentukan range tanggal berdasarkan query atau gunakan seluruh range data jika tidak ada query
+            const start = startDate ? new Date(startDate) : new Date(0); // Tanggal Unix Epoch sebagai awal
+            const end = endDate ? new Date(endDate) : new Date(); // Hari ini sebagai akhir
+
+            // Query data pengiriman
+            const pengiriman = await ProsesPengirimanDistributor.find({
+                distributorId,
+                status_distributor: "Selesai",
+                createdAt: {
+                    $gte: start,
+                    $lte: end
+                }
+            });
+
+            // Mengelompokkan data berdasarkan hari
+            const dataPerDay = pengiriman.reduce((acc, curr) => {
+                const date = new Date(curr.createdAt).toLocaleDateString('id-ID');
+                if (!acc[date]) acc[date] = 0;
+                acc[date]++;
+                return acc;
+            }, {});
+
+            // Mengirimkan respon ke client
+            res.status(200).json({
+                message: "Data grafik performa berhasil diambil",
+                data: dataPerDay
+            });
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
     }
+
 }
