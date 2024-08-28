@@ -26,7 +26,7 @@ dotenv.config()
 module.exports = {
     getProfileDistributor: async (req, res, next) => {
         try {
-            const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
+            const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId").lean()
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
             const poin = await PoinHistory.find({userId: req.user.id});
             dataDistributor.userId.poin = poin.length > 0 ? 
@@ -37,7 +37,7 @@ module.exports = {
                     .filter(pn => pn.jenis === "keluar")
                     .reduce((acc, val)=> acc + val.value, 0)
                 : 0
-            dataDistributor.userId.pin = dataKonsumen.userId.pin? "Ada" : null;
+            dataDistributor.userId.pin = dataDistributor.userId.pin? "Ada" : null;
             const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
             const total_pesanan = pesanan.length
             const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak" || item.status_distributor === "Kadaluwarsa")
