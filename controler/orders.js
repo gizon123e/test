@@ -2761,12 +2761,14 @@ module.exports = {
 
             if (!countedSeller.has(user?._id.toString())) {
               user = await User.findById(selectedProduct.userId);
-              PoinHistory.create({
-                userId: user._id,
-                jenis: "masuk",
-                value: biayaTetap.poinPembelian,
-                from
-              }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+                promisesFunction.push(
+                  PoinHistory.create({
+                  userId: user._id,
+                  jenis: "masuk",
+                  value: biayaTetap.poinPembelian,
+                  from
+                })
+              )
               countedSeller.add(user._id.toString());
             }
           }
@@ -2776,13 +2778,14 @@ module.exports = {
           const userDistri = await User.findById(distri.userId);
           
           if (!countedDistri.has(userDistri?._id.toString())) {
-            user = await User.findById(selectedProduct.userId);
-            PoinHistory.create({
-              userId: userDistri._id,
-              jenis: "masuk",
-              value: biayaTetap.poinPembelian,
-              from
-            }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+              promisesFunction.push(
+                PoinHistory.create({
+                userId: userDistri._id,
+                jenis: "masuk",
+                value: biayaTetap.poinPembelian,
+                from
+              })
+            )
             countedDistri.add(userDistri._id.toString());
           }
 
