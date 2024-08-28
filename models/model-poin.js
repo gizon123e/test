@@ -14,7 +14,7 @@ const modelPoin = new mongoose.Schema({
         type: String,
         enum: ["keluar", "masuk"]
     }
-});
+}, {timestamps: true});
 
 const PoinHistory = mongoose.model("PoinHistory", modelPoin);
 
