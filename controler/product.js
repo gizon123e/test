@@ -1930,7 +1930,7 @@ module.exports = {
         isBuyerAccepted: false,
       }).lean();
 
-      if (ordered.length > 0) return res.status(403).json({ message: "Tidak bisa menghapus product karena ada orderan yang sedang aktif", data: ordered });
+      if (ordered.length > 0) return res.status(403).json({ message: `${deleted.name_product} tidak bisa dihapus sedang ada transaksi`, data: ordered });
       if (deleted.isReviewed && req.user.role !== "administrator") return res.status(403).json({ message: "Product sedang direview, tidak bisa hapus" });
       await Product.deleteOne({ _id: deleted._id });
       return res.status(201).json({
