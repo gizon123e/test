@@ -197,9 +197,9 @@ app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
   // flash_sale_checker.start()
-  // checker_order()
-  // send_notif()
-  // batalPesanan()
+  checker_order()
+  send_notif()
+  batalPesanan()
   console.log("connection express success");
   websocket.listen(8000, () => {
     console.log("Connection websocket success");
