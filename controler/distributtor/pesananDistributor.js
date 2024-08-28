@@ -332,7 +332,7 @@ module.exports = {
                     populate: "addressId"
                 })
                 .populate({
-                    path: "id_toko",
+                    path: "tokoId",
                     populate: "address"
                 })
 
