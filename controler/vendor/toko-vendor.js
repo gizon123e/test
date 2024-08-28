@@ -24,6 +24,22 @@ const socket = io("https://staging-backend.superdigitalapps.my.id/", {
     },
 });
 
+function correctInvalidDate(dateString) {
+    const date = new Date(dateString);
+
+    // If the provided date rolls over to the next month, it means the original date was invalid
+    if (date.getDate() !== parseInt(dateString.split('-')[2])) {
+        const year = date.getFullYear();
+        const month = date.getMonth(); // months are zero-indexed, so +1
+        const lastDayOfMonth = new Date(year, month, 0).getDate(); // 0 day of the next month gives the last day of the current month
+
+        return `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}T00:00:00.000Z`;
+    }
+
+    // Return the original date as an ISO string with UTC timezone if it's valid
+    return date.toISOString().split('T')[0] + 'T00:00:00.000Z';
+}
+
 module.exports = {
     createToko: async(req, res, next) => {
         try {
@@ -266,14 +282,12 @@ module.exports = {
                 dateStart = today.setHours(0, 0, 0, 0), 
                 dateEnd = tomorrow.setHours(0, 0, 0, 0) 
             } = req.query;
-            const iso8601WithTimezoneRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-            if (!iso8601WithTimezoneRegex.test(dateStart) || !iso8601WithTimezoneRegex.test(dateEnd)) {
-                return res.status(400).json({ message: 'Bad Request: dateStart and dateEnd must be in ISO 8601 format with timezone (e.g., 2024-02-01T07:58:32.000Z).' });
-            }
-                    const startDate = new Date(dateStart);
-            const endDate = new Date(dateEnd);
-            endDate.setMonth(endDate.getMonth(), 0); // Set to the last day of the current month
+
+            const startDate = new Date(correctInvalidDate(dateStart));
+            const endDate = new Date(correctInvalidDate(dateEnd));
+
             const products = (await Product.find({ userId: req.user.id }).lean()).map(prd => prd._id);
+            console.log(startDate, endDate)
 
             const kunjungan_produk = await ProductPerformanceReport.aggregate([
                 {
@@ -303,13 +317,11 @@ module.exports = {
             
             while (currentDate <= endDate) {
                 const formattedDate = currentDate.toISOString().split('T')[0];
-
                 const found = kunjungan_produk.find(k => k._id === formattedDate);
                 results.push({
                     _id: formattedDate,
                     count: found ? found.count : Math.floor(Math.random() * 10)
                 });
-
                 currentDate.setDate(currentDate.getDate() + 1);
             }
 
