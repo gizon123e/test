@@ -3,7 +3,7 @@ const ReviewProduk = require('../../models/model-review/model-reviewProduk')
 const Supplier = require('../../models/supplier/model-supplier')
 
 module.exports = {
-    getReviewUlasanVendor: async (req, res, next) => {
+    getReviewUlasanProdusen: async (req, res, next) => {
         try {
             const { nilai_review, komentar_review, foto_video, replies } = req.query
 

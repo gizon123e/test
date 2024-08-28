@@ -84,11 +84,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// router
-app.get('/failed', (req, res) => {
-  res.send("Failed");
-});
-
 app.use("/api/temporary", require('./routes/router-temporary'));
 // app.use("/api/temporary/seller", require('./routes/router-temporary-seller'));
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
@@ -197,9 +192,9 @@ app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
   // flash_sale_checker.start()
-  checker_order()
-  send_notif()
-  batalPesanan()
+  // checker_order()
+  // send_notif()
+  // batalPesanan()
   console.log("connection express success");
   websocket.listen(8000, () => {
     console.log("Connection websocket success");
