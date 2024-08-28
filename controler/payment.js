@@ -126,13 +126,6 @@ module.exports = {
 
                     user = await User.findById(pesanan.userId)
 
-                    promisesFunct.push(
-                        PoinHistory.create({
-                            userId: user._id,
-                            jenis: "keluar",
-                            value: pesanan.poinTerpakai
-                        })
-                    )
                     const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
                     const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id}).select('_id kode_invoice')
                     const pengiriman = await Pengiriman.find({invoice: invoiceTambahan._id})
@@ -202,6 +195,16 @@ module.exports = {
                         pesananId: pesanan._id,
                     }).lean()
 
+                    if(pesanan.poinTerpakai){
+                        promisesFunct.push(
+                            PoinHistory.create({
+                                userId: user._id,
+                                jenis: "keluar",
+                                value: pesanan.poinTerpakai,
+                                from: dataProd.dataProduct
+                            })
+                        )
+                    }
                     const ids = dataProd.dataProduct.map(prod =>{
                         return prod._id
                     })

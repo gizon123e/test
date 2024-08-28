@@ -175,7 +175,9 @@ app.use('/api/tarif', require('./routes/router-tarif'))
 app.use('/api/campeni-profile', require('./routes/router-campeniProfile/router-mbg'));
 
 // Wishlist
-app.use('/api/wishlist', require('./routes/router-wishlist'))
+app.use('/api/wishlist', require('./routes/router-wishlist'));
+
+app.use('/api/poin', require('./routes/router-poin'));
 
 //Router PPOB
 app.use('/api/pulsa', require('./routes/router-ppob/router-pulsa/router-pulsa'));
