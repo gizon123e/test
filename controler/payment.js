@@ -19,6 +19,7 @@ const { io } = require("socket.io-client");
 const BiayaTetap = require('../models/model-biaya-tetap');
 const Distributtor = require('../models/distributor/model-distributor');
 const ProsesPengirimanDistributor = require('../models/distributor/model-proses-pengiriman');
+const PoinHistory = require("../models/model-poin")
 
 dotenv.config();
 
@@ -121,15 +122,17 @@ module.exports = {
                             status: "Berlangsung",
                             items
                         })
-                    )
+                    );
 
-                    if (pesanan.poinTerpakai) {
-                        user = await User.findByIdAndUpdate(pesanan.userId, {
-                            $inc: { poin: -pesanan.poinTerpakai }
-                        });
-                    } else {
-                        user = await User.findById(pesanan.userId)
-                    }
+                    user = await User.findById(pesanan.userId)
+
+                    promisesFunct.push(
+                        PoinHistory.create({
+                            userId: user._id,
+                            jenis: "keluar",
+                            value: pesanan.poinTerpakai
+                        })
+                    )
                     const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
                     const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id}).select('_id kode_invoice')
                     const pengiriman = await Pengiriman.find({invoice: invoiceTambahan._id})

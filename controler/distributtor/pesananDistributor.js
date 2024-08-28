@@ -153,10 +153,11 @@ module.exports = {
             }
             const mergedProduct = Object.keys(foundedProduct).map(key => foundedProduct[key])
             const finalData = Object.keys(pengiriman).map(key => {
-                let { waktu_pengiriman, createdAt, updatedAt, ...restOfPgr } = pengiriman[key]
+                let { waktu_pengiriman, createdAt, updatedAt, orderId, ...restOfPgr } = pengiriman[key]
                 return {
                     ...restOfPgr,
-                    createdAt: createdAt !== updatedAt ? updatedAt : createdAt,
+                    orderId,
+                    createdAt: orderId.createdAt.getTime() !== orderId.updatedAt.getTime() ? orderId.updatedAt : orderId.createdAt,
                     waktu_pengiriman: new Date(waktu_pengiriman),
                     products: mergedProduct.filter(prod => prod.storeId === key)
                 }

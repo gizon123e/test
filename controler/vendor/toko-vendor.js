@@ -287,7 +287,6 @@ module.exports = {
             const endDate = new Date(correctInvalidDate(dateEnd));
 
             const products = (await Product.find({ userId: req.user.id }).lean()).map(prd => prd._id);
-            console.log(startDate, endDate)
 
             const kunjungan_produk = await ProductPerformanceReport.aggregate([
                 {
@@ -320,7 +319,7 @@ module.exports = {
                 const found = kunjungan_produk.find(k => k._id === formattedDate);
                 results.push({
                     _id: formattedDate,
-                    count: found ? found.count : Math.floor(Math.random() * 10)
+                    count: found ? found.count : 0
                 });
                 currentDate.setDate(currentDate.getDate() + 1);
             }
