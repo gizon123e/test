@@ -6,6 +6,7 @@ const modelSimulasiSekolah = new mongoose.Schema({
     },
     NPSN:{
         type: Number,
+        unique: true
     },
     jumlahMurid: {
         type: Number

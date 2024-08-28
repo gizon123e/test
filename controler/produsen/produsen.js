@@ -4,6 +4,7 @@ const path = require('path')
 const fs = require('fs');
 const User = require('../../models/model-auth-user');
 const PicProdusen = require('../../models/produsen/model-penanggung-jawab');
+const PoinHistory = require('../../models/model-poin');
 
 module.exports = {
 
@@ -31,7 +32,18 @@ module.exports = {
             const dataProdusen = await Produsen.findOne({userId: req.user.id}).select("-nomorAktaPerusahaan -file_ktp -nik -npwpFile -nomorNpwpPerusahaan -nomorNpwp -legalitasBadanUsaha").populate('userId', '-password').populate('address').lean()
             let pic;
             if (!dataProdusen) return res.status(404).json({ error: `data Produsen id :${req.user.id} not Found` });
+            const poin = await PoinHistory.find({userId: req.user.id});
+
             let modifiedDataProdusen = dataProdusen
+            dataProdusen.userId.poin = poin.length > 0 ? 
+                poin
+                .filter(pn => pn.jenis === "masuk")
+                .reduce((acc, val)=> acc + val.value, 0) - 
+                poin
+                .filter(pn => pn.jenis === "keluar")
+                .reduce((acc, val)=> acc + val.value, 0)
+            : 0
+            dataProdusen.userId.pin = dataProdusen.userId.pin? "Ada" : null;
             const isIndividu = dataProdusen.nama? true : false
             if(isIndividu){
                 pic = null
@@ -102,7 +114,8 @@ module.exports = {
                     long: long_pin_alamat,
                     lat: lat_pin_alamat
                 },
-                isMain: true
+                isMain: true,
+                isUsed: true
             };
             
             if (registerAs === "not_individu") {

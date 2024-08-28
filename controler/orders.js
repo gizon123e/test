@@ -402,7 +402,7 @@ module.exports = {
                   detailToko = await TokoSupplier.findOne({ userId: storeId }).select("namaToko");
                   break;
                 case "produsen":
-                  detailToko = await Produsen.findOne({ userId: storeId });
+                  detailToko = await TokoProdusen.findOne({ userId: storeId }).select("namaToko");
                   break;
               }
 
@@ -1230,7 +1230,7 @@ module.exports = {
               detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
               break;
             case "produsen":
-              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
+              detailToko = await TokoProdusen.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
               break;
           }
           const user = await User.findById(productId.userId._id).select("email phone").lean();
@@ -1345,10 +1345,10 @@ module.exports = {
               detailToko = await TokoVendor.findOne({ userId: sellerId }).select("namaToko address").populate("address").lean();
               break;
             case "supplier":
-              detailToko = await TokoSupplier.findOne({ userId: sellerId }).lean();
+              detailToko = await TokoSupplier.findOne({ userId: sellerId }).select("namaToko address").populate("address").lean();
               break;
             case "produsen":
-              detailToko = await Produsen.findOne({ userId: sellerId }).lean();
+              detailToko = await TokoProdusen.findOne({ userId: sellerId }).select("namaToko address").populate("address").lean();
               break;
           }
 
@@ -1498,7 +1498,7 @@ module.exports = {
           total_pesanan: jumlah_uang,
           status: checkStatus(),
           dibatalkanOleh: pembatalan ? pembatalan.canceledBy : null,
-          invoice: invoiceSubsidi,
+          invoice: invoiceSubsidi? invoiceSubsidi : null,
           invoiceTambahan: invoiceTambahan ? invoiceTambahan : null,
           detailInvoiceSubsidi,
           detailInvoiceTambahan,

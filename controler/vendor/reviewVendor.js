@@ -5,7 +5,7 @@ const Vendor = require('../../models/vendor/model-vendor')
 module.exports = {
     getReviewUlasanVendor: async (req, res, next) => {
         try {
-            const { nilai_review, komentar_review, foto_video, replies } = req.query
+            const { nilai_review, komentar_review, foto_video, replies, belum_balas, belum_diulas } = req.query
 
             const vendor = await Vendor.findOne({ userId: req.user.id })
             if (!vendor) return res.status(404).json({ message: 'data Vendor not found' })
@@ -56,8 +56,14 @@ module.exports = {
 
             if (replies === 'true') {
                 reviews = dataPayload.filter(review => review.replies.length > 0 || review.replies.length > 0);
-            } else if (replies === 'false') {
+            } 
+            
+            if (belum_balas === 'true') {
                 reviews = dataPayload.filter(review => review.replies.length === 0 || review.replies.length === 0);
+            }
+
+            if (belum_diulas === 'true') {
+                reviews = dataPayload.filter(review => review.nilai_review === 0);
             }
 
             const totalRatingPembeli = parseInt(rating_dari_pembeli) / parseInt(index_user)

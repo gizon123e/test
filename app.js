@@ -83,11 +83,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// router
-app.get('/failed', (req, res) => {
-  res.send("Failed");
-});
-
 app.use("/api/temporary", require('./routes/router-temporary'));
 // app.use("/api/temporary/seller", require('./routes/router-temporary-seller'));
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
@@ -101,7 +96,6 @@ app.use('/api/order', require('./routes/router-order'));
 app.use("/api/report", require("./routes/router-laporan"));
 app.use("/api/comment", require("./routes/router-komentar"));
 app.use("/api/export", require("./routes/router-export"));
-app.use("/api/supplier", require('./routes/router-supplier'));
 app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
 app.use('/api/review-vendor', require('./routes/router-vendor/router-reviewVendor'));
@@ -197,9 +191,9 @@ app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
   // flash_sale_checker.start()
-  checker_order()
-  send_notif()
-  batalPesanan()
+  // checker_order()
+  // send_notif()
+  // batalPesanan()
   console.log("connection express success");
   websocket.listen(8000, () => {
     console.log("Connection websocket success");

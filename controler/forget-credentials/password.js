@@ -22,15 +22,18 @@ module.exports = {
                 filter = {
                     'phone.content': noHp
                 }
-                await sendOtp.sendOtpPhone(noHp, `KODE OTP LUPA PASSWORD :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
             }else if(!noHp && email){
                 filter = {
                     'email.content': email
                 }
-                await sendOtp.sendOtp(email, kode_random, "lupa_password")
             }
             const user = await User.exists(filter)
-            if(!user) return res.status(404).json({message: "User tidak ditemukan"})
+            if(!user) return res.status(404).json({message: "User tidak ditemukan"});
+            if(noHp && !email){
+                await sendOtp.sendOtpPhone(noHp, `KODE OTP LUPA PASSWORD :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
+            }else if(!noHp && email){
+                await sendOtp.sendOtp(email, kode_random, "lupa_password")
+            }
             const value_token = generateToken();
             User.findOneAndUpdate(
                 filter,

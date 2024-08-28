@@ -3,7 +3,7 @@ require('./model-product')
 
 const performanceReport = new mongoose.Schema({
     productId:{
-        type: mongoose.Types.ObjectId,
+        type: String,
         ref:"Product",
         required: [true, "productId harus diisi"],
         index: true
@@ -14,7 +14,7 @@ const performanceReport = new mongoose.Schema({
         required: [true, "productId harus diisi"],
         index: true
     }
-}) 
+}, {timestamps: true}) 
 
 const ProductPerformanceReport = mongoose.model("ProductPerformanceReport", performanceReport)
 module.exports = ProductPerformanceReport

@@ -2,6 +2,7 @@ const Pengiriman = require("../../models/model-pengiriman");
 const Notifikasi = require("../../models/notifikasi/notifikasi")
 const DetailNotifikasi = require("../../models/notifikasi/detail-notifikasi")
 const { io } = require("socket.io-client");
+const Invoice = require("../../models/model-invoice");
 
 const socket = io(process.env.HOST, {
     auth: {
@@ -69,7 +70,9 @@ module.exports = {
             }
 
             const pengiriman = await Pengiriman.find({ orderId, id_toko, kode_pengiriman });
-            if (!pengiriman) return res.status(404).json({ message: `Pengiriman tidak ditemukan` })
+            const invoices = await Invoice.find({_id: { $in: pengiriman }});
+            console.log(invoices)
+            if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Pengiriman tidak ditemukan` })
 
             await Pengiriman.updateMany({ orderId, id_toko, kode_pengiriman }, {
                 distributorId,

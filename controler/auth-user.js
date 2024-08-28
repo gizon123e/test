@@ -197,6 +197,7 @@ module.exports = {
       const passwordValid = await bcrypt.compare(password, newUser.password)
       if(!passwordValid) return res.status(401).json({message: "Password yang dimasukkan salah"})
       const kode_random = Math.floor(1000 + Math.random() * 9000);
+      console.log(kode_random)
       const kode = await bcrypt.hash(kode_random.toString(), 3);
       const codeOtp = {
         code: kode,

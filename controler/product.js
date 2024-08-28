@@ -27,6 +27,7 @@ const { vendor } = require("../midelware/user-role-clasification");
 const formatNumber = require("../utils/formatAngka");
 const Pengiriman = require("../models/model-pengiriman");
 const Wishlist = require("../models/model-wishlist");
+const TokoProdusen = require("../models/produsen/model-toko");
 // const BahanBaku = require("../models/model-bahan-baku");
 
 module.exports = {
@@ -152,6 +153,7 @@ module.exports = {
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
       const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
+      console.log(alamatSekolah, req.user.id)
       let sellers;
 
       switch(req.user.role){
@@ -185,8 +187,8 @@ module.exports = {
             },
           ]);
           break;
-        default:
-          sellers = await TokoSupplier.aggregate([
+        case "supplier":
+          sellers = await TokoProdusen.aggregate([
             {
               $lookup: {
                 from: "addresses",
@@ -261,9 +263,9 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "produsens",
+            from: "tokoprodusens",
             let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "produsenDatas",
           },
         },
@@ -884,7 +886,9 @@ module.exports = {
         });
       }
       let finalData;
-      if(!status) finalData = dataProds;
+      if(!status){
+        finalData = dataProds;
+      };
       if(status){
         finalData = dataProds.filter(prd => prd.status.value.toLowerCase() === status.toLowerCase())
       }
@@ -911,6 +915,20 @@ module.exports = {
         .populate("id_sub_category")
         .populate("pangan.panganId")
         .lean();
+      let accepted;
+      switch(req.user.role){
+        case "konsumen":
+          accepted = "vendor";
+          break;
+        case "vendor":
+          accepted = "supplier";
+          break;
+        case "supplier":
+          accepted = 'produsen';
+          break;
+      }
+      if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
+      if(accepted !== dataProduct.userId.role) return res.status(403).json({message: "Invalid Request"});
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
       const total_terjual = terjual
         ? terjual.track.reduce((acc, val) => {
@@ -918,7 +936,6 @@ module.exports = {
         }, 0)
         : 0;
       let toko;
-      if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
       const wishlisted = await Wishlist.exists({ productId: req.params.id, userId: req.user?.id })
       switch (dataProduct.userId.role) {
         case "vendor":
@@ -927,8 +944,8 @@ module.exports = {
         case "supplier":
           toko = await TokoSupplier.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
-        default:
-          toko = await TokoSupplier.findOne({ userId: dataProduct.userId._id }).populate("address");
+        case "produsen":
+          toko = await TokoProdusen.findOne({ userId: dataProduct.userId._id }).populate("address");
           break;
       }
       if (dataProduct.bervarian == true) {
@@ -1881,7 +1898,8 @@ module.exports = {
   updateProductPerformance: async (req, res, next) => {
     try {
       if (!req.body.productId) return res.status(400).json({ message: "Dibutuh kan payload productId" });
-
+      const prod = await Product.findOne({_id: req.body.productId});
+      if(!prod) return res.status(404).json({message: "Produk dengan id: " + req.body.productId + " tidak ditemukan"})
       const kinerja = await Performance.findOne({ productId: req.body.productId, userId: req.user.id });
       if(!kinerja){
         Performance.create({ productId: req.body.productId, userId: req.user.id })
@@ -1889,7 +1907,7 @@ module.exports = {
         .catch((e)=>console.log("gagal simpan performance produk ", e))
       }
 
-      return res.status(200).json({ message: "Berhasil update performance product!", data: kinerja });
+      return res.status(200).json({ message: "Berhasil update performance product!" });
     } catch (error) {
       console.log(error);
       next(error);
