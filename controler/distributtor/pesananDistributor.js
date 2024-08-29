@@ -346,7 +346,7 @@ module.exports = {
             const longTokoVendorAddress = parseFloat(dataPengiriman.id_toko.address.pinAlamat.long)
             const latTokoVendorAddress = parseFloat(dataPengiriman.id_toko.address.pinAlamat.lat)
 
-            const nilaiJarak = await calculateDistance(latTokoVendorAddress, longTokoVendorAddress, latKAlamatKonsumen, longAlamatKonsumen, 100);
+            const nilaiJarak = await calculateDistance(latTokoVendorAddress, longTokoVendorAddress, latKAlamatKonsumen, longAlamatKonsumen, biayaTetap.radius);
             const jarakOngkir = nilaiJarak.toFixed(2)
 
             const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
