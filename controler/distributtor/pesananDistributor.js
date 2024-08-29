@@ -326,6 +326,8 @@ module.exports = {
     updateDiTerimaDistributor: async (req, res, next) => {
         try {
             const { id_toko, distributorId, orderId, kode_pengiriman, status, id_pengiriman } = req.body
+            const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
+
             if (!status) return res.status(400).json({ message: 'status harus di isi' })
 
             const dataPengiriman = await Pengiriman.findOne({ _id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
@@ -349,7 +351,6 @@ module.exports = {
             const nilaiJarak = await calculateDistance(latTokoVendorAddress, longTokoVendorAddress, latKAlamatKonsumen, longAlamatKonsumen, biayaTetap.radius);
             const jarakOngkir = nilaiJarak.toFixed(2)
 
-            const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
             const timeInSeconds = (jarakOngkir / biayaTetap.rerata_kecepatan) * 3600; // cari hitungan detik
 
             const payLoadDataPengiriman = await Pengiriman.find({ id_toko, distributorId, orderId, kode_pengiriman })
