@@ -13,7 +13,7 @@ module.exports = {
                 const konsumen = await Sekolah.findOne({ userId: req.user.id, _id: id_sekolah })
                 if (!konsumen) return res.status(404).json({ message: 'konsumen tidak ada' })
             } else {
-                const konsumen = await Sekolah.findOne({ userId: req.user.id, _id: id_sekolah })
+                const konsumen = await Sekolah.findOne({ _id: id_sekolah })
                 if (!konsumen) return res.status(404).json({ message: 'konsumen tidak ada' })
             }
 
