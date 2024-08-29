@@ -166,7 +166,17 @@ module.exports = {
                             tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
                         })
 
-                        const proses = await ProsesPengirimanDistributor.findOne({kode_pengiriman: pgr.kode_pengiriman})
+                        const proses = await ProsesPengirimanDistributor.findOneAndUpdate(
+                            {kode_pengiriman: pgr.kode_pengiriman},
+                            {
+                                $inc: {
+                                    tarif_pengiriman: pgr.total_ongkir
+                                }
+                            },
+                            {
+                                new: true
+                            }
+                        )
                         for(const prd of pgr.productToDelivers){
                             if(proses){
                                 const index = proses.produk_pengiriman.findIndex(prod => prod._id === prd._id)
