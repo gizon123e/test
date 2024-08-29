@@ -435,6 +435,7 @@ module.exports = {
         const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
         if (distance <= biayaTetap.radius) {
           sellerDalamRadius.push(sellers[i]);
+          console.log(sellers[i].namaToko)
           sellers[i].jarakVendor = distance;
         }
       }
@@ -473,7 +474,7 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "suppliers",
+            from: "tokosuppliers",
             let: { userId: "$userId" },
             pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "supplierData",
@@ -481,7 +482,7 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "produsens",
+            from: "tokoprodusens",
             let: { userId: "$userId" },
             pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "produsenDatas",
