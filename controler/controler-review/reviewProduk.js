@@ -182,9 +182,9 @@ module.exports = {
             res.status(200).json({
                 message: "get all review",
                 data: {
+                    nilai_review_toko: nilai_review_toko.nilai_review,
                     indexdata,
                     reviews,
-                    nilai_review_toko
                 }
             });
         } catch (error) {
