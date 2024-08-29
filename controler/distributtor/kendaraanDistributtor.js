@@ -18,6 +18,7 @@ const dotenv = require('dotenv')
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
 const User = require('../../models/model-auth-user')
 const TokoSupplier = require('../../models/supplier/model-toko')
+const TokoProdusen = require('../../models/produsen/model-toko')
 dotenv.config()
 
 module.exports = {
@@ -148,9 +149,11 @@ module.exports = {
                     addressDetail = await TokoSupplier.findOne({ userId: userId }).populate('address');
                     break
                 default:
-                    addressDetail = await TokoSupplier.findOne({ userId: userId }).populate('address');
+                    addressDetail = await TokoProdusen.findOne({ userId: userId }).populate('address');
                     break
             }
+
+            console.log('===========================>', addressDetail)
             const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
             const longDetaik = parseFloat(addressDetail.address.pinAlamat.long)
 
@@ -168,7 +171,7 @@ module.exports = {
                 });
             }
 
-            const jarakTempu = Math.round(distance)
+            const jarakTempu = distance
 
             let data = []
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, status: 'Aktif' })
@@ -252,7 +255,7 @@ module.exports = {
                         if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -263,7 +266,7 @@ module.exports = {
                         } else {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -275,7 +278,7 @@ module.exports = {
                     } else {
                         data.push({
                             kendaraan,
-                            jarakTempu: Math.round(jarakTempu),
+                            jarakTempu: jarakTempu,
                             totalBeratProduct: beratProduct,
                             totalVolumeProduct: volumeProduct,
                             hargaOngkir: Math.round(hargaOngkir),
@@ -316,7 +319,7 @@ module.exports = {
                         if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -327,7 +330,7 @@ module.exports = {
                         } else {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -340,7 +343,7 @@ module.exports = {
                         console.log("testig 1")
                         data.push({
                             kendaraan,
-                            jarakTempu: Math.round(jarakTempu),
+                            jarakTempu: jarakTempu,
                             totalBeratProduct: beratProduct,
                             totalVolumeProduct: volumeProduct,
                             hargaOngkir: Math.round(hargaOngkir),

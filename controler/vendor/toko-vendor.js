@@ -16,6 +16,7 @@ const mergeObjectsByStoreId = require('../../utils/merginPengirimanId')
 const { io } = require("socket.io-client");
 const SellerPerformanceReport = require('../../models/model-laporan-kinerja-toko');
 const Wishlist = require('../../models/model-wishlist');
+const correctInvalidDate = require("../../utils/correctInvalidDate")
 const ProductPerformanceReport = require('../../models/model-laporan-kinerja-product');
 dotenv.config()
 const socket = io("https://staging-backend.superdigitalapps.my.id/", {
@@ -267,8 +268,8 @@ module.exports = {
                 dateEnd = tomorrow.setHours(0, 0, 0, 0) 
             } = req.query;
 
-            const startDate = new Date(dateStart);
-            const endDate = new Date(dateEnd);
+            const startDate = new Date(correctInvalidDate(dateStart));
+            const endDate = new Date(correctInvalidDate(dateEnd));
 
             const products = (await Product.find({ userId: req.user.id }).lean()).map(prd => prd._id);
 
@@ -297,16 +298,14 @@ module.exports = {
 
             const results = [];
             let currentDate = new Date(startDate);
-
+            
             while (currentDate <= endDate) {
                 const formattedDate = currentDate.toISOString().split('T')[0];
-
                 const found = kunjungan_produk.find(k => k._id === formattedDate);
                 results.push({
                     _id: formattedDate,
-                    count: found ? found.count : Math.floor(Math.random() * 10)
+                    count: found ? found.count : 0
                 });
-
                 currentDate.setDate(currentDate.getDate() + 1);
             }
 
@@ -320,7 +319,7 @@ module.exports = {
 
     getProdukPopuler: async(req, res, next) => {
         try {
-            const products = await Product.find({userId: req.user.id}).select("_id image_product name_product total_stok").lean();
+            const products = await Product.find({userId: req.user.id}).select("_id image_product name_product total_stok total_price").lean();
             const datas = await Promise.all(products.map(async(prod)=> {
                 const report = await SalesReport.findOne({productId: prod._id}).lean();
                 const klik = await ProductPerformanceReport.countDocuments({productId: prod._id})

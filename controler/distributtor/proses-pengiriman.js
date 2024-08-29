@@ -56,6 +56,7 @@ module.exports = {
           path: "tokoId",
           populate: "address",
         })
+        .populate("pengirimanId")
         .populate({
           path: "buyerId",
           populate: "address",
@@ -69,26 +70,31 @@ module.exports = {
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ createdAt: -1 })
+        .lean()
 
-      if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" });
 
       const datas = [];
       for (let data of dataProsesPengirimanDistributor) {
-        const { waktu_pengiriman, ...restOfData } = data;
+        const { waktu_pengiriman, pengirimanId, ...restOfData } = data;
         let total_qty = 0;
         for (let item of data.produk_pengiriman) {
           total_qty += item.quantity;
         }
-        datas.push({
-          ...restOfData,
-          waktu_pengiriman: new Date(waktu_pengiriman),
-          total_qty,
-        });
+        if(pengirimanId[0].isRequestedToPickUp){
+          datas.push({
+            ...restOfData,
+            pengirimanId: pengirimanId.map(pgr => pgr._id),
+            waktu_pengiriman: new Date(waktu_pengiriman),
+            total_qty,
+          });
+        }
       }
+
+      if (datas.length === 0 || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" });
 
       res.status(200).json({
         message: "data get All success",
-        datas: dataProsesPengirimanDistributor,
+        datas: datas,
       });
     } catch (error) {
       console.log(error);

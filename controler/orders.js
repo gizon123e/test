@@ -127,7 +127,7 @@ module.exports = {
 
   getOrders: async (req, res, next) => {
     try {
-      const { status, page = 1, limit = 5 } = req.query;
+      const { page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
       console.log(req.user.id)
       const filter = {
@@ -218,11 +218,7 @@ module.exports = {
           },
         },
       ])
-        .skip(skip)
-        .limit(parseInt(limit));
-      
-      // return res.status(200).json({ dataOrders });
-
+        
       if (!dataOrders || dataOrders.length < 1) {
         return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` });
       }
@@ -557,8 +553,8 @@ module.exports = {
       }
       const filteredData = data
         .filter((ord) => {
-          if (!status) return true;
-          return ord.status === status;
+          if (!req.query.status) return true;
+          return ord.status.toLowerCase() === req.query.status.toLowerCase();
         })
         .sort((a, b) => {
           if (a.status === "Belum Bayar" && b.status !== "Belum Bayar") {
@@ -568,7 +564,8 @@ module.exports = {
             return 1;
           }
           return 0;
-        });
+        })
+        .slice(skip, skip + limit)
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
       if (error && error.name === "ValidationError") {
@@ -1398,6 +1395,7 @@ module.exports = {
           });
 
           if (selectedPengirimanSubsidi) {
+            console.log(selectedPengirimanSubsidi)
             const foundProd = selectedPengirimanSubsidi.productToDelivers.find((prd) => productSelected._id.toString() === prd.productId.toString());
             if (!addedPengiriman.has(selectedPengirimanSubsidi._id.toString())) {
               detailInvoiceSubsidi.totalOngkir += selectedPengirimanSubsidi.ongkir;
@@ -1419,6 +1417,7 @@ module.exports = {
           }
 
           if (selectedPengirimanTambahan) {
+            console.log(detailBiaya)
             const foundProd = selectedPengirimanTambahan.productToDelivers.find((prd) => productSelected._id.toString() === prd.productId.toString());
             if (!addedPengiriman.has(selectedPengirimanTambahan._id.toString())) {
               detailInvoiceTambahan.totalOngkir += selectedPengirimanTambahan.ongkir;
@@ -2744,10 +2743,11 @@ module.exports = {
       const addedInv = new Set();
       const from = []
       for (const shp of shipments) {
-        const sekolah = await ProsesPengirimanDistributor.findOne({pengirimanId: { $in: [shp._id]}})
-        .populate({path: "sekolahId", select: "userId"})
+        const prosesPengiriman = await ProsesPengirimanDistributor.findOne({pengirimanId: { $in: [shp._id]}})
+        .populate({path: "buyerId"})
         .lean()
-        if(sekolah.sekolahId.userId.toString() !== req.user.id.toString()) return res.status(403).json({message: "Tidak bisa mengubah punya orang lain"})
+
+        if(prosesPengiriman.buyerId.userId.toString() !== req.user.id.toString()) return res.status(403).json({message: "Tidak bisa mengubah punya orang lain"})
         const dataProduct = await DataProductOrder.findOne({ pesananId: shp.orderId });
         const incompleteOrder = await IncompleteOrders.findOne({ pengirimanId: shp._id });
         const inv = await Invoice.findOne({ _id: shp.invoice, status: "Lunas" }).populate("id_transaksi");
@@ -2761,12 +2761,14 @@ module.exports = {
 
             if (!countedSeller.has(user?._id.toString())) {
               user = await User.findById(selectedProduct.userId);
-              PoinHistory.create({
-                userId: user._id,
-                jenis: "masuk",
-                value: biayaTetap.poinPembelian,
-                from
-              }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+              promisesFunction.push(
+                PoinHistory.create({
+                  userId: user._id,
+                  jenis: "masuk",
+                  value: biayaTetap.poinPembelian,
+                  from
+                })
+              )    
               countedSeller.add(user._id.toString());
             }
           }
@@ -2776,13 +2778,14 @@ module.exports = {
           const userDistri = await User.findById(distri.userId);
           
           if (!countedDistri.has(userDistri?._id.toString())) {
-            user = await User.findById(selectedProduct.userId);
-            PoinHistory.create({
-              userId: userDistri._id,
-              jenis: "masuk",
-              value: biayaTetap.poinPembelian,
-              from
-            }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+              promisesFunction.push(
+                PoinHistory.create({
+                userId: userDistri._id,
+                jenis: "masuk",
+                value: biayaTetap.poinPembelian,
+                from
+              })
+            )
             countedDistri.add(userDistri._id.toString());
           }
 
@@ -2884,9 +2887,17 @@ module.exports = {
         }
       }
       await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { isBuyerAccepted: true });
-      await Promise.all(promisesFunction);
-
       if (invoice.length == 1) {
+        if(req.user.role !== "konsumen"){
+          promisesFunction.push(
+            PoinHistory.create({
+              userId: req.user.id,
+              jenis: "masuk",
+              value: biayaTetap.poinPembelian,
+              from
+            })
+          )
+        }
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         DetailNotifikasi.create({
           notifikasiId: notifikasi._id,
@@ -2909,12 +2920,16 @@ module.exports = {
         });
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       } else {
-        PoinHistory.create({
-          userId: req.user.id,
-          jenis: "masuk",
-          value: biayaTetap.poinPembelian,
-          from
-        }).then(()=> console.log('berhasil mencatat poin history')).catch((e)=> console.log("gagal mencatat history poin"))
+        if(req.user.role === "konsumen"){
+          promisesFunction.push(
+            PoinHistory.create({
+              userId: req.user.id,
+              jenis: "masuk",
+              value: biayaTetap.poinPembelian,
+              from
+            })
+          )
+        }
         for (const item of invoice) {
           const notifikasi = await Notifikasi.findOne({ invoiceId: item.invoice._id });
           DetailNotifikasi.create({
@@ -2936,6 +2951,8 @@ module.exports = {
             tanggal: formatTanggal(new Date()),
           });
         }
+        await Promise.all(promisesFunction);
+        
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       }
     } catch (error) {

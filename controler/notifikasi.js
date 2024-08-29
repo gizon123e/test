@@ -117,11 +117,10 @@ module.exports = {
           }
      },
 
-          sendNotifikasi: async(req, res, next) => {
+     sendNotifikasi: async(req, res, next) => {
         try{
           const shipments = await Pengiriman.find({sellerApproved: true}).sort({createdAt: -1}).populate("invoice").populate("productToDelivers.productId").populate("distributorId").lean();
           for (const shipment of shipments){      
-               console.log(shipment._id)
                const deadline = new Date(shipment.waktu_pengiriman);
                const countdown_pengemasan_vendor = new Date(shipment.waktu_pengiriman).setHours(new Date(shipment.waktu_pengiriman).getHours() - 2);
                const pengemasan = await Pengemasan.findOne({pengirimanId: shipment._id}).lean()
@@ -133,15 +132,8 @@ module.exports = {
                const yesterdayDeadline = new Date(deadline);
                yesterdayDeadline.setDate(yesterdayDeadline.getDate() - 1);
 
-               console.log(`sekarang ${now}`)
-               console.log(`muncul notif ${new Date(waktuMunculNotif.setSeconds(0,0))}`)
-               console.log(`countdown ${new Date(countdown_pengemasan_vendor)}`)
-
                const notifikasiDistri =  await Notifikasi.findOne({userId: shipment.distributorId.userId})
                
-               console.log(`NOW => ${formatTanggal(now)} ${formatWaktu(now)}`)
-               console.log(`DEADLINE => ${formatTanggal(deadline)} ${formatWaktu(deadline)}`)
-               console.log(`YESTERDAY DEADLINE => ${formatTanggal(yesterdayDeadline)} ${formatWaktu(yesterdayDeadline)}`)
                if(now.setSeconds(0,0) == yesterdayDeadline.setSeconds(0,0)){
                     DetailNotifikasi.create({
                          notifikasiId: notifikasiDistri._id,
@@ -166,7 +158,6 @@ module.exports = {
 
                const notifikasi = await Notifikasi.findOne({invoiceId: shipment.invoice._id}).sort({createdAt: -1});
                if(now.setSeconds(0,0) == waktuMunculNotif.setSeconds(0,0)){
-                    console.log(`countdown => ${new Date(countdown_pengemasan_vendor)}`)
                     await Pengiriman.findOneAndUpdate({ _id: shipment._id }, { countdown_pengemasan_vendor: new Date(countdown_pengemasan_vendor) }, { new: true })
                     DetailNotifikasi.create({
                          notifikasiId: notifikasiDistri._id,

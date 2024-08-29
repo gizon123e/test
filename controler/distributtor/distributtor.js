@@ -20,14 +20,24 @@ const Vendor = require('../../models/vendor/model-vendor')
 const Supplier = require('../../models/supplier/model-supplier')
 const TokoSupplier = require('../../models/supplier/model-toko')
 const TokoProdusen = require('../../models/produsen/model-toko')
+const PoinHistory = require('../../models/model-poin')
 dotenv.config()
 
 module.exports = {
     getProfileDistributor: async (req, res, next) => {
         try {
-            const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
+            const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId").lean()
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
-
+            const poin = await PoinHistory.find({ userId: req.user.id });
+            dataDistributor.userId.poin = poin.length > 0 ?
+                poin
+                    .filter(pn => pn.jenis === "masuk")
+                    .reduce((acc, val) => acc + val.value, 0) -
+                poin
+                    .filter(pn => pn.jenis === "keluar")
+                    .reduce((acc, val) => acc + val.value, 0)
+                : 0
+            dataDistributor.userId.pin = dataDistributor.userId.pin ? "Ada" : null;
             const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
             const total_pesanan = pesanan.length
             const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak" || item.status_distributor === "Kadaluwarsa")
@@ -117,244 +127,6 @@ module.exports = {
         }
     },
 
-    // getDistributtorCariHargaTerenda: async (req, res, next) => {
-    //     try {
-    //         const { idAddress } = req.query
-    //         const { product = [] } = req.body
-
-    //         // const dataProduct = await Product.findOne({ _id: req.params.id }).populate('userId')
-    //         const userDetail = await User.findById(req.params.id).select('role')
-
-    //         let addressDetail;
-    //         switch (userDetail.role) {
-    //             case "vendor":
-    //                 addressDetail = await TokoVendor.findOne({ userId: req.params.id }).populate("address");
-    //                 break;
-    //             case "supplier":
-    //                 addressDetail = await TokoSupplier.findOne({ userId: req.params.id }).populate("address");
-    //                 break;
-    //             case "produsen":
-    //                 addressDetail = await TokoProdusen.findOne({ userId: req.params.id }).populate("address");
-    //                 break;
-    //         }
-
-    //         const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
-
-    //         let ukuranVolumeProduct = 0
-    //         let ukuranBeratProduct = 0
-    //         let hargaVolumeBeratProduct
-
-    //         for (let productId of product) {
-    //             const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
-    //             const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang
-    //             const volumeTotal = volume * productId.qty
-    //             ukuranVolumeProduct += volumeTotal
-
-    //             const berat = dataProduct.berat * productId.qty //gram
-    //             const beratProduct = dataProduct.berat * dataProduct.minimalOrder
-    //             // ukuranBeratProduct += berat
-    //             if (berat) {
-    //                 ukuranBeratProduct += berat
-    //             } else {
-    //                 ukuranBeratProduct += beratProduct
-    //             }
-    //         }
-
-    //         const ukuranVolumeMotor = 100 * 30 * 40
-
-    //         if (ukuranVolumeProduct <= ukuranVolumeMotor && ukuranBeratProduct > 30000) {
-    //             const total = ukuranBeratProduct / 1000
-    //             hargaVolumeBeratProduct = total
-    //         } else if (ukuranVolumeProduct <= ukuranVolumeMotor && ukuranBeratProduct <= 30000) {
-    //             const total = ukuranBeratProduct / 1000
-    //             hargaVolumeBeratProduct = total
-    //         } else if (ukuranVolumeProduct > ukuranVolumeMotor && ukuranBeratProduct > 30000) {
-    //             const beratVolume = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
-    //             const beratAktual = ukuranBeratProduct / 1000
-    //             if (beratVolume > beratAktual) {
-    //                 hargaVolumeBeratProduct = beratVolume
-    //             } else {
-    //                 hargaVolumeBeratProduct = beratAktual
-    //             }
-    //         } else {
-    //             const total = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
-    //             hargaVolumeBeratProduct = total
-    //         }
-
-    //         const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
-    //         const longDetail = parseFloat(addressDetail.address.pinAlamat.long)
-
-    //         const addressCustom = await Address.findById(idAddress)
-    //         const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
-    //         const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-    //         const ongkir = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
-
-    //         if (isNaN(ongkir)) {
-    //             return res.status(400).json({
-    //                 message: "Jarak antara konsumen dan vendor melebihi 100 km"
-    //             });
-    //         }
-
-    //         let dataAllDistributtor = []
-    //         const dataDistributtor = await Distributtor.find().populate("userId", '-password').populate('alamat_id')
-
-    //         if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
-
-    //         for (let distributor of dataDistributtor) {
-    //             const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
-    //             const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
-
-    //             const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latDetail, longDetail, 50);
-
-    //             if (Math.round(distance) < 50 && distance !== NaN) {
-
-    //                 const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id })
-    //                     .populate({
-    //                         path: "id_distributor",
-    //                         populate: "userId"
-    //                     })
-    //                     .populate("jenisKendaraan")
-    //                     .populate({
-    //                         path: "tarifId",
-    //                         populate: "jenis_kendaraan",
-    //                         populate: "jenis_jasa"
-    //                     })
-
-    //                 if (dataKendaraan.length > 0)
-    //                     for (let data of dataKendaraan) {
-    //                         const gratong = await Gratong.findOne({ tarif: data.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
-
-    //                         const jarakOngkir = Math.round(ongkir)
-    //                         if (jarakOngkir > 4) {
-    //                             let potongan_harga;
-    //                             let total_ongkir;
-
-    //                             const angkaJarak = jarakOngkir - 4
-    //                             const hargaKiloMeter = angkaJarak * data.tarifId.tarif_per_km
-    //                             let hargaOngkir = 0
-
-    //                             if (hargaVolumeBeratProduct > 1) {
-    //                                 const hargaVolume = hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg
-    //                                 hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) + hargaVolume
-    //                             } else {
-    //                                 hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) + dataBiayaTetap.biaya_per_kg
-    //                             }
-
-    //                             if (gratong) {
-    //                                 data.isGratong = true
-    //                                 switch (gratong.jenis) {
-    //                                     case "persentase":
-    //                                         potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
-    //                                         total_ongkir = hargaOngkir - potongan_harga
-    //                                         break;
-    //                                     case "langsung":
-    //                                         potongan_harga = hargaOngkir - gratong.nilai_gratong;
-    //                                         total_ongkir = hargaOngkir - potongan_harga;
-    //                                         break;
-    //                                 }
-    //                             } else {
-    //                                 data.isGratong = false
-    //                                 total_ongkir = hargaOngkir
-    //                             }
-
-    //                             dataAllDistributtor.push({
-    //                                 distributor: data,
-    //                                 ukuranBeratProduct,
-    //                                 ukuranVolumeProduct,
-    //                                 hargaOngkir,
-    //                                 jarakTempu: Math.round(distance),
-    //                                 potongan_harga,
-    //                                 total_ongkir: Math.round(total_ongkir)
-    //                             })
-    //                         } else {
-    //                             let potongan_harga;
-    //                             let total_ongkir;
-    //                             let hargaOngkir = 0
-
-    //                             if (hargaVolumeBeratProduct > 1) {
-    //                                 const hargaVolume = hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg
-    //                                 hargaOngkir = data.tarifId.tarif_dasar + hargaVolume
-    //                             } else {
-    //                                 hargaOngkir = data.tarifId.tarif_dasar + dataBiayaTetap.biaya_per_kg
-    //                             }
-
-    //                             if (gratong) {
-    //                                 data.isGratong = true
-    //                                 switch (gratong.jenis) {
-    //                                     case "persentase":
-    //                                         potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
-    //                                         total_ongkir = hargaOngkir - potongan_harga
-    //                                         break;
-    //                                     case "langsung":
-    //                                         potongan_harga = hargaOngkir - gratong.nilai_gratong;
-    //                                         total_ongkir = hargaOngkir - potongan_harga;
-    //                                         break;
-    //                                 }
-    //                             } else {
-    //                                 data.isGratong = false
-    //                                 total_ongkir = hargaOngkir
-    //                             }
-
-    //                             dataAllDistributtor.push({
-    //                                 distributor: data,
-    //                                 jarakTempu: Math.round(distance),
-    //                                 ukuranBeratProduct,
-    //                                 ukuranVolumeProduct,
-    //                                 hargaOngkir: Math.round(hargaOngkir),
-    //                                 total_ongkir: Math.round(total_ongkir),
-    //                                 potongan_harga
-    //                             })
-    //                         }
-    //                     }
-    //             }
-    //         }
-
-    //         const validate = dataAllDistributtor.filter(data =>
-    //             data.distributor.id_distributor.userId.isDetailVerified && data.distributor.id_distributor.userId.isVerifikasiDocument);
-
-    //         let validDistributors = []
-    //         for (let distributor of validate) {
-    //             const activeKendaraan = await KendaraanDistributor.find({ id_distributor: distributor.distributor.id_distributor._id, status: 'Aktif' })
-    //             const activePengemudi = await Pengemudi.find({ id_distributor: distributor.distributor.id_distributor._id, status: 'Aktif' })
-
-    //             if (activeKendaraan.length > 0 && activePengemudi.length > 0) {
-    //                 validDistributors.push(distributor)
-    //             }
-    //         }
-    //         let dataKendaraanHargaTermurah
-
-    //         if (validate.length > 0) {
-    //             if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-    //                 dataKendaraanHargaTermurah = validDistributors
-    //                     .filter((item) => item.distributor.jenisKendaraan.jenis !== 'Motor' && item.distributor.id_distributor.tolak_pesanan < 4)
-    //                     .sort((a, b) => a.total_ongkir - b.total_ongkir);
-    //             } else {
-    //                 dataKendaraanHargaTermurah = validDistributors
-    //                     .filter(item => item.distributor.id_distributor.tolak_pesanan < 4)
-    //                     .sort((a, b) => a.total_ongkir - b.total_ongkir);
-    //             }
-    //         }
-
-    //         const datas = dataKendaraanHargaTermurah[0]
-
-    //         res.status(200).json({
-    //             message: "success get data Distributtor",
-    //             datas: datas ? datas : {}
-    //         })
-
-    //     } catch (error) {
-    //         console.log(error)
-    //         if (error && error.name === 'ValidationError') {
-    //             return res.status(400).json({
-    //                 error: true,
-    //                 message: error.message,
-    //                 fields: error.fields
-    //             })
-    //         }
-    //         next(error)
-    //     }
-    // },
-
     getDistributtorCariHargaTerenda: async (req, res, next) => {
         try {
             const { idAddress } = req.query;
@@ -400,13 +172,24 @@ module.exports = {
 
             const ukuranVolumeMotor = 100 * 30 * 40;
             let hargaVolumeBeratProduct;
+
             if (ukuranVolumeProduct <= ukuranVolumeMotor && ukuranBeratProduct > 30000) {
-                hargaVolumeBeratProduct = ukuranBeratProduct / 1000;
+                const total = ukuranBeratProduct / 1000
+                hargaVolumeBeratProduct = total
+            } else if (ukuranVolumeProduct <= ukuranVolumeMotor && ukuranBeratProduct <= 30000) {
+                const total = ukuranBeratProduct / 1000
+                hargaVolumeBeratProduct = total
             } else if (ukuranVolumeProduct > ukuranVolumeMotor && ukuranBeratProduct > 30000) {
-                const beratVolume = ukuranVolumeProduct / dataBiayaTetap.constanta_volume;
-                hargaVolumeBeratProduct = Math.max(beratVolume, ukuranBeratProduct / 1000);
+                const beratVolume = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
+                const beratAktual = ukuranBeratProduct / 1000
+                if (beratVolume > beratAktual) {
+                    hargaVolumeBeratProduct = beratVolume
+                } else {
+                    hargaVolumeBeratProduct = beratAktual
+                }
             } else {
-                hargaVolumeBeratProduct = ukuranVolumeProduct / dataBiayaTetap.constanta_volume;
+                const total = ukuranVolumeProduct / dataBiayaTetap.constanta_volume
+                hargaVolumeBeratProduct = total
             }
 
             const [latDetail, longDetail] = [parseFloat(addressDetail.address.pinAlamat.lat), parseFloat(addressDetail.address.pinAlamat.long)];
@@ -435,8 +218,6 @@ module.exports = {
                     let hargaOngkir, total_ongkir, potongan_harga;
                     const jarakOngkir = Math.round(ongkir);
 
-                    console.log(data)
-
                     if (jarakOngkir > 4) {
                         const hargaKiloMeter = (jarakOngkir - 4) * data.tarifId.tarif_per_km;
                         hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar + (hargaVolumeBeratProduct > 1 ? hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg : dataBiayaTetap.biaya_per_kg);
@@ -463,42 +244,46 @@ module.exports = {
 
                     if (distributor.userId.isDetailVerified === true && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
                         if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                            dataAllDistributtor.push({
-                                distributor: {
-                                    id: distributor._id,
-                                    name: distributor.nama_distributor,
-                                    address: distributor.alamat_id.alamat,
-                                    npwp: distributor.npwp,
-                                    jenisKelamin: distributor.jenisKelamin,
-                                    imageProfile: distributor.imageProfile,
-                                    kendaraan: {
-                                        jenis: data.jenisKendaraan.jenis,
-                                        description: data.jenisKendaraan.description,
-                                        ukuran: data.jenisKendaraan.ukuran,
+                            if (data.jenisKendaraan.jenis === 'Mobil' || data.jenisKendaraan.jenis === 'Truk Box') {
+                                console.log('=============================================> 1', data.jenisKendaraan.jenis)
+                                dataAllDistributtor.push({
+                                    distributor: {
+                                        id: distributor._id,
+                                        name: distributor.nama_distributor,
+                                        address: distributor.alamat_id.alamat,
+                                        npwp: distributor.npwp,
+                                        jenisKelamin: distributor.jenisKelamin,
+                                        imageProfile: distributor.imageProfile,
+                                        kendaraan: {
+                                            id_kendaraan: data.jenisKendaraan._id,
+                                            jenis: data.jenisKendaraan.jenis,
+                                            description: data.jenisKendaraan.description,
+                                            ukuran: data.jenisKendaraan.ukuran,
+                                        },
+                                        tarif: {
+                                            id: data.tarifId._id,
+                                            dasar: data.tarifId.tarif_dasar,
+                                            per_km: data.tarifId.tarif_per_km,
+                                        },
+                                        userId: {
+                                            _id: distributor.userId._id,
+                                            isDetailVerified: distributor.userId.isDetailVerified,
+                                            role: distributor.userId.role,
+                                            isActive: distributor.userId.isActive,
+                                            isBlocked: distributor.userId.isBlocked,
+                                            isVerifikasiDocument: distributor.userId.isVerifikasiDocument
+                                        }
                                     },
-                                    tarif: {
-                                        dasar: data.tarifId.tarif_dasar,
-                                        per_km: data.tarifId.tarif_per_km,
-                                    },
-                                    userId: {
-                                        _id: distributor.userId._id,
-                                        isDetailVerified: distributor.userId.isDetailVerified,
-                                        role: distributor.userId.role,
-                                        isActive: distributor.userId.isActive,
-                                        isBlocked: distributor.userId.isBlocked,
-                                        isVerifikasiDocument: distributor.userId.isVerifikasiDocument
-                                    }
-                                },
-                                jarakTempu: Math.round(distance),
-                                ukuranBeratProduct,
-                                ukuranVolumeProduct,
-                                hargaOngkir: Math.round(hargaOngkir),
-                                total_ongkir: Math.round(total_ongkir),
-                                potongan_harga
-                            });
+                                    jarakTempu: Math.round(distance),
+                                    ukuranBeratProduct,
+                                    ukuranVolumeProduct,
+                                    hargaOngkir: Math.round(hargaOngkir),
+                                    total_ongkir: Math.round(total_ongkir),
+                                    potongan_harga
+                                });
+                            }
                         } else {
-
-                            console.log(data.jenisKendaraan.jenis)
+                            console.log('=============================================> 2', data.jenisKendaraan.jenis)
                             dataAllDistributtor.push({
                                 distributor: {
                                     id: distributor._id,
@@ -508,11 +293,13 @@ module.exports = {
                                     jenisKelamin: distributor.jenisKelamin,
                                     imageProfile: distributor.imageProfile,
                                     kendaraan: {
+                                        id_kendaraan: data.jenisKendaraan._id,
                                         jenis: data.jenisKendaraan.jenis,
                                         description: data.jenisKendaraan.description,
                                         ukuran: data.jenisKendaraan.ukuran,
                                     },
                                     tarif: {
+                                        id: data.tarif._id,
                                         dasar: data.tarifId.tarif_dasar,
                                         per_km: data.tarifId.tarif_per_km,
                                     },
@@ -537,9 +324,18 @@ module.exports = {
                 }));
             }));
 
+            dataAllDistributtor.sort((a, b) => {
+                if (a.total_ongkir === b.total_ongkir) {
+                    return a.jarakTempu - b.jarakTempu;
+                }
+                return a.total_ongkir - b.total_ongkir;
+            });
+
+            const data = dataAllDistributtor[0]
+
             res.status(200).json({
                 message: "Success get data Distributtor",
-                distributor: dataAllDistributtor,
+                distributor: data,
             });
 
         } catch (error) {

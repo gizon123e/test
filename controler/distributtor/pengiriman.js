@@ -82,7 +82,8 @@ module.exports = {
                 id_jenis_kendaraan,
                 jenis_pengiriman: id_jenis_layanan,
                 potongan_ongkir,
-                ongkir: parseInt(ongkir) - parseInt(potongan_ongkir)
+                total_ongkir: parseInt(ongkir) - parseInt(potongan_ongkir),
+                ongkir: parseInt(ongkir)
             })
 
             res.status(200).json({ message: "update data success" })

@@ -19,6 +19,7 @@ const { io } = require("socket.io-client");
 const BiayaTetap = require('../models/model-biaya-tetap');
 const Distributtor = require('../models/distributor/model-distributor');
 const ProsesPengirimanDistributor = require('../models/distributor/model-proses-pengiriman');
+const PoinHistory = require("../models/model-poin")
 
 dotenv.config();
 
@@ -121,15 +122,10 @@ module.exports = {
                             status: "Berlangsung",
                             items
                         })
-                    )
+                    );
 
-                    if (pesanan.poinTerpakai) {
-                        user = await User.findByIdAndUpdate(pesanan.userId, {
-                            $inc: { poin: -pesanan.poinTerpakai }
-                        });
-                    } else {
-                        user = await User.findById(pesanan.userId)
-                    }
+                    user = await User.findById(pesanan.userId)
+
                     const transaksi = await Transaksi.findOneAndUpdate({ id_pesanan: pesanan._id, subsidi: false }, { status: "Pembayaran Berhasil" })
                     const invoiceTambahan = await Invoice.exists({id_transaksi: transaksi._id}).select('_id kode_invoice')
                     const pengiriman = await Pengiriman.find({invoice: invoiceTambahan._id})
@@ -170,7 +166,17 @@ module.exports = {
                             tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
                         })
 
-                        const proses = await ProsesPengirimanDistributor.findOne({kode_pengiriman: pgr.kode_pengiriman})
+                        const proses = await ProsesPengirimanDistributor.findOneAndUpdate(
+                            {kode_pengiriman: pgr.kode_pengiriman},
+                            {
+                                $inc: {
+                                    tarif_pengiriman: pgr.total_ongkir
+                                }
+                            },
+                            {
+                                new: true
+                            }
+                        )
                         for(const prd of pgr.productToDelivers){
                             if(proses){
                                 const index = proses.produk_pengiriman.findIndex(prod => prod._id === prd._id)
@@ -199,6 +205,16 @@ module.exports = {
                         pesananId: pesanan._id,
                     }).lean()
 
+                    if(pesanan.poinTerpakai){
+                        promisesFunct.push(
+                            PoinHistory.create({
+                                userId: user._id,
+                                jenis: "keluar",
+                                value: pesanan.poinTerpakai,
+                                from: dataProd.dataProduct
+                            })
+                        )
+                    }
                     const ids = dataProd.dataProduct.map(prod =>{
                         return prod._id
                     })

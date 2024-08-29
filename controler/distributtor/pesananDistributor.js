@@ -153,9 +153,11 @@ module.exports = {
             }
             const mergedProduct = Object.keys(foundedProduct).map(key => foundedProduct[key])
             const finalData = Object.keys(pengiriman).map(key => {
-                const { waktu_pengiriman, ...restOfPgr } = pengiriman[key]
+                let { waktu_pengiriman, createdAt, updatedAt, orderId, ...restOfPgr } = pengiriman[key]
                 return {
                     ...restOfPgr,
+                    orderId,
+                    createdAt: orderId.createdAt.getTime() !== orderId.updatedAt.getTime() ? orderId.updatedAt : orderId.createdAt,
                     waktu_pengiriman: new Date(waktu_pengiriman),
                     products: mergedProduct.filter(prod => prod.storeId === key)
                 }
@@ -194,7 +196,6 @@ module.exports = {
                 // await Distributtor.findByIdAndUpdate({ _id: order.distributorId }, { nilai_pinalti: jumlahPinalti }, { new: true })
             }
 
-            console.log(`${orders.length} orders updated to "Kadaluwarsa".`);
         } catch (error) {
             console.error('Error updating order statuses:', error);
         }
@@ -291,7 +292,7 @@ module.exports = {
                     orderId: data.orderId,
                     detailBuyer,
                     id_toko: data.id_toko,
-                    waktu_pengiriman: data.waktu_pengiriman,
+                    waktu_pengiriman: new Date(data.waktu_pengiriman),
                     jenis_pengiriman: data.jenis_pengiriman,
                     total_ongkir: data.total_ongkir,
                     id_jenis_kendaraan: data.id_jenis_kendaraan,
@@ -509,7 +510,6 @@ module.exports = {
                 await Distributtor.updateOne({ _id: id._id }, { tolak_pesanan: 0 })
             }
 
-            console.log(`${dataRisertAnkaPelanggaran.length} distributor violations reset to 0.`);
         } catch (error) {
             console.error('Error updating pelanggaran distributor statuses:', error);
         }
