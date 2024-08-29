@@ -163,7 +163,7 @@ module.exports = {
 
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
-            distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
+            distance = await await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
 
             if (isNaN(distance)) {
                 return res.status(400).json({

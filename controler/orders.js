@@ -2606,7 +2606,7 @@ module.exports = {
         const latKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.lat);
         const longKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.long);
 
-        const jarakTempuh = calculateDistance(latTokoVendor, longTokoVendor, latKonsumen, longKonsumen, 100).toFixed(2);
+        const jarakTempuh = await calculateDistance(latTokoVendor, longTokoVendor, latKonsumen, longKonsumen, 100).toFixed(2);
 
         const waktuPengiriman = (jarakTempuh / avgKecepatan) * 3600;
         const waktuPengemasan = totalQuantity * avgPengemasan * 60;

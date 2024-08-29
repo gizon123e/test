@@ -202,8 +202,8 @@ module.exports = {
                     break;
             }
 
-            const data = toko.filter(toko => {
-                const jarak = calculateDistance(
+            const data = toko.filter(async(toko) => {
+                const jarak = await calculateDistance(
                     parseFloat(toko.address_detail.pinAlamat.lat),
                     parseFloat(toko.address_detail.pinAlamat.long),
                     parseFloat(address_user.pinAlamat.lat),

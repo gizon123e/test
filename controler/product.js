@@ -210,7 +210,7 @@ module.exports = {
       let sellerDalamRadius = [];
 
       for (let i = 0; i < sellers.length; i++) {
-        const distance = calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
+        const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
         if (distance <= biayaTetap.radius) {
           sellerDalamRadius.push(sellers[i]);
           sellers[i].jarakVendor = distance;
@@ -430,7 +430,7 @@ module.exports = {
       const latalamatDefault = parseFloat(alamatDefault.pinAlamat.lat);
 
       const sellerDalamRadius = sellers.filter(async(seller)=> {
-        const distance = await calculateDistance(latalamatDefault, longalamatDefault, parseFloat(seller.address.pinAlamat.lat), parseFloat(seller.address.pinAlamat.long), biayaTetap.radius);
+        const distance = await await calculateDistance(latalamatDefault, longalamatDefault, parseFloat(seller.address.pinAlamat.lat), parseFloat(seller.address.pinAlamat.long), biayaTetap.radius);
         if (!isNaN(distance)) {
           return seller;
         } else {
