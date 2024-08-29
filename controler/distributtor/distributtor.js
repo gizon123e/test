@@ -405,7 +405,7 @@ module.exports = {
                 const addressCustom = await Address.findById(addressId);
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat).toFixed(7);
                 const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long).toFixed(7);
-                jarakVendorKonsumen = await await calculateDistance(
+                jarakVendorKonsumen = await calculateDistance(
                     parseFloat(latitudeAddressCustom),
                     parseFloat(longitudeAddressCustom),
                     parseFloat(latitudeVendor),
@@ -413,7 +413,7 @@ module.exports = {
                     100
                 );
             } else {
-                jarakVendorKonsumen = await await calculateDistance(
+                jarakVendorKonsumen = await calculateDistance(
                     parseFloat(latDetail),
                     parseFloat(longDetail),
                     parseFloat(latitudeVendor),
@@ -445,7 +445,7 @@ module.exports = {
                 const latitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.lat);
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long);
 
-                const distance = await await calculateDistance(
+                const distance = await calculateDistance(
                     latitudeDistributtor,
                     longitudeDistributtor,
                     latitudeVendor,
@@ -529,7 +529,7 @@ module.exports = {
                 const latitudeToko2 = parseFloat(toko2.address.pinAlamat.lat)
                 const longitudeToko2 = parseFloat(toko2.address.pinAlamat.long)
 
-                const jarak = await await calculateDistance(latitudeToko1, longitudeToko1, latitudeToko2, longitudeToko2, 200);
+                const jarak = await calculateDistance(latitudeToko1, longitudeToko1, latitudeToko2, longitudeToko2, 200);
                 if (isNaN(jarak)) {
                     return res.status(400).json({
                         message: "Jarak antara toko 1 dan toko 2 melebihi 5 km"
@@ -548,7 +548,7 @@ module.exports = {
                     const latitudeToko = parseFloat(toko.address.pinAlamat.lat)
                     const longitudeToko = parseFloat(toko.address.pinAlamat.long)
 
-                    const jarak = await await calculateDistance(parseFloat(addressCustom.pinAlamat.lat), parseFloat(addressCustom.pinAlamat.long), latitudeToko, longitudeToko, 100);
+                    const jarak = await calculateDistance(parseFloat(addressCustom.pinAlamat.lat), parseFloat(addressCustom.pinAlamat.long), latitudeToko, longitudeToko, 100);
                     if (Math.round(jarak) < 100 && jarak !== NaN) {
                         tokoVendor.push(toko)
                     }
@@ -567,7 +567,7 @@ module.exports = {
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
                 for (let itemToko of tokoVendor) {
-                    const distance = await await calculateDistance(latitudeDistributtot, longitudeDistributtor, parseFloat(itemToko.address.pinAlamat.lat), parseFloat(itemToko.address.pinAlamat.long), 50);
+                    const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, parseFloat(itemToko.address.pinAlamat.lat), parseFloat(itemToko.address.pinAlamat.long), 50);
 
                     if (Math.round(distance) < 50 && distance !== NaN) {
                         const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
@@ -646,7 +646,7 @@ module.exports = {
                 const addressCustom = await Address.findById(addressId)
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
                 const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-                const jarakVendorKonsumen = await await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+                const jarakVendorKonsumen = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
 
                 console.log(jarakVendorKonsumen)
 
@@ -656,7 +656,7 @@ module.exports = {
                     });
                 }
             } else {
-                const jarakVendorKonsumen = await await calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+                const jarakVendorKonsumen = await calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
                         message: "Jarak antara konsumen dan vendor melebihi 100 km"
@@ -679,7 +679,7 @@ module.exports = {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
-                const distance = await await calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+                const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
                     const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
