@@ -8,7 +8,7 @@ const varianSchema = new mongoose.Schema({
   _id: false,
   nama_varian: {
     type: String,
-    enum: ["Level(Pedas)", "Rasa", "Topping"]
+    enum: ["Level (Pedas)", "Rasa", "Topping"]
   },
   nilai_varian: [
     {

@@ -11,6 +11,8 @@ const Follower = require('../../models/model-follower');
 const ProductPerformanceReport = require('../../models/model-laporan-kinerja-product');
 const Wishlist = require('../../models/model-wishlist');
 const TokoProdusen = require('../../models/produsen/model-toko');
+const merginPengirimanId = require('../../utils/merginPengirimanId');
+
 
 
 module.exports = {
@@ -246,14 +248,14 @@ module.exports = {
     getAllProsesPengiriman: async (req, res, next) => {
         try {   
             const { status } = req.query
-            const toko = await TokoVendor.findOne({userId: req.user.id})
+            const toko = await TokoProdusen.findOne({userId: req.user.id})
             const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ tokoId: toko._id, status_distributor: { $ne: "Belum dijemput"} })
                 .populate({
                     path: "tokoId",
                     populate: "address"
                 })
                 .populate({
-                    path: "sekolahId",
+                    path: "buyerId",
                     populate: "address"
                 })
                 .populate("jenisPengiriman")
@@ -268,7 +270,7 @@ module.exports = {
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
             const data = dataProsesPengirimanDistributor.map(pgr => {
-                const { waktu_pengiriman, status_distributor, ...restOfPgr } = pgr
+                const { waktu_pengiriman, status_distributor, pengirimanId, ...restOfPgr } = pgr
                 const generateStatus = () => {
                     
                     if(status_distributor === "Sedang dijemput"){
@@ -291,6 +293,7 @@ module.exports = {
                 return {
                     ...restOfPgr,
                     status_distributor: generateStatus(),
+                    pengirimanId: merginPengirimanId(pengirimanId),
                     waktu_pengiriman: new Date(waktu_pengiriman)
                 }
             })
