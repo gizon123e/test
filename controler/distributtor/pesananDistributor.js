@@ -169,7 +169,7 @@ module.exports = {
         }
     },
 
-    updateOrderStatuses: async () => {
+    updateOrderStatuses: async (req, res, next) => {
         try {
             const currentTime = new Date();
 
@@ -198,6 +198,7 @@ module.exports = {
 
         } catch (error) {
             console.error('Error updating order statuses:', error);
+            next(error)
         }
     },
 
