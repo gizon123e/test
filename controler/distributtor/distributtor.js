@@ -201,7 +201,7 @@ module.exports = {
             const dataAllDistributtor = []
             await Promise.all(dataDistributtor.map(async distributor => {
                 const [latitudeDistributtot, longitudeDistributtor] = [parseFloat(distributor.alamat_id.pinAlamat.lat), parseFloat(distributor.alamat_id.pinAlamat.long)];
-                const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latDetail, longDetail, 50);
+                const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latDetail, longDetail, 50, distributor);
 
                 if (Math.round(distance) >= 50 || isNaN(distance)) return null;
 
@@ -245,7 +245,7 @@ module.exports = {
                     if (distributor.userId.isDetailVerified === true && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
                         if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
                             if (data.jenisKendaraan.jenis === 'Mobil' || data.jenisKendaraan.jenis === 'Truk Box') {
-                                console.log('=============================================> 1', data.jenisKendaraan.jenis)
+                                // console.log('=============================================> 1', data.jenisKendaraan.jenis)
                                 dataAllDistributtor.push({
                                     distributor: {
                                         id: distributor._id,
@@ -283,7 +283,7 @@ module.exports = {
                                 });
                             }
                         } else {
-                            console.log('=============================================> 2', data.jenisKendaraan.jenis)
+                            // console.log('=============================================> 2', data.jenisKendaraan.jenis)
                             dataAllDistributtor.push({
                                 distributor: {
                                     id: distributor._id,

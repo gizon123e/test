@@ -9,8 +9,13 @@ module.exports = {
         try {
             const { id_toko, id_distributor, pengirimanId, id_sekolah } = req.params;
 
-            const konsumen = await Sekolah.findOne({ userId: req.user.id, _id: id_sekolah })
-            if (!konsumen) return res.status(404).json({ message: 'konsumen tidak ada' })
+            if (req.user.role === 'konsumen') {
+                const konsumen = await Sekolah.findOne({ userId: req.user.id, _id: id_sekolah })
+                if (!konsumen) return res.status(404).json({ message: 'konsumen tidak ada' })
+            } else {
+                const konsumen = await Sekolah.findOne({ userId: req.user.id, _id: id_sekolah })
+                if (!konsumen) return res.status(404).json({ message: 'konsumen tidak ada' })
+            }
 
             const pengiriman = await ProsesPengirimanDistributor.findOne({ pengirimanId: pengirimanId })
             if (!pengiriman) return res.status(404).json({ message: "pengiriman id not found" })
