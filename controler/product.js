@@ -409,8 +409,8 @@ module.exports = {
             },
           ]);
           break;
-        default:
-          sellers = await TokoSupplier.aggregate([
+        case "supplier":
+          sellers = await TokoProdusen.aggregate([
             {
               $lookup: {
                 from: "addresses",
@@ -475,7 +475,7 @@ module.exports = {
           $lookup: {
             from: "suppliers",
             let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "supplierData",
           },
         },
@@ -483,7 +483,7 @@ module.exports = {
           $lookup: {
             from: "produsens",
             let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "produsenDatas",
           },
         },
