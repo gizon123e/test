@@ -429,14 +429,15 @@ module.exports = {
       const longalamatDefault = parseFloat(alamatDefault.pinAlamat.long);
       const latalamatDefault = parseFloat(alamatDefault.pinAlamat.lat);
 
-      const sellerDalamRadius = sellers.filter((seller => {
-        const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(seller.address.pinAlamat.lat), parseFloat(seller.address.pinAlamat.long), biayaTetap.radius);
+      const sellerDalamRadius = sellers.filter(async(seller)=> {
+        const distance = await calculateDistance(latalamatDefault, longalamatDefault, parseFloat(seller.address.pinAlamat.lat), parseFloat(seller.address.pinAlamat.long), biayaTetap.radius);
         if (!isNaN(distance)) {
           return seller;
         } else {
           return null;
         } 
-      }));
+      });
+
 
       const idVendors = sellerDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
 
