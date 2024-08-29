@@ -351,6 +351,7 @@ module.exports = {
     getAllDistributtor: async (req, res, next) => {
         try {
             const { name, addressId } = req.query;
+            const biayaTetap = await BiayaTetap.findOne({})
             const { product = [] } = req.body;
 
             const ukuranVolumeMotor = 100 * 30 * 40;
@@ -411,7 +412,7 @@ module.exports = {
                     parseFloat(longitudeAddressCustom),
                     parseFloat(latitudeVendor),
                     parseFloat(longitudeVendor),
-                    100
+                    biayaTetap.radius
                 );
             } else {
                 jarakVendorKonsumen = await calculateDistance(
@@ -419,13 +420,13 @@ module.exports = {
                     parseFloat(longDetail),
                     parseFloat(latitudeVendor),
                     parseFloat(longitudeVendor),
-                    100
+                    biayaTetap.radius
                 );
             }
 
             if (isNaN(jarakVendorKonsumen)) {
                 return res.status(400).json({
-                    message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                    message: `Jarak antara konsumen dan vendor melebihi ${biayaTetap.radius} km`
                 });
             }
 
@@ -451,10 +452,10 @@ module.exports = {
                     longitudeDistributtor,
                     latitudeVendor,
                     longitudeVendor,
-                    50
+                    biayaTetap.radius
                 );
 
-                if (Math.round(distance) < 50 && !isNaN(distance)) {
+                if (Math.round(distance) < biayaTetap.radius && !isNaN(distance)) {
                     const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
                         .populate({
                             path: "id_distributor",
