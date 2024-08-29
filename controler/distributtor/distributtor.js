@@ -21,6 +21,7 @@ const Supplier = require('../../models/supplier/model-supplier')
 const TokoSupplier = require('../../models/supplier/model-toko')
 const TokoProdusen = require('../../models/produsen/model-toko')
 const PoinHistory = require('../../models/model-poin')
+const cekLokasiLatLog = require('../../utils/cek-alamat')
 dotenv.config()
 
 module.exports = {
@@ -759,6 +760,8 @@ module.exports = {
         try {
             const { nama_distributor, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat, userId, npwp, nik, nomorAkta, noTelepon } = req.body
 
+            // cekLokasiLatLog()
+
             const validateDistributor = await Distributtor.findOne({ userId })
             if (validateDistributor) return res.status(400).json({ message: "User ini sudah memiliki data detail Distributor", data: validateDistributor });
             const address = {
@@ -772,7 +775,8 @@ module.exports = {
                     long: long_pin_alamat,
                     lat: lat_pin_alamat
                 },
-                isMain: true
+                isMain: true,
+                isUsed: true
             };
 
             const newAddress = await Address.create({ ...address, userId });
