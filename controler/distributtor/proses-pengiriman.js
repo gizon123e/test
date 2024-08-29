@@ -48,7 +48,9 @@ module.exports = {
       let query = { distributorId: distributor._id };
 
       if (status) {
-        query.status_distributor = status;
+        query.status_distributor = {
+          $regex: new RegExp(`${status}`, 'i')
+        };
       }
 
       const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find(query)
