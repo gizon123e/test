@@ -175,7 +175,7 @@ module.exports = {
                     toko = await ReviewProdusen.find({ id_produk });
                     break;
             };
-
+            if (toko.length === 0) return res.status(400).json({ message: `belom ada yang reviews di toko vendor produk id ini ${id_produk}` })
             const nilai_pengemasan = toko.filter(review => review.nilai_pengemasan && review.nilai_pengemasan !== 0)
             const nilai_kualitas = toko.filter(review => review.nilai_kualitas && review.nilai_kualitas !== 0)
             const nilai_keberhasilan = toko.filter(review => review.nilai_keberhasilan && review.nilai_keberhasilan !== 0)

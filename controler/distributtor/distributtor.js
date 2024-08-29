@@ -443,8 +443,8 @@ module.exports = {
             }
 
             const distributorPromises = dataDistributtor.map(async (distributor) => {
-                const latitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.lat);
-                const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long);
+                const latitudeDistributtor = parseFloat(distributor?.alamat_id?.pinAlamat?.lat);
+                const longitudeDistributtor = parseFloat(distributor?.alamat_id?.pinAlamat?.long);
 
                 const distance = await calculateDistance(
                     latitudeDistributtor,
