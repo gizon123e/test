@@ -18,6 +18,7 @@ const dotenv = require('dotenv')
 const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
 const User = require('../../models/model-auth-user')
 const TokoSupplier = require('../../models/supplier/model-toko')
+const TokoProdusen = require('../../models/produsen/model-toko')
 dotenv.config()
 
 module.exports = {
@@ -148,7 +149,7 @@ module.exports = {
                     addressDetail = await TokoSupplier.findOne({ userId: userId }).populate('address');
                     break
                 default:
-                    addressDetail = await TokoSupplier.findOne({ userId: userId }).populate('address');
+                    addressDetail = await TokoProdusen.findOne({ userId: userId }).populate('address');
                     break
             }
             const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
