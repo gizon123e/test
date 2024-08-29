@@ -202,26 +202,31 @@ module.exports = {
                     break;
             }
 
-            const data = toko.filter(toko => {
-                const jarak = calculateDistance(
-                    parseFloat(toko.address_detail.pinAlamat.lat),
-                    parseFloat(toko.address_detail.pinAlamat.long),
-                    parseFloat(address_user.pinAlamat.lat),
-                    parseFloat(address_user.pinAlamat.long),
-                    biayaTetap.radius
-                )
-                return !isNaN(jarak);
-            })
-            .map(toko => {
-                const { namaToko, profile_pict, userId } = toko
-                return {
-                    namaToko,
-                    profile_pict,
-                    userId
-                }
-            })
+            const data = await Promise.all(
+                toko.map(async (toko) => {
+                    const jarak = await calculateDistance(
+                        parseFloat(toko.address_detail.pinAlamat.lat),
+                        parseFloat(toko.address_detail.pinAlamat.long),
+                        parseFloat(address_user.pinAlamat.lat),
+                        parseFloat(address_user.pinAlamat.long),
+                        biayaTetap.radius
+                    );
+                    if (!isNaN(jarak)) {
+                        const { namaToko, profile_pict, userId } = toko;
+                        return {
+                            namaToko,
+                            profile_pict,
+                            userId
+                        };
+                    }
+                    return null; // Jika tidak memenuhi syarat, return null
+                })
+            );
+            
+            // Filter hasil untuk menghilangkan nilai null
+            const filteredData = data.filter(toko => toko !== null);
 
-            return res.status(200).json({ datas, toko: data })
+            return res.status(200).json({ datas, toko: filteredData })
         } catch (error) {
             console.log(error);
             next(error)

@@ -373,7 +373,7 @@ module.exports = {
             
             let jarak = null;
             if (userLat && userLong && tokoLat && tokoLong) {
-              jarak = calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
+              jarak = await calculateDistance(userLat, userLong, tokoLat, tokoLong, biayaTetap.radius);
             }
       
             // Return the toko object if it meets the conditions

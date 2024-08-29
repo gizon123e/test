@@ -195,7 +195,7 @@ module.exports = {
             const [latDetail, longDetail] = [parseFloat(addressDetail.address.pinAlamat.lat), parseFloat(addressDetail.address.pinAlamat.long)];
             const [latitudeAddressCustom, longitudeAddressCustom] = [parseFloat(addressCustom.pinAlamat.lat), parseFloat(addressCustom.pinAlamat.long)];
 
-            const ongkir = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
+            const ongkir = await await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
             if (isNaN(ongkir)) return res.status(400).json({ message: "Jarak antara konsumen dan vendor melebihi 100 km" });
 
             const dataAllDistributtor = []
