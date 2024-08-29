@@ -2888,6 +2888,16 @@ module.exports = {
       }
       await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { isBuyerAccepted: true });
       if (invoice.length == 1) {
+        if(req.user.role !== "konsumen"){
+          promisesFunction.push(
+            PoinHistory.create({
+              userId: req.user.id,
+              jenis: "masuk",
+              value: biayaTetap.poinPembelian,
+              from
+            })
+          )
+        }
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         DetailNotifikasi.create({
           notifikasiId: notifikasi._id,
@@ -2910,14 +2920,16 @@ module.exports = {
         });
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       } else {
-        promisesFunction.push(
-          PoinHistory.create({
-            userId: req.user.id,
-            jenis: "masuk",
-            value: biayaTetap.poinPembelian,
-            from
-          })
-        )
+        if(req.user.role === "konsumen"){
+          promisesFunction.push(
+            PoinHistory.create({
+              userId: req.user.id,
+              jenis: "masuk",
+              value: biayaTetap.poinPembelian,
+              from
+            })
+          )
+        }
         for (const item of invoice) {
           const notifikasi = await Notifikasi.findOne({ invoiceId: item.invoice._id });
           DetailNotifikasi.create({

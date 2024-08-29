@@ -19,9 +19,7 @@ async function flash_sale_checker(){
                 { $set: { isFlashSale: false } }
             );
     
-            console.log('Produk berhasil diperbarui.');
         } else {
-            console.log('Tidak ada flashSale yang ditemukan.');
         }
     } catch (error) {
         console.log(error)
