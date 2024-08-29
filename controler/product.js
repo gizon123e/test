@@ -429,16 +429,14 @@ module.exports = {
       const longalamatDefault = parseFloat(alamatDefault.pinAlamat.long);
       const latalamatDefault = parseFloat(alamatDefault.pinAlamat.lat);
 
-      let sellerDalamRadius = [];
-
-      for (let i = 0; i < sellers.length; i++) {
-        const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
-        if (distance <= biayaTetap.radius) {
-          sellerDalamRadius.push(sellers[i]);
-          console.log(sellers[i].namaToko)
-          sellers[i].jarakVendor = distance;
-        }
-      }
+      const sellerDalamRadius = sellers.filter((seller => {
+        const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(seller.address.pinAlamat.lat), parseFloat(seller.address.pinAlamat.long), biayaTetap.radius);
+        if (!isNaN(distance)) {
+          return seller;
+        } else {
+          return null;
+        } 
+      }));
 
       const idVendors = sellerDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
 
@@ -453,17 +451,17 @@ module.exports = {
         {
           $project: { id_main_category: 0, id_sub_category: 0, categoryId: 0 },
         },
-        {
-          $lookup: {
-            from: "users",
-            let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, { $project: { _id: 1, role: 1 } }],
-            as: "userData",
-          },
-        },
-        {
-          $unwind: "$userData",
-        },
+        // {
+        //   $lookup: {
+        //     from: "users",
+        //     let: { userId: "$userId" },
+        //     pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, { $project: { _id: 1, role: 1 } }],
+        //     as: "userData",
+        //   },
+        // },
+        // {
+        //   $unwind: "$userData",
+        // },
         {
           $lookup: {
             from: "tokovendors",
@@ -534,13 +532,18 @@ module.exports = {
           },
         },
         {
-          $unwind: "$terjual",
+          $unwind: {
+            path: "$terjual",
+            preserveNullAndEmptyArrays: true
+          },
         },
         {
           $addFields: {
             terjual: {
               $reduce: {
-                input: "$terjual.track",
+                input: {
+                  $ifNull: ["$terjual.track", []], // Jika `terjual` null, maka gunakan array kosong
+                },
                 initialValue: 0,
                 in: {
                   $add: ["$$value", "$$this.soldAtMoment"],
@@ -551,9 +554,6 @@ module.exports = {
         },
         {
           $project: { alamatToko: 0 },
-        },
-        {
-          $project: { userData: 0 },
         },
         {
           $sort: { poin_review: -1 },
