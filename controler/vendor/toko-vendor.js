@@ -16,6 +16,7 @@ const mergeObjectsByStoreId = require('../../utils/merginPengirimanId')
 const { io } = require("socket.io-client");
 const SellerPerformanceReport = require('../../models/model-laporan-kinerja-toko');
 const Wishlist = require('../../models/model-wishlist');
+const correctInvalidDate = require("../../utils/correctInvalidDate")
 const ProductPerformanceReport = require('../../models/model-laporan-kinerja-product');
 dotenv.config()
 const socket = io("https://staging-backend.superdigitalapps.my.id/", {
@@ -23,22 +24,6 @@ const socket = io("https://staging-backend.superdigitalapps.my.id/", {
       fromServer: true,
     },
 });
-
-function correctInvalidDate(dateString) {
-    const date = new Date(dateString);
-
-    // If the provided date rolls over to the next month, it means the original date was invalid
-    if (date.getDate() !== parseInt(dateString.split('-')[2])) {
-        const year = date.getFullYear();
-        const month = date.getMonth(); // months are zero-indexed, so +1
-        const lastDayOfMonth = new Date(year, month, 0).getDate(); // 0 day of the next month gives the last day of the current month
-
-        return `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}T00:00:00.000Z`;
-    }
-
-    // Return the original date as an ISO string with UTC timezone if it's valid
-    return date.toISOString().split('T')[0] + 'T00:00:00.000Z';
-}
 
 module.exports = {
     createToko: async(req, res, next) => {

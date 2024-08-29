@@ -311,6 +311,122 @@ module.exports = {
         }
     },
 
+    getRingkasan: async(req, res, next) => {    
+        try {
+            const toko = await TokoProdusen.exists({userId: req.user.id});
+            const kunjungan_toko = await SellerPerformanceReport.countDocuments({tokoId: toko._id});
+            const products = (await Product.find({userId: req.user.id}).lean()).map(prd => prd._id);
+            let total_produk = 0;
+            let total_quantity = 0;
+            const addedProduct = new Set()
+            const total_penjualan = await SalesReport.find({productId: { $in: products }}).lean()
+            for(sp of total_penjualan){
+                total_quantity += sp.track.reduce((acc, val) => {
+                    if(!addedProduct.has(sp.productId)){
+                        total_produk += 1;
+                        addedProduct.add(sp.productId)
+                    }
+                    return acc + val.soldAtMoment
+                }, 0)
+            };
+            const tayangan_product = await ProductPerformanceReport.countDocuments({productId: { $in: products}})
+            const total_wishlist = await Wishlist.countDocuments({productId: { $in: products }});
+
+            return res.status(200).json({ message: "Berhasil menampilkan ringkasan", kunjungan_toko, total_penjualan: { total_produk, total_quantity }, daftar_keinginan: total_wishlist, tayangan_product })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    grafikPerforma: async(req, res, next) => {
+        try {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+
+            const {
+                dateStart = today.setHours(0, 0, 0, 0), 
+                dateEnd = tomorrow.setHours(0, 0, 0, 0) 
+            } = req.query;
+
+            const startDate = new Date(correctInvalidDate(dateStart));
+            const endDate = new Date(correctInvalidDate(dateEnd));
+
+            const products = (await Product.find({ userId: req.user.id }).lean()).map(prd => prd._id);
+
+            const kunjungan_produk = await ProductPerformanceReport.aggregate([
+                {
+                    $match: {
+                        productId: { $in: products },
+                        createdAt: {
+                            $gte: startDate,
+                            $lte: endDate
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: { _id: 1 }
+                }
+            ]);
+
+            const results = [];
+            let currentDate = new Date(startDate);
+            
+            while (currentDate <= endDate) {
+                const formattedDate = currentDate.toISOString().split('T')[0];
+                const found = kunjungan_produk.find(k => k._id === formattedDate);
+                results.push({
+                    _id: formattedDate,
+                    count: found ? found.count : 0
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return res.status(200).json({ message: "Berhasil menampilkan grafik performa", data: results });
+
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getProdukPopuler: async(req, res, next) => {
+        try {
+            const products = await Product.find({userId: req.user.id}).select("_id image_product name_product total_stok total_price").lean();
+            const datas = await Promise.all(products.map(async(prod)=> {
+                const report = await SalesReport.findOne({productId: prod._id}).lean();
+                const klik = await ProductPerformanceReport.countDocuments({productId: prod._id})
+                const total_terjual = report ? report.track.reduce((acc, val) => acc + val.soldAtMoment, 0) : 0;
+                return {
+                    ...prod,
+                    total_terjual,
+                    klik
+                }
+            }))
+
+            datas.sort((a, b) => {
+                if (b.total_terjual === a.total_terjual) {
+                    return b.klik - a.klik;
+                }
+                return b.total_terjual - a.total_terjual;
+            });
+
+            return res.status(200).json({message: "berhasil mendapatkan produk populer",datas})
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    },
+
     getNotifUpload: async(req, res, next) => {
         try{
             const dataToko = await Toko.findOne({userId: req.user.id}).populate('address');
