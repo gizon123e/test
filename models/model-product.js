@@ -8,6 +8,7 @@ const varianSchema = new mongoose.Schema({
   _id: false,
   nama_varian: {
     type: String,
+    enum: ["Level(Pedas)", "Rasa", "Topping"]
   },
   nilai_varian: [
     {
@@ -21,7 +22,16 @@ const varianSchema = new mongoose.Schema({
       bahan: {
         type: mongoose.Types.ObjectId,
         ref: "Pangan",
-        default: null
+        default: null,
+        validate: {
+          validator: function (value) {
+            if (this.parent().nama_varian === "Topping") {
+              return value != null; 
+            }
+            return true;
+          },
+          message: "bahan must be a valid ObjectId when nama_varian is 'Topping'."
+        }
       },
       total_gram: {
         type: Number,

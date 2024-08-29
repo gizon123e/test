@@ -334,7 +334,7 @@ module.exports = {
 
     getProdukPopuler: async(req, res, next) => {
         try {
-            const products = await Product.find({userId: req.user.id}).select("_id image_product name_product total_stok").lean();
+            const products = await Product.find({userId: req.user.id}).select("_id image_product name_product total_stok total_price").lean();
             const datas = await Promise.all(products.map(async(prod)=> {
                 const report = await SalesReport.findOne({productId: prod._id}).lean();
                 const klik = await ProductPerformanceReport.countDocuments({productId: prod._id})
