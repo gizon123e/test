@@ -299,7 +299,7 @@ module.exports = {
                                         ukuran: data.jenisKendaraan.ukuran,
                                     },
                                     tarif: {
-                                        id: data.tarif._id,
+                                        id: data.tarifId._id,
                                         dasar: data.tarifId.tarif_dasar,
                                         per_km: data.tarifId.tarif_per_km,
                                     },
