@@ -141,7 +141,7 @@ module.exports = {
 
             let addressDetail;
 
-            switch(user.role){
+            switch (user.role) {
                 case "vendor":
                     addressDetail = await TokoVendor.findOne({ userId: userId }).populate('address');
                     break;
@@ -152,6 +152,8 @@ module.exports = {
                     addressDetail = await TokoProdusen.findOne({ userId: userId }).populate('address');
                     break
             }
+
+            console.log('===========================>', addressDetail)
             const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
             const longDetaik = parseFloat(addressDetail.address.pinAlamat.long)
 
@@ -161,7 +163,7 @@ module.exports = {
 
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
-            distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
+            distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
 
             if (isNaN(distance)) {
                 return res.status(400).json({
@@ -169,7 +171,7 @@ module.exports = {
                 });
             }
 
-            const jarakTempu = Math.round(distance)
+            const jarakTempu = distance
 
             let data = []
             const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, status: 'Aktif' })
@@ -253,7 +255,7 @@ module.exports = {
                         if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -264,7 +266,7 @@ module.exports = {
                         } else {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -276,7 +278,7 @@ module.exports = {
                     } else {
                         data.push({
                             kendaraan,
-                            jarakTempu: Math.round(jarakTempu),
+                            jarakTempu: jarakTempu,
                             totalBeratProduct: beratProduct,
                             totalVolumeProduct: volumeProduct,
                             hargaOngkir: Math.round(hargaOngkir),
@@ -317,7 +319,7 @@ module.exports = {
                         if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -328,7 +330,7 @@ module.exports = {
                         } else {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -341,7 +343,7 @@ module.exports = {
                         console.log("testig 1")
                         data.push({
                             kendaraan,
-                            jarakTempu: Math.round(jarakTempu),
+                            jarakTempu: jarakTempu,
                             totalBeratProduct: beratProduct,
                             totalVolumeProduct: volumeProduct,
                             hargaOngkir: Math.round(hargaOngkir),

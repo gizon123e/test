@@ -169,6 +169,8 @@ module.exports = {
             const nilai_ketepatan = distributor.filter(review => review.nilai_ketepatan && review.nilai_ketepatan !== 0)
             const nilai_komunikasi = distributor.filter(review => review.nilai_komunikasi && review.nilai_komunikasi !== 0)
 
+            const nilai_review_toko = await TokoVendor.findOne({ _id: toko[0].id_toko })
+
             const indexdata = {
                 nilai_pengemasan: parseInt(nilai_pengemasan.length),
                 nilai_kualitas: parseInt(nilai_kualitas.length),
@@ -180,8 +182,9 @@ module.exports = {
             res.status(200).json({
                 message: "get all review",
                 data: {
+                    nilai_review_toko: nilai_review_toko.nilai_review,
                     indexdata,
-                    reviews
+                    reviews,
                 }
             });
         } catch (error) {
