@@ -35,7 +35,7 @@ module.exports = {
             } 
             const notifDistributor = await Notifikasi.findOne({ userId: pengiriman.distributorId.userId }).sort({ createdAt: -1 })
             DetailNotifikasi.create({
-                notifikasiId: notifDistributor._id,
+                notifikasiId: notifDistributor?._id,
                 status: "Pesanan yang akan dikirim telah dikemas",
                 message: `Yuk jemput pesanan ${pengiriman.kode_pengiriman} lalu segera kirim ke alamat tujuan konsumen`,
                 jenis: "Pesanan",
