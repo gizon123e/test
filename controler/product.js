@@ -409,8 +409,8 @@ module.exports = {
             },
           ]);
           break;
-        default:
-          sellers = await TokoSupplier.aggregate([
+        case "supplier":
+          sellers = await TokoProdusen.aggregate([
             {
               $lookup: {
                 from: "addresses",
@@ -435,6 +435,7 @@ module.exports = {
         const distance = calculateDistance(latalamatDefault, longalamatDefault, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
         if (distance <= biayaTetap.radius) {
           sellerDalamRadius.push(sellers[i]);
+          console.log(sellers[i].namaToko)
           sellers[i].jarakVendor = distance;
         }
       }
@@ -473,17 +474,17 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "suppliers",
+            from: "tokosuppliers",
             let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "supplierData",
           },
         },
         {
           $lookup: {
-            from: "produsens",
+            from: "tokoprodusens",
             let: { userId: "$userId" },
-            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
+            pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { namaToko: 1, profile_pict: 1, address: 1 } }],
             as: "produsenDatas",
           },
         },
