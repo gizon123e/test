@@ -480,7 +480,7 @@ module.exports = {
                     pengirimanId: payLoadDataPengiriman.map(pgr => pgr._id),
                     jarakPengiriman: jarakOngkir,
                     jenisPengiriman: dataPengiriman.jenis_pengiriman,
-                    optimasi_pengiriman: timeInSeconds,
+                    optimasi_pengiriman: timeInSeconds !== NaN? timeInSeconds : 0,
                     kode_pengiriman: dataPengiriman.kode_pengiriman,
                     tarif_pengiriman: tarif_pengiriman,
                     produk_pengiriman: productToDelivers,
