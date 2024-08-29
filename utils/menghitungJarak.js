@@ -1,23 +1,24 @@
-function calculateDistance(lat1, lon1, lat2, lon2, maxDistance) {
-    const R = 6371; // Radius of the Earth in kilometers
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
+const axios = require('axios')
+require('dotenv').config()
 
-    if (distance > maxDistance) {
+async function calculateDistance(lat1, lon1, lat2, lon2, maxDistance) {
+    try {
+        const response = await axios.get(`https://peta-backend.superdigitalapps.my.id/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`);
+
+        // const response = await axios.get(`https://peta-backend.superdigitalapps.my.id/route/v1/driving/106.63464785719901,-6.276579715529846;106.64978671619583,-6.289461823639146?overview=false`);
+
+        const jarak = parseInt(response.data.routes[0].distance) / 1000;
+
+        if (jarak > maxDistance) {
+            return NaN;
+        }
+
+        return jarak;
+    } catch (error) {
+        console.error('Error fetching distance:', error);
         return NaN;
     }
-
-    return distance;
 }
 
-function deg2rad(deg) {
-    return deg * (Math.PI / 180);
-}
 
 module.exports = { calculateDistance };

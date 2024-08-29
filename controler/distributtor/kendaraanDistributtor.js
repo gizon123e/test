@@ -140,7 +140,7 @@ module.exports = {
 
             let addressDetail;
 
-            switch(user.role){
+            switch (user.role) {
                 case "vendor":
                     addressDetail = await TokoVendor.findOne({ userId: userId }).populate('address');
                     break;
@@ -160,7 +160,7 @@ module.exports = {
 
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
-            distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
+            distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
 
             if (isNaN(distance)) {
                 return res.status(400).json({

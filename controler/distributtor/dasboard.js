@@ -173,5 +173,4 @@ module.exports = {
             next(error);
         }
     }
-
 }
