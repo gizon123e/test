@@ -2,6 +2,7 @@ const Address = require("../../models/model-address");
 const Sekolah = require("../../models/model-sekolah");
 const SimulasiSekolah = require('../../models/model-simulasi-sekolah')
 const Konsumen = require("../../models/konsumen/model-konsumen");
+const cekLokasiLatLog = require('../../utils/cek-alamat')
 
 const path = require("path")
 const dotenv = require('dotenv');
@@ -66,6 +67,11 @@ module.exports = {
                 NPSN,
                 namaSekolah
             } = req.body
+
+            const lokasiValidasi = cekLokasiLatLog(lat_pin_alamat, long_pin_alamat);
+            if (!lokasiValidasi.valid) {
+                return res.status(400).json({ message: lokasiValidasi.message });
+            }      
             const files = req.files
             const logoSekolah = files ? files.logoSekolah : null;
 
