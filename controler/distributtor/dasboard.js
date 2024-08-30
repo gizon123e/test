@@ -132,15 +132,24 @@ module.exports = {
 
     getGrafikPerforma: async (req, res, next) => {
         try {
+            const { start_date, end_date } = req.query;
             const distributorId = req.user.id;
 
             const dataDistributor = await Distributtor.findOne({ userId: distributorId });
-            if (!dataDistributor) return res.status(404).json({ message: "data distributor Not Found" });
+            if (!dataDistributor) return res.status(404).json({ message: "Data distributor Not Found" });
 
-            // Get the current date and determine the start and end of the current month
-            const now = new Date();
-            const start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month
-            const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of the current month
+            // Define the start and end dates
+            let start, end;
+            if (start_date && end_date) {
+                start = new Date(start_date);
+                end = new Date(end_date);
+                end.setHours(23, 59, 59, 999); // Set end date to the end of the day
+            } else {
+                const now = new Date();
+                start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month
+                end = new Date(now); // Current day
+                end.setHours(23, 59, 59, 999); // Set end time to the end of the current day
+            }
 
             // Query data pengiriman
             const pengiriman = await ProsesPengirimanDistributor.find({
@@ -154,15 +163,15 @@ module.exports = {
 
             const dataPerDay = pengiriman.reduce((acc, curr) => {
                 const dateObj = new Date(curr.createdAt);
-                const date = dateObj.toLocaleDateString('id-ID').split('/').reverse().join('-'); // Format tanggal menjadi yyyy-mm-dd
+                const date = dateObj.toLocaleDateString('id-ID').split('/').reverse().join('-'); // Format date to yyyy-mm-dd
                 if (!acc[date]) acc[date] = 0;
                 acc[date]++;
                 return acc;
             }, {});
 
-            // Generate all dates for the current month
+            // Generate all dates from start to end
             const result = [];
-            for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 const formattedDate = d.toLocaleDateString('id-ID').split('/').reverse().join('-');
                 result.push({
                     tanggal: formattedDate,
@@ -170,7 +179,7 @@ module.exports = {
                 });
             }
 
-            // Mengirimkan respon ke client
+            // Send response to client
             res.status(200).json({
                 message: "Data grafik performa berhasil diambil",
                 data: result
@@ -180,4 +189,5 @@ module.exports = {
             next(error);
         }
     }
+
 }
