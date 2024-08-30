@@ -153,7 +153,6 @@ module.exports = {
                     break
             }
 
-            console.log('===========================>', addressDetail)
             const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
             const longDetaik = parseFloat(addressDetail.address.pinAlamat.long)
 
@@ -163,11 +162,11 @@ module.exports = {
 
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
-            distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, dataBiayaTetap.radius);
+            distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
 
             if (isNaN(distance)) {
                 return res.status(400).json({
-                    message: `Jarak antara konsumen dan vendor melebihi ${dataBiayaTetap.radius} km`
+                    message: "Jarak antara konsumen dan vendor melebihi 100 km"
                 });
             }
 
@@ -275,18 +274,19 @@ module.exports = {
                                 is_available: true
                             })
                         }
-                    } else {
-                        data.push({
-                            kendaraan,
-                            jarakTempu: jarakTempu,
-                            totalBeratProduct: beratProduct,
-                            totalVolumeProduct: volumeProduct,
-                            hargaOngkir: Math.round(hargaOngkir),
-                            potongan_harga,
-                            total_ongkir: Math.round(total_ongkir),
-                            is_available: true
-                        })
                     }
+                    // else {
+                    //     data.push({
+                    //         kendaraan,
+                    //         jarakTempu: jarakTempu,
+                    //         totalBeratProduct: beratProduct,
+                    //         totalVolumeProduct: volumeProduct,
+                    //         hargaOngkir: Math.round(hargaOngkir),
+                    //         potongan_harga,
+                    //         total_ongkir: Math.round(total_ongkir),
+                    //         is_available: true
+                    //     })
+                    // }
                 } else {
                     let potongan_harga;
                     let total_ongkir;
@@ -327,7 +327,8 @@ module.exports = {
                                 total_ongkir: Math.round(total_ongkir),
                                 is_available: false
                             })
-                        } else {
+                        }
+                        else {
                             data.push({
                                 kendaraan,
                                 jarakTempu: jarakTempu,
