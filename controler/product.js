@@ -368,6 +368,8 @@ module.exports = {
 
   getProductWithRadiusKonsumen: async (req, res, next) => {
     try {
+      const { wishlist } = req.query
+
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
       const alamatDefault = await Address.findOne({ userId: req.user.id, isUsed: true });
@@ -452,28 +454,24 @@ module.exports = {
       .filter(seller => seller !== null)
       .map((item) => new mongoose.Types.ObjectId(item.userId));
 
-      const productWithRadius = await Product.aggregate([
-        {
-          $match: {
-            userId: {
-              $in: idVendors,
-            },
+      let filter = {
+        $match: {
+          userId: {
+            $in: idVendors,
           },
         },
+      }
+
+      if(!Boolean(wishlist)){
+        const wishlist = (await Wishlist.find({userId: req.user.id}).lean()).map(prd => prd.productId);
+        filter.$match.productId.$nin = wishlist
+      };
+
+      const productWithRadius = await Product.aggregate([
+        filter,
         {
           $project: { id_main_category: 0, id_sub_category: 0, categoryId: 0 },
         },
-        // {
-        //   $lookup: {
-        //     from: "users",
-        //     let: { userId: "$userId" },
-        //     pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, { $project: { _id: 1, role: 1 } }],
-        //     as: "userData",
-        //   },
-        // },
-        // {
-        //   $unwind: "$userData",
-        // },
         {
           $lookup: {
             from: "tokovendors",
@@ -575,6 +573,7 @@ module.exports = {
       const productIds = productWithRadius.map((item) => {
         return item._id;
       });
+
       const banners = await Promo.find({ productId: { $in: productIds } });
       let productFlashSale;
       let productNotFlashSale;
