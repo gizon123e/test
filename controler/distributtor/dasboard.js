@@ -6,25 +6,6 @@ const Pengiriman = require("../../models/model-pengiriman")
 module.exports = {
     getAllDasboard: async (req, res, next) => {
         try {
-            const { kemarin, tujuMinggu, customStart, customEnd } = req.query
-
-            const today = new Date();
-            const formattedDate = today.toLocaleDateString('id-ID', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-
-            today.setDate(today.getDate() - 1);
-            const formattedDateHariKemarin = today.toLocaleDateString('id-ID', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-
-            const sevenDaysAgo = new Date(today);
-            sevenDaysAgo.setDate(today.getDate() - 7);
-
             const distributor = await Distributtor.findOne({ userId: req.user.id })
             if (!distributor) return res.status(404).json({ message: "data Distributor Not Found" })
 
@@ -35,49 +16,12 @@ module.exports = {
             let totalProduk = 0
             let quantity = 0
             pengiriman.map((data) => {
-                const datePesanan = new Date(data.createdAt);
-                const formattedDatePesanan = datePesanan.toLocaleDateString('id-ID', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                });
+                dataProsesPengiriman.push(data)
+                totalProduk += data.produk_pengiriman.length
 
-                if (formattedDate === formattedDatePesanan) {
-                    dataProsesPengiriman.push(data)
-                    totalProduk += data.produk_pengiriman.length
-
-                    for (let pcs of data.produk_pengiriman) {
-                        quantity += pcs.quantity
-                    }
-                } else if (kemarin && formattedDateHariKemarin === formattedDatePesanan) {
-                    dataProsesPengiriman.push(data)
-                    totalProduk += data.produk_pengiriman.length
-
-                    for (let pcs of data.produk_pengiriman) {
-                        quantity += pcs.quantity
-                    }
-                } else if (tujuMinggu && datePesanan >= sevenDaysAgo && datePesanan <= today) {
-                    dataProsesPengiriman.push(data);
-                    totalProduk += data.produk_pengiriman.length
-
-                    for (let pcs of data.produk_pengiriman) {
-                        quantity += pcs.quantity
-                    }
-
-                } else if (customStart && customEnd) {
-                    const startDate = new Date(customStart);
-                    const endDate = new Date(customEnd);
-
-                    if (datePesanan >= startDate && datePesanan <= endDate) {
-                        dataProsesPengiriman.push(data);
-                        totalProduk += data.produk_pengiriman.length
-
-                        for (let pcs of data.produk_pengiriman) {
-                            quantity += pcs.quantity
-                        }
-                    }
+                for (let pcs of data.produk_pengiriman) {
+                    quantity += pcs.quantity
                 }
-
             })
 
             const listRataRataPengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id })
@@ -121,6 +65,7 @@ module.exports = {
                 totalProduk,
                 rata_rata_pengiriman: quantity,
                 perfoma_pesanan,
+                pembatalan_pesanan: pervomaPengirimanDibatalkan.length,
                 data_layanan_distributor
             })
         } catch (error) {
@@ -141,19 +86,24 @@ module.exports = {
             const { startDate, endDate } = req.query;
             const distributorId = req.user.id;
 
+            const dataDistributor = await Distributtor.findOne({ userId: distributorId })
+            if (!dataDistributor) return res.status(404).json({ message: "data disstributor Not Found" })
+
             // Tentukan range tanggal berdasarkan query atau gunakan seluruh range data jika tidak ada query
             const start = startDate ? new Date(startDate) : new Date(0); // Tanggal Unix Epoch sebagai awal
             const end = endDate ? new Date(endDate) : new Date(); // Hari ini sebagai akhir
 
             // Query data pengiriman
             const pengiriman = await ProsesPengirimanDistributor.find({
-                distributorId,
+                distributorId: dataDistributor._id,
                 status_distributor: "Selesai",
                 createdAt: {
                     $gte: start,
                     $lte: end
                 }
             });
+
+            console.log(pengiriman)
 
             // Mengelompokkan data berdasarkan hari
             const dataPerDay = pengiriman.reduce((acc, curr) => {
@@ -163,10 +113,16 @@ module.exports = {
                 return acc;
             }, {});
 
+            // Mengubah dataPerDay menjadi array dengan tanggal dan nilai
+            const result = Object.entries(dataPerDay).map(([tanggal, nilai]) => ({
+                tanggal,
+                nilai
+            }));
+
             // Mengirimkan respon ke client
             res.status(200).json({
                 message: "Data grafik performa berhasil diambil",
-                data: dataPerDay
+                data: result
             });
         } catch (error) {
             console.log(error);
