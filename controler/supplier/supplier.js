@@ -5,6 +5,7 @@ const fs = require('fs');
 const User = require('../../models/model-auth-user');
 const PicSupplier = require('../../models/supplier/model-penanggung-jawab');
 const PoinHistory = require("../../models/model-poin");
+const cekLokasiLatLog = require('../../utils/cek-alamat')
 
 module.exports = {
 
@@ -106,6 +107,11 @@ module.exports = {
                 nik,
                 nomorNpwp
             } = req.body;
+
+            const lokasiValidasi = cekLokasiLatLog(lat_pin_alamat, long_pin_alamat);
+            if (!lokasiValidasi.valid) {
+                return res.status(400).json({ message: lokasiValidasi.message });
+            }
             
             const address = {
                 province,
