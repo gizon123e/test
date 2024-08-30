@@ -433,7 +433,7 @@ module.exports = {
         }
       }
       const data = await dataMake();
-
+      console.log(data)
       const dataKonsumen = await Konsumen.create(data);
 
       return res.status(200).json({
