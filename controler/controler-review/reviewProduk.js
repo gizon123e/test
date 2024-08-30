@@ -164,12 +164,12 @@ module.exports = {
         try {
             const reviews = await ReviewProduk.find({ id_produk }).populate("id_konsumen")
             let toko;
-            switch(req.user.role){
+            switch (req.user.role) {
                 case "konsumen":
-                    toko =  await ReviewVendor.find({ id_produk });
+                    toko = await ReviewVendor.find({ id_produk });
                     break;
                 case "vendor":
-                    toko =  await ReviewSupplier.find({ id_produk });
+                    toko = await ReviewSupplier.find({ id_produk });
                     break;
                 case "supplier":
                     toko = await ReviewProdusen.find({ id_produk });
@@ -186,19 +186,17 @@ module.exports = {
 
             let nilai_review_toko;
 
-            switch(req.user.role){
+            switch (req.user.role) {
                 case "konsumen":
-                    nilai_review_toko =  await TokoVendor.findOne({ _id: toko[0]?.id_toko })
+                    nilai_review_toko = await TokoVendor.findOne({ _id: toko[0]?.id_toko })
                     break;
                 case "vendor":
-                    nilai_review_toko =  await TokoSupplier.findOne({ _id: toko[0]?.id_toko })
+                    nilai_review_toko = await TokoSupplier.findOne({ _id: toko[0]?.id_toko })
                     break;
                 case "supplier":
-                    nilai_review_toko =  await TokoProdusen.findOne({ _id: toko[0]?.id_toko })
+                    nilai_review_toko = await TokoProdusen.findOne({ _id: toko[0]?.id_toko })
                     break;
             };
-
-           
 
             const indexdata = {
                 nilai_pengemasan: parseInt(nilai_pengemasan.length),
@@ -291,5 +289,4 @@ module.exports = {
             next(error)
         }
     }
-
 }

@@ -93,5 +93,31 @@ module.exports = {
 
             next(error);
         }
+    },
+
+    lacakLokasiDitributor: async (req, res, next) => {
+        try {
+            const { latitude, longitude, id_toko, id_distributor, pengirimanId, id_sekolah } = req.body
+
+            const data = await PelacakanDistributorKonsumen.findOne({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengirimanId, id_konsumen: id_sekolah })
+            if (!data) return res.status(404).json({ message: "data Pelacakan Distributor tidak di temukan" })
+
+            const dataLacak = await PelacakanDistributorKonsumen.findOneAndUpdate({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengirimanId, id_konsumen: id_sekolah }, { latitude, longitude }, { new: true })
+
+            res.status(200).json({
+                message: "get data lacak success",
+                data: dataLacak
+            })
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                })
+            }
+            next(error)
+        }
     }
 }
