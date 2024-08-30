@@ -11,23 +11,18 @@ const modulePelacakanDistributorKonsumen = new mongoose.Schema({
         required: [true, "id_distributor harus di isi"],
         ref: "TokoVendor"
     },
+    tokoType: {
+        type: String,
+        enum: ["TokoVendor", "TokoProdusen", "TokoSupplier"]
+    },
     id_konsumen: {
         type: mongoose.Types.ObjectId,
         required: [true, "id_kosumen harus di isi"],
-        ref: "Sekolah",
-        default: null
+        refPath: "konsumenType"
     },
-    id_vendor: {
-        type: mongoose.Types.ObjectId,
-        required: [true, "id_vendor harus di isi"],
-        ref: "Vendor",
-        default: null
-    },
-    id_supplier: {
-        type: mongoose.Types.ObjectId,
-        required: [true, "id_supplier harus di isi"],
-        ref: "Supplier",
-        default: null
+    konsumenType: {
+        type: String,
+        enum: ["TokoVendor", "Sekolah", "TokoSupplier"]
     },
     id_address: {
         type: mongoose.Types.ObjectId,
