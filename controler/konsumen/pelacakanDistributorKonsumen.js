@@ -97,12 +97,12 @@ module.exports = {
 
     lacakLokasiDitributor: async (req, res, next) => {
         try {
-            const { latitude, longitude, id_toko, id_distributor, pengirimanId, id_sekolah } = req.body
+            const { latitude, longitude, id_toko, id_distributor, pengirimanId } = req.body
 
-            const data = await PelacakanDistributorKonsumen.findOne({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengirimanId, id_konsumen: id_sekolah })
+            const data = await PelacakanDistributorKonsumen.findOne({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengirimanId })
             if (!data) return res.status(404).json({ message: "data Pelacakan Distributor tidak di temukan" })
 
-            const dataLacak = await PelacakanDistributorKonsumen.findOneAndUpdate({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengirimanId, id_konsumen: id_sekolah }, { latitude, longitude }, { new: true })
+            const dataLacak = await PelacakanDistributorKonsumen.findOneAndUpdate({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengirimanId }, { latitude, longitude }, { new: true })
 
             res.status(200).json({
                 message: "get data lacak success",
