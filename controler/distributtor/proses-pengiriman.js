@@ -15,6 +15,7 @@ dotenv.config();
 
 const { io } = require("socket.io-client");
 const Pengemudi = require("../../models/distributor/model-pengemudi");
+const Address = require("../../models/model-address");
 
 const socket = io(process.env.HOST, {
   auth: {
@@ -156,13 +157,24 @@ module.exports = {
 
       if (!id_address || !latitude || !longitude || !id_konsumen || !id_pengemudi || !id_kendaraan) return res.status(400).json({ message: "id_address, latitude, longitude, id_konsumen, id_pengemudi, id_kendaraan harus di isi" });
       const distri = await Distributtor.exists({ userId: req.user.id });
-
+      const alamat = await Address.findById(id_address).select("userId").populate({path: "userId", select: "role"})
       const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput", id_pengemudi, id_kendaraan }, { new: true })
         .populate("tokoId")
         .populate("produk_pengiriman.productId");
 
+      const cekKonsumen = () => {
+        if(alamat.userId.role === "konsumen"){
+          return "Sekolah"
+        }else if(alamat.userId.role === "vendor"){
+          return "TokoVendor"
+        }else if(alamat.userId.role === "supplier"){
+          return "TokoSupplier"
+        }
+      }
       const lacak = await PelacakanDistributorKonsumen.create({
         id_toko: prosesPengiriman.tokoId,
+        konsumenType: cekKonsumen(),
+        tokoType: prosesPengiriman.tokoType,
         id_address,
         latitude,
         longitude,
@@ -172,7 +184,7 @@ module.exports = {
         statusPengiriman: "Pesanan diserahkan ke distributor",
       });
 
-      await Pengiriman.updateOne({ _id: prosesPengiriman.pengirimanId }, { status_pengiriman: "dikirim" });
+      await Pengiriman.updateMany({ _id: { $in: prosesPengiriman.pengirimanId } }, { status_pengiriman: "dikirim" });
 
       const toko_user_id = prosesPengiriman.tokoId.userId;
 
