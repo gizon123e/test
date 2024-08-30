@@ -10,7 +10,7 @@ module.exports = {
             if (!distributor) return res.status(404).json({ message: "data Distributor Not Found" })
 
             const dataProsesPengiriman = []
-            const pengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id, status_distributor: "Selesai" })
+            const pengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id, status_distributor: "Selesai" }).populate('jenisPengiriman').populate('id_kendaraan')
             if (pengiriman.length === 0) return res.status(400).json({ message: "pesanan pengiriman saat ini masih kosong" });
 
             let totalProduk = 0
@@ -24,14 +24,13 @@ module.exports = {
                 }
             })
 
-            const listRataRataPengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id })
             const pesananDistributor = await Pengiriman.find({ distributorId: distributor._id })
 
             const pervomaPengirimanSuccess = []
             const pervomaPengirimanDibatalkan = []
             const dataLayananHemat = []
             const dataLayananExpress = []
-            for (let data of listRataRataPengiriman) {
+            for (let data of pengiriman) {
                 if (data.status_distributor === 'Selesai') {
                     pervomaPengirimanSuccess.push(data)
                 }
@@ -66,7 +65,57 @@ module.exports = {
                 rata_rata_pengiriman: quantity,
                 perfoma_pesanan,
                 pembatalan_pesanan: pervomaPengirimanDibatalkan.length,
-                data_layanan_distributor
+            })
+        } catch (error) {
+            console.log(error)
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields,
+                })
+            }
+            next(error)
+        }
+    },
+
+    rataPengiriman: async (req, res, next) => {
+        try {
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            if (!distributor) return res.status(404).json({ message: "data Distributor Not Found" })
+
+            const pengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id, status_distributor: "Selesai" })
+                .select('jarakPengiriman jenisPengiriman id_kendaraan')
+                .populate('jenisPengiriman')
+                .populate('id_kendaraan')
+            if (pengiriman.length === 0) return res.status(400).json({ message: "pesanan pengiriman saat ini masih kosong" });
+
+            const pervomaPengirimanSuccess = []
+            const dataLayananHemat = []
+            const dataLayananExpress = []
+            for (let data of pengiriman) {
+                if (data.status_distributor === 'Selesai') {
+                    pervomaPengirimanSuccess.push(data)
+                }
+
+                const layanan = await JenisJasaDistributor.findOne({ _id: data.jenisPengiriman })
+                if (layanan.nama === 'Hemat') {
+                    dataLayananHemat.push(data)
+                } else if (layanan.nama === 'Express') {
+                    dataLayananExpress.push(data)
+                }
+            }
+
+            let data_layanan_distributor
+            if (dataLayananHemat.length > dataLayananExpress.length) {
+                data_layanan_distributor = dataLayananHemat
+            } else {
+                data_layanan_distributor = dataLayananExpress
+            }
+
+            res.status(200).json({
+                message: "get data dasboard success",
+                rata_rata_pengiriman: data_layanan_distributor,
             })
         } catch (error) {
             console.log(error)
@@ -83,15 +132,15 @@ module.exports = {
 
     getGrafikPerforma: async (req, res, next) => {
         try {
-            const { startDate, endDate } = req.query;
             const distributorId = req.user.id;
 
-            const dataDistributor = await Distributtor.findOne({ userId: distributorId })
-            if (!dataDistributor) return res.status(404).json({ message: "data disstributor Not Found" })
+            const dataDistributor = await Distributtor.findOne({ userId: distributorId });
+            if (!dataDistributor) return res.status(404).json({ message: "data distributor Not Found" });
 
-            // Tentukan range tanggal berdasarkan query atau gunakan seluruh range data jika tidak ada query
-            const start = startDate ? new Date(startDate) : new Date(0); // Tanggal Unix Epoch sebagai awal
-            const end = endDate ? new Date(endDate) : new Date(); // Hari ini sebagai akhir
+            // Get the current date and determine the start and end of the current month
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month
+            const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of the current month
 
             // Query data pengiriman
             const pengiriman = await ProsesPengirimanDistributor.find({
@@ -103,21 +152,23 @@ module.exports = {
                 }
             });
 
-            console.log(pengiriman)
-
-            // Mengelompokkan data berdasarkan hari
             const dataPerDay = pengiriman.reduce((acc, curr) => {
-                const date = new Date(curr.createdAt).toLocaleDateString('id-ID');
+                const dateObj = new Date(curr.createdAt);
+                const date = dateObj.toLocaleDateString('id-ID').split('/').reverse().join('-'); // Format tanggal menjadi yyyy-mm-dd
                 if (!acc[date]) acc[date] = 0;
                 acc[date]++;
                 return acc;
             }, {});
 
-            // Mengubah dataPerDay menjadi array dengan tanggal dan nilai
-            const result = Object.entries(dataPerDay).map(([tanggal, nilai]) => ({
-                tanggal,
-                nilai
-            }));
+            // Generate all dates for the current month
+            const result = [];
+            for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+                const formattedDate = d.toLocaleDateString('id-ID').split('/').reverse().join('-');
+                result.push({
+                    tanggal: formattedDate,
+                    nilai: dataPerDay[formattedDate] || 0
+                });
+            }
 
             // Mengirimkan respon ke client
             res.status(200).json({
