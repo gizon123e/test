@@ -10,7 +10,7 @@ module.exports = {
             if (!distributor) return res.status(404).json({ message: "data Distributor Not Found" })
 
             const dataProsesPengiriman = []
-            const pengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id, status_distributor: "Selesai" })
+            const pengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id, status_distributor: "Selesai" }).populate('jenisPengiriman').populate('id_kendaraan')
             if (pengiriman.length === 0) return res.status(400).json({ message: "pesanan pengiriman saat ini masih kosong" });
 
             let totalProduk = 0
@@ -24,14 +24,13 @@ module.exports = {
                 }
             })
 
-            const listRataRataPengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id })
             const pesananDistributor = await Pengiriman.find({ distributorId: distributor._id })
 
             const pervomaPengirimanSuccess = []
             const pervomaPengirimanDibatalkan = []
             const dataLayananHemat = []
             const dataLayananExpress = []
-            for (let data of listRataRataPengiriman) {
+            for (let data of pengiriman) {
                 if (data.status_distributor === 'Selesai') {
                     pervomaPengirimanSuccess.push(data)
                 }
