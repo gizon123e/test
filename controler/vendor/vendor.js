@@ -10,6 +10,7 @@ const BiayaTetap = require('../../models/model-biaya-tetap');
 const Product = require('../../models/model-product');
 const { calculateDistance } = require("../../utils/menghitungJarak");
 const PoinHistory = require("../../models/model-poin");
+const cekLokasiLatLog = require('../../utils/cek-alamat')
 
 
 module.exports = {
@@ -111,6 +112,11 @@ module.exports = {
                 nik,
                 nomorNpwp
             } = req.body;
+
+            const lokasiValidasi = cekLokasiLatLog(lat_pin_alamat, long_pin_alamat);
+            if (!lokasiValidasi.valid) {
+              return res.status(400).json({ message: lokasiValidasi.message });
+            }
             
             const address = {
                 province,
