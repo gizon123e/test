@@ -461,11 +461,14 @@ module.exports = {
           },
         },
       }
-
-      if(!Boolean(wishlist)){
-        const wishlist = (await Wishlist.find({userId: req.user.id}).lean()).map(prd => prd.productId);
-        filter.$match.productId.$nin = wishlist
-      };
+      console.log(Boolean(wishlist))
+      if (Boolean(wishlist)) {
+        const user_wishlist = (await Wishlist.find({ userId: req.user.id }).lean()).map(prd => prd.productId);
+        console.log(user_wishlist)
+        if (user_wishlist.length > 0) {
+          filter.$match._id = { $nin: user_wishlist };
+        }
+      }
 
       const productWithRadius = await Product.aggregate([
         filter,
