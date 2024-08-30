@@ -6,6 +6,7 @@ const Comment = require("./model-komentar");
 const Minat = require("./model-minat-user");
 const Pembatalan = require("./model-pembatalan");
 const Product = require("./model-product")
+const {Transaksi, Transaksi2} = require("./model-transaksi");
 const Produksi = require("./produsen/bahan/model-produksi");
 const VirtualAccountUser = require("./model-user-va");
 const Address = require("./model-address");
@@ -19,6 +20,13 @@ const Konsumen = require("./konsumen/model-konsumen");
 const TokoVendor = require("./vendor/model-toko");
 const ModelPenanggungJawabKonsumen = require("./konsumen/model-penanggung-jawab");
 const Sekolah = require("./model-sekolah");
+const TokoSupplier = require("./supplier/model-toko");
+const TokoProdusen = require("./produsen/model-toko");
+const Follower = require("./model-follower");
+const PoinHistory = require("./model-poin");
+const Wishlist = require("./model-wishlist");
+const ReviewProduk = require("./model-review/model-reviewProduk");
+const Notifikasi = require("./notifikasi/notifikasi");
 
 
 const userModels = new mongoose.Schema(
@@ -153,6 +161,10 @@ userModels.post("findOneAndDelete", async function (doc) {
     await Cart.deleteMany({ userId: doc._id });
     console.log('Deleted all Cart documents for user:', doc._id);
 
+    await ReviewProduk.deleteMany({ userId: doc._id });
+
+    await Notifikasi.deleteMany({ userId: doc._id });
+
     await Conversation.deleteMany({ participants: { $in: doc._id } });
     console.log('Deleted all Conversation documents for user:', doc._id);
 
@@ -161,6 +173,18 @@ userModels.post("findOneAndDelete", async function (doc) {
 
     await Comment.deleteMany({ userId: doc._id });
     console.log('Deleted all Comment documents for user:', doc._id);
+
+    await Transaksi.deleteMany({ userId: doc._id });
+    console.log('Deleted all Comment documents for user:', doc._id);
+
+    await Transaksi2.deleteMany({ userId: doc._id });
+    console.log('Deleted all Comment documents for user:', doc._id);
+
+    await Follower.deleteMany({ userId: doc._id });
+    console.log('Deleted all Follow documents for user:', doc._id);
+
+    await PoinHistory.deleteMany({ userId: doc._id });
+    console.log('Deleted all Poin documents for user:', doc._id);
 
     await Minat.deleteMany({ userId: doc._id });
     console.log('Deleted all Minat documents for user:', doc._id);
@@ -173,6 +197,8 @@ userModels.post("findOneAndDelete", async function (doc) {
 
     await Produksi.deleteMany({ userId: doc._id });
     console.log('Deleted all Produksi documents for user:', doc._id);
+
+    Wish
 
     await VirtualAccountUser.deleteMany({ userId: doc._id });
     console.log('Deleted all VirtualAccountUser documents for user:', doc._id);
@@ -187,25 +213,31 @@ userModels.post("findOneAndDelete", async function (doc) {
     console.log('Deleted all Pesanan documents for user:', doc._id);
 
     await Vendor.deleteMany({ userId: doc._id });
+    await TokoVendor.deleteMany({ userId: doc._id });
     console.log('Deleted all Vendor documents for user:', doc._id);
+
+    await Wishlist.deleteMany({ userId: doc._id });
 
     await Distributor.deleteMany({ userId: doc._id });
     console.log('Deleted all Distributor documents for user:', doc._id);
 
     await Supplier.deleteMany({ userId: doc._id });
+    await TokoSupplier.deleteMany({ userId: doc._id });
+
     console.log('Deleted all Supplier documents for user:', doc._id);
 
     await Produsen.deleteMany({ userId: doc._id });
+    await TokoProdusen.deleteMany({ userId: doc._id });
     console.log('Deleted all Produsen documents for user:', doc._id);
 
     await Konsumen.deleteMany({ userId: doc._id });
     console.log('Deleted all Konsumen documents for user:', doc._id);
 
-    await TokoVendor.deleteMany({ userId: doc._id });
-    console.log('Deleted all TokoVendor documents for user:', doc._id);
-
     await ModelPenanggungJawabKonsumen.deleteMany({ userId: doc._id });
     console.log('Deleted all ModelPenanggungJawabKonsumen documents for user:', doc._id);
+
+    await Address.deleteMany({ userId: doc._id });
+    console.log('Deleted all Address documents for user:', doc._id);
 
     await Sekolah.deleteMany({ userId: doc._id });
     console.log('Deleted all Sekolah documents for user:', doc._id);

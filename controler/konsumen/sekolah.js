@@ -66,10 +66,11 @@ module.exports = {
                 addressId,
                 NPSN,
                 namaSekolah
-            } = req.body
+            } = req.body 
 
             const lokasiValidasi = cekLokasiLatLog(lat_pin_alamat, long_pin_alamat);
-            if (!lokasiValidasi.valid) {
+            if (!lokasiValidasi.valid && !addressId) {
+                console.log(lokasiValidasi)
                 return res.status(400).json({ message: lokasiValidasi.message });
             }      
             const files = req.files

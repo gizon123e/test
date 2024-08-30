@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
+const Product = require("../model-product")
 
 const operasional = new mongoose.Schema({
     _id: false,
@@ -64,6 +65,21 @@ const modelTokoVendor = new mongoose.Schema({
         default: 0
     }
 });
+
+modelTokoVendor.pre(["findOneAndDelete", "deleteMany", "deleteOne"], async function(next){
+    try {
+        const toko = (await this.model.find(this.getQuery()).lean()).map(toko => toko.userId);
+
+        await Product.deleteMany({userId: {
+            $in: toko
+        }});
+
+        next()
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+})
 
 const TokoVendor = mongoose.model("TokoVendor", modelTokoVendor);
 module.exports = TokoVendor

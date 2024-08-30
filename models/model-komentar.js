@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 require('./model-auth-user')
 require("./model-product")
-const komentarModels = mongoose.Schema({
+const komentarModels = new mongoose.Schema({
     userId:{
         type: mongoose.Types.ObjectId,
         required: true,
