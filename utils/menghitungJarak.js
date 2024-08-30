@@ -10,7 +10,6 @@ async function calculateDistance(lat1, lon1, lat2, lon2, maxDistance, distributo
         }
         return jarak;
     } catch (error) {
-        console.log('========================================================> ', distributor)
         return NaN
     }
 }
