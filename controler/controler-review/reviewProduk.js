@@ -1,7 +1,9 @@
 const ReviewProduk = require('../../models/model-review/model-reviewProduk')
 const Product = require('../../models/model-product')
 const ReviewVendor = require('../../models/vendor/model-reviewVendor')
-const TokoVendor = require('../../models/vendor/model-toko')
+const ReviewSupplier = require('../../models/supplier/model-reviewSupplier')
+const ReviewProdusen = require('../../models/produsen/model-reviewProdusen')
+const TokoVendor = require('../../models/vendor/model-toko');
 const ReviewDistributor = require('../../models/distributor/model-reviewDistributor')
 const path = require('path')
 const User = require('../../models/model-auth-user')
@@ -9,6 +11,8 @@ const Konsumen = require('../../models/konsumen/model-konsumen')
 const PoinHistory = require('../../models/model-poin')
 const BiayaTetap = require('../../models/model-biaya-tetap')
 const Pengiriman = require('../../models/model-pengiriman')
+const TokoSupplier = require('../../models/supplier/model-toko')
+const TokoProdusen = require('../../models/produsen/model-toko')
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
@@ -159,9 +163,18 @@ module.exports = {
 
         try {
             const reviews = await ReviewProduk.find({ id_produk }).populate("id_konsumen")
-            if (reviews.length === 0) return res.status(400).json({ message: `belom ada yang reviews produk id ini ${id_produk}` })
-
-            const toko = await ReviewVendor.find({ id_produk })
+            let toko;
+            switch(req.user.role){
+                case "konsumen":
+                    toko =  await ReviewVendor.find({ id_produk });
+                    break;
+                case "vendor":
+                    toko =  await ReviewSupplier.find({ id_produk });
+                    break;
+                case "supplier":
+                    toko = await ReviewProdusen.find({ id_produk });
+                    break;
+            };
             if (toko.length === 0) return res.status(400).json({ message: `belom ada yang reviews di toko vendor produk id ini ${id_produk}` })
             const nilai_pengemasan = toko.filter(review => review.nilai_pengemasan && review.nilai_pengemasan !== 0)
             const nilai_kualitas = toko.filter(review => review.nilai_kualitas && review.nilai_kualitas !== 0)
@@ -171,7 +184,21 @@ module.exports = {
             const nilai_ketepatan = distributor.filter(review => review.nilai_ketepatan && review.nilai_ketepatan !== 0)
             const nilai_komunikasi = distributor.filter(review => review.nilai_komunikasi && review.nilai_komunikasi !== 0)
 
-            const nilai_review_toko = await TokoVendor.findOne({ _id: toko[0].id_toko })
+            let nilai_review_toko;
+
+            switch(req.user.role){
+                case "konsumen":
+                    nilai_review_toko =  await TokoVendor.findOne({ _id: toko[0]?.id_toko })
+                    break;
+                case "vendor":
+                    nilai_review_toko =  await TokoSupplier.findOne({ _id: toko[0]?.id_toko })
+                    break;
+                case "supplier":
+                    nilai_review_toko =  await TokoProdusen.findOne({ _id: toko[0]?.id_toko })
+                    break;
+            };
+
+           
 
             const indexdata = {
                 nilai_pengemasan: parseInt(nilai_pengemasan.length),
@@ -184,7 +211,7 @@ module.exports = {
             res.status(200).json({
                 message: "get all review",
                 data: {
-                    nilai_review_toko: nilai_review_toko.nilai_review,
+                    nilai_review_toko: nilai_review_toko?.nilai_review,
                     indexdata,
                     reviews,
                 }

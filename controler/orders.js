@@ -2400,7 +2400,7 @@ module.exports = {
               gross_amount: grossAmount(),
             },
             bank_transfer: {
-              bank: "bca",
+              bank: VirtualAccount.nama_bank.toLowerCase(),
               va_number: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
             },
           }),

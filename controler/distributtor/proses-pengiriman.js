@@ -181,7 +181,7 @@ module.exports = {
       if (!notifikasi) return res.status(404).json({ message: "notifikasi tidak ditemukan" });
 
       DetailNotifikasi.create({
-        notifikasiId: notifikasi._id,
+        notifikasiId: notifikasi?._id,
         status: "Distributor sedang dalam perjalanan menjemput pesanan",
         message: `Pesanan ${prosesPengiriman.kode_pengiriman} akan segera dijemput oleh distributor ke lokasi anda`,
         jenis: "Pesanan",
@@ -336,7 +336,7 @@ module.exports = {
 
       const notifDistributor = await Notifikasi.findOne({ userId: prosesPengiriman.distributorId.userId }).sort({ createdAt: -1 });
       DetailNotifikasi.create({
-        notifikasiId: notifDistributor._id,
+        notifikasiId: notifDistributor?._id,
         status: `Pesanan sedang dikirim ke alamat tujuan oleh pengemudi ${prosesPengiriman.id_pengemudi.name}`,
         jenis: "Pesanan",
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} sedang dikirim ke alamat tujuan konsumen`,
@@ -348,7 +348,7 @@ module.exports = {
 
       socket.emit("notif_distri_pesanan_dikirim", {
         jenis: "Pesanan",
-        userId: notifDistributor.userId,
+        userId: notifDistributor?.userId,
         status: `Pesanan sedang dikirim ke alamat tujuan oleh pengemudi ${prosesPengiriman.id_pengemudi.name}`,
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} sedang dikirim ke alamat tujuan konsumen`,
         image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
@@ -358,7 +358,7 @@ module.exports = {
       if (invoice.length == 1) {
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         DetailNotifikasi.create({
-          notifikasiId: notifikasi._id,
+          notifikasiId: notifikasi?._id,
           status: "Pesanan sedang dalam pengiriman",
           jenis: "Pesanan",
           message: `${invoice[0].invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
@@ -370,7 +370,7 @@ module.exports = {
 
         socket.emit("notif_pesanan_dikirim", {
           jenis: "Pesanan",
-          userId: notifikasi.userId,
+          userId: notifikasi?.userId,
           status: "Pesanan sedang dalam pengiriman",
           message: `${invoice[0].invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
           image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
@@ -380,7 +380,7 @@ module.exports = {
         const notifikasiTokoVendor = await Notifikasi.findOne({ userId: toko_vendor_id }).populate("invoiceId");
 
         DetailNotifikasi.create({
-          notifikasiId: notifikasiTokoVendor._id,
+          notifikasiId: notifikasiTokoVendor?._id,
           status: "Pesanan sedang dalam pengiriman ke konsumen",
           jenis: "Pesanan",
           message: `Pesanan ${prosesPengiriman.kode_pengiriman} sedang dalam perjalanan menuju alamat tujuan konsumen`,
@@ -403,7 +403,7 @@ module.exports = {
         const notifikasiTokoVendor = await Notifikasi.findOne({ userId: toko_vendor_id }).populate("invoiceId");
 
         DetailNotifikasi.create({
-          notifikasiId: notifikasiTokoVendor._id,
+          notifikasiId: notifikasiTokoVendor?._id,
           status: "Pesanan sedang dalam pengiriman ke konsumen",
           jenis: "Pesanan",
           message: `Pesanan ${prosesPengiriman.kode_pengiriman} sedang dalam perjalanan menuju alamat tujuan konsumen`,
@@ -424,7 +424,7 @@ module.exports = {
         for (const item of invoice) {
           const notifikasi = await Notifikasi.findOne({ invoiceId: item.invoice._id });
           DetailNotifikasi.create({
-            notifikasiId: notifikasi._id,
+            notifikasiId: notifikasi?._id,
             status: "Pesanan sedang dalam pengiriman",
             jenis: "Pesanan",
             message: `${item.invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
@@ -436,7 +436,7 @@ module.exports = {
 
           socket.emit("notif_pesanan_dikirim", {
             jenis: "Pesanan",
-            userId: notifikasi.userId,
+            userId: notifikasi?.userId,
             status: "Pesanan sedang dalam pengiriman",
             message: `${item.invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
             image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
@@ -512,7 +512,7 @@ module.exports = {
       const notifDistributor = await Notifikasi.findOne({ userId: prosesPengiriman.distributorId._id }).sort({ createdAt: -1 });
 
       DetailNotifikasi.create({
-        notifikasiId: notifDistributor.id,
+        notifikasiId: notifDistributor?.id,
         status: "Pesanan telah selesai dikirim",
         jenis: "Pesanan",
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} telah dikirim ke alamat tujuan`,
@@ -524,7 +524,7 @@ module.exports = {
 
       socket.emit('notif_distri_pesanan_selesai', {
         jenis: "Pesanan",
-        userId: notifDistributor.userId,
+        userId: notifDistributor?.userId,
         status: "Pesanan telah selesai dikirim",
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} telah dikirim ke alamat tujuan`,
         image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
@@ -536,7 +536,7 @@ module.exports = {
       if (invoice.length == 1) {
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         DetailNotifikasi.create({
-          notifikasiId: notifikasi._id,
+          notifikasiId: notifikasi?._id,
           status: "Pesanan telah diterima oleh konsumen",
           jenis: "Pesanan",
           message: `${invoice[0].invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
@@ -548,7 +548,7 @@ module.exports = {
 
         socket.emit("notif_pesanan_diterima", {
           jenis: "Pesanan",
-          userId: notifikasi.userId,
+          userId: notifikasi?.userId,
           status: "Pesanan telah diterima oleh konsumen",
           message: `${invoice[0].invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
           image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
@@ -557,7 +557,7 @@ module.exports = {
 
         const notifikasiVendor = await Notifikasi.findOne({ userId: toko_user_id }).populate("invoiceId");
         DetailNotifikasi.create({
-          notifikasiId: notifikasiVendor._id,
+          notifikasiId: notifikasiVendor?._id,
           status: "Pesanan telah diterima oleh konsumen",
           jenis: "Pesanan",
           message: `${prosesPengiriman.kode_pengiriman} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
@@ -580,7 +580,7 @@ module.exports = {
       } else {
         const notifikasiVendor = await Notifikasi.findOne({ userId: toko_user_id })
         DetailNotifikasi.create({
-          notifikasiId: notifikasiVendor._id,
+          notifikasiId: notifikasiVendor?._id,
           status: "Pesanan telah diterima oleh konsumen",
           jenis: "Pesanan",
           message: `${prosesPengiriman.kode_pengiriman} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
@@ -592,7 +592,7 @@ module.exports = {
 
         socket.emit("notif_pesanan_dikirim", {
           jenis: "Pesanan",
-          userId: notifikasiVendor.userId,
+          userId: notifikasiVendor?.userId,
           status: "Pesanan telah diterima oleh konsumen",
           message: `${prosesPengiriman.kode_pengiriman} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
           image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
@@ -601,7 +601,7 @@ module.exports = {
         for (const item of invoice) {
           const notifikasi = await Notifikasi.findOne({ invoiceId: item.invoice._id });
           DetailNotifikasi.create({
-            notifikasiId: notifikasi._id,
+            notifikasiId: notifikasi?._id,
             status: "Pesanan telah diterima oleh konsumen",
             jenis: "Pesanan",
             message: `${item.invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
@@ -613,7 +613,7 @@ module.exports = {
 
           socket.emit("notif_pesanan_diterima", {
             jenis: "Pesanan",
-            userId: notifikasi.userId,
+            userId: notifikasi?.userId,
             status: "Pesanan telah diterima oleh konsumen",
             message: `${item.invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
             image: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],

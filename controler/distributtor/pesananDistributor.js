@@ -326,6 +326,8 @@ module.exports = {
     updateDiTerimaDistributor: async (req, res, next) => {
         try {
             const { id_toko, distributorId, orderId, kode_pengiriman, status, id_pengiriman } = req.body
+            const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
+
             if (!status) return res.status(400).json({ message: 'status harus di isi' })
 
             const dataPengiriman = await Pengiriman.findOne({ _id: id_pengiriman, id_toko, distributorId, orderId, kode_pengiriman })
@@ -346,10 +348,9 @@ module.exports = {
             const longTokoVendorAddress = parseFloat(dataPengiriman.id_toko.address.pinAlamat.long)
             const latTokoVendorAddress = parseFloat(dataPengiriman.id_toko.address.pinAlamat.lat)
 
-            const nilaiJarak = await calculateDistance(latTokoVendorAddress, longTokoVendorAddress, latKAlamatKonsumen, longAlamatKonsumen, 100);
+            const nilaiJarak = await calculateDistance(latTokoVendorAddress, longTokoVendorAddress, latKAlamatKonsumen, longAlamatKonsumen, biayaTetap.radius);
             const jarakOngkir = nilaiJarak.toFixed(2)
 
-            const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
             const timeInSeconds = (jarakOngkir / biayaTetap.rerata_kecepatan) * 3600; // cari hitungan detik
 
             const payLoadDataPengiriman = await Pengiriman.find({ id_toko, distributorId, orderId, kode_pengiriman })
@@ -480,7 +481,7 @@ module.exports = {
                     pengirimanId: payLoadDataPengiriman.map(pgr => pgr._id),
                     jarakPengiriman: jarakOngkir,
                     jenisPengiriman: dataPengiriman.jenis_pengiriman,
-                    optimasi_pengiriman: timeInSeconds,
+                    optimasi_pengiriman: timeInSeconds !== NaN? timeInSeconds : 0,
                     kode_pengiriman: dataPengiriman.kode_pengiriman,
                     tarif_pengiriman: tarif_pengiriman,
                     produk_pengiriman: productToDelivers,
