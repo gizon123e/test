@@ -2562,6 +2562,7 @@ module.exports = {
   confirmOrder: async (req, res, next) => {
     try {
       if (req.user.role === "konsumen") return res.status(403).json({ message: "Invalid Request" });
+      const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).lean();
       const { userIdKonsumen, pengirimanId, completedOrders } = req.body;
       const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true, amountCapable: completedOrders }, { new: true })
         .populate({
@@ -2577,7 +2578,6 @@ module.exports = {
         .lean();
 
       const total_produk_qty = pengiriman.productToDelivers.reduce((acc, val) => acc + val.quantity, 0);
-      const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).lean();
       const avgPengemasan = biayaTetap.lama_pengemasan;
       const avgKecepatan = biayaTetap.rerata_kecepatan;
       const maxPengemasanPengiriman = biayaTetap.max_pengemasan_pengiriman * 60;
@@ -2606,7 +2606,7 @@ module.exports = {
         const latKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.lat);
         const longKonsumen = parseFloat(pengiriman.orderId.addressId.pinAlamat.long);
 
-        const jarakTempuh = await calculateDistance(latTokoVendor, longTokoVendor, latKonsumen, longKonsumen, 100);
+        const jarakTempuh = await calculateDistance(latTokoVendor, longTokoVendor, latKonsumen, longKonsumen, biayaTetap.radius);
 
         const waktuPengiriman = (jarakTempuh / avgKecepatan) * 3600;
         const waktuPengemasan = totalQuantity * avgPengemasan * 60;
@@ -2619,7 +2619,7 @@ module.exports = {
         const pengemasan = await Pengemasan.create({
           pengirimanId: pengiriman._id,
           total_quantity: totalQuantity,
-          total_jarak: jarakTempuh,
+          total_jarak: jarakTempuh !== NaN ? jarakTempuh : 0,
           waktu_pengemasan: waktuPengemasan,
           waktu_pengiriman: waktuPengiriman,
           total_pengemasan_pengiriman: totalPengemasanPengiriman,
