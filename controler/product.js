@@ -28,6 +28,7 @@ const formatNumber = require("../utils/formatAngka");
 const Pengiriman = require("../models/model-pengiriman");
 const Wishlist = require("../models/model-wishlist");
 const TokoProdusen = require("../models/produsen/model-toko");
+const { unlinkSync } = require("fs");
 // const BahanBaku = require("../models/model-bahan-baku");
 
 module.exports = {
@@ -1816,9 +1817,9 @@ module.exports = {
   edit: async (req, res, next) => {
     try {
       let updateData;
+
       const productId = req.body.productId;
       const notDirectlyEdited = ["name_product", "id_main_category", "id_sub_category", "categoryId", "image_product", "description", "long_description", "varian"];
-
       if (!productId) return res.status(400).json({ message: "Diperlukan payload productId" });
 
       const product = await Product.findById(productId);
@@ -1832,6 +1833,36 @@ module.exports = {
       }
 
       if (product.isReviewed) return res.status(403).json({ message: "Product sedang direview, tidak bisa diubah" });
+
+      const imgPaths = []
+
+      if(req.files.ImageProduct || req.files.ImageProduct.length > 0){
+        for(const img of product.image_product){
+          const pathFile = path.join(`${__dirname}`, '../' , img.split(`${process.env.HOST}`)[1]);
+          unlinkSync(pathFile)
+        }
+
+        if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
+          for (const img of req.files.ImageProduct) {
+            const nameImg = `${req.body.name_product.replace(/ /g, "_") || product.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`;
+            const pathImg = path.join(__dirname, "../public", "img_products", nameImg);
+            imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`);
+            img.mv(pathImg, (err) => {
+              if (err) return res.status(500).json({ message: "Ada kesalahan saat nyimpan file, segera diperbaiki!" });
+            });
+          }
+        } else {
+          const nameImg = `${req.body.name_product.replace(/ /g, "_") || product.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`;
+          const pathImg = path.join(__dirname, "../public", "img_products", nameImg);
+          req.files.ImageProduct.mv(pathImg, (err) => {
+            if (err) return res.status(500).json({ message: "Ada kesalahan saat nyimpan file, segera diperbaiki!" });
+          });
+          imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`);
+        }
+        
+        req.body.image_product = imgPaths
+        
+      };
 
       Object.keys(req.body).forEach((key) => {
         if (notDirectlyEdited.includes(key)) {
