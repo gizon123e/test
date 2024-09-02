@@ -66,7 +66,7 @@ module.exports = {
                 };
             }
             
-            const transaksis = await Transaksi.find(filter)
+            const transaksis = await Transaksi.find(filter).sort({createdAt: -1})
             .lean();
 
             const products = (await Product.find({userId: req.user.id}).lean()).map(prod => prod._id);
