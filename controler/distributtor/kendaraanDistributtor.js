@@ -138,6 +138,7 @@ module.exports = {
                 hargaTotalVolume = total
             }
             const user = await User.findById(userId).select("role");
+            console.log(user)
 
             let addressDetail;
 
@@ -156,6 +157,9 @@ module.exports = {
             const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
             const longDetaik = parseFloat(addressDetail.address.pinAlamat.long)
 
+            console.log('======================================>', latDetail)
+            console.log('=========================>', longDetaik)
+
             let distance
 
             const addressCustom = await Address.findOne({ _id: addressId })
@@ -163,6 +167,7 @@ module.exports = {
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
             distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, 100);
+            console.log(distance)
 
             if (isNaN(distance)) {
                 return res.status(400).json({
@@ -275,18 +280,18 @@ module.exports = {
                             })
                         }
                     }
-                    // else {
-                    //     data.push({
-                    //         kendaraan,
-                    //         jarakTempu: jarakTempu,
-                    //         totalBeratProduct: beratProduct,
-                    //         totalVolumeProduct: volumeProduct,
-                    //         hargaOngkir: Math.round(hargaOngkir),
-                    //         potongan_harga,
-                    //         total_ongkir: Math.round(total_ongkir),
-                    //         is_available: true
-                    //     })
-                    // }
+                    else {
+                        data.push({
+                            kendaraan,
+                            jarakTempu: jarakTempu,
+                            totalBeratProduct: beratProduct,
+                            totalVolumeProduct: volumeProduct,
+                            hargaOngkir: Math.round(hargaOngkir),
+                            potongan_harga,
+                            total_ongkir: Math.round(total_ongkir),
+                            is_available: true
+                        })
+                    }
                 } else {
                     let potongan_harga;
                     let total_ongkir;
