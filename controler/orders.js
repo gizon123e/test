@@ -73,10 +73,7 @@ function formatWaktu(waktu) {
 }
 
 function formatTanggalBulan(date) {
-  const bulan = [
-      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-  ];
+  const bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
   const tanggal = date.getDate();
   const bulanIndex = date.getMonth();
@@ -129,7 +126,7 @@ module.exports = {
     try {
       const { page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
-      console.log(req.user.id)
+      console.log(req.user.id);
       const filter = {
         userId: new mongoose.Types.ObjectId(req.user.id),
       };
@@ -217,8 +214,8 @@ module.exports = {
             createdAt: -1,
           },
         },
-      ])
-        
+      ]);
+
       if (!dataOrders || dataOrders.length < 1) {
         return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` });
       }
@@ -236,7 +233,7 @@ module.exports = {
         const addedPengiriman = new Set();
         const dataProduct = await DataProductOrder.findOne({ pesananId: order._id });
         if (order.status === "Belum Bayar" || order.status === "Dibatalkan") {
-          if (transaksi && transaksiSubsidi && req.user.role === 'konsumen') {
+          if (transaksi && transaksiSubsidi && req.user.role === "konsumen") {
             if (transaksiSubsidi) {
               const store = {};
               const invoice = await Invoice.findOne({ id_transaksi: transaksiSubsidi._id }).lean();
@@ -380,10 +377,10 @@ module.exports = {
             }
           }
 
-          if(req.user.role !== 'konsumen'){
+          if (req.user.role !== "konsumen") {
             const invoice = await Invoice.findOne({ id_transaksi: transaksi?._id });
             let jumlah_uang = order.biaya_layanan + order.biaya_jasa_aplikasi;
-            const pengiriman = await Pengiriman.find({ invoice: invoice ._id }).populate("distributorId").populate("id_jenis_kendaraan").lean();
+            const pengiriman = await Pengiriman.find({ invoice: invoice._id }).populate("distributorId").populate("id_jenis_kendaraan").lean();
             const store = {};
             for (const item of order.items) {
               const { productId, quantity, ...restOfProduct } = item.product;
@@ -439,9 +436,8 @@ module.exports = {
             const orders = Object.keys(store).map((key) => {
               return store[key];
             });
-            data.push({ ...rest, total_pesanan: jumlah_uang, status: "Belum Bayar", orders });    
+            data.push({ ...rest, total_pesanan: jumlah_uang, status: "Belum Bayar", orders });
           }
-
         } else {
           let jumlah_uang = 0;
           const store = {};
@@ -565,7 +561,7 @@ module.exports = {
           }
           return 0;
         })
-        .slice(skip, skip + limit)
+        .slice(skip, skip + limit);
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
       if (error && error.name === "ValidationError") {
@@ -579,11 +575,11 @@ module.exports = {
     }
   },
 
-  getOrdersSeller: async(req, res, next) => {
+  getOrdersSeller: async (req, res, next) => {
     try {
       const { status, page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
-      if(req.user.role === "konsumen") return res.status(403).json({message: "Invalid Request"})
+      if (req.user.role === "konsumen") return res.status(403).json({ message: "Invalid Request" });
       const products = await Product.find({ userId: req.user.id });
       const productIds = products.map((item) => {
         return item._id;
@@ -627,9 +623,9 @@ module.exports = {
           },
         },
         { $unwind: "$alamat" },
-      ]
+      ];
 
-      if(req.user.role === "vendor"){
+      if (req.user.role === "vendor") {
         pipeline.push(
           {
             $lookup: {
@@ -640,7 +636,7 @@ module.exports = {
             },
           },
           { $unwind: "$sekolah" }
-        )
+        );
       }
 
       pipeline.push(
@@ -668,16 +664,14 @@ module.exports = {
           $sort: {
             createdAt: -1,
           },
-        },
-      )
+        }
+      );
 
-      dataOrders = await Pesanan.aggregate(pipeline)
-        .skip(skip)
-        .limit(parseInt(limit));
+      dataOrders = await Pesanan.aggregate(pipeline).skip(skip).limit(parseInt(limit));
 
       const data = [];
       for (const order of dataOrders) {
-        console.log(order._id)
+        console.log(order._id);
         const { createdAt, updatedAt, status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order;
         const dataProd = await DataProductOrder.findOne({ pesananId: order._id });
         const transaksiSubsidi = await Transaksi.findOne({ id_pesanan: order._id, subsidi: true });
@@ -691,16 +685,16 @@ module.exports = {
           const detailUserBuyer = await User.findById(order.alamat.userId);
           switch (detailUserBuyer.role) {
             case "konsumen":
-              detailBuyer = await Konsumen.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
+              detailBuyer = await Konsumen.findOne({ userId: detailUserBuyer._id }).select("nama namaBadanUsaha");
               break;
             case "vendor":
-              detailBuyer = await Vendor.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
+              detailBuyer = await Vendor.findOne({ userId: detailUserBuyer._id }).select("nama namaBadanUsaha");
               break;
             case "supplier":
-              detailBuyer = await Supplier.findOne({ userId: detailUserBuyer._id }).select('nama namaBadanUsaha');
+              detailBuyer = await Supplier.findOne({ userId: detailUserBuyer._id }).select("nama namaBadanUsaha");
               break;
           }
-          console.log(order.alamat.userId)
+          console.log(order.alamat.userId);
           const pesanan = {};
           const kode_pesanan = new Set();
           for (const item of order.items) {
@@ -768,23 +762,23 @@ module.exports = {
           for (const key of Object.keys(pesanan)) {
             const pembatalan = await Pembatalan.findOne({ pengirimanId: pesanan[key].pengiriman._id });
             const tidakMemenuhiSyarat = await IncompleteOrders.exists({
-              userIdSeller: req.user.id, 
+              userIdSeller: req.user.id,
               pengirimanId: pesanan[key].pengiriman._id,
-              userIdKonsumen: restOfOrder?.sekolah?.userId
-            })
+              userIdKonsumen: restOfOrder?.sekolah?.userId,
+            });
             const checkStatus = () => {
               if (pesanan[key].pengiriman.isRequestedToPickUp && !pembatalan) {
                 return "Menunggu Distributor";
               }
               if (pesanan[key].pengiriman.sellerApproved && !pembatalan) {
                 return "Dikemas";
-              }  
+              }
               if (!pesanan[key].pengiriman.sellerApproved && !pembatalan) {
                 return "Pesanan Terbaru";
-              }  
+              }
               if (pesanan[key].pengiriman.status_pengiriman === "dikirim" && !pembatalan) {
                 return "Sedang Penjemputan";
-              }  
+              }
               if (pembatalan) {
                 return "Kadaluarsa";
               }
@@ -792,13 +786,13 @@ module.exports = {
             const checkCreatedAt = () => {
               if (pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi?._id.toString()) {
                 return createdAt;
-              }  
+              }
               if (pesanan[key].pengiriman.invoice._id.toString() === invoiceTambahan?._id.toString()) {
                 return updatedAt;
               }
             };
             const { pengiriman, ...restOfPesanan } = pesanan[key];
-            const { waktu_pengiriman, countdown_pengemasan_vendor,...restOfPengiriman } = pengiriman;
+            const { waktu_pengiriman, countdown_pengemasan_vendor, ...restOfPengiriman } = pengiriman;
             data.push({
               ...restOfOrder,
               createdAt: checkCreatedAt(),
@@ -824,7 +818,7 @@ module.exports = {
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
       console.log(error);
-      next(error)  
+      next(error);
     }
   },
 
@@ -916,31 +910,30 @@ module.exports = {
         const pengiriman = await Pengiriman.find({ orderId: order._id, sellerApproved: false }).populate("distributorId").lean();
         let detailToko;
 
-                const pesanan = {}
-                // const kode_pesanan = new Set()
-                for(const item of order.items){
-                    
-                    let isApproved = item.isApproved
-                    const productSelected = dataProd?.dataProduct.find(prd => item.product.productId.toString() === prd._id.toString());
-                    // if(!kode_pesanan.has(item.kode_pesanan)){
-                    //     kode_pesanan.add(item.kode_pesanan)
-                    // }
-                    if(productSelected){
-                        const selectedPengiriman = pengiriman.filter(pgr => {
-                            return pgr.productToDelivers.some(prd => prd.productId.toString() === productSelected._id.toString())
-                        })
-                        
-                        selectedPengiriman.map(pgr => {
-                            const pgrId = pgr._id.toString()
-                            const isDistributtorApprovedCheck = () => {
-                                if(item.isDistributtorApproved){
-                                    return true
-                                }else if(!item.isDistributtorApproved){
-                                    return null
-                                }else if(pgr.rejected){
-                                    return false
-                                }
-                            };
+        const pesanan = {};
+        // const kode_pesanan = new Set()
+        for (const item of order.items) {
+          let isApproved = item.isApproved;
+          const productSelected = dataProd?.dataProduct.find((prd) => item.product.productId.toString() === prd._id.toString());
+          // if(!kode_pesanan.has(item.kode_pesanan)){
+          //     kode_pesanan.add(item.kode_pesanan)
+          // }
+          if (productSelected) {
+            const selectedPengiriman = pengiriman.filter((pgr) => {
+              return pgr.productToDelivers.some((prd) => prd.productId.toString() === productSelected._id.toString());
+            });
+
+            selectedPengiriman.map((pgr) => {
+              const pgrId = pgr._id.toString();
+              const isDistributtorApprovedCheck = () => {
+                if (item.isDistributtorApproved) {
+                  return true;
+                } else if (!item.isDistributtorApproved) {
+                  return null;
+                } else if (pgr.rejected) {
+                  return false;
+                }
+              };
 
               if (pgr.invoice.toString() === invoiceSubsidi._id.toString()) {
                 if (!pesanan[pgrId]) {
@@ -1015,7 +1008,7 @@ module.exports = {
   getOrderDetail: async (req, res, next) => {
     try {
       const { sellerId, status_order } = req.query;
-      const isKonsumen = req.user.role === 'konsumen'
+      const isKonsumen = req.user.role === "konsumen";
       const pipeline = [
         {
           $match: {
@@ -1049,10 +1042,7 @@ module.exports = {
           $lookup: {
             from: "products",
             let: { productId: "$items.product.productId" },
-            pipeline: [
-              { $match: { $expr: { $eq: ["$_id", "$$productId"] } } },
-              { $project: { name_product: 1, image_product: 1, userId: 1, total_price: 1 } }
-            ],
+            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$productId"] } } }, { $project: { name_product: 1, image_product: 1, userId: 1, total_price: 1 } }],
             as: "product_detail",
           },
         },
@@ -1063,10 +1053,7 @@ module.exports = {
           $lookup: {
             from: "users",
             let: { userId: "$items.product.productId.userId" },
-            pipeline: [
-              { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
-              { $project: { role: 1, _id: 1 } }
-            ],
+            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, { $project: { role: 1, _id: 1 } }],
             as: "user_detail",
           },
         },
@@ -1085,7 +1072,7 @@ module.exports = {
         { $addFields: { addressId: "$alamat" } },
         { $project: { alamat: 0 } },
       ];
-      
+
       // Conditionally add the sekolah lookup stages if the user role is 'konsumen'
       if (isKonsumen) {
         pipeline.push(
@@ -1110,7 +1097,7 @@ module.exports = {
           { $addFields: { "sekolahId.address": "$alamatSekolah" } }
         );
       }
-      
+
       pipeline.push(
         {
           $group: {
@@ -1160,7 +1147,7 @@ module.exports = {
         },
         { $replaceRoot: { newRoot: "$data" } }
       );
-      const dataOrder = await Orders.aggregate(pipeline)
+      const dataOrder = await Orders.aggregate(pipeline);
       // return res.status(200).json({dataOrder})
       if (!dataOrder[0]) return res.status(404).json({ message: `Order dengan id: ${req.params.id} tidak ditemukan` });
       const { _id, items, order_detail, addressId, status, biaya_layanan, biaya_jasa_aplikasi, biaya_asuransi, ...restOfOrder } = dataOrder[0];
@@ -1224,10 +1211,10 @@ module.exports = {
               detailToko = await TokoVendor.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean();
               break;
             case "supplier":
-              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
+              detailToko = await TokoSupplier.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean();
               break;
             case "produsen":
-              detailToko = await TokoProdusen.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean()
+              detailToko = await TokoProdusen.findOne({ userId: productId.userId._id }).select("namaToko address").populate("address").lean();
               break;
           }
           const user = await User.findById(productId.userId._id).select("email phone").lean();
@@ -1280,7 +1267,7 @@ module.exports = {
           total_pesanan: jumlah_uang,
           status: pembatalan ? "Dibatalkan" : status,
           dibatalkanOleh: pembatalan ? pembatalan.canceledBy : null,
-          invoice: { ...invoiceTambahan, paymentMethod: pay.nama_bank},
+          invoice: { ...invoiceTambahan, paymentMethod: pay.nama_bank },
           ...restOfOrder,
           kode_transaksi: transaksi.kode_transaksi,
           biaya_layanan,
@@ -1303,7 +1290,7 @@ module.exports = {
           totalPotonganOngkir: 0,
           biaya_layanan: 0,
           biaya_jasa_aplikasi: 0,
-          paymentMethod: pay?.nama_bank
+          paymentMethod: pay?.nama_bank,
         };
         const detailInvoiceSubsidi = {
           product: [],
@@ -1314,7 +1301,7 @@ module.exports = {
           totalPotonganOngkir: 0,
           biaya_layanan: 0,
           biaya_jasa_aplikasi: 0,
-          paymentMethod: "subsidi"
+          paymentMethod: "subsidi",
         };
         const invoiceSubsidi = await Invoice.findOne({ id_transaksi: transaksiSubsidi?._id });
         const invoiceTambahan = await Invoice.findOne({ id_transaksi: transaksi?._id, status: "Lunas" });
@@ -1395,7 +1382,7 @@ module.exports = {
           });
 
           if (selectedPengirimanSubsidi) {
-            console.log(selectedPengirimanSubsidi)
+            console.log(selectedPengirimanSubsidi);
             const foundProd = selectedPengirimanSubsidi.productToDelivers.find((prd) => productSelected._id.toString() === prd.productId.toString());
             if (!addedPengiriman.has(selectedPengirimanSubsidi._id.toString())) {
               detailInvoiceSubsidi.totalOngkir += selectedPengirimanSubsidi.ongkir;
@@ -1417,7 +1404,7 @@ module.exports = {
           }
 
           if (selectedPengirimanTambahan) {
-            console.log(detailBiaya)
+            console.log(detailBiaya);
             const foundProd = selectedPengirimanTambahan.productToDelivers.find((prd) => productSelected._id.toString() === prd.productId.toString());
             if (!addedPengiriman.has(selectedPengirimanTambahan._id.toString())) {
               detailInvoiceTambahan.totalOngkir += selectedPengirimanTambahan.ongkir;
@@ -1497,7 +1484,7 @@ module.exports = {
           total_pesanan: jumlah_uang,
           status: checkStatus(),
           dibatalkanOleh: pembatalan ? pembatalan.canceledBy : null,
-          invoice: invoiceSubsidi? invoiceSubsidi : null,
+          invoice: invoiceSubsidi ? invoiceSubsidi : null,
           invoiceTambahan: invoiceTambahan ? invoiceTambahan : null,
           detailInvoiceSubsidi,
           detailInvoiceTambahan,
@@ -1509,67 +1496,55 @@ module.exports = {
           data,
         };
 
-          return res.status(200).json(respon)
-        }
-      } catch (error) {
-        console.error('Error fetching order:', error);
-        next(error);
+        return res.status(200).json(respon);
       }
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      next(error);
+    }
   },
 
-  checkStatusPembayaran: async(req, res, next) => {
+  checkStatusPembayaran: async (req, res, next) => {
     try {
-      const { order_id } = req.query
-      const pesanan = await Pesanan.exists({_id: order_id})
-      const detailPesanan = await DetailPesanan.findOne({id_pesanan: pesanan._id}).select("id_va").populate("id_va").lean();
-      if(!detailPesanan) return res.status(404).json({message: "pembayaran tidak ditemukan"})
-      const panduan = await PanduanPembayaran.findOne({bank_id: detailPesanan.id_va._id}).select('content')
-      if(!detailPesanan) return res.status(404).json({message: "order_id tidak ditemukan"})
+      const { order_id } = req.query;
+      const pesanan = await Pesanan.exists({ _id: order_id });
+      const detailPesanan = await DetailPesanan.findOne({ id_pesanan: pesanan._id }).select("id_va").populate("id_va").lean();
+      if (!detailPesanan) return res.status(404).json({ message: "pembayaran tidak ditemukan" });
+      const panduan = await PanduanPembayaran.findOne({ bank_id: detailPesanan.id_va._id }).select("content");
+      if (!detailPesanan) return res.status(404).json({ message: "order_id tidak ditemukan" });
       const resAxios = await axios.get(`https://api.sandbox.midtrans.com/v2/${detailPesanan._id}/status`, {
         headers: {
-          Authorization: `Basic ${btoa(process.env.SERVERKEY + ':')}`
-        }
+          Authorization: `Basic ${btoa(process.env.SERVERKEY + ":")}`,
+        },
       });
-      return res.status(200).json({ 
-        message: "berhasil mendapatkan status pembayaran", 
-        paid: resAxios.data.transaction_status === "settlement"? true : false, 
+      return res.status(200).json({
+        message: "berhasil mendapatkan status pembayaran",
+        paid: resAxios.data.transaction_status === "settlement" ? true : false,
         methodPembayaran: {
           ...detailPesanan,
-          paymenNumbers: resAxios.data.va_numbers[0].va_number
+          paymenNumbers: resAxios.data.va_numbers[0].va_number,
         },
-        panduan
+        panduan,
       });
     } catch (error) {
       console.log(error);
-      next(error)
+      next(error);
     }
-  },  
+  },
 
   createOrder: async (req, res, next) => {
     try {
-      const today = new Date()
-      today.setDate(today.getDate() + 1)
+      const today = new Date();
+      today.setDate(today.getDate() + 1);
       // today.setHours(today.getHours() + 1)
-      today.setMinutes(today.getMinutes() + 4)
-      console.log(today)
+      today.setMinutes(today.getMinutes() + 4);
+      console.log(today);
 
-      const tommorow = new Date()
-      tommorow.setDate(tommorow.getDate() + 1)
+      const tommorow = new Date();
+      tommorow.setDate(tommorow.getDate() + 1);
 
-      const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000))
-      const {
-          metode_pembayaran,
-          total,
-          items,
-          shipments,
-          dp,
-          biaya_asuransi,
-          biaya_jasa_aplikasi,
-          biaya_layanan,
-          poin_terpakai,
-          sekolahId,
-          biaya_awal_asuransi
-      } = req.body
+      const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000));
+      const { metode_pembayaran, total, items, shipments, dp, biaya_asuransi, biaya_jasa_aplikasi, biaya_layanan, poin_terpakai, sekolahId, biaya_awal_asuransi } = req.body;
 
       if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
       if (!sekolahId && req.user.role === "konsumen") return res.status(400).json({ message: "Kirimkan Id Sekolah" });
@@ -1611,7 +1586,7 @@ module.exports = {
       if (items.length !== shipments.length) return res.status(400).json({ message: "ama dengan dengan data pengiriman" });
 
       let toko_vendor = [];
-      
+
       const decimalPattern = /^\d+\.\d+$/;
       if (decimalPattern.test(total)) return res.status(400).json({ message: `Total yang dikirimkan tidak boleh decimal. ${total}` });
       const idPesanan = new mongoose.Types.ObjectId();
@@ -1724,8 +1699,8 @@ module.exports = {
             detailBiaya.totalOngkir += dataOrder.shipments[i].ongkir;
             detailBiaya.totalPotonganOngkir += dataOrder.shipments[i].potongan_ongkir;
             detailBiaya.jumlahOngkir += dataOrder.shipments[i].total_ongkir;
-            const jenisJasa = await JenisJasaDistributor.exists({_id: dataOrder.shipments[i].id_jenis_layanan});
-            if(!jenisJasa) return res.status(404).json({message: "Tidak ada jenis pengiriman dengan id " + dataOrder.shipments[i].id_jenis_layanan})
+            const jenisJasa = await JenisJasaDistributor.exists({ _id: dataOrder.shipments[i].id_jenis_layanan });
+            if (!jenisJasa) return res.status(404).json({ message: "Tidak ada jenis pengiriman dengan id " + dataOrder.shipments[i].id_jenis_layanan });
             promisesFunct.push(
               Pengiriman.create({
                 orderId: dataOrder._id,
@@ -1744,23 +1719,22 @@ module.exports = {
               })
             );
             total_pengiriman += 1;
-            const addedToko = new Set()
+            const addedToko = new Set();
             for (const item of dataOrder.shipments[i].products) {
-              const idToko = dataOrder.shipments[i].id_toko_vendor
+              const idToko = dataOrder.shipments[i].id_toko_vendor;
               const find_product = await Product.findOne({ _id: item.productId });
               const total_harga_product = find_product.price * item.quantity;
               const vendor = await TokoVendor.findById(dataOrder.shipments[i].id_toko_vendor).select("userId");
               if (!vendor) return res.status(404).json({ message: "id_toko_vendor di shipments tidak ditemukan, tolong cek lagi" });
-              if(!addedToko.has(idToko.toString())){
+              if (!addedToko.has(idToko.toString())) {
                 toko_vendor.push({
                   id_toko_vendor: dataOrder.shipments[i].id_toko_vendor,
                   userId: vendor.userId,
                   total_harga: total_harga_product,
                   image_product: find_product.image_product[0],
                 });
-                addedToko.add(idToko.toString())
+                addedToko.add(idToko.toString());
               }
-              
             }
           }
 
@@ -1800,8 +1774,8 @@ module.exports = {
             jenis_invoice: "Subsidi",
             createdAt: new Date(),
           })
-          .then(() => console.log("Berhasil simpan notif konsumen"))
-          .catch(() => console.log("Gagal simpan notif konsumen"));
+            .then(() => console.log("Berhasil simpan notif konsumen"))
+            .catch(() => console.log("Gagal simpan notif konsumen"));
 
           DetailNotifikasi.create({
             notifikasiId: notifikasiKonsumenId,
@@ -1811,9 +1785,9 @@ module.exports = {
             image_product: products[0].image_product[0],
             createdAt: new Date(),
           })
-          .then(() => console.log("Berhasil simpan detail notif konsumen"))
-          .catch(() => console.log("Gagal simpan detail notif konsumen"));
-          
+            .then(() => console.log("Berhasil simpan detail notif konsumen"))
+            .catch(() => console.log("Gagal simpan detail notif konsumen"));
+
           socket.emit("notif_pesanan_berhasil", {
             orderId: dataOrder._id,
             jenis: "Info",
@@ -1825,12 +1799,12 @@ module.exports = {
           });
 
           for (let i = 0; i < toko_vendor.length; i++) {
-            console.log(shipments[i], toko_vendor[i], i)
+            console.log(shipments[i], toko_vendor[i], i);
             const distributor = await Distributtor.findById(shipments[i].id_distributor);
             const id_notif_distri = new mongoose.Types.ObjectId();
             const formatHarga = toko_vendor[i].total_harga.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             const notifikasi_vendor_id = new mongoose.Types.ObjectId();
-           
+
             Notifikasi.create({
               _id: id_notif_distri,
               userId: distributor.userId,
@@ -1838,8 +1812,8 @@ module.exports = {
               jenis_invoice: "Subsidi",
               createdAt: new Date(),
             })
-            .then(() => console.log("Berhasil simpan notif distributtor"))
-            .catch(() => console.log("Gagal simpan notif distributtor"))
+              .then(() => console.log("Berhasil simpan notif distributtor"))
+              .catch(() => console.log("Gagal simpan notif distributtor"));
 
             DetailNotifikasi.create({
               notifikasiId: id_notif_distri,
@@ -1849,17 +1823,17 @@ module.exports = {
               image_product: products[0].image_product[0],
               createdAt: new Date(),
             })
-            .then(() => console.log("Berhasil simpan detail notif distributtor"))
-            .catch(() => console.log("Gagal simpan detail notif distributtor"));
+              .then(() => console.log("Berhasil simpan detail notif distributtor"))
+              .catch(() => console.log("Gagal simpan detail notif distributtor"));
 
-            socket.emit('notif_distri_pengiriman_baru', {
+            socket.emit("notif_distri_pengiriman_baru", {
               jenis: "Pesanan",
               userId: distributor.userId,
               status: "Ada pesanan terbaru yang harus dikirim",
               message: `Terima pengiriman pesanan PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1} sebelum ${formatTanggalBulan(tommorow)} pukul ${formatWaktu(tommorow)}`,
               image_product: products[0].image_product[0],
               tanggal: `${formatTanggal(new Date())} ${formatWaktu(new Date())}`,
-            })
+            });
             Notifikasi.create({
               _id: notifikasi_vendor_id,
               userId: toko_vendor[i].userId,
@@ -1891,7 +1865,6 @@ module.exports = {
             });
           }
         } else if (totalQuantity > sekolah.jumlahMurid) {
-
           const splitted = metode_pembayaran.split(" / ");
           if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
             va_user = await VaUser.findOne({
@@ -2009,7 +1982,7 @@ module.exports = {
                     soldAtMoment: prd.quantity,
                   })
                 );
-                const hargaVendor = prod.total_price * prd.quantity
+                const hargaVendor = prod.total_price * prd.quantity;
                 const formatHargaVendor = hargaVendor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
                 const notifikasi_vendor_id = new mongoose.Types.ObjectId();
@@ -2261,28 +2234,28 @@ module.exports = {
           });
         }
       } else {
-        if(req.body.sekolahId) return res.status(400).json({message: "Gak usah ada sekolahId"})
+        if (req.body.sekolahId) return res.status(400).json({ message: "Gak usah ada sekolahId" });
         const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
         const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
         const splitted = metode_pembayaran.split(" / ");
-          if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
-            va_user = await VaUser.findOne({
-              nama_bank: splitted[0],
-              userId: req.user.id,
-            }).populate("nama_bank");
-            VirtualAccount = await VA.findById(splitted[0]);
-            if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
-            (idPay = va_user.nama_bank._id), (nama = va_user.nama_virtual_account);
-          } else {
-            paymentNumber = "123";
-          }
+        if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
+          va_user = await VaUser.findOne({
+            nama_bank: splitted[0],
+            userId: req.user.id,
+          }).populate("nama_bank");
+          VirtualAccount = await VA.findById(splitted[0]);
+          if (!va_user) return res.status(404).json({ message: "User belum memiliki virtual account " + VirtualAccount.nama_bank });
+          (idPay = va_user.nama_bank._id), (nama = va_user.nama_virtual_account);
+        } else {
+          paymentNumber = "123";
+        }
 
         const va_used = await VA_Used.findOne({
           nomor_va: va_user.nomor_va.split(VirtualAccount.kode_perusahaan)[1],
           userId: req.user.id,
         });
 
-        if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });    
+        if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });
         const kodeInvoice = `INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1}`;
         const ids = [];
         for (const item of items) {
@@ -2316,12 +2289,12 @@ module.exports = {
           detailBiayaTambahan.jumlahOngkir += total_ongkir;
 
           let tokoType;
-          switch(req.user.role){
+          switch (req.user.role) {
             case "vendor":
               tokoType = "TokoSupplier";
               break;
             case "supplier":
-              tokoType = "TokoProdusen"
+              tokoType = "TokoProdusen";
           }
 
           promisesFunct.push(
@@ -2430,7 +2403,7 @@ module.exports = {
       return res.status(201).json({
         message: `Berhasil membuat Pesanan`,
         datas: dataOrder,
-        nama: nama? nama : undefined,
+        nama: nama ? nama : undefined,
         paymentNumber: transaksiMidtrans ? transaksiMidtrans.va_numbers[0].va_number : null,
         VirtualAccount,
         total_tagihan,
@@ -2703,7 +2676,7 @@ module.exports = {
           image: pengiriman.productToDelivers[0].productId.image_product[0],
           tanggal: `${formatWaktu(new Date())}`,
         });
-        return res.status(200).json({ message: "Berhasil Mengkonfirmasi Pesanan",   updatePengemasan });
+        return res.status(200).json({ message: "Berhasil Mengkonfirmasi Pesanan", updatePengemasan });
       }
     } catch (error) {
       console.log(error);
@@ -2739,15 +2712,15 @@ module.exports = {
         },
       });
       const countedSeller = new Set();
-      const countedDistri = new Set()
+      const countedDistri = new Set();
       const addedInv = new Set();
-      const from = []
+      const from = [];
       for (const shp of shipments) {
-        const prosesPengiriman = await ProsesPengirimanDistributor.findOne({pengirimanId: { $in: [shp._id]}})
-        .populate({path: "buyerId"})
-        .lean()
+        const prosesPengiriman = await ProsesPengirimanDistributor.findOne({ pengirimanId: { $in: [shp._id] } })
+          .populate({ path: "buyerId" })
+          .lean();
 
-        if(prosesPengiriman.buyerId.userId.toString() !== req.user.id.toString()) return res.status(403).json({message: "Tidak bisa mengubah punya orang lain"})
+        if (prosesPengiriman.buyerId.userId.toString() !== req.user.id.toString()) return res.status(403).json({ message: "Tidak bisa mengubah punya orang lain" });
         const dataProduct = await DataProductOrder.findOne({ pesananId: shp.orderId });
         const incompleteOrder = await IncompleteOrders.findOne({ pengirimanId: shp._id });
         const inv = await Invoice.findOne({ _id: shp.invoice, status: "Lunas" }).populate("id_transaksi");
@@ -2755,7 +2728,7 @@ module.exports = {
         let total_harga_produk = 0;
         for (prd of shp.productToDelivers) {
           const selectedProduct = dataProduct.dataProduct.find((prod) => prod._id === prd.productId._id);
-          from.push(selectedProduct)
+          from.push(selectedProduct);
           if (inv) {
             total_harga_produk += selectedProduct.total_price * prd.quantity;
 
@@ -2766,9 +2739,9 @@ module.exports = {
                   userId: user._id,
                   jenis: "masuk",
                   value: biayaTetap.poinPembelian,
-                  from
+                  from,
                 })
-              )    
+              );
               countedSeller.add(user._id.toString());
             }
           }
@@ -2776,16 +2749,16 @@ module.exports = {
         if (inv) {
           const distri = await Distributtor.findById(shp.distributorId).select("userId");
           const userDistri = await User.findById(distri.userId);
-          
+
           if (!countedDistri.has(userDistri?._id.toString())) {
-              promisesFunction.push(
-                PoinHistory.create({
+            promisesFunction.push(
+              PoinHistory.create({
                 userId: userDistri._id,
                 jenis: "masuk",
                 value: biayaTetap.poinPembelian,
-                from
+                from,
               })
-            )
+            );
             countedDistri.add(userDistri._id.toString());
           }
 
@@ -2888,15 +2861,15 @@ module.exports = {
       }
       await Pengiriman.updateMany({ _id: { $in: pengirimanIds } }, { isBuyerAccepted: true });
       if (invoice.length == 1) {
-        if(req.user.role !== "konsumen"){
+        if (req.user.role !== "konsumen") {
           promisesFunction.push(
             PoinHistory.create({
               userId: req.user.id,
               jenis: "masuk",
               value: biayaTetap.poinPembelian,
-              from
+              from,
             })
-          )
+          );
         }
         const notifikasi = await Notifikasi.findOne({ invoiceId: invoice[0].invoice._id });
         DetailNotifikasi.create({
@@ -2920,15 +2893,15 @@ module.exports = {
         });
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       } else {
-        if(req.user.role === "konsumen"){
+        if (req.user.role === "konsumen") {
           promisesFunction.push(
             PoinHistory.create({
               userId: req.user.id,
               jenis: "masuk",
               value: biayaTetap.poinPembelian,
-              from
+              from,
             })
-          )
+          );
         }
         for (const item of invoice) {
           const notifikasi = await Notifikasi.findOne({ invoiceId: item.invoice._id });
@@ -2940,8 +2913,8 @@ module.exports = {
             image_product: shipments[0].productToDelivers[0].productId.image_product[0],
             createdAt: new Date(),
           })
-          .then(() => console.log("Berhasil menyimpan detail notifikasi "))
-          .catch(() => console.log("Gagal menyimpan detail notifikasi"));
+            .then(() => console.log("Berhasil menyimpan detail notifikasi "))
+            .catch(() => console.log("Gagal menyimpan detail notifikasi"));
           socket.emit("notif_pesanan_selesai", {
             jenis: "Pesanan",
             userId: notifikasi.userId,
@@ -2952,7 +2925,7 @@ module.exports = {
           });
         }
         await Promise.all(promisesFunction);
-        
+
         return res.status(200).json({ message: "Berhasil Menerima Order" });
       }
     } catch (error) {

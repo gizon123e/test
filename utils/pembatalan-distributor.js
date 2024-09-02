@@ -6,12 +6,12 @@ module.exports = {
         try {
             cron.schedule('*/2 * * * *', () => {
                 console.log('Running Distributor status update job...');
-                updateOrderStatuses();
+                // updateOrderStatuses();
             })
 
             cron.schedule('*/2 * * * *', () => {
                 console.log('Running Distributor violation reset job...');
-                updatePelanggaranDistributor();
+                // updatePelanggaranDistributor();
             })
         } catch (error) {
             console.log("error", error)

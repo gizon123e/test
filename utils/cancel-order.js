@@ -31,7 +31,7 @@ module.exports = async () => {
         // Jadwalkan cron job untuk menjalankan setiap menit
         cron.schedule('* * * * *', () => {
           console.log('Running scheduled task: cancelExpiredOrders');
-          orderVendorAutoCancel()
+        //   orderVendorAutoCancel()
           flash_sale_checker();
         });
     } catch (error) {
