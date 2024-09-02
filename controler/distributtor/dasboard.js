@@ -143,11 +143,11 @@ module.exports = {
             if (start_date && end_date) {
                 start = new Date(start_date);
                 end = new Date(end_date);
-                end.setUTCHours(23, 59, 59, 999); // Set end date to the end of the day in UTC
+                end.setHours(23, 59, 59, 999); // Set end date to the end of the day in local time
             } else {
                 const now = new Date();
-                start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1)); // First day of the current month in UTC
-                end = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)); // Current day with end time in UTC
+                start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month in local time
+                end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); // Current day with end time in local time
             }
 
             // Query data pengiriman
@@ -170,7 +170,7 @@ module.exports = {
 
             // Generate all dates from start to end
             const result = [];
-            for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 const formattedDate = d.toISOString().split('T')[0];
                 result.push({
                     tanggal: formattedDate,
@@ -188,5 +188,4 @@ module.exports = {
             next(error);
         }
     }
-
 }
