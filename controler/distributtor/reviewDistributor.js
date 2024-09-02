@@ -21,7 +21,7 @@ module.exports = {
                     path: 'id_toko',
                     populate: 'address',
                 })
-                .populate('id_address').populate('id_jenis_pengiriman')
+                .populate('id_address').populate('id_jenis_pengiriman').sort({ createdAt: -1 })
 
             res.status(200).json({
                 message: "get All review success",
