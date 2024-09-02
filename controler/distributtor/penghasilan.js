@@ -8,6 +8,8 @@ const endOfToday = new Date(now.setHours(23, 59, 59, 999));
 
 module.exports = {
     getTotalPenghasilan: async(req, res, next) => {
+        if(req.user.role !== 'distributor') return res.status(400).json({message: "Invalid Request"})
+
         try {
             const transaksis = await Transaksi.find({userId: req.user.id}).lean()
             const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi == "masuk").reduce((acc, val)=> acc+val.jumlah, 0) - transaksis.filter(tr => tr.jenis_transaksi == "keluar").reduce((acc, val)=> acc+val.jumlah, 0)
@@ -19,6 +21,7 @@ module.exports = {
     },
 
     getPenghasilan: async(req, res, next) => {
+        if(req.user.role !== 'distributor') return res.status(400).json({message: "Invalid Request"})
         try {
             const { day, dateStart, dateEnd } = req.query
             const filter = {
@@ -94,6 +97,8 @@ module.exports = {
     },
 
     getRiwayatKeuangan: async(req, res, next) => {
+        if(req.user.role !== 'distributor') return res.status(400).json({message: "Invalid Request"})
+
         try {
             const { bulan } = req.query;
 
@@ -142,6 +147,8 @@ module.exports = {
     },
 
     getGrafikPenghasilan: async(req, res, next) => {
+        if(req.user.role !== 'distributor') return res.status(400).json({message: "Invalid Request"})
+
         try {
             const { tahun } = req.query;
             const year = parseInt(tahun, 10) || new Date().getFullYear();
