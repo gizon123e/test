@@ -138,6 +138,7 @@ module.exports = {
                 hargaTotalVolume = total
             }
             const user = await User.findById(userId).select("role");
+            console.log(user)
 
             let addressDetail;
 
@@ -155,6 +156,9 @@ module.exports = {
 
             const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
             const longDetaik = parseFloat(addressDetail.address.pinAlamat.long)
+
+            console.log('======================================>', latDetail)
+            console.log('=========================>', longDetaik)
 
             let distance
 
@@ -275,18 +279,18 @@ module.exports = {
                             })
                         }
                     }
-                    // else {
-                    //     data.push({
-                    //         kendaraan,
-                    //         jarakTempu: jarakTempu,
-                    //         totalBeratProduct: beratProduct,
-                    //         totalVolumeProduct: volumeProduct,
-                    //         hargaOngkir: Math.round(hargaOngkir),
-                    //         potongan_harga,
-                    //         total_ongkir: Math.round(total_ongkir),
-                    //         is_available: true
-                    //     })
-                    // }
+                    else {
+                        data.push({
+                            kendaraan,
+                            jarakTempu: jarakTempu,
+                            totalBeratProduct: beratProduct,
+                            totalVolumeProduct: volumeProduct,
+                            hargaOngkir: Math.round(hargaOngkir),
+                            potongan_harga,
+                            total_ongkir: Math.round(total_ongkir),
+                            is_available: true
+                        })
+                    }
                 } else {
                     let potongan_harga;
                     let total_ongkir;
