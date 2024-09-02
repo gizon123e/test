@@ -9,7 +9,7 @@ const BiayaTetap = require("../models/model-biaya-tetap");
 const { calculateDistance } = require("../utils/menghitungJarak");
 // const Address = require("../models/model-address");
 // const { Pangan } = require("../models/model-pangan");
-
+const User = require("../models/model-auth-user")
 const mongoose = require("mongoose");
 const SpecificCategory = require("../models/model-specific-category");
 const SubCategory = require("../models/model-sub-category");
@@ -677,6 +677,45 @@ module.exports = {
   filterProduk: async (req, res, next) => {
     try {
       const { minPrice, maxPrice, penilaian, main_cat, sub_cat } = req.query;
+
+      let sellers
+
+      switch(req.user.role){
+        case "konsumen":
+          sellers = (await User.find({role: "vendor"}).lean()).map((user)=> user._id)
+          break;
+        case "vendor":
+          sellers = await TokoSupplier.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+        case "supplier":
+          sellers = await TokoProdusen.aggregate([
+            {
+              $lookup: {
+                from: "addresses",
+                let: { address: "$address" },
+                pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$address"] } } }],
+                as: "address",
+              },
+            },
+            {
+              $unwind: "$address",
+            },
+          ]);
+          break;
+      }
+
       const filter = {
         "status.value": "terpublish",
         total_stok: { $gt: 0 },
@@ -731,7 +770,7 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "suppliers",
+            from: "tokosuppliers",
             let: { userId: "$userId" },
             pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
             as: "supplierData",
@@ -739,7 +778,7 @@ module.exports = {
         },
         {
           $lookup: {
-            from: "produsens",
+            from: "tokoprodusens",
             let: { userId: "$userId" },
             pipeline: [{ $match: { $expr: { $eq: ["$userId", "$$userId"] } } }, { $project: { _id: 1, nama: 1, namaBadanUsaha: 1, address: 1 } }],
             as: "produsenDatas",

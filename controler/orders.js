@@ -41,6 +41,7 @@ const TokoSupplier = require("../models/supplier/model-toko");
 const TokoProdusen = require("../models/produsen/model-toko");
 const Supplier = require("../models/supplier/model-supplier");
 const Konsumen = require("../models/konsumen/model-konsumen");
+const PelacakanDistributorKonsumen = require("../models/konsumen/pelacakanDistributorKonsumen");
 dotenv.config();
 
 const now = new Date();
@@ -1382,7 +1383,6 @@ module.exports = {
           });
 
           if (selectedPengirimanSubsidi) {
-            console.log(selectedPengirimanSubsidi);
             const foundProd = selectedPengirimanSubsidi.productToDelivers.find((prd) => productSelected._id.toString() === prd.productId.toString());
             if (!addedPengiriman.has(selectedPengirimanSubsidi._id.toString())) {
               detailInvoiceSubsidi.totalOngkir += selectedPengirimanSubsidi.ongkir;
@@ -1404,7 +1404,6 @@ module.exports = {
           }
 
           if (selectedPengirimanTambahan) {
-            console.log(detailBiaya);
             const foundProd = selectedPengirimanTambahan.productToDelivers.find((prd) => productSelected._id.toString() === prd.productId.toString());
             if (!addedPengiriman.has(selectedPengirimanTambahan._id.toString())) {
               detailInvoiceTambahan.totalOngkir += selectedPengirimanTambahan.ongkir;
@@ -1441,6 +1440,7 @@ module.exports = {
                   ...restOfItem,
                   status_pengiriman: pengiriman.filter((pgr) => pgr.id_toko.toString() === detailToko._id.toString()),
                 },
+                bukti_pengiriman: null,
                 products: [],
               };
             }
@@ -1448,7 +1448,7 @@ module.exports = {
           }
         }
 
-        Object.keys(store).forEach((key) => {
+        for(const key of Object.keys(store)){
           const total_produk_tambahan = detailInvoiceTambahan.totalHargaProduk;
           const total_produk_subsidi = detailInvoiceSubsidi.totalHargaProduk;
           const rasioJasaAplikasiSubsidi = totalPriceVendorSubsidi > 0 ? Math.round((total_produk_subsidi / totalPriceVendorSubsidi) * biaya_jasa_aplikasi) : 0;
@@ -1463,8 +1463,19 @@ module.exports = {
           total_biaya_layanan += rasioBiayaLayananTambahan;
           total_biaya_jasa_aplikasi += rasioJasaAplikasiSubsidi;
           total_biaya_layanan += rasioBiayaLayananSubsidi;
+          if(store[key].toko.status_pengiriman[0].status_pengiriman === 'pesanan selesai'){
+            const proses = await ProsesPengirimanDistributor.exists({pengirimanId: { $in: store[key].toko.status_pengiriman.map(pgr => pgr._id)}});
+            const prosesPelacakan = await PelacakanDistributorKonsumen.findOne({id_pesanan: proses._id});
+            console.log(prosesPelacakan)
+            store[key].bukti_pengiriman = {
+              image: prosesPelacakan.image_pengiriman,
+              latitude: prosesPelacakan.latitude,
+              longitude: prosesPelacakan.longitude 
+            }
+          }
           data.push(store[key]);
-        });
+        }
+
         jumlah_uang += total_biaya_layanan + total_biaya_jasa_aplikasi;
         const pembatalan = await Pembatalan.findOne({ pesananId: _id, userId: req.user.id });
         const checkStatus = () => {
@@ -1476,6 +1487,7 @@ module.exports = {
             return status;
           }
         };
+
         const respon = {
           message: "get detail data order success",
           _id,

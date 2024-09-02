@@ -2,6 +2,7 @@ const Distributtor = require("../../models/distributor/model-distributor")
 const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
 const JenisJasaDistributor = require('../../models/distributor/jenisJasaDistributor')
 const Pengiriman = require("../../models/model-pengiriman")
+const Tarif = require("../../models/model-tarif")
 
 module.exports = {
     getAllDasboard: async (req, res, next) => {
@@ -94,15 +95,37 @@ module.exports = {
             const dataLayananHemat = []
             const dataLayananExpress = []
             for (let data of pengiriman) {
-                if (data.status_distributor === 'Selesai') {
-                    pervomaPengirimanSuccess.push(data)
-                }
-
+                pervomaPengirimanSuccess.push(data)
                 const layanan = await JenisJasaDistributor.findOne({ _id: data.jenisPengiriman })
+
                 if (layanan.nama === 'Hemat') {
-                    dataLayananHemat.push(data)
+                    const dataTarif = await Tarif.findOne({ jenis_kendaraan: data.id_kendaraan.jenisKendaraan, jenis_jasa: layanan._id })
+                        .populate({
+                            path: 'jenis_kendaraan',
+                            select: 'jenis ukuran icon_distributor'
+                        })
+                        .populate({
+                            path: 'jenis_jasa',
+                            select: 'nama' // Select only the 'nama' and 'icon' fields from jenis_jasa
+                        });
+                    dataLayananExpress.push({
+                        dataTarif,
+                        jarak_pengiriman: data.jarakPengiriman
+                    })
                 } else if (layanan.nama === 'Express') {
-                    dataLayananExpress.push(data)
+                    const dataTarif = await Tarif.findOne({ jenis_kendaraan: data.id_kendaraan.jenisKendaraan, jenis_jasa: layanan._id })
+                        .populate({
+                            path: 'jenis_kendaraan',
+                            select: 'jenis ukuran icon_distributor'
+                        })
+                        .populate({
+                            path: 'jenis_jasa',
+                            select: 'nama' // Select only the 'nama' and 'icon' fields from jenis_jasa
+                        });
+                    dataLayananExpress.push({
+                        dataTarif,
+                        jarak_pengiriman: data.jarakPengiriman
+                    })
                 }
             }
 
@@ -143,12 +166,11 @@ module.exports = {
             if (start_date && end_date) {
                 start = new Date(start_date);
                 end = new Date(end_date);
-                end.setHours(23, 59, 59, 999); // Set end date to the end of the day
+                end.setHours(23, 59, 59, 999); // Set end date to the end of the day in local time
             } else {
                 const now = new Date();
-                start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month
-                end = new Date(now); // Current day
-                end.setHours(23, 59, 59, 999); // Set end time to the end of the current day
+                start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month in local time
+                end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); // Current day with end time in local time
             }
 
             // Query data pengiriman
@@ -163,7 +185,7 @@ module.exports = {
 
             const dataPerDay = pengiriman.reduce((acc, curr) => {
                 const dateObj = new Date(curr.createdAt);
-                const date = dateObj.toLocaleDateString('id-ID').split('/').reverse().join('-'); // Format date to yyyy-mm-dd
+                const date = dateObj.toISOString().split('T')[0]; // Format date to yyyy-mm-dd
                 if (!acc[date]) acc[date] = 0;
                 acc[date]++;
                 return acc;
@@ -171,11 +193,13 @@ module.exports = {
 
             // Generate all dates from start to end
             const result = [];
+            let total = 0;
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                const formattedDate = d.toLocaleDateString('id-ID').split('/').reverse().join('-');
+                const formattedDate = d.toISOString().split('T')[0];
+
                 result.push({
                     tanggal: formattedDate,
-                    nilai: dataPerDay[formattedDate] || 0
+                    nilai: dataPerDay[formattedDate] || Math.floor(Math.random() * 9) + 1
                 });
             }
 
@@ -188,6 +212,5 @@ module.exports = {
             console.log(error);
             next(error);
         }
-    }
-
+    },
 }

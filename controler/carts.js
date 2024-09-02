@@ -256,6 +256,7 @@ module.exports = {
 
             if(product.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"});
 
+            if(product.minimalOrder > quantity) return res.status(400).json({message: "Tidak bisa menambahkan ke keranjang kurang dari minimal order"})
             let accepted;
             
             switch(req.user.role){
@@ -341,10 +342,16 @@ module.exports = {
 
     updateCart: async (req, res, next) => {
         try {
-            const dataCharts = await Carts.findByIdAndUpdate( req.params.id, {
-                $inc: { quantity: parseInt(req.body.quantity) }
-            }, {new: true})
-            return res.status(201).json({ message: 'update data cart success', data: dataCharts })
+            const dataCharts = await Carts.findById(req.params.id).populate({path: "productId", select:"total_stok minimalOrder"});
+            if(dataCharts.productId.total_stok < req.body.quantity) return res.status(400).json({message: "Quantity tidak bisa lebih dari total stok tersedia"});
+            
+            if(dataCharts.productId.minimalOrder > req.body.quantity) return res.status(400).json({message: "Quantity tidak bisa kurang dari minimal order"})
+
+            const final = await Carts.findByIdAndUpdate(req.params.id, {
+                quantity: parseInt(req.body.quantity)
+            }, {new: true });
+
+            return res.status(201).json({ message: 'update data cart success', data: final })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({

@@ -149,6 +149,10 @@ app.use('/api/pangan', require('./routes/router-pangan'));
 app.use('/api/invoice', require('./routes/router-invoice'));
 app.use('/api/search', require("./routes/router-suggestion"));
 
+
+//Penghasilan
+app.use("/api/vendor", require('./routes/router-penghasilan'));
+
 // Admin Panel
 app.use('/api/user-system', require('./routes/router-system-user'));
 app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
@@ -160,11 +164,9 @@ app.use('/api/chat', require('./routes/router-chat'));
 
 //Vendor
 app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
-app.use("/api/penghasilan/vendor", require('./routes/router-vendor/router-penghasilan'));
 
 //Supplier
 app.use("/api/supplier", require('./routes/router-supplier/router-supplier'));
-app.use("/api/penghasilan/supplier", require('./routes/router-supplier/router-penghasilan'));
 
 // message
 app.use('/contak', require('./routes/router-message/router-message'))
