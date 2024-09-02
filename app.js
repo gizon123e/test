@@ -151,7 +151,7 @@ app.use('/api/search', require("./routes/router-suggestion"));
 
 
 //Penghasilan
-app.use("/api/vendor", require('./routes/router-penghasilan'));
+app.use("/api/penghasilan", require('./routes/router-penghasilan'));
 
 // Admin Panel
 app.use('/api/user-system', require('./routes/router-system-user'));
