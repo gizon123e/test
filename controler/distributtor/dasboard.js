@@ -2,6 +2,7 @@ const Distributtor = require("../../models/distributor/model-distributor")
 const ProsesPengirimanDistributor = require("../../models/distributor/model-proses-pengiriman")
 const JenisJasaDistributor = require('../../models/distributor/jenisJasaDistributor')
 const Pengiriman = require("../../models/model-pengiriman")
+const Tarif = require("../../models/model-tarif")
 
 module.exports = {
     getAllDasboard: async (req, res, next) => {
@@ -94,15 +95,37 @@ module.exports = {
             const dataLayananHemat = []
             const dataLayananExpress = []
             for (let data of pengiriman) {
-                if (data.status_distributor === 'Selesai') {
-                    pervomaPengirimanSuccess.push(data)
-                }
-
+                pervomaPengirimanSuccess.push(data)
                 const layanan = await JenisJasaDistributor.findOne({ _id: data.jenisPengiriman })
+
                 if (layanan.nama === 'Hemat') {
-                    dataLayananHemat.push(data)
+                    const dataTarif = await Tarif.findOne({ jenis_kendaraan: data.id_kendaraan.jenisKendaraan, jenis_jasa: layanan._id })
+                        .populate({
+                            path: 'jenis_kendaraan',
+                            select: 'jenis ukuran icon_distributor'
+                        })
+                        .populate({
+                            path: 'jenis_jasa',
+                            select: 'nama' // Select only the 'nama' and 'icon' fields from jenis_jasa
+                        });
+                    dataLayananExpress.push({
+                        dataTarif,
+                        jarak_pengiriman: data.jarakPengiriman
+                    })
                 } else if (layanan.nama === 'Express') {
-                    dataLayananExpress.push(data)
+                    const dataTarif = await Tarif.findOne({ jenis_kendaraan: data.id_kendaraan.jenisKendaraan, jenis_jasa: layanan._id })
+                        .populate({
+                            path: 'jenis_kendaraan',
+                            select: 'jenis ukuran icon_distributor'
+                        })
+                        .populate({
+                            path: 'jenis_jasa',
+                            select: 'nama' // Select only the 'nama' and 'icon' fields from jenis_jasa
+                        });
+                    dataLayananExpress.push({
+                        dataTarif,
+                        jarak_pengiriman: data.jarakPengiriman
+                    })
                 }
             }
 
