@@ -132,7 +132,7 @@ module.exports = {
                 }
             }
 
-            const transaksi = await Transaksi.find(filter);
+            const transaksi = await Transaksi.find(filter).sort({createdAt: -1}).lean();
             if(transaksi.length === 0) return res.status(200).json({message: `Tidak Ada Penghasilan di bulan ${bulan.charAt(0).toUpperCase() + bulan.slice(1).toLowerCase()}`})
             return res.status(200).json({message: "Berhasil menampilkan riwayat keuangan", data: transaksi })
         } catch (error) {
