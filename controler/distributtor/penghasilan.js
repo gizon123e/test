@@ -67,6 +67,7 @@ module.exports = {
             }
             
             const transaksis = await Transaksi.find(filter)
+            .sort({createdAt: -1})
             .lean();
             const distri = await Distributtor.exists({userId: req.user.id})
             const shipments = await Pengiriman.find({distributorId: distri._id, createdAt: filter.createdAt}).lean();
