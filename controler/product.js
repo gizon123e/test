@@ -966,6 +966,7 @@ module.exports = {
           path: "userId",
           select: "role",
         })
+        .populate("pangan.panganId")
         .populate("id_main_category")
         .populate("id_sub_category")
         .populate("pangan.panganId")
