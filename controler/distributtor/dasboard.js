@@ -174,20 +174,10 @@ module.exports = {
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 const formattedDate = d.toISOString().split('T')[0];
 
-                let randomValue = dataPerDay[formattedDate] || Math.floor(Math.random() * 9) + 1;
-
-                // Ensure total does not exceed 99
-                if (total + randomValue > 99) {
-                    randomValue = 99 - total; // Adjust to keep within 99
-                }
-                total += randomValue;
-
                 result.push({
                     tanggal: formattedDate,
-                    nilai: randomValue
+                    nilai: dataPerDay[formattedDate] || Math.floor(Math.random() * 9) + 1
                 });
-
-                if (total >= 99) break;
             }
 
             // Send response to client
