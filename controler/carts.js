@@ -342,13 +342,13 @@ module.exports = {
 
     updateCart: async (req, res, next) => {
         try {
-            // const dataCharts = await Carts.findById( req.params.id, {
-            //     $inc: { quantity: parseInt(req.body.quantity) }
-            // }, {new: true})
-            const dataCharts = await Carts.findById(req.params.id).populate({path: "productId", select:"total_stok"});
-            if(dataCharts.productId.total_stok < req.body.quantiy) return res.status(400).json({message: "Quantity tidak bisa lebih dari total stok tersedia"})
+            const dataCharts = await Carts.findById(req.params.id).populate({path: "productId", select:"total_stok minimalOrder"});
+            if(dataCharts.productId.total_stok < req.body.quantity) return res.status(400).json({message: "Quantity tidak bisa lebih dari total stok tersedia"});
+            
+            if(dataCharts.productId.minimalOrder > req.body.quantity) return res.status(400).json({message: "Quantity tidak bisa kurang dari minimal order"})
+
             const final = await Carts.findByIdAndUpdate(req.params.id, {
-                $inc: { quantity: parseInt(req.body.quantity) }
+                quantity: parseInt(req.body.quantity)
             }, {new: true });
 
             return res.status(201).json({ message: 'update data cart success', data: final })
