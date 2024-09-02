@@ -1,5 +1,5 @@
-const authorization = require("../../midelware/authorization");
-const controllerPenghasilan = require('../../controler/supplier/penghasilan')
+const authorization = require("../midelware/authorization");
+const controllerPenghasilan = require('../controler/penghasilan')
 const router = require("express").Router();
 
 router.get('/', authorization, controllerPenghasilan.getPenghasilan);

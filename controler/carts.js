@@ -256,6 +256,7 @@ module.exports = {
 
             if(product.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"});
 
+            if(product.minimalOrder > quantity) return res.status(400).json({message: "Tidak bisa menambahkan ke keranjang kurang dari minimal order"})
             let accepted;
             
             switch(req.user.role){

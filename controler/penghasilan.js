@@ -1,13 +1,14 @@
 const { default: mongoose } = require('mongoose');
-const SalesReport = require('../../models/model-laporan-penjualan');
-const Product = require('../../models/model-product');
-const { Transaksi } = require('../../models/model-transaksi');
+const SalesReport = require('../models/model-laporan-penjualan');
+const Product = require('../models/model-product');
+const { Transaksi } = require('../models/model-transaksi');
 const now = new Date();
 const startOfToday = new Date(now.setHours(0, 0, 0, 0));
 const endOfToday = new Date(now.setHours(23, 59, 59, 999));
 
 module.exports = {
     getTotalPenghasilan: async(req, res, next) => {
+        if(req.user.role === 'konsumen' || req.user.role === "distributor") return res.status(400).json({message : "invalid request"})
         try {
             const transaksis = await Transaksi.find({userId: req.user.id}).lean()
             const total_penghasilan = transaksis.filter(tr => tr.jenis_transaksi == "masuk").reduce((acc, val)=> acc+val.jumlah, 0) - transaksis.filter(tr => tr.jenis_transaksi == "keluar").reduce((acc, val)=> acc+val.jumlah, 0)
@@ -20,6 +21,7 @@ module.exports = {
     
     getPenghasilan: async(req, res, next) => {
         try {
+            if(req.user.role === 'konsumen' || req.user.role === "distributor") return res.status(400).json({message : "invalid request"})
             const { day, dateStart, dateEnd } = req.query
             const filter = {
                 userId: req.user.id
@@ -116,7 +118,10 @@ module.exports = {
         }
     },
 
-    getRiwayatKeuangan: async(req, res, next) => {
+    getRiwayatKeuangan: async(req, res, next) => 
+    {
+        if(req.user.role === 'konsumen' || req.user.role === "distributor") return res.status(400).json({message : "invalid request"})
+    
         try {
             const { bulan } = req.query;
 
