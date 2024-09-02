@@ -342,10 +342,16 @@ module.exports = {
 
     updateCart: async (req, res, next) => {
         try {
-            const dataCharts = await Carts.findByIdAndUpdate( req.params.id, {
+            // const dataCharts = await Carts.findById( req.params.id, {
+            //     $inc: { quantity: parseInt(req.body.quantity) }
+            // }, {new: true})
+            const dataCharts = await Carts.findById(req.params.id).populate({path: "productId", select:"total_stok"});
+            if(dataCharts.productId.total_stok < req.body.quantiy) return res.status(400).json({message: "Quantity tidak bisa lebih dari total stok tersedia"})
+            const final = await Carts.findByIdAndUpdate(req.params.id, {
                 $inc: { quantity: parseInt(req.body.quantity) }
-            }, {new: true})
-            return res.status(201).json({ message: 'update data cart success', data: dataCharts })
+            }, {new: true });
+
+            return res.status(201).json({ message: 'update data cart success', data: final })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({
