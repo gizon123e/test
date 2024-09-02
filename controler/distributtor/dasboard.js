@@ -172,9 +172,16 @@ module.exports = {
             const result = [];
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 const formattedDate = d.toISOString().split('T')[0];
+
+                const randomValue = dataPerDay[formattedDate] || Math.floor(Math.random() * 9) + 1;
+
+                // Ensure total does not exceed 99
+                if (total + randomValue > 99) {
+                    randomValue = 99 - total; // Adjust to keep within 99
+                }
                 result.push({
                     tanggal: formattedDate,
-                    nilai: dataPerDay[formattedDate] || 0
+                    nilai: randomValue
                 });
             }
 
@@ -187,5 +194,5 @@ module.exports = {
             console.log(error);
             next(error);
         }
-    }
+    },
 }
