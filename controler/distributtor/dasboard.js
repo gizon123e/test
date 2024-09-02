@@ -143,12 +143,11 @@ module.exports = {
             if (start_date && end_date) {
                 start = new Date(start_date);
                 end = new Date(end_date);
-                end.setHours(23, 59, 59, 999); // Set end date to the end of the day
+                end.setHours(23, 59, 59, 999); // Set end date to the end of the day in local time
             } else {
                 const now = new Date();
-                start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month
-                end = new Date(now); // Current day
-                end.setHours(23, 59, 59, 999); // Set end time to the end of the current day
+                start = new Date(now.getFullYear(), now.getMonth(), 1); // First day of the current month in local time
+                end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); // Current day with end time in local time
             }
 
             // Query data pengiriman
@@ -163,7 +162,7 @@ module.exports = {
 
             const dataPerDay = pengiriman.reduce((acc, curr) => {
                 const dateObj = new Date(curr.createdAt);
-                const date = dateObj.toLocaleDateString('id-ID').split('/').reverse().join('-'); // Format date to yyyy-mm-dd
+                const date = dateObj.toISOString().split('T')[0]; // Format date to yyyy-mm-dd
                 if (!acc[date]) acc[date] = 0;
                 acc[date]++;
                 return acc;
@@ -172,7 +171,7 @@ module.exports = {
             // Generate all dates from start to end
             const result = [];
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                const formattedDate = d.toLocaleDateString('id-ID').split('/').reverse().join('-');
+                const formattedDate = d.toISOString().split('T')[0];
                 result.push({
                     tanggal: formattedDate,
                     nilai: dataPerDay[formattedDate] || 0
@@ -189,5 +188,4 @@ module.exports = {
             next(error);
         }
     }
-
 }
