@@ -1470,7 +1470,8 @@ module.exports = {
             store[key].bukti_pengiriman = {
               image: prosesPelacakan.image_pengiriman,
               latitude: prosesPelacakan.latitude,
-              longitude: prosesPelacakan.longitude 
+              longitude: prosesPelacakan.longitude,
+              waktu: prosesPelacakan.update_date_pesanan_selesai
             }
           }
           data.push(store[key]);

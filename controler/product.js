@@ -1839,12 +1839,13 @@ module.exports = {
       if(req.files.ImageProduct || req.files.ImageProduct.length > 0){
         for(const img of product.image_product){
           const pathFile = path.join(`${__dirname}`, '../' , img.split(`${process.env.HOST}`)[1]);
+          console.log(pathFile)
           unlinkSync(pathFile)
         }
 
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
           for (const img of req.files.ImageProduct) {
-            const nameImg = `${req.body.name_product.replace(/ /g, "_") || product.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(img.name)}`;
+            const nameImg = `${req.body.name_product.replace(/ /g, "_") || product.name_product.replace(/ /g, "_")}_${new Date().getTime() + 1}${path.extname(img.name)}`;
             const pathImg = path.join(__dirname, "../public", "img_products", nameImg);
             imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`);
             img.mv(pathImg, (err) => {
@@ -1852,7 +1853,7 @@ module.exports = {
             });
           }
         } else {
-          const nameImg = `${req.body.name_product.replace(/ /g, "_") || product.name_product.replace(/ /g, "_")}_${new Date().getTime()}${path.extname(req.files.ImageProduct.name)}`;
+          const nameImg = `${req.body.name_product.replace(/ /g, "_") || product.name_product.replace(/ /g, "_")}_${new Date().getTime() + 1}${path.extname(req.files.ImageProduct.name)}`;
           const pathImg = path.join(__dirname, "../public", "img_products", nameImg);
           req.files.ImageProduct.mv(pathImg, (err) => {
             if (err) return res.status(500).json({ message: "Ada kesalahan saat nyimpan file, segera diperbaiki!" });
