@@ -21,7 +21,7 @@ module.exports = {
 
     createJenisJasaDistributor: async (req, res, next) => {
         try {
-            const { nama, description } = req.body
+            const { nama, description, maximum } = req.body
             const files = req.files;
             const icon = files ? files.icon : null
 
@@ -35,7 +35,8 @@ module.exports = {
             const data = await JenisJasaDistributor.create({
                 nama,
                 description,
-                icon: `${process.env.HOST}/public/icon-kendaraan/${imageIcon}`
+                icon: `${process.env.HOST}/public/icon-kendaraan/${imageIcon}`,
+                maximum
             })
 
             res.status(201).json({
@@ -50,7 +51,7 @@ module.exports = {
 
     updateJenisJasaDistributor: async (req, res, next) => {
         try {
-            const { nama, description } = req.body
+            const { nama, description, maximum } = req.body
             const files = req.files;
             const icon = files ? files.icon : null
 
@@ -74,7 +75,8 @@ module.exports = {
             const data = await JenisJasaDistributor.findByIdAndUpdate({ _id: req.params.id }, {
                 nama,
                 description,
-                icon: `${process.env.HOST}/public/icon-kendaraan/${legalitasNpwp}`
+                icon: `${process.env.HOST}/public/icon-kendaraan/${legalitasNpwp}`,
+                maximum
             }, { new: true })
 
             res.status(201).json({

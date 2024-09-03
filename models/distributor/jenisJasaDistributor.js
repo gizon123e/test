@@ -12,6 +12,11 @@ const modelJenisJasaDistributor = new mongoose.Schema({
     description: {
         type: String,
         required: [true, 'description harus di isi']
+    },
+    maximum: {
+        type: Number,
+        default: null,
+        required: [true, 'maximum harus di isi']
     }
 })
 
