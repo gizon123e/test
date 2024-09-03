@@ -114,7 +114,7 @@ module.exports = {
 
     getAllProsesPengiriman: async (req, res, next) => {
         try {   
-            const { status } = req.query
+            const { page = 1, limit = 5, status } = req.query;
             const toko = await Toko.findOne({userId: req.user.id})
             const dataProsesPengirimanDistributor = await ProsesPengirimanDistributor.find({ tokoId: toko._id, status_distributor: { $ne: "Belum dijemput"} })
                 .populate({
@@ -171,7 +171,7 @@ module.exports = {
                     if(!status) return true;
 
                     return pgr.status_distributor === status
-                })
+                }).slice(skip, skip + limit)
             })
         } catch (error) {
             console.log(error)

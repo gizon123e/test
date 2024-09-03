@@ -68,6 +68,7 @@ module.exports = {
         try {
             const chat = await Chat.findById(req.params.id)
                 .populate({ path: "participants", select: "role" })
+                .populate({ path: "messages.sender", select: "role" })
                 .sort({ 'messages.timestamp': 1 })
                 .lean();
         
@@ -75,7 +76,7 @@ module.exports = {
                 return res.status(404).json({ message: "Percakapan tidak ditemukan" });
             }
         
-            const { participants, ...restOfChat } = chat;
+            const { participants, __v , messages , ...restOfChat } = chat;
         
             let lawanBicara = participants.find(pr => pr._id.toString() !== req.user.id.toString());
             if (!lawanBicara) {
@@ -121,9 +122,59 @@ module.exports = {
                     break;
                 default:
                     return res.status(400).json({ message: "Role tidak dikenali" });
-            }
+            };
+
+            const mappedSender = await Promise.all(messages.map(async (msg) => {
+                const { sender, ...restOfMsg } = msg
+                let senderDetail;
+                let detail;
+            
+                switch (msg.sender.role) {
+                    case "konsumen":
+                        detail = await Konsumen.findOne({ userId: msg.sender.role._id }).select("profile_pict namaBadanUsaha userId").lean();
+                        if (!detail) {
+                            return res.status(404).json({ message: "Detail konsumen tidak ditemukan" });
+                        }
+                        senderDetail = { ...detail };
+                        break;
+                    case "vendor":
+                        detail = await Vendor.findOne({ userId: msg.sender.role._id }).select("profile_pict namaBadanUsaha userId").lean();
+                        if (!detail) {
+                            return res.status(404).json({ message: "Detail vendor tidak ditemukan" });
+                        }
+                        senderDetail = { ...detail };
+                        break;
+                    case "supplier":
+                        detail = await Supplier.findOne({ userId: msg.sender.role._id }).select("profile_pict namaBadanUsaha userId").lean();
+                        if (!detail) {
+                            return res.status(404).json({ message: "Detail supplier tidak ditemukan" });
+                        }
+                        senderDetail = { ...detail };
+                        break;
+                    case "produsen":
+                        detail = await Produsen.findOne({ userId: msg.sender.role._id }).select("profile_pict namaBadanUsaha userId").lean();
+                        if (!detail) {
+                            return res.status(404).json({ message: "Detail produsen tidak ditemukan" });
+                        }
+                        senderDetail = { ...detail };
+                        break;
+                    case "distributor":
+                        detail = await Distributtor.findOne({ userId: msg.sender.role._id }).select("imageProfile namaBadanUsaha userId").lean();
+                        if (!detail) {
+                            return res.status(404).json({ message: "Detail distributor tidak ditemukan" });
+                        }
+                        senderDetail = { ...detail, profile_pict: detail.imageProfile };
+                        delete senderDetail.imageProfile;
+                        break;
+                    default:
+                        return res.status(400).json({ message: "Role tidak dikenali" });
+                }
+            
+                return { sender, ...restOfMsg };
+            }));
+            
         
-            return res.status(200).json({ message: "Berhasil Mendapatkan Chat", data: { ...restOfChat, lawanBicara } });
+            return res.status(200).json({ message: "Berhasil Mendapatkan Chat", data: { ...restOfChat, messages: mappedSender, lawanBicara } });
         } catch (error) {
             console.log(error);
             next(error);
