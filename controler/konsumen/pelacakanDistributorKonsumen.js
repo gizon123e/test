@@ -61,14 +61,14 @@ module.exports = {
                         { path: "merekKendaraan" }
                     ]
                 })
-                .populate("jenisKendaraans")
+                .populate("jenisKendaraan")
                 .populate("id_pengemudi")
                 .populate({
                     path: "tokoId",
                     populate: "address"
                 })
                 .populate({
-                    path: "sekolahId",
+                    path: "buyerId",
                     populate: "address"
                 })
 
