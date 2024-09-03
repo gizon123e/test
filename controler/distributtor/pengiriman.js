@@ -4,7 +4,7 @@ const DetailNotifikasi = require("../../models/notifikasi/detail-notifikasi")
 const { io } = require("socket.io-client");
 const Invoice = require("../../models/model-invoice");
 
-const socket = io(process.env.HOST, {
+const socket = io(process.env.WEBSOCKET, {
     auth: {
         fromServer: true
     }

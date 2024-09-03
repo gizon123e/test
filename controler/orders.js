@@ -83,7 +83,7 @@ function formatTanggalBulan(date) {
   return `${tanggal} ${bulan[bulanIndex]} ${tahun}`;
 }
 
-const socket = io(process.env.HOST, {
+const socket = io(process.env.WEBSOCKET, {
   auth: {
     fromServer: true,
   },

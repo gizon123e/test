@@ -17,7 +17,7 @@ const { io } = require("socket.io-client");
 const Pengemudi = require("../../models/distributor/model-pengemudi");
 const Address = require("../../models/model-address");
 
-const socket = io(process.env.HOST, {
+const socket = io(process.env.WEBSOCKET, {
   auth: {
     fromServer: true,
   },

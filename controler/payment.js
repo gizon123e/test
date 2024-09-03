@@ -23,7 +23,7 @@ const PoinHistory = require("../models/model-poin")
 
 dotenv.config();
 
-const socket = io(process.env.HOST, {
+const socket = io(process.env.WEBSOCKET, {
     auth: {
         fromServer: true
     }
