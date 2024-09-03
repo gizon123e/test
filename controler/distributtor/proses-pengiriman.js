@@ -83,7 +83,7 @@ module.exports = {
         for (let item of data.produk_pengiriman) {
           total_qty += item.quantity;
         }
-        if(pengirimanId[0].isRequestedToPickUp){
+        if (pengirimanId[0].isRequestedToPickUp) {
           datas.push({
             ...restOfData,
             pengirimanId: pengirimanId.map(pgr => pgr._id),
@@ -121,7 +121,8 @@ module.exports = {
           path: "produk_pengiriman.productId",
           populate: "categoryId",
         })
-        .populate("jenisKendaraan");
+        .populate("jenisKendaraan")
+        .populate('id_pengemudi')
 
       if (!dataProsesPengirimanDistributor) return res.status(404).json({ message: "Data Not Found" });
 
@@ -157,17 +158,17 @@ module.exports = {
 
       if (!id_address || !latitude || !longitude || !id_konsumen || !id_pengemudi || !id_kendaraan) return res.status(400).json({ message: "id_address, latitude, longitude, id_konsumen, id_pengemudi, id_kendaraan harus di isi" });
       const distri = await Distributtor.exists({ userId: req.user.id });
-      const alamat = await Address.findById(id_address).select("userId").populate({path: "userId", select: "role"})
+      const alamat = await Address.findById(id_address).select("userId").populate({ path: "userId", select: "role" })
       const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate({ _id: req.params.id, distributorId: distri._id }, { status_distributor: "Sedang dijemput", id_pengemudi, id_kendaraan }, { new: true })
         .populate("tokoId")
         .populate("produk_pengiriman.productId");
 
       const cekKonsumen = () => {
-        if(alamat.userId.role === "konsumen"){
+        if (alamat.userId.role === "konsumen") {
           return "Sekolah"
-        }else if(alamat.userId.role === "vendor"){
+        } else if (alamat.userId.role === "vendor") {
           return "TokoVendor"
-        }else if(alamat.userId.role === "supplier"){
+        } else if (alamat.userId.role === "supplier") {
           return "TokoSupplier"
         }
       }
