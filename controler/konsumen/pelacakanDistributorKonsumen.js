@@ -71,6 +71,7 @@ module.exports = {
                     path: "buyerId",
                     populate: "address"
                 })
+                .populate('jenisPengiriman')
 
             if (!lacak) return res.status(404).json({
                 message: "Link pengiriman pesanan tidak tersedia",
