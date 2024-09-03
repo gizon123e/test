@@ -982,6 +982,7 @@ module.exports = {
           accepted = 'produsen';
           break;
       }
+
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
       if((accepted !== dataProduct.userId.role) && (dataProduct.userId._id.toString() !== req.user.id.toString()) ) return res.status(403).json({message: "Invalid Request"});
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
@@ -1178,10 +1179,11 @@ module.exports = {
           }
           return res.status(200).json({
             datas: {
-              ...restOfProduct,
+              ...dataProduct,
               total_terjual: terjual ? total_terjual : 0,
               varian,
             },
+            wishlisted: wishlisted ? true : false,
             toko,
             seluruh_gizi_varian,
             nutrisi,
@@ -1296,7 +1298,7 @@ module.exports = {
       if (!dataProduct) return res.status(404).json({ message: "product Not Found" });
       return res.status(200).json({
         datas: {
-          ...restOfProduct,
+          ...dataProduct,
           total_terjual: terjual ? total_terjual : 0,
         },
         toko,
