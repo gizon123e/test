@@ -75,7 +75,7 @@ module.exports = {
             const data = await JenisJasaDistributor.findByIdAndUpdate({ _id: req.params.id }, {
                 nama,
                 description,
-                icon: `${process.env.HOST}/public/icon-kendaraan/${legalitasNpwp}`,
+                icon: `${process.env.HOST}/public/icon-kendaraan/${imageIcon}`,
                 maximum
             }, { new: true })
 
