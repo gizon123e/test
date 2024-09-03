@@ -122,7 +122,6 @@ module.exports = {
           populate: "categoryId",
         })
         .populate("jenisKendaraan")
-        .populate('id_pengemudi')
 
       if (!dataProsesPengirimanDistributor) return res.status(404).json({ message: "Data Not Found" });
 
