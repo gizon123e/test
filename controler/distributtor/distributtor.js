@@ -196,15 +196,17 @@ module.exports = {
             const [latDetail, longDetail] = [parseFloat(addressDetail.address.pinAlamat.lat), parseFloat(addressDetail.address.pinAlamat.long)];
             const [latitudeAddressCustom, longitudeAddressCustom] = [parseFloat(addressCustom.pinAlamat.lat), parseFloat(addressCustom.pinAlamat.long)];
 
-            const ongkir = await await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
+            const ongkir = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
             if (isNaN(ongkir)) return res.status(400).json({ message: "Jarak antara konsumen dan vendor melebihi 100 km" });
 
             const dataAllDistributtor = []
             await Promise.all(dataDistributtor.map(async distributor => {
-                const [latitudeDistributtot, longitudeDistributtor] = [parseFloat(distributor.alamat_id.pinAlamat.lat), parseFloat(distributor.alamat_id.pinAlamat.long)];
-                const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latDetail, longDetail, 50, distributor);
+                const latitudeDistributtot = parseFloat(distributor.alamat_id?.pinAlamat?.lat);
+                const longitudeDistributtor = parseFloat(distributor.alamat_id?.pinAlamat?.long);
 
-                if (Math.round(distance) >= 50 || isNaN(distance)) return null;
+                const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latDetail, longDetail, 50);
+
+                if (distance >= 50 || isNaN(distance)) return null;
 
                 const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id })
                     .populate({
@@ -212,13 +214,16 @@ module.exports = {
                         populate: 'userId'
                     })
                     .populate("jenisKendaraan")
-                    .populate("tarifId")
+                    .populate({
+                        path: 'tarifId',
+                        populate: 'jenis_jasa'
+                    })
 
                 return Promise.all(dataKendaraan.map(async data => {
                     const gratong = await Gratong.findOne({ tarif: data.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
                     let hargaOngkir, total_ongkir, potongan_harga;
-                    const jarakOngkir = Math.round(ongkir);
-
+                    const jarakOngkir = ongkir;
+                    console.log(data.tarifId.jenis_jasa.nama)
                     if (jarakOngkir > 4) {
                         const hargaKiloMeter = (jarakOngkir - 4) * data.tarifId.tarif_per_km;
                         hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar + (hargaVolumeBeratProduct > 1 ? hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg : dataBiayaTetap.biaya_per_kg);
@@ -243,7 +248,7 @@ module.exports = {
                         total_ongkir = hargaOngkir;
                     }
 
-                    if (distributor.userId.isDetailVerified === true && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
+                    if (distributor.userId.isDetailVerified === true && data.tarifId.jenis_jasa.nama === "Standar" && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
                         if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
                             if (data.jenisKendaraan.jenis === 'Mobil' || data.jenisKendaraan.jenis === 'Truk Box') {
                                 // console.log('=============================================> 1', data.jenisKendaraan.jenis)
@@ -275,7 +280,7 @@ module.exports = {
                                             isVerifikasiDocument: distributor.userId.isVerifikasiDocument
                                         }
                                     },
-                                    jarakTempu: Math.round(distance),
+                                    jarakTempu: distance,
                                     ukuranBeratProduct,
                                     ukuranVolumeProduct,
                                     hargaOngkir: Math.round(hargaOngkir),
@@ -313,7 +318,7 @@ module.exports = {
                                         isVerifikasiDocument: distributor.userId.isVerifikasiDocument
                                     }
                                 },
-                                jarakTempu: Math.round(distance),
+                                jarakTempu: distance,
                                 ukuranBeratProduct,
                                 ukuranVolumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -361,6 +366,7 @@ module.exports = {
             // Calculate total volume and weight of products
             const productPromises = product.map(async (productId) => {
                 const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId');
+                console.log(dataProduct)
                 const ukuranVolumeProduct = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang;
                 const ukuranBeratProduct = dataProduct.berat * productId.qty;
                 totalUkuranVolumeProduct += ukuranVolumeProduct;
@@ -455,7 +461,7 @@ module.exports = {
                     biayaTetap.radius
                 );
 
-                if (Math.round(distance) < biayaTetap.radius && !isNaN(distance)) {
+                if (distance < biayaTetap.radius && !isNaN(distance)) {
                     const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
                         .populate({
                             path: "id_distributor",
@@ -474,7 +480,7 @@ module.exports = {
                     if (filteredDataKendaraan.length > 0 && dataPengemudi.length > 0) {
                         return {
                             distributor,
-                            jarakTempu: Math.round(distance)
+                            jarakTempu: distance
                         };
                     }
                 }
