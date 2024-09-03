@@ -3,6 +3,34 @@ const dotenv = require('dotenv');
 dotenv.config()
 
 module.exports = {
+
+    //PRODUCTION OTP SEND
+
+    // sendOtp: (email, kode, status) => {
+    //     const subject = 
+    //     status === "login" ? "Login Otp Code" : 
+    //     status === "register" ? "Register Otp Code" : 
+    //     status === "lupa_password" ? "Forgot Password Otp Code" :
+    //     status === "lupa_pin" ? "Forgot Pin Otp Code" :
+    //     "Send Otp Code"
+    //     const transporter = nodemailer.createTransport({
+    //         host: "smtp.gmail.com",
+    //         port: 587,
+    //         secure: false,
+    //         auth: {
+    //             user: process.env.SENDER_EMAIL_PROD,
+    //             pass: process.env.PASSWORD_EMAIL_PROD,
+    //         },
+    //     });
+
+    //     return transporter.sendMail({
+    //         from: process.env.EMAIL_SENDER,
+    //         to: email,
+    //         subject: subject,
+    //         text: `KODE OTP MBG:  ${kode} berlaku selama 5 menit. RAHASIAKAN KODE OTP MBG Anda! Jangan beritahukan kepada SIAPAPUN!`,
+    //     })
+    // },
+
     sendOtp: (email, kode, status) => {
         const subject = 
         status === "login" ? "Login Otp Code" : 

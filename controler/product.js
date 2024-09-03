@@ -913,7 +913,7 @@ module.exports = {
   list_all: async (req, res, next) => {
     try {
       const { status } = req.query;
-      const data = await Product.find({ userId: req.user.id }).populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId").lean();
+      const data = await Product.find({ userId: req.user.id }).populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId").populate("pangan.panganId").lean();
       const dataProds = [];
       for (const produk of data) {
         let detailToko;
