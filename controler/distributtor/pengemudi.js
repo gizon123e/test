@@ -230,4 +230,24 @@ module.exports = {
         }
     },
 
+    getPengemudiAktif: async (req, res, next) => {
+        try {
+            const allowedStatuses = ["Sedang dijemput", "Sudah dijemput", "Sedang dikirim"];
+
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            if (!distributor) return res.status(404).json({ message: "data Distributor Not Found" })
+
+            const dataProsessPengemudi = await ProsesPengirimanDistributor.find({ distributorId: distributor._id, status_distributor: { $in: allowedStatuses }, id_pengemudi: { $ne: null } })
+                .populate('buyerId')
+                .populate('distributorId')
+
+            res.status(200).json({
+                message: "get Pengemudi Sedang Aktif success",
+                datas: dataProsessPengemudi
+            })
+        } catch (error) {
+            console.log(error)
+            next(error)
+        }
+    }
 }

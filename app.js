@@ -18,10 +18,9 @@ const socketIo = require('socket.io')
 const initSocketIo = require('./utils/pelacakanDistributor')
 const initializeChatSocket = require('./controler/message/vendor-distributor/vendor-distributor');
 const UAParser = require('ua-parser-js');
-// const Address = require('./models/model-address')
-// const User = require('./models/model-auth-user')
 
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
+
 dotenv.config()
 
 // Sertifikat SSL
