@@ -8,28 +8,23 @@ const Vendor = require("../models/vendor/model-vendor");
 module.exports = {
     getAllChat: async (req, res, next) => {
         try {
-            // Retrieve chats where the user is a participant, sort them by message timestamp
             const chats = await Chat.find({
                 participants: { $in: [req.user.id] }
             }).populate({ path: 'participants', select: "role" })
               .sort({ 'messages.timestamp': 1 })
               .lean();
     
-            // If no chats found, return a message
             if (chats.length === 0) {
                 return res.status(200).json({ message: "Anda tidak memiliki percakapan" });
             }
     
-            // Process each chat asynchronously
             const detailedChats = await Promise.all(chats.map(async (chat) => {
-                const { participants, ...restOfChat } = chat;
+                const { participants, __v, ...restOfChat } = chat;
     
-                // Find the other participant in the chat
                 const index = participants.findIndex(user => user._id.toString() !== req.user.id.toString());
                 const lawanBicara = participants[index];
     
                 let detailLawanBicara;
-                // Retrieve detailed information based on the role
                 switch (lawanBicara.role) {
                     case "konsumen":
                         detailLawanBicara = await Konsumen.findOne({ userId: lawanBicara._id });
@@ -43,19 +38,19 @@ module.exports = {
                     case "produsen":
                         detailLawanBicara = await Produsen.findOne({ userId: lawanBicara._id });
                         break;
-                    case "distributtor":
+                    case "distributor":
                         detailLawanBicara = await Distributtor.findOne({ userId: lawanBicara._id });
                         break;
                     default:
                         detailLawanBicara = null;
                 }
-    
+
                 return {
                     lawanBicara: {
-                        nama: detailLawanBicara.nama || detailLawanBicara.namaBadanUsaha,
-                        profile_pict: detailLawanBicara.profile_pict
+                        nama: detailLawanBicara.nama || detailLawanBicara.namaBadanUsaha || detailLawanBicara.nama_distributor,
+                        profile_pict: detailLawanBicara.profile_pict || detailLawanBicara.imageProfile
                     },
-                    ...restOfChat
+                    ...restOfChat,
                 };
             }));
     
