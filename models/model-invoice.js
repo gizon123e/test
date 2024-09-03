@@ -17,7 +17,7 @@ const modelInvoice = new mongoose.Schema({
         enum: ["Belum Lunas", "Lunas", "Piutang"],
         message: `{VALUE} is not supported`
     }
-});
+}, { timestamps: true });
 
 const Invoice = mongoose.model("Invoice", modelInvoice);
 module.exports = Invoice

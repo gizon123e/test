@@ -6,19 +6,68 @@ const Supplier = require("../models/supplier/model-supplier");
 const Vendor = require("../models/vendor/model-vendor");
 
 module.exports = {
-    getAllChat: async(req, res, next) => {
+    getAllChat: async (req, res, next) => {
         try {
+            // Retrieve chats where the user is a participant, sort them by message timestamp
             const chats = await Chat.find({
                 participants: { $in: [req.user.id] }
-            }).sort({ 'messages.timestamp': 1 }).lean();
-
-            if(chats.length === 0) return res.status(200).json({message: "Anda tidak memiliki percakapan"})
-            return res.status(200).json({message: "Berhasil Menampilkan Semua Chat", data: chats})
+            }).populate({ path: 'participants', select: "role" })
+              .sort({ 'messages.timestamp': 1 })
+              .lean();
+    
+            // If no chats found, return a message
+            if (chats.length === 0) {
+                return res.status(200).json({ message: "Anda tidak memiliki percakapan" });
+            }
+    
+            // Process each chat asynchronously
+            const detailedChats = await Promise.all(chats.map(async (chat) => {
+                const { participants, ...restOfChat } = chat;
+    
+                // Find the other participant in the chat
+                const index = participants.findIndex(user => user._id.toString() !== req.user.id.toString());
+                const lawanBicara = participants[index];
+    
+                let detailLawanBicara;
+                // Retrieve detailed information based on the role
+                switch (lawanBicara.role) {
+                    case "konsumen":
+                        detailLawanBicara = await Konsumen.findOne({ userId: lawanBicara._id });
+                        break;
+                    case "vendor":
+                        detailLawanBicara = await Vendor.findOne({ userId: lawanBicara._id });
+                        break;
+                    case "supplier":
+                        detailLawanBicara = await Supplier.findOne({ userId: lawanBicara._id });
+                        break;
+                    case "produsen":
+                        detailLawanBicara = await Produsen.findOne({ userId: lawanBicara._id });
+                        break;
+                    case "distributtor":
+                        detailLawanBicara = await Distributtor.findOne({ userId: lawanBicara._id });
+                        break;
+                    default:
+                        detailLawanBicara = null;
+                }
+    
+                return {
+                    lawanBicara: {
+                        nama: detailLawanBicara.nama || detailLawanBicara.namaBadanUsaha,
+                        profile_pict: detailLawanBicara.profile_pict
+                    },
+                    ...restOfChat
+                };
+            }));
+    
+            // Return the detailed chat data
+            return res.status(200).json({ message: "Berhasil Menampilkan Semua Chat", data: detailedChats });
+    
         } catch (error) {
             console.log(error);
-            next(error)
+            next(error);
         }
     },
+    
 
     getDetailChat: async(req, res, next) => {
         try {

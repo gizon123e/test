@@ -1838,7 +1838,7 @@ module.exports = {
 
       const imgPaths = []
 
-      if(req.files.ImageProduct || req.files.ImageProduct.length > 0){
+      if(req.files?.ImageProduct || req.files?.ImageProduct?.length > 0){
         for(const img of product.image_product){
           const pathFile = path.join(`${__dirname}`, '../' , img.split(`${process.env.HOST}`)[1]);
           console.log(pathFile)

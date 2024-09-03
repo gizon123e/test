@@ -158,6 +158,9 @@ app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
 
+//Transaksi
+app.use('/api/transaksi', require('./routes/router-transaksi'));
+
 //Chat
 app.use('/api/chat', require('./routes/router-chat'));
 
