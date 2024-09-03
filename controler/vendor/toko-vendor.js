@@ -18,6 +18,7 @@ const SellerPerformanceReport = require('../../models/model-laporan-kinerja-toko
 const Wishlist = require('../../models/model-wishlist');
 const correctInvalidDate = require("../../utils/correctInvalidDate")
 const ProductPerformanceReport = require('../../models/model-laporan-kinerja-product');
+const Pesanan = require('../../models/pesanan/model-orders');
 dotenv.config()
 const socket = io("https://staging-backend.superdigitalapps.my.id/", {
     auth: {
@@ -167,35 +168,46 @@ module.exports = {
                 .lean()
 
             if (!dataProsesPengirimanDistributor || dataProsesPengirimanDistributor.length === 0) return res.status(400).json({ message: "data saat ini masi kosong" })
-            const data = dataProsesPengirimanDistributor.map(pgr => {
-                const { waktu_pengiriman, status_distributor, pengirimanId, ...restOfPgr } = pgr;
-
-                const generateStatus = () => {
-
+            const data = await Promise.all(
+                dataProsesPengirimanDistributor.map(async (pgr) => {
+                  const { waktu_pengiriman, status_distributor, pengirimanId, ...restOfPgr } = pgr;
+              
+                  const generateStatus = () => {
                     if (status_distributor === "Sedang dijemput") {
-                        return "menunggu penjemputan"
+                      return "menunggu penjemputan";
                     }
-
-                    if (status_distributor === 'Sudah dijemput') {
-                        return 'diserahkan ke distributor'
+              
+                    if (status_distributor === "Sudah dijemput") {
+                      return "diserahkan ke distributor";
                     }
-
-                    if (status_distributor === 'Selesai') {
-                        return 'telah diterima konsumen'
+              
+                    if (status_distributor === "Selesai") {
+                      return "telah diterima konsumen";
                     }
-
-                    if (status_distributor === 'Sedang dikirim') {
-                        return 'sedang dalam perjalanan'
+              
+                    if (status_distributor === "Sedang dikirim") {
+                      return "sedang dalam perjalanan";
                     }
-                }
-
-                return {
+                  };
+              
+                  const merged = mergeObjectsByStoreId(pengirimanId);
+                  const order = await Pesanan.findById(merged.orderId).select("items");
+                  const kode_pesanan = order.items
+                    .find((item) =>
+                      item.product.some((prd) => (prd.productId === merged.productToDelivers[0].productId) && (prd.quantity === merged.productToDelivers[0].quantity))
+                    )
+                    ?.kode_pesanan;
+              
+                  return {
                     ...restOfPgr,
-                    pengirimanId: mergeObjectsByStoreId(pengirimanId),
+                    pengirimanId: merged,
+                    kode_pesanan,
                     status_distributor: generateStatus(),
-                    waktu_pengiriman: new Date(waktu_pengiriman)
-                }
-            })
+                    waktu_pengiriman: new Date(waktu_pengiriman),
+                  };
+                })
+              );
+              
             res.status(200).json({
                 message: "data get All success",
                 datas: data.filter(pgr => {
