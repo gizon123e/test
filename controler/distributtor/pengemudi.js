@@ -240,6 +240,7 @@ module.exports = {
             const dataProsessPengemudi = await ProsesPengirimanDistributor.find({ distributorId: distributor._id, status_distributor: { $in: allowedStatuses }, id_pengemudi: { $ne: null } })
                 .populate('buyerId')
                 .populate('distributorId')
+                .populate('id_pengemudi')
 
             res.status(200).json({
                 message: "get Pengemudi Sedang Aktif success",
