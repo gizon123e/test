@@ -215,7 +215,7 @@ module.exports = {
             createdAt: -1,
           },
         },
-      ]);
+      ]).skip(skip).limit(parseInt(limit));
 
       if (!dataOrders || dataOrders.length < 1) {
         return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` });
@@ -562,7 +562,6 @@ module.exports = {
           }
           return 0;
         })
-        .slice(skip, skip + limit);
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
       if (error && error.name === "ValidationError") {
@@ -668,7 +667,7 @@ module.exports = {
         }
       );
 
-      dataOrders = await Pesanan.aggregate(pipeline);
+      dataOrders = await Pesanan.aggregate(pipeline).skip(skip).limit(parseInt(limit));
 
       const data = [];
       for (const order of dataOrders) {
@@ -814,7 +813,7 @@ module.exports = {
       let filteredData = data.filter((dt) => {
         if (!status) return true;
         return dt.status.toLowerCase() === status.toLowerCase();
-      }).slice(skip, skip + limit);
+      });
 
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
