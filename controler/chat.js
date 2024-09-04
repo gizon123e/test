@@ -66,7 +66,7 @@ module.exports = {
 
     getDetailChat: async(req, res, next) => {
         try {
-            console.log(req.user.id)
+            console.log(req.user)
             const chat = await Chat.findById(req.params.id)
                 .populate({ path: "participants", select: "role" })
                 .populate({ path: "messages.sender", select: "role" })
@@ -137,35 +137,35 @@ module.exports = {
                         if (!detail) {
                             return res.status(404).json({ message: "Detail konsumen tidak ditemukan" });
                         }
-                        senderDetail = { userId: detail.userId , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+                        senderDetail = { userId: detail.userId , role: msg.sender.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
                         break;
                     case "vendor":
                         detail = await Vendor.findOne({ userId: msg.sender._id }).select("profile_pict namaBadanUsaha userId nama").lean();
                         if (!detail) {
                             return res.status(404).json({ message: "Detail vendor tidak ditemukan" });
                         }
-                        senderDetail = { userId: detail.userId , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+                        senderDetail = { userId: detail.userId , role: msg.sender.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
                         break;
                     case "supplier":
                         detail = await Supplier.findOne({ userId: msg.sender._id }).select("profile_pict namaBadanUsaha userId nama").lean();
                         if (!detail) {
                             return res.status(404).json({ message: "Detail supplier tidak ditemukan" });
                         }
-                        senderDetail = { userId: detail.userId , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+                        senderDetail = { userId: detail.userId , role: msg.sender.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
                         break;
                     case "produsen":
                         detail = await Produsen.findOne({ userId: msg.sender._id }).select("profile_pict namaBadanUsaha userId nama").lean();
                         if (!detail) {
                             return res.status(404).json({ message: "Detail produsen tidak ditemukan" });
                         }
-                        senderDetail = { userId: detail.userId , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+                        senderDetail = { userId: detail.userId , role: msg.sender.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
                         break;
                     case "distributor":
                         detail = await Distributtor.findOne({ userId: msg.sender._id }).select("imageProfile nama_distributor userId").lean();
                         if (!detail) {
                             return res.status(404).json({ message: "Detail distributor tidak ditemukan", });
                         }
-                        senderDetail = { userId: detail.userId , profile_pict: detail.imageProfile, nama: detail.nama_distributor };
+                        senderDetail = { userId: detail.userId , role: msg.sender.role , profile_pict: detail.imageProfile, nama: detail.nama_distributor };
                         break;
                     default:
                         return res.status(400).json({ message: "Role tidak dikenali" });
