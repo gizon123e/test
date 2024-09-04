@@ -3,6 +3,7 @@ const PelacakanDistributorKonsumen = require('../../models/konsumen/pelacakanDis
 const Konsumen = require('../../models/konsumen/model-konsumen');
 const TokoVendor = require('../../models/vendor/model-toko');
 const Sekolah = require('../../models/model-sekolah');
+const Chat = require("../../models/model-chat")
 
 module.exports = {
     getTrekingDistributor: async (req, res, next) => {
@@ -31,10 +32,15 @@ module.exports = {
 
             if (location.length === 0) {
                 return res.status(404).json({ message: 'Lokasi tidak ditemukan' });
-            }
+            };
+
+            const chat = await Chat.exists({
+                participants: { $all: [req.user.id, ] }
+            });
+
             res.status(200).json({
                 message: "get data succees",
-                data: location
+                data: { ...location, idChat: chat? chat._id : null }
             });
         } catch (error) {
             console.log(error)
