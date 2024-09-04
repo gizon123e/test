@@ -38,7 +38,7 @@ module.exports = {
             };
 
             const chat = await Chat.exists({
-                participants: { $all: [req.user.id, ] }
+                participants: { $all: [req.user.id, location[0].id_distributor.userId] }
             });
 
             res.status(200).json({
