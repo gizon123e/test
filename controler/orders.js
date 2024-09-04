@@ -215,7 +215,7 @@ module.exports = {
             createdAt: -1,
           },
         },
-      ]);
+      ]).skip(skip).limit(parseInt(limit));
 
       if (!dataOrders || dataOrders.length < 1) {
         return res.status(200).json({ message: `anda belom memiliki ${req.user.role === "konsumen" ? "order" : "orderan"}` });
@@ -562,7 +562,6 @@ module.exports = {
           }
           return 0;
         })
-        .slice(skip, skip + limit);
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
       if (error && error.name === "ValidationError") {
