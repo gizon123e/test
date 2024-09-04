@@ -20,6 +20,8 @@ const initializeChatSocket = require('./controler/message/vendor-distributor/ven
 const UAParser = require('ua-parser-js');
 
 const dotenv = require('dotenv');
+const Distributtor = require("./models/distributor/model-distributor");
+const Address = require("./models/model-address");
 
 dotenv.config()
 
