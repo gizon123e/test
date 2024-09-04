@@ -668,7 +668,7 @@ module.exports = {
         }
       );
 
-      dataOrders = await Pesanan.aggregate(pipeline).skip(skip).limit(parseInt(limit));
+      dataOrders = await Pesanan.aggregate(pipeline);
 
       const data = [];
       for (const order of dataOrders) {
@@ -814,7 +814,7 @@ module.exports = {
       let filteredData = data.filter((dt) => {
         if (!status) return true;
         return dt.status.toLowerCase() === status.toLowerCase();
-      });
+      }).slice(skip, skip + limit);
 
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
