@@ -162,7 +162,7 @@ module.exports = {
         const { id_produk } = req.params;
 
         try {
-            const reviews = await ReviewProduk.find({ id_produk }).populate("id_konsumen")
+            const reviews = await ReviewProduk.find({ id_produk }).populate("id_konsumen").sort({ createdAt: -1 });
             let toko;
             switch (req.user.role) {
                 case "konsumen":
