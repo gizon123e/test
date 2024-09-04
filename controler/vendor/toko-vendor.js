@@ -11,7 +11,6 @@ const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders')
 const Vendor = require('../../models/vendor/model-vendor');
 const Follower = require('../../models/model-follower');
 const User = require('../../models/model-auth-user');
-const dotenv = require('dotenv')
 const mergeObjectsByStoreId = require('../../utils/merginPengirimanId')
 const { io } = require("socket.io-client");
 const SellerPerformanceReport = require('../../models/model-laporan-kinerja-toko');
@@ -19,8 +18,9 @@ const Wishlist = require('../../models/model-wishlist');
 const correctInvalidDate = require("../../utils/correctInvalidDate")
 const ProductPerformanceReport = require('../../models/model-laporan-kinerja-product');
 const Pesanan = require('../../models/pesanan/model-orders');
+const dotenv = require('dotenv')
 dotenv.config()
-const socket = io("https://staging-backend.superdigitalapps.my.id/", {
+const socket = io(process.env.WEBSOCKET, {
     auth: {
         fromServer: true,
     },

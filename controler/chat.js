@@ -4,6 +4,14 @@ const Chat = require("../models/model-chat");
 const Produsen = require("../models/produsen/model-produsen");
 const Supplier = require("../models/supplier/model-supplier");
 const Vendor = require("../models/vendor/model-vendor");
+const { io } = require("socket.io-client");
+const dotenv = require('dotenv')
+dotenv.config()
+const socket = io(process.env.WEBSOCKET, {
+    auth: {
+        fromServer: true,
+    },
+});
 
 module.exports = {
     getAllChat: async (req, res, next) => {
@@ -125,6 +133,16 @@ module.exports = {
                     return res.status(400).json({ message: "Role tidak dikenali" });
             };
 
+            socket.emit('status_user', lawanBicara.userId)
+            let status_user
+
+            socket.on('status_user', (data) => {
+                console.log('hasil nya: ',data)
+                status_user = data
+            })
+
+            console.log(status_user)
+
             const mappedSender = await Promise.all(messages.map(async (msg) => {
                 const { sender, ...restOfMsg } = msg
                 let senderDetail;
@@ -175,7 +193,7 @@ module.exports = {
             }));
             
         
-            return res.status(200).json({ message: "Berhasil Mendapatkan Chat", data: { ...restOfChat, messages: mappedSender, lawanBicara } });
+            return res.status(200).json({ message: "Berhasil Mendapatkan Chat", data: { ...restOfChat, messages: mappedSender, lawanBicara: { ...lawanBicara, status_user } } });
         } catch (error) {
             console.log(error);
             next(error);
