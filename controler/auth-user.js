@@ -210,7 +210,7 @@ module.exports = {
         });
       }
 
-      if(existedDeviceId?.valid_until?.getTime() > new Date().getTime() || !existedDeviceId?.valid_until){
+      if(existedDeviceId?.valid_until?.getTime() < new Date().getTime() || !existedDeviceId?.valid_until){
         
         const kode_random = Math.floor(1000 + Math.random() * 9000);
         const kode = await bcrypt.hash(kode_random.toString(), 3);
