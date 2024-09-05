@@ -3,6 +3,7 @@ const PelacakanDistributorKonsumen = require('../../models/konsumen/pelacakanDis
 const Konsumen = require('../../models/konsumen/model-konsumen');
 const TokoVendor = require('../../models/vendor/model-toko');
 const Sekolah = require('../../models/model-sekolah');
+const Chat = require("../../models/model-chat")
 
 module.exports = {
     getTrekingDistributor: async (req, res, next) => {
@@ -24,17 +25,26 @@ module.exports = {
             if (!toko) return res.status(404).json({ message: "toko vendor id not found" })
 
             const location = await PelacakanDistributorKonsumen.find({ id_toko: id_toko, id_distributor: id_distributor, id_pesanan: pengiriman._id, id_konsumen: id_sekolah })
-                .populate('id_toko').populate('id_distributor').populate('id_konsumen').populate('id_address').populate({
+                .populate({
+                    path: "id_toko",
+                    populate: "address"
+                }).populate('id_distributor').populate('id_konsumen').populate('id_address').populate({
                     path: 'id_pesanan',
                     populate: "produk_pengiriman.productId"
                 })
 
             if (location.length === 0) {
                 return res.status(404).json({ message: 'Lokasi tidak ditemukan' });
-            }
+            };
+
+            const chat = await Chat.exists({
+                participants: { $all: [req.user.id, location[0].id_distributor.userId] }
+            });
+
             res.status(200).json({
                 message: "get data succees",
-                data: location
+                data: location,
+                chatId: chat? chat._id : null
             });
         } catch (error) {
             console.log(error)
