@@ -5,6 +5,7 @@ const sendPhoneOTP = require('../utils/sendOtp').sendOtpPhone
 const jwt = require("../utils/jwt");
 const bcrypt = require("bcrypt");
 const temporaryUser = require("./temporaryUser");
+const DeviceId = require("../models/model-token-device");
 
 module.exports = {
 
@@ -195,29 +196,53 @@ module.exports = {
       if(email && !newUser.email.isVerified && !phone) return res.status(403).json({message: "Email Belum diverifikasi", verified: false});
 
       const passwordValid = await bcrypt.compare(password, newUser.password)
-      if(!passwordValid) return res.status(401).json({message: "Password yang dimasukkan salah"})
-      const kode_random = Math.floor(1000 + Math.random() * 9000);
-      console.log(kode_random)
-      const kode = await bcrypt.hash(kode_random.toString(), 3);
-      const codeOtp = {
-        code: kode,
-        expire: new Date(new Date().getTime() + 5 * 60 * 1000)
-      };
-      newUser.codeOtp = codeOtp;
-      await newUser.save();
-      let hasilOtp;
-      if(email && !phone){ 
-        hasilOtp = await sendOTP(email, kode_random, "login")
-      }else if(!email && phone) {
-        console.log('masuk')
-        hasilOtp = await sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
-      }
+      if(!passwordValid) return res.status(401).json({message: "Password yang dimasukkan salah"});
 
-      return res.status(200).json({
-        error: false,
-        message: `${phone? "Phone" : "Email"} verifikasi sudah dikirim!`,
-        id: newUser._id,
-      });
+      const deviceId = req.headers["x-header-deviceid"];
+      const existedDeviceId = await DeviceId.findOne({userId: newUser._id, deviceId});
+
+      if(existedDeviceId.valid_until.getTime() > new Date().getTime()){
+        
+        const kode_random = Math.floor(1000 + Math.random() * 9000);
+        const kode = await bcrypt.hash(kode_random.toString(), 3);
+        
+        const codeOtp = {
+          code: kode,
+          expire: new Date(new Date().getTime() + 5 * 60 * 1000)
+        };
+
+        newUser.codeOtp = codeOtp;
+        await newUser.save();
+
+        if(email && !phone){ 
+          await sendOTP(email, kode_random, "login")
+        }else if(!email && phone) {
+          console.log('masuk')
+          await sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
+        }
+
+        return res.status(200).json({
+          error: false,
+          message: `${phone? "Phone" : "Email"} verifikasi sudah dikirim!`,
+          id: newUser._id,
+          token: null
+        });
+      }else {
+        const tokenPayload = {
+          id: newUser._id,
+          email: newUser.email,
+          phone: newUser.phone,
+          role: newUser.role,
+        };
+
+        const jwtToken = jwt.createToken(tokenPayload);
+        return res.status(200).json({
+          error: false,
+          message: `Berhasil Login`,
+          ...tokenPayload,
+          token: jwtToken
+        });
+      }
 
     } catch (err) {
       if (err && err.name == "ValidationError") {

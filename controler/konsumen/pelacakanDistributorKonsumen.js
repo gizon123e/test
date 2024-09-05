@@ -43,7 +43,8 @@ module.exports = {
 
             res.status(200).json({
                 message: "get data succees",
-                data: { ...location, idChat: chat? chat._id : null }
+                data: location,
+                chatId: chat? chat._id : null
             });
         } catch (error) {
             console.log(error)

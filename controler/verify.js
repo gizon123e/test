@@ -2,6 +2,7 @@ const User = require("../models/model-auth-user");
 const { TemporaryUser } = require('../models/model-temporary-user');
 const bcrypt = require("bcrypt");
 const jwt = require("../utils/jwt");
+const DeviceId = require("../models/model-token-device");
 
 module.exports = {
     verifyOtpRegister: async (req, res, next) =>{
@@ -39,6 +40,11 @@ module.exports = {
             if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
             const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
             if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
+
+            await DeviceId.updateOne(
+                { deviceId, userId: user._id },
+                { valid_until: new Date().setDate(new Date().getDate() + 7 )}
+            )
 
             const tokenPayload = {
                 id: user._id,
