@@ -13,11 +13,12 @@ const BiayaTetap = require('../../models/model-biaya-tetap')
 const Pengiriman = require('../../models/model-pengiriman')
 const TokoSupplier = require('../../models/supplier/model-toko')
 const TokoProdusen = require('../../models/produsen/model-toko')
+const Orders = require("../../models/pesanan/model-orders");
 
 module.exports = {
     tambahUlasan: async (req, res, next) => {
         try {
-            const { id_pengiriman, komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen } = req.body;
+            const { komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen, id_order } = req.body;
             const files = req.files;
             const biayaTetap = await BiayaTetap.findOne({}).lean();
             const images = files ? files.images : [];
@@ -98,6 +99,8 @@ module.exports = {
             if (nilai_keseluruan < 1) {
                 nilai_keseluruan = 1
             }
+
+            const order = await Orders.findByIdAndUpdate(id_order, { refiews: true }, { new: true })
 
             // Membuat ulasan baru
             const review = new ReviewProduk({
