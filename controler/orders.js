@@ -208,6 +208,7 @@ module.exports = {
             sekolahId: { $first: "$sekolahId" },
             biaya_asuransi: { $first: "$biaya_asuransi" },
             biaya_awal_asuransi: { $first: "$biaya_awal_asuransi" },
+            sudah_direview: { $first: "$sudah_direview" },
           },
         },
         {
