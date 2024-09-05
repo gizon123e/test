@@ -154,7 +154,7 @@ const modelOrder = new mongoose.Schema({
             }
         }
     ],
-    refiews: {
+    sudah_direview: {
         type: Boolean,
         default: false
     }
