@@ -400,6 +400,7 @@ module.exports = {
             jenis: "Pesanan",
             image_product: shipment.productToDelivers[0].productId.image_product[0],
             kode: shipment.kode_pengiriman,
+            redirect: 'detail-pengiriman',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan detail notif distributor"))
@@ -425,6 +426,7 @@ module.exports = {
             jenis: "Pesanan",
             image_product: shipment.productToDelivers[0].productId.image_product[0],
             kode: shipment.kode_pengiriman,
+            redirect: 'detail-pengiriman',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan notif distri"))
@@ -437,6 +439,7 @@ module.exports = {
             jenis: "Pesanan",
             image_product: shipment.productToDelivers[0].productId.image_product[0],
             kode: shipment.invoice.kode_invoice,
+            redirect: 'detail-transaksi',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan detail notif konsumen"))

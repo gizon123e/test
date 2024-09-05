@@ -198,6 +198,7 @@ module.exports = {
         jenis: "Pesanan",
         image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
         kode: prosesPengiriman.kode_pengiriman,
+        redirect: "detail-pengiriman",
         cretedAt: new Date(),
       })
         .then(() => console.log("Berhasil menambahkan notif"))
@@ -276,6 +277,7 @@ module.exports = {
           message: `${prosesPengiriman.kode_pengiriman} telah diserahkan ke jasa pengiriman dan akan segera diantar menuju alamat tujuan`,
           image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
           kode: prosesPengiriman.kode_pengiriman,
+          redirect: "detail-transaksi",
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan notif"))
@@ -300,6 +302,7 @@ module.exports = {
             message: `${item.invoice.kode_invoice} telah diserahkan ke jasa pengiriman dan akan segera diantar menuju alamat tujuan`,
             image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
             kode: item.invoice.kode_invoice,
+            redirect: "detail-pengiriman",
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil menyimpan notif"))
@@ -356,6 +359,7 @@ module.exports = {
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} sedang dikirim ke alamat tujuan konsumen`,
         image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
         kode: prosesPengiriman.kode_pengiriman,
+        redirect: "detail-pengiriman",
         createdAt: new Date(),
       })
         .then(() => console.log("Berbayar simpan notif distributor"))
@@ -379,6 +383,7 @@ module.exports = {
           message: `${invoice[0].invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
           image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
           kode: invoice[0].invoice.kode_invoice,
+          redirect: "detail-pengiriman",
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan notif"))
@@ -402,6 +407,7 @@ module.exports = {
           message: `Pesanan ${prosesPengiriman.kode_pengiriman} sedang dalam perjalanan menuju alamat tujuan konsumen`,
           image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
           kode: prosesPengiriman.kode_pengiriman,
+          redirect: 'detail-order',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan notif"))
@@ -426,6 +432,7 @@ module.exports = {
           message: `Pesanan ${prosesPengiriman.kode_pengiriman} sedang dalam perjalanan menuju alamat tujuan konsumen`,
           image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
           kode: prosesPengiriman.kode_pengiriman,
+          redirect: 'detail-order',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan notif"))
@@ -448,6 +455,7 @@ module.exports = {
             message: `${item.invoice.kode_invoice} sedang dalam perjalanan ke alamat tujuan`,
             image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
             kode: item.invoice.kode_invoice,
+            redirect: 'detail-transaksi',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil menyimpan notif"))
@@ -537,6 +545,7 @@ module.exports = {
         message: `Pengiriman pesanan ${prosesPengiriman.kode_pengiriman} telah dikirim ke alamat tujuan`,
         image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
         kode: prosesPengiriman.kode_pengiriman,
+        redirect: 'detail-pengiriman',
         createdAt: new Date(),
       })
         .then(() => console.log("Berhasil simpan notif distributor"))
@@ -562,6 +571,7 @@ module.exports = {
           message: `${invoice[0].invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
           image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
           kode: invoice[0].invoice.kode_invoice,
+          redirect: 'detail-transaksi',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan notif"))
@@ -584,6 +594,7 @@ module.exports = {
           message: `${prosesPengiriman.kode_pengiriman} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
           image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
           kode: prosesPengiriman.kode_pengiriman,
+          redirect: 'detail-order',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan notif"))
@@ -608,6 +619,7 @@ module.exports = {
           message: `${prosesPengiriman.kode_pengiriman} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
           image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
           kode: prosesPengiriman.kode_pengiriman,
+          redirect: 'detail-order',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan notif"))
@@ -630,6 +642,7 @@ module.exports = {
             message: `${item.invoice.kode_invoice} telah tiba ditujuan, pesanan telah diterima oleh konsumen`,
             image_product: prosesPengiriman.produk_pengiriman[0].productId.image_product[0],
             kode: item.invoice.kode_invoice,
+            redirect: 'detail-transaksi',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil menyimpan notif"))

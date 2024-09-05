@@ -153,6 +153,7 @@ module.exports = {
                             message: `Segera terima pesanan ${pgr.invoice.kode_invoice} sebelum ${sixHoursAgo}`,
                             image_product: pgr.productToDelivers[0].productId.image_product[0],
                             kode: pgr.invoice.kode_invoice,
+                            redirect: 'detail-order',
                             createdAt: new Date()
                         })
                         .then(() => console.log("Berhasil simpan detail notif vendor"))
@@ -254,6 +255,7 @@ module.exports = {
                         message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} telah berhasil kamu bayar, pesanan akan segera diproses`,
                         image_product: pengiriman[0].productToDelivers[0].productId.image_product[0],
                         kode: invoiceTambahan.kode_invoice,
+                        redirect: 'detail-transaksi',
                         createdAt: new Date()
                     })
                     .then(() => console.log("notif pembayaran berhasil"))

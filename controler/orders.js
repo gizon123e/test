@@ -1796,6 +1796,7 @@ module.exports = {
             message: `INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
             image_product: products[0].image_product[0],
             kode: `INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1}`,
+            redirect: 'detail-transaksi',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan detail notif konsumen"))
@@ -1835,6 +1836,7 @@ module.exports = {
               message: `Terima pengiriman pesanan PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1} sebelum ${formatTanggalBulan(tommorow)} pukul ${formatWaktu(tommorow)}`,
               image_product: products[0].image_product[0],
               kode:`PNR_${user.kode_role}_${date}_${minutes}_${total_pengiriman + 1}`,
+              redirect: 'detail-pengiriman',
               createdAt: new Date(),
             })
               .then(() => console.log("Berhasil simpan detail notif distributtor"))
@@ -1865,6 +1867,7 @@ module.exports = {
               message: `Segera terima pesanan INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1} sebelum jam ${sixHoursAgo}`,
               image_product: toko_vendor[i].image_product,
               kode: `INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1}`,
+              redirect: 'detail-order',
               createdAt: new Date(),
             })
               .then(() => console.log("Berhasil simpan detail notif vendor"))
@@ -2018,6 +2021,7 @@ module.exports = {
                   message: `Segera terima pesanan INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1} sebelum ${sixHoursAgo}`,
                   image_product: prod.image_product[0],
                   kode: `INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1}`,
+                  redirect: 'detail-order',
                   createdAt: new Date(),
                 })
                   .then(() => console.log("Berhasil simpan detail notif vendor"))
@@ -2071,6 +2075,7 @@ module.exports = {
                 message: `${kodeInvoice} Senilai Rp. ${formatHarga} telah berhasil, pesanan akan segera diproses`,
                 image_product: products[0].image_product[0],
                 kode: kodeInvoice,
+                redirect: 'detial-transaksi',
                 createdAt: new Date(),
               })
                 .then(() => console.log("Berhasil simpan detail subsidi notif konsumen"))
@@ -2236,6 +2241,7 @@ module.exports = {
             message: `${kodeInvoice} Senilai Rp. ${formatHarga} belum dibayar, segera selesaikan pembayaranmu sebelum ${formatTanggal(a_day_later)}`,
             image_product: productNotif.image_product[0],
             kode: kodeInvoice,
+            redirect: 'detail-transaksi',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan notif non subsidi konsumen"))
@@ -2626,6 +2632,7 @@ module.exports = {
           jenis: "Pesanan",
           image_product: pengiriman.productToDelivers[0].productId.image_product[0],
           kode: pengiriman.invoice.kode_invoice,
+          redirect: 'detail-transaksi',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil simpan detail notif konsumen"))
@@ -2683,6 +2690,7 @@ module.exports = {
           jenis: "Pesanan",
           image_product: pengiriman.productToDelivers[0].productId.image_product[0],
           kode: pengiriman.invoice.kode_invoice,
+          redirect: 'detail-transaksi',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil simpan notif konsumen"))
@@ -2899,6 +2907,7 @@ module.exports = {
           message: `Klik untuk beri penilaian ${invoice[0].invoice.kode_invoice}`,
           image_product: shipments[0].productToDelivers[0].productId.image_product[0],
           kode: invoice[0].invoice.kode_invoice,
+          redirect: 'detail-transaksi',
           createdAt: new Date(),
         })
           .then(() => console.log("Berhasil menyimpan detail notifikasi"))
@@ -2933,6 +2942,7 @@ module.exports = {
             message: `Klik untuk beri penilaian ${item.invoice.kode_invoice}`,
             image_product: shipments[0].productToDelivers[0].productId.image_product[0],
             kode: item.invoice.kode_invoice,
+            redirect: 'detail-transaksi',
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil menyimpan detail notifikasi "))
@@ -3003,6 +3013,7 @@ module.exports = {
           message: `${invoice[0].invoice.kode_invoice} telah dibatalkan oleh kamu`,
           image_product: order.items[0].product[0].productId.image_product[0],
           kode: invoice[0].invoice.kode_invoice,
+          redirect: 'detail-transaksi',
           createdAt: new Date(),
         });
         socket.emit("notif_pesanan_dibatalkan", {
@@ -3024,6 +3035,7 @@ module.exports = {
             message: `${item.invoice.kode_invoice} telah dibatalkan oleh kamu`,
             image_product: order.items[0].product[0].productId.image_product[0],
             kode: item.invoice.kode_invoice,
+            redirect: 'detail-transaksi',
             createdAt: new Date(),
           });
           socket.emit("notif_pesanan_dibatalkan", {

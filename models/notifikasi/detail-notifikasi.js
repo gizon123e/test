@@ -30,6 +30,10 @@ const detailNotifikasiSchema = new mongoose.Schema({
     type: String,
     required: [true, "kode harus di isi"],
   },
+  redirect: {
+    type: String,
+    required: [true, "redirect harus di isi"],
+  },
   createdAt: {
     type: Date,
     default: new Date(),

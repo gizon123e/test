@@ -41,6 +41,7 @@ module.exports = {
                 jenis: "Pesanan",
                 image_product: pengiriman.productToDelivers[0].productId.image_product[0],
                 kode: pengiriman.kode_pengiriman,
+                redirect: 'detail-pengiriman',
                 createdAt: new Date()
             })
             .then(() => console.log("Berhasil simpan notif distributor"))
