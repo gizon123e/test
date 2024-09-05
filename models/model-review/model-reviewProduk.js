@@ -36,7 +36,13 @@ const modelReviewProduk = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: "Konsumen",
         required: [true, "id_konsumen harus di isi"]
-    }
+    },
+    pengirimanId: [
+        {
+            type: mongoose.Types.ObjectId,
+            ref: "Pengiriman"
+        }
+    ]
 }, { timestamps: true })
 
 const ReviewProduk = mongoose.model("ReviewProduk", modelReviewProduk)

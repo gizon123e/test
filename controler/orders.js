@@ -42,6 +42,7 @@ const TokoProdusen = require("../models/produsen/model-toko");
 const Supplier = require("../models/supplier/model-supplier");
 const Konsumen = require("../models/konsumen/model-konsumen");
 const PelacakanDistributorKonsumen = require("../models/konsumen/pelacakanDistributorKonsumen");
+const ReviewProduk = require("../models/model-review/model-reviewProduk");
 dotenv.config();
 
 const now = new Date();
@@ -523,10 +524,12 @@ module.exports = {
               jumlah_uang = 0;
             }
           }
-          Object.keys(store).forEach((key) => {
+          // Object.keys(store).forEach((key) => );
+          // formm
+          for(const key of Object.keys(store)){
             let jumlah = 0;
             const { totalHargaSubsidi, totalHargaTambahan, status_pengiriman, total_pesanan, ...restOfStore } = store[key];
-
+            const isReviewed = await ReviewProduk.exists({pengirimanId: { $in: status_pengiriman.map(pgr => pgr._id )}})
             if (totalHargaTambahan > 0) {
               const rasio = totalHargaTambahan / totalProductTambahan;
               jumlah += Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan);
@@ -545,8 +548,9 @@ module.exports = {
               total_pesanan: total_pesanan + jumlah,
               status_pengiriman,
               ...restOfStore,
+              isReviewed: isReviewed ? true : false
             });
-          });
+          }
         }
       }
       const filteredData = data
@@ -565,6 +569,7 @@ module.exports = {
         })
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
     } catch (error) {
+      console.log(error)
       if (error && error.name === "ValidationError") {
         return res.status(400).json({
           error: true,

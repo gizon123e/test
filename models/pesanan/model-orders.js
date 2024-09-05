@@ -153,11 +153,7 @@ const modelOrder = new mongoose.Schema({
                 ref: "TokoVendor"
             }
         }
-    ],
-    sudah_direview: {
-        type: Boolean,
-        default: false
-    }
+    ]
 }, { timestamps: true }
 )
 

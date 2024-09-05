@@ -18,7 +18,7 @@ const Orders = require("../../models/pesanan/model-orders");
 module.exports = {
     tambahUlasan: async (req, res, next) => {
         try {
-            const { komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen, id_order } = req.body;
+            const { komentar_review, nilai_review = 0, id_toko, id_produk, nilai_pengemasan = 0, nilai_kualitas = 0, nilai_keberhasilan = 0, id_konsumen, pengirimanId } = req.body;
             const files = req.files;
             const biayaTetap = await BiayaTetap.findOne({}).lean();
             const images = files ? files.images : [];
@@ -100,8 +100,6 @@ module.exports = {
                 nilai_keseluruan = 1
             }
 
-            await Orders.findByIdAndUpdate({ _id: id_order }, { sudah_direview: true }, { new: true })
-
             // Membuat ulasan baru
             const review = new ReviewProduk({
                 id_produk,
@@ -110,7 +108,8 @@ module.exports = {
                 nilai_review: parseInt(nilai_review),
                 images: imagePaths,
                 nilai_keseluruan,
-                id_konsumen
+                id_konsumen,
+                pengirimanId,
             });
 
             // Menyimpan ulasan ke database
