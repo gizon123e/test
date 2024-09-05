@@ -93,12 +93,12 @@ const modelOrder = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    biaya_awal_asuransi:{
+    biaya_awal_asuransi: {
         type: Number
     },
     biaya_awal_proteksi: {
         type: Number
-    }, 
+    },
     dp: {
         isUsed: {
             type: Boolean
@@ -107,7 +107,7 @@ const modelOrder = new mongoose.Schema({
             type: Decimal128
         }
     },
-    sekolahId:{
+    sekolahId: {
         type: mongoose.Types.ObjectId,
         ref: "Sekolah",
         default: null
@@ -153,44 +153,48 @@ const modelOrder = new mongoose.Schema({
                 ref: "TokoVendor"
             }
         }
-    ]
+    ],
+    sudah_direview: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true }
 )
 
 // modelOrder.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate", "updateMany"], async function (next){
-    // if(this.getUpdate().status === "Dibatalkan"){
-    //     const orders = await this.model.find(this.getQuery()).exec();
-  
-    //     for (const order of orders) {
-    //         await Pembatalan.create({
-    //             pesananId: order._id,
-    //             userId: order.userId,
-    //             canceledBy: this.getUpdate().canceledBy,
-    //             reason: this.getUpdate().reason
-    //         });
-    //     }
-    // }
-    // else if(this.getUpdate().status === "Berlangsung"){
-    //     const orders = await this.model.find(this.getQuery()).lean();
-    //     for (const order of orders) {
-    //         const { items, ...restOfOrder } = order;
-    //         for( const item of items ){
-    //             const { product, ...restOfItem } = item;
-    //             for ( let prod of product ){
-    //                 const { productId, ...restOfProd } = prod
-    //                 const produk = await mongoose.model("Product").findById(productId).populate({ path: "userId", select: "_id role" }).lean()
-    //                 prod = {
-    //                     dataProduct: produk,
-    //                     ...restOfProd
-    //                 }
+// if(this.getUpdate().status === "Dibatalkan"){
+//     const orders = await this.model.find(this.getQuery()).exec();
 
-    //                 item.product = prod
-    //             }
-    //         }
-    //         Object.assign(this.getUpdate(), order);
-    //     }
-    // }
-    // next()
+//     for (const order of orders) {
+//         await Pembatalan.create({
+//             pesananId: order._id,
+//             userId: order.userId,
+//             canceledBy: this.getUpdate().canceledBy,
+//             reason: this.getUpdate().reason
+//         });
+//     }
+// }
+// else if(this.getUpdate().status === "Berlangsung"){
+//     const orders = await this.model.find(this.getQuery()).lean();
+//     for (const order of orders) {
+//         const { items, ...restOfOrder } = order;
+//         for( const item of items ){
+//             const { product, ...restOfItem } = item;
+//             for ( let prod of product ){
+//                 const { productId, ...restOfProd } = prod
+//                 const produk = await mongoose.model("Product").findById(productId).populate({ path: "userId", select: "_id role" }).lean()
+//                 prod = {
+//                     dataProduct: produk,
+//                     ...restOfProd
+//                 }
+
+//                 item.product = prod
+//             }
+//         }
+//         Object.assign(this.getUpdate(), order);
+//     }
+// }
+// next()
 // })
 // const updateExpiredOrderStatus = async (order) => {
 //     if (order.expire && order.expire < new Date() && order.status !== "Dibatalkan") {

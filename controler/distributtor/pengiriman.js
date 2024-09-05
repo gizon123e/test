@@ -40,6 +40,8 @@ module.exports = {
                 message: `Yuk jemput pesanan ${pengiriman.kode_pengiriman} lalu segera kirim ke alamat tujuan konsumen`,
                 jenis: "Pesanan",
                 image_product: pengiriman.productToDelivers[0].productId.image_product[0],
+                kode: pengiriman.kode_pengiriman,
+                redirect: 'detail-pengiriman',
                 createdAt: new Date()
             })
             .then(() => console.log("Berhasil simpan notif distributor"))

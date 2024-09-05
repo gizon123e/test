@@ -193,8 +193,8 @@ module.exports = {
                 hargaVolumeBeratProduct = total
             }
 
-            const [latDetail, longDetail] = [parseFloat(addressDetail.address.pinAlamat.lat), parseFloat(addressDetail.address.pinAlamat.long)];
-            const [latitudeAddressCustom, longitudeAddressCustom] = [parseFloat(addressCustom.pinAlamat.lat), parseFloat(addressCustom.pinAlamat.long)];
+            const [latDetail, longDetail] = [parseFloat(addressDetail?.address?.pinAlamat?.lat), parseFloat(addressDetail?.address?.pinAlamat?.long)];
+            const [latitudeAddressCustom, longitudeAddressCustom] = [parseFloat(addressCustom?.pinAlamat?.lat), parseFloat(addressCustom?.pinAlamat?.long)];
 
             const ongkir = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
             if (isNaN(ongkir)) return res.status(400).json({ message: "Jarak antara konsumen dan vendor melebihi 100 km" });
@@ -223,7 +223,7 @@ module.exports = {
                     const gratong = await Gratong.findOne({ tarif: data.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
                     let hargaOngkir, total_ongkir, potongan_harga;
                     const jarakOngkir = ongkir;
-                    console.log(data.tarifId.jenis_jasa.nama)
+
                     if (jarakOngkir > 4) {
                         const hargaKiloMeter = (jarakOngkir - 4) * data.tarifId.tarif_per_km;
                         hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar + (hargaVolumeBeratProduct > 1 ? hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg : dataBiayaTetap.biaya_per_kg);
@@ -270,6 +270,7 @@ module.exports = {
                                             id: data.tarifId._id,
                                             dasar: data.tarifId.tarif_dasar,
                                             per_km: data.tarifId.tarif_per_km,
+                                            maximum: data.tarifId.jenis_jasa.maximum
                                         },
                                         userId: {
                                             _id: distributor.userId._id,
@@ -308,6 +309,7 @@ module.exports = {
                                         id: data.tarifId._id,
                                         dasar: data.tarifId.tarif_dasar,
                                         per_km: data.tarifId.tarif_per_km,
+                                        maximum: data.tarifId.jenis_jasa.maximum
                                     },
                                     userId: {
                                         _id: distributor.userId._id,
