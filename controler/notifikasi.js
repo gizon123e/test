@@ -54,7 +54,7 @@ const socket = io(process.env.WEBSOCKET, {
 module.exports = {
   getDetailNotif: async (req, res, next) => {
     try {
-     console.log(req.user)
+      console.log(req.user);
       const { status, page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
       if (req.user.role === "konsumen") return res.status(403).json({ message: "Invalid Request" });
@@ -285,7 +285,7 @@ module.exports = {
         }
       }
       let filteredData = data.forEach((dt) => {
-        console.log("data" ,dt);
+        console.log("data", dt);
       });
 
       return res.status(200).json({ message: "get data all Order success", data: filteredData });
@@ -350,6 +350,7 @@ module.exports = {
         {
           $addFields: {
             id_pesanan: "$transaksi.id_pesanan",
+            kode_invoice: "$invoice.kode_invoice",
           },
         },
         {
@@ -362,6 +363,7 @@ module.exports = {
             image_product: 1,
             is_read: 1,
             createdAt: 1,
+            kode_invoice: 1,
             id_pesanan: 1,
           },
         },
@@ -397,6 +399,7 @@ module.exports = {
             message: `Yuk jangan lupa ada pengiriman pesanan ${shipment.kode_pengiriman} yang harus dikirim besok`,
             jenis: "Pesanan",
             image_product: shipment.productToDelivers[0].productId.image_product[0],
+            kode: shipment.kode_pengiriman,
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan detail notif distributor"))
@@ -421,6 +424,7 @@ module.exports = {
             message: `Pengiriman pesanan ${shipment.kode_pengiriman} sedang dikemas oleh penjual dan akan segera kamu kirim ke konsumen`,
             jenis: "Pesanan",
             image_product: shipment.productToDelivers[0].productId.image_product[0],
+            kode: shipment.kode_pengiriman,
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan notif distri"))
@@ -432,6 +436,7 @@ module.exports = {
             message: `${shipment.invoice.kode_invoice} sedang dikemas oleh penjual dan akan segera dikirim`,
             jenis: "Pesanan",
             image_product: shipment.productToDelivers[0].productId.image_product[0],
+            kode: shipment.invoice.kode_invoice,
             createdAt: new Date(),
           })
             .then(() => console.log("Berhasil simpan detail notif konsumen"))

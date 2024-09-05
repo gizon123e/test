@@ -152,6 +152,7 @@ module.exports = {
                             status: `Ada ${pgr.productToDelivers[0].quantity} Pesanan Senilai Rp. ${total_harga_vendor}`,
                             message: `Segera terima pesanan ${pgr.invoice.kode_invoice} sebelum ${sixHoursAgo}`,
                             image_product: pgr.productToDelivers[0].productId.image_product[0],
+                            kode: pgr.invoice.kode_invoice,
                             createdAt: new Date()
                         })
                         .then(() => console.log("Berhasil simpan detail notif vendor"))
@@ -252,6 +253,7 @@ module.exports = {
                         status: "Pembayaran berhasil",
                         message: `${invoiceTambahan.kode_invoice} senilai Rp. ${gross_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} telah berhasil kamu bayar, pesanan akan segera diproses`,
                         image_product: pengiriman[0].productToDelivers[0].productId.image_product[0],
+                        kode: invoiceTambahan.kode_invoice,
                         createdAt: new Date()
                     })
                     .then(() => console.log("notif pembayaran berhasil"))
