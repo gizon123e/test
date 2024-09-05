@@ -100,7 +100,7 @@ module.exports = {
                 nilai_keseluruan = 1
             }
 
-            const order = await Orders.findByIdAndUpdate(id_order, { refiews: true }, { new: true })
+            await Orders.findByIdAndUpdate({ _id: id_order }, { refiews: true }, { new: true })
 
             // Membuat ulasan baru
             const review = new ReviewProduk({
