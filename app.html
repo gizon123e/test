@@ -203,7 +203,7 @@
       }
 
       function initializeSocket(token) {
-        socket = io("https://staging-backend.superdigitalapps.my.id",{
+        socket = io("https://staging-backend.superdigitalapps.my.id/",{
           transports: ['websocket'],
           auth: {
             token,
@@ -262,6 +262,7 @@
 
       socket.on('notifikasi_vendor_pesanan_masuk', (data)=> {
         console.log(data);
+        alert(data.toString())
         const text = document.createElement("p");
         text.innerHTML = `${JSON.stringify(data)}`;
         document.body.appendChild(text);  
