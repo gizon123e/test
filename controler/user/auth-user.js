@@ -1,11 +1,11 @@
-const User = require("../models/model-auth-user");
-const { TemporaryUser } = require('../models/model-temporary-user')
-const sendOTP = require("../utils/sendOtp").sendOtp;
-const sendPhoneOTP = require('../utils/sendOtp').sendOtpPhone
-const jwt = require("../utils/jwt");
+const User = require("../../models/model-auth-user");
+const { TemporaryUser } = require('../../models/model-temporary-user')
+const sendOTP = require("../../utils/sendOtp").sendOtp;
+const sendPhoneOTP = require('../../utils/sendOtp').sendOtpPhone
+const jwt = require("../../utils/jwt");
 const bcrypt = require("bcrypt");
-const temporaryUser = require("./temporaryUser");
-const DeviceId = require("../models/model-token-device");
+const temporaryUser = require("../temporaryUser");
+const DeviceId = require("../../models/model-token-device");
 
 module.exports = {
 
@@ -199,6 +199,8 @@ module.exports = {
       if(!passwordValid) return res.status(401).json({message: "Password yang dimasukkan salah"});
 
       const deviceId = req.headers["x-header-deviceid"];
+      const brand = req.headers["x-device-brand"];
+
       if(!deviceId) return res.status(404).json({message: "kirimkan header yang dibutuhkan"})
       let existedDeviceId = await DeviceId.findOne({userId: newUser._id, deviceId});
       
@@ -206,7 +208,9 @@ module.exports = {
       if(!existedDeviceId){
         existedDeviceId = await DeviceId.create({
           userId: newUser._id,
-          deviceId
+          deviceId,
+          device: brand,
+          login_at: new Date()
         });
       }
 
@@ -243,6 +247,11 @@ module.exports = {
           phone: newUser.phone,
           role: newUser.role,
         };
+
+        await DeviceId.updateOne(
+          { userId: newUser._id },
+          { login_at: new Date() }
+        )
 
         const jwtToken = jwt.createToken(tokenPayload);
         return res.status(200).json({

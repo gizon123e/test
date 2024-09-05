@@ -2,12 +2,15 @@
 const authorization = require("../midelware/authorization");
 
 // import controler
-const controlerAuthUser = require("../controler/auth-user");
+const controlerAuthUser = require("../controler/user/auth-user");
+const controlerActivities = require("../controler/user/aktivitas-login");
+
 
 const router = require("express").Router();
 
 // router auth user
 router.get("/check-verified-detail", authorization, controlerAuthUser.validateDetail);
+router.get("/login-activities", authorization, controlerActivities.getAktivitasLogin);
 router.post("/login", controlerAuthUser.login);
 router.post("/reset-password" , controlerAuthUser.resetPassword);
 router.post("/reset-pin" , controlerAuthUser.resetPin);

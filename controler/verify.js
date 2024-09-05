@@ -44,7 +44,10 @@ module.exports = {
             if(!deviceId) return res.status(404).json({message: "kirimkan header yang dibutuhkan"})
             await DeviceId.updateOne(
                 { deviceId, userId: user._id },
-                { valid_until: new Date().setDate(new Date().getDate() + 7 )}
+                { 
+                    valid_until: new Date().setDate(new Date().getDate() + 7 ),
+                    login_at: new Date()
+                }
             )
 
             const tokenPayload = {

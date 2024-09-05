@@ -9,6 +9,12 @@ const model = new mongoose.Schema({
     },
     valid_until: {
         type: Date
+    },
+    device: {
+        type: String
+    },
+    login_at: {
+        type: Date
     }
 });
 
