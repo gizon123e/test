@@ -40,7 +40,8 @@ module.exports = {
             if(new Date().getTime() > user.codeOtp.expire.getTime() ) return res.status(401).json({message: "Kode sudah tidak valid"});
             const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
             if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
-
+            const deviceId = req.headers["x-header-deviceid"];
+            if(!deviceId) return res.status(404).json({message: "kirimkan header yang dibutuhkan"})
             await DeviceId.updateOne(
                 { deviceId, userId: user._id },
                 { valid_until: new Date().setDate(new Date().getDate() + 7 )}

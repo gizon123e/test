@@ -199,9 +199,18 @@ module.exports = {
       if(!passwordValid) return res.status(401).json({message: "Password yang dimasukkan salah"});
 
       const deviceId = req.headers["x-header-deviceid"];
-      const existedDeviceId = await DeviceId.findOne({userId: newUser._id, deviceId});
+      if(!deviceId) return res.status(404).json({message: "kirimkan header yang dibutuhkan"})
+      let existedDeviceId = await DeviceId.findOne({userId: newUser._id, deviceId});
+      
 
-      if(existedDeviceId.valid_until.getTime() > new Date().getTime()){
+      if(!existedDeviceId){
+        existedDeviceId = await DeviceId.create({
+          userId: newUser._id,
+          deviceId
+        });
+      }
+
+      if(existedDeviceId?.valid_until?.getTime() > new Date().getTime() || !existedDeviceId?.valid_until){
         
         const kode_random = Math.floor(1000 + Math.random() * 9000);
         const kode = await bcrypt.hash(kode_random.toString(), 3);
