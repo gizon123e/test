@@ -85,15 +85,15 @@ module.exports = {
             }
             let dataUser
             if (dataDetailId.userId.role === 'konsumen') {
-                dataUser = await Konsumen.findOne({ userId: dataDetailId.userId._id })
+                dataUser = await Konsumen.findOne({ userId: dataDetailId.userId._id }).populate('address')
             } else if (dataDetailId.userId.role === 'vendor') {
-                dataUser = await Vendor.findOne({ userId: dataDetailId.userId._id })
+                dataUser = await Vendor.findOne({ userId: dataDetailId.userId._id }).populate('address')
             } else if (dataDetailId.userId.role === 'produsen') {
-                dataUser = await Produsen.findOne({ userId: dataDetailId.userId._id })
+                dataUser = await Produsen.findOne({ userId: dataDetailId.userId._id }).populate('address')
             } else if (dataDetailId.userId.role === 'supplier') {
-                dataUser = await Supplier.findOne({ userId: dataDetailId.userId._id })
+                dataUser = await Supplier.findOne({ userId: dataDetailId.userId._id }).populate('address')
             } else {
-                dataUser = await Distributtor.findOne({ userId: dataDetailId.userId._id })
+                dataUser = await Distributtor.findOne({ userId: dataDetailId.userId._id }).populate('alamat_id')
             }
 
             res.status(200).json({
