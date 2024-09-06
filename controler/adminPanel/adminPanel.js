@@ -83,10 +83,23 @@ module.exports = {
             if (!dataDetailId) {
                 return res.status(404).json({ message: "data Not Found" })
             }
+            let dataUser
+            if (dataDetailId.userId.role === 'konsumen') {
+                dataUser = await Konsumen.findOne({ userId: dataDetailId.userId._id })
+            } else if (dataDetailId.userId.role === 'vendor') {
+                dataUser = await Vendor.findOne({ userId: dataDetailId.userId._id })
+            } else if (dataDetailId.userId.role === 'produsen') {
+                dataUser = await Produsen.findOne({ userId: dataDetailId.userId._id })
+            } else if (dataDetailId.userId.role === 'supplier') {
+                dataUser = await Supplier.findOne({ userId: dataDetailId.userId._id })
+            } else {
+                dataUser = await Distributtor.findOne({ userId: dataDetailId.userId._id })
+            }
 
             res.status(200).json({
                 message: "get detail success",
-                datas: dataDetailId
+                datas: dataDetailId,
+                data_user: dataUser
             })
         } catch (error) {
             console.log(error);
