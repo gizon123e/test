@@ -2,6 +2,7 @@ require("./database/database");
 const flash_sale_checker = require('./utils/flash-sale-checker');
 const checker_order = require("./utils/cancel-order")
 const send_notif = require("./utils/send-notif");
+const expiredPoin = require("./utils/expired-point");
 const http = require('http');
 const https = require('https')
 const fs = require('fs');
@@ -20,8 +21,7 @@ const initializeChatSocket = require('./controler/message/vendor-distributor/ven
 const UAParser = require('ua-parser-js');
 
 const dotenv = require('dotenv');
-const Distributtor = require("./models/distributor/model-distributor");
-const Address = require("./models/model-address");
+
 
 dotenv.config()
 
@@ -202,6 +202,7 @@ app.listen(4000, () => {
   // checker_order()
   // send_notif()
   // batalPesanan()
+  // expiredPoin()
   console.log("connection express success");
   websocket.listen(8000, () => {
     console.log("Connection websocket success");

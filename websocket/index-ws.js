@@ -21,6 +21,7 @@ io.use(async(socket, next) => {
     const verifyToken = jwt.verifyToken(token);
     if (!verifyToken) return next(new Error("Authentication error"));
     socket.user = verifyToken;
+    socket.id = socket.user.id
     next();
   } catch (error) {
     next(error)
@@ -64,6 +65,7 @@ io.on("connection", (socket) => {
 
   socket.on("send msg", async (data) => {
     const { userId, ...contents } = data;
+    console.log(data)
     try {
         const receiver = await User.findById(userId).select("role");
         const senderRole = socket.user.role;
