@@ -254,33 +254,32 @@ module.exports = {
 
     getHistoryBelomDiReview: async (req, res, next) => {
         try {
-            const dataPesanan = await Pengiriman.find({ status_distributor: "Selesai" })
-                .populate('productToDelivers.productId')
-                .populate('orderId')
-                .populate('id_toko')
-                .populate('distributorId')
+            const user = await Konsumen.findOne({ userId: req.user.id })
+            if (!user) return res.status(404).json({ message: "data user tidak di temukan" })
 
-            const produk = []
-            console.log(req.user.id)
-            for (const dataOrder of dataPesanan) {
-                const itemOrder = await Orders.findById(dataOrder.orderId._id)
-                console.log(dataOrder)
+            const itemOrder = await Orders.find({ userId: req.user.id, status: "Berhasil" })
+            // console.log(itemOrder)
 
-                if (itemOrder.userId.toString() === req.user.id.toString()) {
+            const pesanan = []
 
-                    console.log("tes")
+            for (const data of itemOrder) {
+                // status_distributor: 'Diterima' 
+                const pengiriman = await Pengiriman.findOne({ orderId: data._id.toString() })
 
-                    const validateData = await ReviewProduk.findOne({ id_produk: item.productId._id, userId: req.user.id })
-                    if (!validateData) {
-                        produk.push(data)
-                    }
+                let review
+                if (pengiriman) {
+                    review = await ReviewProduk.find({ id_konsumen: user._id, pengirimanId: pengiriman._id })
+                }
 
+                if (!review) {
+                    console.log("tesssss")
+                    pesanan.push(data)
                 }
             }
 
             res.status(200).json({
                 message: "get data success",
-                datas: produk
+                datas: pesanan
             })
         } catch (error) {
             console.log(error)
