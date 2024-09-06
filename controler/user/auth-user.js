@@ -250,7 +250,7 @@ module.exports = {
 
         await DeviceId.updateOne(
           { userId: newUser._id },
-          { login_at: new Date() }
+          { login_at: new Date(), valid_until: new Date().setDate(new Date().getDate() + 3 ) }
         )
 
         const jwtToken = jwt.createToken(tokenPayload);
