@@ -232,7 +232,7 @@ module.exports = {
             const user = await Konsumen.findOne({ userId: req.user.id })
             if (!user) return res.status(404).json({ message: "data user tidak di temukan" })
 
-            const reviews = await ReviewProduk.find({ id_konsumen: user._id }).populate("id_konsumen").populate('id_produk')
+            const reviews = await ReviewProduk.find({ id_konsumen: user._id }).populate("id_konsumen").populate('id_produk').sort({ createdAt: -1 })
             if (reviews.length === 0) return res.status(400).json({ message: 'saat ini kamo belom ada histroy review' })
 
             res.status(200).json({
@@ -254,22 +254,27 @@ module.exports = {
 
     getHistoryBelomDiReview: async (req, res, next) => {
         try {
-            const dataPesanan = await Pengiriman.find({ status_pengiriman: "pesanan selesai" })
+            const dataPesanan = await Pengiriman.find({ status_distributor: "Selesai" })
                 .populate('productToDelivers.productId')
                 .populate('orderId')
                 .populate('id_toko')
                 .populate('distributorId')
 
             const produk = []
+            console.log(req.user.id)
+            for (const dataOrder of dataPesanan) {
+                const itemOrder = await Orders.findById(dataOrder.orderId._id)
+                console.log(dataOrder)
 
-            for (const data of dataPesanan) {
-                if (data.orderId.userId.toString() === req.user.id) {
-                    for (const item of data.productToDelivers) {
-                        const validateData = await ReviewProduk.findOne({ id_produk: item.productId._id, userId: req.user.id })
-                        if (!validateData) {
-                            produk.push(data)
-                        }
+                if (itemOrder.userId.toString() === req.user.id.toString()) {
+
+                    console.log("tes")
+
+                    const validateData = await ReviewProduk.findOne({ id_produk: item.productId._id, userId: req.user.id })
+                    if (!validateData) {
+                        produk.push(data)
                     }
+
                 }
             }
 
