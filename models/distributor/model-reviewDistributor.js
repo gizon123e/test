@@ -31,11 +31,6 @@ const modelReviewDistributor = new mongoose.Schema({
         ref: "TokoVendor",
         required: [true, "id_toko harus di isi"]
     },
-    id_address: {
-        type: mongoose.Types.ObjectId,
-        ref: "Address",
-        required: [true, "id_toko harus di isi"]
-    },
     id_jenis_pengiriman: {
         type: mongoose.Types.ObjectId,
         ref: 'JenisJasaDistributor',
@@ -50,7 +45,13 @@ const modelReviewDistributor = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: 'Sekolah',
         required: [true, 'id_sekolahn harus di isi'],
-    }
+    },
+    pengirimanId: [
+        {
+            type: mongoose.Types.ObjectId,
+            ref: "Pengiriman",
+        }
+    ]
 }, { timestamps: true })
 
 const ReviewDistributor = mongoose.model("ReviewDistributor", modelReviewDistributor)
