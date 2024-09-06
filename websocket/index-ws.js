@@ -21,7 +21,6 @@ io.use(async(socket, next) => {
     const verifyToken = jwt.verifyToken(token);
     if (!verifyToken) return next(new Error("Authentication error"));
     socket.user = verifyToken;
-    socket.id = socket.user.id;
     next();
   } catch (error) {
     next(error)
