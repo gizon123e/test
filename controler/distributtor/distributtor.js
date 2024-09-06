@@ -248,10 +248,10 @@ module.exports = {
                         total_ongkir = hargaOngkir;
                     }
 
-                    if (distributor.userId.isDetailVerified === true && data.tarifId.jenis_jasa.nama === "Standar" && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
+                    if (distributor.userId.isDetailVerified === true && data.tarifId.jenis_jasa.nama === "Standar" && req.user.role === "konsumen" && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
                         if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
                             if (data.jenisKendaraan.jenis === 'Mobil' || data.jenisKendaraan.jenis === 'Truk Box') {
-                                // console.log('=============================================> 1', data.jenisKendaraan.jenis)
+
                                 dataAllDistributtor.push({
                                     distributor: {
                                         id: distributor._id,
@@ -290,7 +290,85 @@ module.exports = {
                                 });
                             }
                         } else {
-                            // console.log('=============================================> 2', data.jenisKendaraan.jenis)
+
+                            dataAllDistributtor.push({
+                                distributor: {
+                                    id: distributor._id,
+                                    name: distributor.nama_distributor,
+                                    address: distributor.alamat_id.alamat,
+                                    npwp: distributor.npwp,
+                                    jenisKelamin: distributor.jenisKelamin,
+                                    imageProfile: distributor.imageProfile,
+                                    kendaraan: {
+                                        id_kendaraan: data.jenisKendaraan._id,
+                                        jenis: data.jenisKendaraan.jenis,
+                                        description: data.jenisKendaraan.description,
+                                        ukuran: data.jenisKendaraan.ukuran,
+                                    },
+                                    tarif: {
+                                        id: data.tarifId._id,
+                                        dasar: data.tarifId.tarif_dasar,
+                                        per_km: data.tarifId.tarif_per_km,
+                                        maximum: data.tarifId.jenis_jasa.maximum
+                                    },
+                                    userId: {
+                                        _id: distributor.userId._id,
+                                        isDetailVerified: distributor.userId.isDetailVerified,
+                                        role: distributor.userId.role,
+                                        isActive: distributor.userId.isActive,
+                                        isBlocked: distributor.userId.isBlocked,
+                                        isVerifikasiDocument: distributor.userId.isVerifikasiDocument
+                                    }
+                                },
+                                jarakTempu: distance,
+                                ukuranBeratProduct,
+                                ukuranVolumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                total_ongkir: Math.round(total_ongkir),
+                                potongan_harga
+                            });
+                        }
+                    } else if (distributor.userId.isDetailVerified === true && data.tarifId.jenis_jasa.nama !== "Standar" && req.user.role !== "konsumen" && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
+                        if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
+                            if (data.jenisKendaraan.jenis === 'Mobil' || data.jenisKendaraan.jenis === 'Truk Box') {
+                                dataAllDistributtor.push({
+                                    distributor: {
+                                        id: distributor._id,
+                                        name: distributor.nama_distributor,
+                                        address: distributor.alamat_id.alamat,
+                                        npwp: distributor.npwp,
+                                        jenisKelamin: distributor.jenisKelamin,
+                                        imageProfile: distributor.imageProfile,
+                                        kendaraan: {
+                                            id_kendaraan: data.jenisKendaraan._id,
+                                            jenis: data.jenisKendaraan.jenis,
+                                            description: data.jenisKendaraan.description,
+                                            ukuran: data.jenisKendaraan.ukuran,
+                                        },
+                                        tarif: {
+                                            id: data.tarifId._id,
+                                            dasar: data.tarifId.tarif_dasar,
+                                            per_km: data.tarifId.tarif_per_km,
+                                            maximum: data.tarifId.jenis_jasa.maximum
+                                        },
+                                        userId: {
+                                            _id: distributor.userId._id,
+                                            isDetailVerified: distributor.userId.isDetailVerified,
+                                            role: distributor.userId.role,
+                                            isActive: distributor.userId.isActive,
+                                            isBlocked: distributor.userId.isBlocked,
+                                            isVerifikasiDocument: distributor.userId.isVerifikasiDocument
+                                        }
+                                    },
+                                    jarakTempu: distance,
+                                    ukuranBeratProduct,
+                                    ukuranVolumeProduct,
+                                    hargaOngkir: Math.round(hargaOngkir),
+                                    total_ongkir: Math.round(total_ongkir),
+                                    potongan_harga
+                                });
+                            }
+                        } else {
                             dataAllDistributtor.push({
                                 distributor: {
                                     id: distributor._id,
