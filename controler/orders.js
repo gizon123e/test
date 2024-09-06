@@ -793,6 +793,9 @@ module.exports = {
               if (pembatalan) {
                 return "Kadaluarsa";
               }
+              if(tidakMemenuhiSyarat){
+                return "Tidak Memenuhi Syarat"
+              }
             };
             const checkCreatedAt = () => {
               if (pesanan[key].pengiriman.invoice._id.toString() === invoiceSubsidi?._id.toString()) {

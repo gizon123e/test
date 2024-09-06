@@ -65,24 +65,24 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const parser = new UAParser();
-  const ua = parser.setUA(req.headers['user-agent']).getResult();
+// app.use((req, res, next) => {
+//   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+//   const parser = new UAParser();
+//   const ua = parser.setUA(req.headers['user-agent']).getResult();
 
-  const accessInfo = {
-    ip: ip,
-    browser: ua.browser.name,
-    os: ua.os.name,
-    device: ua.device.type || 'Desktop',
-    timestamp: new Date()
-  };
+//   const accessInfo = {
+//     ip: ip,
+//     browser: ua.browser.name,
+//     os: ua.os.name,
+//     device: ua.device.type || 'Desktop',
+//     timestamp: new Date()
+//   };
 
-  // Simpan accessInfo ke database atau log
-  console.log('Access Info:', accessInfo);
+//   // Simpan accessInfo ke database atau log
+//   console.log('Access Info:', accessInfo);
 
-  next();
-});
+//   next();
+// });
 
 app.use("/api/temporary", require('./routes/router-temporary'));
 // app.use("/api/temporary/seller", require('./routes/router-temporary-seller'));
