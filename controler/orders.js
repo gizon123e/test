@@ -43,6 +43,7 @@ const Supplier = require("../models/supplier/model-supplier");
 const Konsumen = require("../models/konsumen/model-konsumen");
 const PelacakanDistributorKonsumen = require("../models/konsumen/pelacakanDistributorKonsumen");
 const ReviewProduk = require("../models/model-review/model-reviewProduk");
+const ReviewDistributor = require("../models/distributor/model-reviewDistributor");
 dotenv.config();
 
 const now = new Date();
@@ -529,7 +530,8 @@ module.exports = {
           for(const key of Object.keys(store)){
             let jumlah = 0;
             const { totalHargaSubsidi, totalHargaTambahan, status_pengiriman, total_pesanan, ...restOfStore } = store[key];
-            const isReviewed = await ReviewProduk.exists({pengirimanId: { $in: status_pengiriman.map(pgr => pgr._id )}})
+            const isSellerReviewed = await ReviewProduk.exists({pengirimanId: { $in: status_pengiriman.map(pgr => pgr._id )}});
+            const isDistriReviewed = await ReviewDistributor.exists({pengirimanId: { $in: status_pengiriman.map(pgr => pgr._id )}});
             if (totalHargaTambahan > 0) {
               const rasio = totalHargaTambahan / totalProductTambahan;
               jumlah += Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan);
@@ -548,7 +550,10 @@ module.exports = {
               total_pesanan: total_pesanan + jumlah,
               status_pengiriman,
               ...restOfStore,
-              isReviewed: isReviewed ? true : false
+              reviewed: {
+                produkReviewed: isSellerReviewed? true : false,
+                distriReviewed: isDistriReviewed? true : false
+              }
             });
           }
         }

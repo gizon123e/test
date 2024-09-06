@@ -39,8 +39,6 @@ module.exports = {
                 const urlImage = `${process.env.HOST}/public/ulasan-produk/${namaImage}`;
                 imagePaths.push(urlImage);
             }
-
-            // Menghitung total review vendor
             const datasReviewVendor = await ReviewVendor.find({ id_toko });
             const indexReviewVendor = datasReviewVendor.length + 1;
 
@@ -109,7 +107,7 @@ module.exports = {
                 images: imagePaths,
                 nilai_keseluruan,
                 id_konsumen,
-                pengirimanId,
+                pengirimanId: JSON.parse(pengirimanId),
             });
 
             // Menyimpan ulasan ke database
