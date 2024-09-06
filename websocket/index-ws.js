@@ -47,7 +47,7 @@ io.on("connection", (socket) => {
   console.log(
     `${userConnected.length} ${
       userConnected.length > 1 ? "users" : "user"
-    } succesfully connected`
+    } succesfully connected`,
   );
 
   socket.on("disconnect", (reason) => {
@@ -171,6 +171,7 @@ io.on("connection", (socket) => {
   // SOCKER NOTIFIKASI PADA VENDOR 
   socket.on('notif_vendor_pesanan_masuk', async(data) => {
     const {userId, ...rest} = data
+    console.log(userConnected.some(user => user.id === userId))
     console.log(data)
     io.to(userId).emit('notifikasi_vendor_pesanan_masuk', JSON.stringify({...rest}));
   })
