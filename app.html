@@ -203,13 +203,13 @@
       }
 
       function initializeSocket(token) {
-        socket = io("http://localhost:8000",{
+        socket = io("https://staging-backend.superdigitalapps.my.id",{
           transports: ['websocket'],
           auth: {
             token,
           },
         });
-        
+
         socket.on("hello", (arg) => {
           const text = document.createElement("p");
           text.innerHTML = arg;

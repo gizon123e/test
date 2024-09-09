@@ -220,12 +220,12 @@ module.exports = {
       let sellerDalamRadius = [];
 
       for (let i = 0; i < sellers.length; i++) {
-        // const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i]?.address?.pinAlamat?.lat), parseFloat(sellers[i]?.address?.pinAlamat?.long), biayaTetap.radius);
+        const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i]?.address?.pinAlamat?.lat), parseFloat(sellers[i]?.address?.pinAlamat?.long), biayaTetap.radius);
         
-        // if (distance <= biayaTetap.radius) {
+        if (distance <= biayaTetap.radius) {
           sellerDalamRadius.push(sellers[i]);
-          // sellers[i].jarakVendor = distance;
-        // }
+          sellers[i].jarakVendor = distance;
+        }
       }
       const idSellers = sellerDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
       // console.log('id seller', idSellers)

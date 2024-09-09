@@ -540,6 +540,7 @@ module.exports = {
               const rasio = totalHargaSubsidi / totalProductSubsidi;
               jumlah += Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan);
             }
+            const incomplete = await IncompleteOrders.findOne({ pengirimanId: status_pengiriman[0]._id });
             const statusOrder = () => {
               const isAccepted = status_pengiriman.some((pgr) => pgr.isBuyerAccepted);
               return isAccepted ? "Berhasil" : status;
@@ -550,6 +551,15 @@ module.exports = {
               total_pesanan: total_pesanan + jumlah,
               status_pengiriman,
               ...restOfStore,
+              incomplete: incomplete ? 
+              {
+                status: true,
+                message: `${store[key].arrayProduct[0].productId.name_product} yang bisa dipenuhi hanya ${incomplete.completedOrders}%. Mohon penuhi kekurangannya.`,
+              } : 
+              {
+                status: false,
+                message: ``
+              },
               reviewed: {
                 produkReviewed: isSellerReviewed? true : false,
                 distriReviewed: isDistriReviewed? true : false
@@ -2619,7 +2629,7 @@ module.exports = {
           completedOrders,
           persentase
         });
-        await Vendor.updateOne({ userId: req.user.id }, { $inc: { nilai_pinalti: 1 } });
+        await Vendor.updateOne({ userId: req.user.id }, { $inc: { nilai_pinalti: 2 } });
       }
 
       if (!pengiriman) return res.status(404).json({ message: `Tidak ada pengiriman dengan id ${pengirimanId}` });
