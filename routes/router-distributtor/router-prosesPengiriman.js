@@ -12,7 +12,7 @@ router.put('/pesanan-diserahkan/:id', authorization, controlerProsesPengiriman.p
 
 // perusahaan
 router.put('/mulai-penjemputan-perusahaan/:id', controlerProsesPengiriman.mulaiPenjemputanPerusahaan);
-router.put('/sudah-penjemputanperusahaan/:id', controlerProsesPengiriman.sudahDiJemputPerusahaan);
+router.put('/sudah-penjemputan-perusahaan/:id', controlerProsesPengiriman.sudahDiJemputPerusahaan);
 router.put('/mulai-pengiriman-perusahaan/:id', controlerProsesPengiriman.mulaiPengirimanPerusahaan);
 router.put('/pesanan-diserahkan-perusahaan/:id', controlerProsesPengiriman.pesasanSelesaiPerusahaan);
 
