@@ -1,6 +1,6 @@
+const Chat = require("../models/model-chat");
 const Distributtor = require("../models/distributor/model-distributor");
 const Konsumen = require("../models/konsumen/model-konsumen");
-const Chat = require("../models/model-chat");
 const Produsen = require("../models/produsen/model-produsen");
 const Supplier = require("../models/supplier/model-supplier");
 const Vendor = require("../models/vendor/model-vendor");

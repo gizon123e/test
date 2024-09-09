@@ -2,6 +2,12 @@ const { Server } = require("socket.io");
 const jwt = require("../utils/jwt");
 const Chat = require("../models/model-chat");
 const User = require("../models/model-auth-user");
+const Distributtor = require("../models/distributor/model-distributor");
+const Konsumen = require("../models/konsumen/model-konsumen");
+const Produsen = require("../models/produsen/model-produsen");
+const Supplier = require("../models/supplier/model-supplier");
+const Vendor = require("../models/vendor/model-vendor");
+
 
 const io = new Server({
   cors: {
@@ -82,7 +88,7 @@ io.on("connection", (socket) => {
         const message = {
           sender: socket.user.id,
           content: JSON.stringify(contents),
-          timestamp: Date.now()
+          timestamp: new Date(Date.now()).toISOString()
         };
 
         if (chat) {
@@ -96,9 +102,53 @@ io.on("connection", (socket) => {
           chat.save().then(()=> console.log("Berhasil Menyimpan Chat")).catch((err)=> console.log("Gagal Menyimpan Chat", err));
         }
 
-        // Kirim pesan
-        io.to(socket.user.id).emit("msg", message.content);
-        io.to(userId).emit("msg", message.content);
+        const { sender, ...rest } = message;
+
+        let senderDetail;
+        let detail;
+
+        switch (socket.user.role) {
+          case "konsumen":
+            detail = await Konsumen.findOne({ userId: sender }).select("profile_pict namaBadanUsaha userId nama").lean();
+            if (!detail) {
+                return ({ message: "Detail konsumen tidak ditemukan" });
+            }
+            senderDetail = { userId: detail.userId , role: socket.user.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+            break;    
+          case "vendor":
+            detail = await Vendor.findOne({ userId: sender }).select("profile_pict namaBadanUsaha userId nama").lean();
+            if (!detail) {
+                return ({ message: "Detail vendor tidak ditemukan" });
+            }
+            senderDetail = { userId: detail.userId , role: socket.user.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+            break;    
+          case "supplier":
+            detail = await Supplier.findOne({ userId: sender }).select("profile_pict namaBadanUsaha userId nama").lean();
+            if (!detail) {
+                return ({ message: "Detail supplier tidak ditemukan" });
+            }
+            senderDetail = { userId: detail.userId , role: socket.user.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+            break;    
+          case "produsen":
+            detail = await Produsen.findOne({ userId: sender }).select("profile_pict namaBadanUsaha userId nama").lean();
+            if (!detail) {
+                return ({ message: "Detail produsen tidak ditemukan" });
+            }
+            senderDetail = { userId: detail.userId , role: socket.user.role , profile_pict: detail.profile_pict, nama: detail.namaBadanUsaha || detail.nama };
+            break;    
+          case "distributor":
+            detail = await Distributtor.findOne({ userId: sender }).select("imageProfile nama_distributor userId").lean();
+            if (!detail) {
+                return ({ message: "Detail distributor tidak ditemukan", });
+            }
+            senderDetail = { userId: detail.userId , role: socket.user.role , profile_pict: detail.imageProfile, nama: detail.nama_distributor };
+            break;    
+          default:
+            return ({ message: "Role tidak dikenali" });  
+        };
+
+        io.to(socket.user.id).emit("msg", JSON.stringify({ sender: senderDetail, ...rest}));
+        io.to(userId).emit("msg", JSON.stringify({ sender: senderDetail, ...rest}));
 
     } catch (err) {
       console.log('Gagal menyimpan chat', err);

@@ -509,7 +509,6 @@ module.exports = {
                     biayaTetap.radius
                 );
             }
-
             if (isNaN(jarakVendorKonsumen)) {
                 return res.status(400).json({
                     message: `Jarak antara konsumen dan vendor melebihi ${biayaTetap.radius} km`
@@ -574,7 +573,7 @@ module.exports = {
 
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas: datas.filter(data => data)  // Filter out undefined entries
+                datas: datas.filter(data => data)  // Filter out undefined entries,
             });
 
         } catch (error) {

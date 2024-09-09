@@ -103,7 +103,6 @@ module.exports = {
         try {
             const { userId, addressId } = req.query
             const { product = [] } = req.body
-
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
 
             const ukuranVolumeMotor = 100 * 30 * 40
@@ -164,7 +163,7 @@ module.exports = {
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
             distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, dataBiayaTetap.radius);
-
+            console.log(distance)
             if (isNaN(distance)) {
                 return res.status(400).json({
                     message: `Jarak antara konsumen dan vendor melebihi ${dataBiayaTetap.radius} km`

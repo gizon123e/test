@@ -169,7 +169,10 @@ module.exports = {
               },
             },
             {
-              $unwind: "$address",
+              $unwind: {
+                path: "$address",
+                preserveNullAndEmptyArrays: true
+              },
             },
           ]);
           break;
@@ -184,7 +187,10 @@ module.exports = {
               },
             },
             {
-              $unwind: "$address",
+              $unwind: {
+                path: "$address",
+                preserveNullAndEmptyArrays: true
+              },
             },
           ]);
           break;
@@ -199,7 +205,10 @@ module.exports = {
               },
             },
             {
-              $unwind: "$address",
+              $unwind: {
+                path: "$address",
+                preserveNullAndEmptyArrays: true
+              },
             },
           ]);
           break;
@@ -211,15 +220,15 @@ module.exports = {
       let sellerDalamRadius = [];
 
       for (let i = 0; i < sellers.length; i++) {
-        const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
-        if (distance <= biayaTetap.radius) {
+        // const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i]?.address?.pinAlamat?.lat), parseFloat(sellers[i]?.address?.pinAlamat?.long), biayaTetap.radius);
+        
+        // if (distance <= biayaTetap.radius) {
           sellerDalamRadius.push(sellers[i]);
-          sellers[i].jarakVendor = distance;
-        }
+          // sellers[i].jarakVendor = distance;
+        // }
       }
-
       const idSellers = sellerDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
-
+      // console.log('id seller', idSellers)
       const dataProds = await Product.aggregate([
         {
           $match: {
@@ -303,8 +312,11 @@ module.exports = {
           },
         },
         {
+          $unwind: { path: "$alamatToko", preserveNullAndEmptyArrays: true },
+        },
+        {
           $addFields: {
-            "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] },
+            "dataToko.alamat": "$alamatToko" ,
           },
         },
         {
@@ -341,6 +353,8 @@ module.exports = {
           $project: { userData: 0 },
         },
       ]);
+
+      // return res.status(200).json({data: dataProds})
 
       const productIds = dataProds.map((item) => {
         return item._id;

@@ -2592,13 +2592,32 @@ module.exports = {
       const avgPengemasan = biayaTetap.lama_pengemasan;
       const avgKecepatan = biayaTetap.rerata_kecepatan;
       const maxPengemasanPengiriman = biayaTetap.max_pengemasan_pengiriman * 60;
+      const persentase = completedOrders / total_produk_qty * 100;
       if (!userIdKonsumen) return res.status(400).json({ message: "Kirimkan userId konsumen" });
-      if (completedOrders !== total_produk_qty) {
+      if (completedOrders < total_produk_qty && persentase > 50) {
         await IncompleteOrders.create({
           userIdSeller: req.user.id,
           userIdKonsumen,
           pengirimanId,
           completedOrders,
+          persentase
+        });
+      }else if( completedOrders < total_produk_qty && persentase < 50){
+        await IncompleteOrders.create({
+          userIdSeller: req.user.id,
+          userIdKonsumen,
+          pengirimanId,
+          completedOrders,
+          persentase
+        });
+        await Vendor.updateOne({ userId: req.user.id }, { $inc: { nilai_pinalti: 1 } });
+      }else if( completedOrders === 0 ){
+        await IncompleteOrders.create({
+          userIdSeller: req.user.id,
+          userIdKonsumen,
+          pengirimanId,
+          completedOrders,
+          persentase
         });
         await Vendor.updateOne({ userId: req.user.id }, { $inc: { nilai_pinalti: 1 } });
       }
