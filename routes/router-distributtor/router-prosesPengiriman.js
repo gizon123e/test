@@ -10,4 +10,10 @@ router.put('/sudah-penjemputan/:id', authorization, controlerProsesPengiriman.su
 router.put('/mulai-pengiriman/:id', authorization, controlerProsesPengiriman.mulaiPengiriman);
 router.put('/pesanan-diserahkan/:id', authorization, controlerProsesPengiriman.pesasanSelesai);
 
+// perusahaan
+router.put('/mulai-penjemputan-perusahaan/:id', controlerProsesPengiriman.mulaiPenjemputanPerusahaan);
+router.put('/sudah-penjemputanperusahaan/:id', controlerProsesPengiriman.sudahDiJemputPerusahaan);
+router.put('/mulai-pengirimanperusahaan/:id', controlerProsesPengiriman.mulaiPengirimanPerusahaan);
+router.put('/pesanan-diserahkanperusahaan/:id', controlerProsesPengiriman.pesasanSelesaiPerusahaan);
+
 module.exports = router
