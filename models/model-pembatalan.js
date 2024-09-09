@@ -16,15 +16,6 @@ const modelPembatalan = new mongoose.Schema({
     },
     reason:{
         type: String,
-        enum: [
-            "berubah pikiran", 
-            "ingin mengubah alamat tujuan",
-            "ingin mengubah pesanan",
-            "menemukan produk yang lebih murah",
-            "order expired",
-            "lainnya"
-        ],
-        message: '{VALUE} is not valid',
         default: null
     }
 }, { timestamps: true });

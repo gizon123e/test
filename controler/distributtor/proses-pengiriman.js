@@ -1009,7 +1009,8 @@ module.exports = {
       await images.mv(imagePathProfile);
 
       const distri = await Distributtor.exists({ userId: id_user_distributor });
-
+      console.log(distri)
+      if(!distri) return res.status(404).json({message: "Distributor tidak ditemukan"})
       const prosesPengiriman = await ProsesPengirimanDistributor.findOneAndUpdate(
         { _id: req.params.id, distributorId: distri._id },
         { status_distributor: "Selesai", image_pengiriman: `${process.env.HOST}public/ulasan-produk/${imageNameProfile}` },

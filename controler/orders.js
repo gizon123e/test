@@ -2585,7 +2585,7 @@ module.exports = {
       if (req.user.role === "konsumen") return res.status(403).json({ message: "Invalid Request" });
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).lean();
       const { userIdKonsumen, pengirimanId, completedOrders } = req.body;
-      const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true, amountCapable: completedOrders }, { new: true })
+      const pengiriman = await Pengiriman.findByIdA(pengirimanId)
         .populate({
           path: "orderId",
           populate: "addressId",
@@ -2633,6 +2633,10 @@ module.exports = {
       }
 
       if (!pengiriman) return res.status(404).json({ message: `Tidak ada pengiriman dengan id ${pengirimanId}` });
+
+      if(completedOrders === total_produk_qty){
+        await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true, amountCapable: completedOrders });
+      }
 
       const transaksi = await Transaksi.findById(pengiriman.invoice.id_transaksi);
       if (transaksi.subsidi == true) {
