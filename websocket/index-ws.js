@@ -71,7 +71,6 @@ io.on("connection", (socket) => {
 
   socket.on("send msg", async (data) => {
     const { userId, ...contents } = data;
-    console.log(data)
     try {
         const receiver = await User.findById(userId).select("role");
         const senderRole = socket.user.role;
@@ -146,9 +145,10 @@ io.on("connection", (socket) => {
           default:
             return ({ message: "Role tidak dikenali" });  
         };
+        console.log(data, chat._id)
 
-        io.to(socket.user.id).emit("msg", JSON.stringify({ sender: senderDetail, ...rest}));
-        io.to(userId).emit("msg", JSON.stringify({ sender: senderDetail, ...rest}));
+        io.to(socket.user.id).emit(`msg`, JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest}));
+        io.to(userId).emit(`msg`, JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest}));
 
     } catch (err) {
       console.log('Gagal menyimpan chat', err);
