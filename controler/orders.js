@@ -2585,7 +2585,7 @@ module.exports = {
       if (req.user.role === "konsumen") return res.status(403).json({ message: "Invalid Request" });
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).lean();
       const { userIdKonsumen, pengirimanId, completedOrders } = req.body;
-      const pengiriman = await Pengiriman.findByIdA(pengirimanId)
+      const pengiriman = await Pengiriman.findById(pengirimanId)
         .populate({
           path: "orderId",
           populate: "addressId",
