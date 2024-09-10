@@ -474,10 +474,7 @@ module.exports = {
           },
           "status.value": "terpublish",
           total_stok: { $gt: 0 },
-          $expr: { $gte: ["$total_stok", "$minimalOrder"] },
-          userId: {
-            $in: idSellers
-          }              
+          $expr: { $gte: ["$total_stok", "$minimalOrder"] },             
         },
       }
       if (Boolean(wishlist)) {
