@@ -554,7 +554,7 @@ module.exports = {
               incomplete: incomplete ? 
               {
                 status: true,
-                message: `${store[key].arrayProduct[0].productId.name_product} yang bisa dipenuhi hanya ${incomplete.completedOrders}%. Mohon penuhi kekurangannya.`,
+                message: `${store[key].arrayProduct[0].productId.name_product} yang bisa dipenuhi hanya ${incomplete.persentase}%. Mohon penuhi kekurangannya.`,
               } : 
               {
                 status: false,
