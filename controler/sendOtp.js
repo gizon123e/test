@@ -8,7 +8,6 @@ module.exports = {
         const { phone, email } = req.body
         const fullUrl = req.originalUrl;
   
-        console.log(`Endpoint accessed: ${fullUrl}`);
         let user;
         if(phone && !email){
             user = await User.findOne({'phone.content': phone}) || await TemporaryUser.findOne({'phone.content': phone})

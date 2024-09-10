@@ -75,7 +75,6 @@ module.exports = {
                 } else if (group._id === 'vendor') {
                     const vendorDetails = await Vendor.find({ userId: { $in: group.userIds } }).populate("userId").populate("address");
                     for (const user of vendorDetails) {
-                        console.log(user.address)
                         if (user.namaBadanUsaha && !user.nama) {
                             userVendor.push({
                                 Nama_Lengkap: user.namaBadanUsaha,
@@ -183,22 +182,18 @@ module.exports = {
 
                 switch (userAuth.role) {
                     case "konsumen":
-                        console.log('masuk konsumen')
                         detail = await Konsumen.findOne({ userId: userAuth._id });
                         await Konsumen.findOneAndDelete({ userId: userAuth._id });
                         break;
                     case "vendor":
-                        console.log('masuk vendor')
                         detail = await Vendor.findOne({ userId: userAuth._id });
                         await Vendor.findOneAndDelete({ userId: userAuth._id });
                         break;
                     case "supplier":
-                        console.log('masuk supplier')
                         detail = await Supplier.findOne({ userId: userAuth._id });
                         await Supplier.findOneAndDelete({ userId: userAuth._id });
                         break;
                     case "produsen":
-                        console.log('masuk produsen')
                         detail = await Produsen.findOne({ userId: userAuth._id })
                         await Produsen.findOneAndDelete({ userId: userAuth._id });
                         break;

@@ -74,7 +74,6 @@ module.exports = {
 
     getDetailChat: async(req, res, next) => {
         try {
-            console.log(req.user)
             const chat = await Chat.findById(req.params.id)
                 .populate({ path: "participants", select: "role" })
                 .populate({ path: "messages.sender", select: "role" })
@@ -137,11 +136,8 @@ module.exports = {
             let status_user
 
             socket.on('status_user', (data) => {
-                console.log('hasil nya: ',data)
                 status_user = data
             })
-
-            console.log(status_user)
 
             const mappedSender = await Promise.all(messages.map(async (msg) => {
                 const { sender, ...restOfMsg } = msg

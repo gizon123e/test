@@ -66,7 +66,6 @@ module.exports = {
           "status.value": "terpublish",
         });
       } else if (req.body.block) {
-        console.log("ditolak ni", req.body);
         update = await Product.findByIdAndUpdate(req.params.id, {
           $set: {
             status: {
@@ -154,7 +153,6 @@ module.exports = {
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
       const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
-      console.log(alamatSekolah, req.user.id)
       let sellers;
 
       switch(req.user.role){
@@ -476,10 +474,8 @@ module.exports = {
           },
         },
       }
-      console.log(Boolean(wishlist))
       if (Boolean(wishlist)) {
         const user_wishlist = (await Wishlist.find({ userId: req.user.id }).lean()).map(prd => prd.productId);
-        console.log(user_wishlist)
         if (user_wishlist.length > 0) {
           filter.$match._id = { $nin: user_wishlist };
         }
@@ -1331,7 +1327,6 @@ module.exports = {
     // b = y
     // y = b * x / a
     try {
-      console.log(req.body);
       if (req.user.role === "konsumen") return res.status(403).json({ message: "User dengan role konsumen tidak bisa menambah product" });
       //JANGAN DULU DIHAPUS!!
       // if (req.user.role === "produsen" && !req.body.bahanBaku && (!Array.isArray(req.body.bahanBaku))) {
@@ -1823,7 +1818,6 @@ module.exports = {
         },
         { new: true }
       );
-      console.log(req.body);
       return res.status(200).json({ message: "Berhasil mengubah reviewd status product", data: product });
     } catch (error) {
       console.log(error);
@@ -1856,7 +1850,6 @@ module.exports = {
       if(req.files?.ImageProduct || req.files?.ImageProduct?.length > 0){
         for(const img of product.image_product){
           const pathFile = path.join(`${__dirname}`, '../' , img.split(`${process.env.HOST}`)[1]);
-          console.log(pathFile)
           unlinkSync(pathFile)
         }
 
@@ -1927,7 +1920,6 @@ module.exports = {
       if (!produk) return res.status(404).json({ message: `Produk dengan id: ${product_id} tidak ditemukan` });
 
       const sameUser = produk.komentar.find((komen) => {
-        console.log(komen.userId.toString(), req.user.id);
         return komen.userId.toString() == req.user.id;
       });
 
@@ -1950,7 +1942,6 @@ module.exports = {
       if (!produk) return res.status(404).json({ message: `Produk dengan id: ${product_id} tidak ditemukan` });
 
       if (produk.userId.toString() !== req.user.id) return res.status(403).json({ message: "Tidak bisa mengubah produk orang lain!" });
-      console.log(produk);
       return res.status(200).json({ message: "Berhasil mengubah pemasok untuk produk ini produk ini", data: produk });
     } catch (err) {
       console.log(err);

@@ -54,7 +54,6 @@ const socket = io(process.env.WEBSOCKET, {
 module.exports = {
   getDetailNotif: async (req, res, next) => {
     try {
-      console.log(req.user);
       const { status, page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
       if (req.user.role === "konsumen") return res.status(403).json({ message: "Invalid Request" });
@@ -285,7 +284,6 @@ module.exports = {
         }
       }
       let filteredData = data.forEach((dt) => {
-        console.log("data", dt);
       });
 
       return res.status(200).json({ message: "get data all Order success", data: filteredData });

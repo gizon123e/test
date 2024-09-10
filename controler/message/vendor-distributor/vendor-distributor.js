@@ -3,7 +3,6 @@ const Contact = require('../../../models/message/vendor-distributor/contak-vendo
 
 const initializeChatSocket = (io) => {
     io.on('connection', (socket) => {
-        console.log('New client connected');
 
         // When a user joins, they join a specific room based on their contacts
         socket.on('join', async ({ userId }) => {
@@ -12,7 +11,6 @@ const initializeChatSocket = (io) => {
                 contacts.forEach(contact => {
                     const room = `${userId}-${contact.contact._id}-${contact.id_toko}`;
                     socket.join(room);
-                    console.log(`User ${userId} joined room ${room}`);
                 });
             } catch (error) {
                 console.error('Error fetching contacts:', error);

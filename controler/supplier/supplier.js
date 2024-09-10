@@ -275,7 +275,6 @@ module.exports = {
             if(req.files && req.files.profile_pict){
                 const name = supplier.profile_pict ? supplier.profile_pict.split('/') : "notfound"
                 if(fs.existsSync(path.join(__dirname, '../../public', 'profile_picts', name[5]))){
-                    console.log('ada')
                     fs.unlink(path.join(__dirname, '../../public', 'profile_picts', name[5]), (err) => {
                         if (err) {
                             console.error('Error while deleting file:', err);

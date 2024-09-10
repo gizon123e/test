@@ -469,7 +469,6 @@ module.exports = {
             path.join(__dirname, "../../public", "profile_picts", name[5])
           )
         ) {
-          console.log("ada");
           fs.unlink(
             path.join(__dirname, "../../public", "profile_picts", name[5]),
             (err) => {

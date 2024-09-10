@@ -32,7 +32,6 @@ module.exports = {
       const { jenis_pangan, varian } = req.query;
       const biaya_tetap = await BiayaTetap.findById("66456e44e21bfd96d4389c73");
       const topping = JSON.parse(biaya_tetap.kelompok_topping);
-      console.log(topping);
       let data;
       if (jenis_pangan == "bahan mentah" && Boolean(varian) == true) {
         data = await KelompokPangan.find({ nama: { $in: topping } }).lean();

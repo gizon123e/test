@@ -450,7 +450,6 @@ module.exports = {
             // Calculate total volume and weight of products
             const productPromises = product.map(async (productId) => {
                 const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId');
-                console.log(dataProduct)
                 const ukuranVolumeProduct = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang;
                 const ukuranBeratProduct = dataProduct.berat * productId.qty;
                 totalUkuranVolumeProduct += ukuranVolumeProduct;
@@ -738,8 +737,6 @@ module.exports = {
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
                 const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
                 const jarakVendorKonsumen = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
-
-                console.log(jarakVendorKonsumen)
 
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({

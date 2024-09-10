@@ -57,7 +57,6 @@ module.exports = {
     createBahanBaku: async(req, res, next)=>{
         try {
             const { quantity, name_bahan } = req.body
-            console.log(new RegExp(name_bahan, "i"))
             const bahan = await BahanBaku.findOne({ 
                 userId: req.user.id,
                 name: { $regex: new RegExp(name_bahan ,'i') }

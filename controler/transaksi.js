@@ -45,7 +45,6 @@ module.exports = {
                         quantity: pengirimanSelected.quantity,
                     }
                 });
-            console.log(transaksi)
             return res.status(200).json({
                 message: "Berhasil mendapatkan data",
                 data: {

@@ -129,7 +129,6 @@ module.exports = {
     try {
       const { page = 1, limit = 5 } = req.query;
       const skip = (page - 1) * limit;
-      console.log(req.user.id);
       const filter = {
         userId: new mongoose.Types.ObjectId(req.user.id),
       };
@@ -692,7 +691,6 @@ module.exports = {
 
       const data = [];
       for (const order of dataOrders) {
-        console.log(order._id);
         const { createdAt, updatedAt, status, items, biaya_layanan, biaya_jasa_aplikasi, poinTerpakai, biaya_asuransi, biaya_awal_asuransi, biaya_awal_proteksi, dp, ...restOfOrder } = order;
         const dataProd = await DataProductOrder.findOne({ pesananId: order._id });
         const transaksiSubsidi = await Transaksi.findOne({ id_pesanan: order._id, subsidi: true });
@@ -1496,9 +1494,16 @@ module.exports = {
               waktu: prosesPelacakan.update_date_pesanan_selesai
             }
           }
-          store[key].incomplete = {
+          const incomplete = await IncompleteOrders.findOne({ pengirimanId: store[key].toko.status_pengiriman[0]._id });
+
+          store[key].incomplete = incomplete ? 
+          {
             status: true,
-            message: `${store[key].arrayProduct[0].productId.name_product} yang bisa dipenuhi hanya ${incomplete.persentase}%. Mohon penuhi kekurangannya.`,
+            message: `${store[key].products[0].name_product} yang bisa dipenuhi hanya ${incomplete.persentase}%. Mohon penuhi kekurangannya.`,
+          } : 
+          {
+            status: false,
+            message: ``
           }
           data.push(store[key]);
         }
@@ -1577,7 +1582,6 @@ module.exports = {
       today.setDate(today.getDate() + 1);
       // today.setHours(today.getHours() + 1)
       today.setMinutes(today.getMinutes() + 4);
-      console.log(today);
 
       const tommorow = new Date();
       tommorow.setDate(tommorow.getDate() + 1);
@@ -1840,7 +1844,6 @@ module.exports = {
           });
 
           for (let i = 0; i < toko_vendor.length; i++) {
-            console.log(shipments[i], toko_vendor[i], i);
             const distributor = await Distributtor.findById(shipments[i].id_distributor);
             const id_notif_distri = new mongoose.Types.ObjectId();
             const formatHarga = toko_vendor[i].total_harga.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");

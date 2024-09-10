@@ -163,7 +163,6 @@ module.exports = {
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
             distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, dataBiayaTetap.radius);
-            console.log(distance)
             if (isNaN(distance)) {
                 return res.status(400).json({
                     message: `Jarak antara konsumen dan vendor melebihi ${dataBiayaTetap.radius} km`

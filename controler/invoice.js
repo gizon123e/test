@@ -9,8 +9,6 @@ const TokoVendor = require("../models/vendor/model-toko");
 module.exports = {
     detailInvoice: async (req, res, next) => {
         try {
-            console.log('sip')
-            console.log(req.params.id)
             const order = await Pesanan.findById(req.params.id).populate("addressId")
             const dataProd = await DataProductOrder.findOne({pesananId: req.params.id})
             const transaksiSubsidi = await Transaksi.findOne({id_pesanan: req.params.id, subsidi: true});
@@ -59,10 +57,7 @@ module.exports = {
                 const selectedPengiriman = pengirimanSubsidi.find(pgr => {
                     return pgr.productToDelivers.some(prd => prd.productId.toString() === prod._id)
                 })
-                console.log(selectedPengiriman)
             }
-            console.log(subsidi);
-            console.log(tambahan)
             return res.status(200).json({ 
                 invoiceSubsidi, 
                 invoiceTambahan: invoiceTambahan? invoiceTambahan : null,

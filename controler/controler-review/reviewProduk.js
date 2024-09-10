@@ -272,7 +272,6 @@ module.exports = {
                 }
 
                 if (!review) {
-                    console.log("tesssss")
                     pesanan.push(data)
                 }
             }

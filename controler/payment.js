@@ -72,7 +72,6 @@ module.exports = {
             };
             const respon = await fetch(`${process.env.MIDTRANS_URL}/${req.params.id}/status`, options);
             const finalResult = await respon.json()
-            console.log(finalResult)
             return res.status(200).json({ message: `Status Transaksi Ini ${finalResult.transaction_status}` })
         } catch (error) {
             console.log(error);

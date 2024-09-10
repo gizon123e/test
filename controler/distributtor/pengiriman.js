@@ -73,7 +73,6 @@ module.exports = {
 
             const pengiriman = await Pengiriman.find({ orderId, id_toko, kode_pengiriman });
             const invoices = await Invoice.find({_id: { $in: pengiriman }});
-            console.log(invoices)
             if (!pengiriman || pengiriman.length === 0) return res.status(404).json({ message: `Pengiriman tidak ditemukan` })
 
             await Pengiriman.updateMany({ orderId, id_toko, kode_pengiriman }, {
