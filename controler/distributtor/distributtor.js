@@ -270,7 +270,8 @@ module.exports = {
                                             id: data.tarifId._id,
                                             dasar: data.tarifId.tarif_dasar,
                                             per_km: data.tarifId.tarif_per_km,
-                                            maximum: data.tarifId.jenis_jasa.maximum
+                                            maximum: data.tarifId.jenis_jasa.maximum,
+                                            jenis_jasa: data.tarifId.jenis_jasa._id
                                         },
                                         userId: {
                                             _id: distributor.userId._id,
@@ -309,7 +310,8 @@ module.exports = {
                                         id: data.tarifId._id,
                                         dasar: data.tarifId.tarif_dasar,
                                         per_km: data.tarifId.tarif_per_km,
-                                        maximum: data.tarifId.jenis_jasa.maximum
+                                        maximum: data.tarifId.jenis_jasa.maximum,
+                                        jenis_jasa: data.tarifId.jenis_jasa._id
                                     },
                                     userId: {
                                         _id: distributor.userId._id,
@@ -349,7 +351,8 @@ module.exports = {
                                             id: data.tarifId._id,
                                             dasar: data.tarifId.tarif_dasar,
                                             per_km: data.tarifId.tarif_per_km,
-                                            maximum: data.tarifId.jenis_jasa.maximum
+                                            maximum: data.tarifId.jenis_jasa.maximum,
+                                            jenis_jasa: data.tarifId.jenis_jasa._id
                                         },
                                         userId: {
                                             _id: distributor.userId._id,
@@ -387,7 +390,8 @@ module.exports = {
                                         id: data.tarifId._id,
                                         dasar: data.tarifId.tarif_dasar,
                                         per_km: data.tarifId.tarif_per_km,
-                                        maximum: data.tarifId.jenis_jasa.maximum
+                                        maximum: data.tarifId.jenis_jasa.maximum,
+                                        jenis_jasa: data.tarifId.jenis_jasa._id
                                     },
                                     userId: {
                                         _id: distributor.userId._id,
