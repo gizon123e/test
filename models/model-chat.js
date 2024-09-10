@@ -13,6 +13,6 @@ const modelChat = new mongoose.Schema({
             timestamp: { type: Date, default: Date.now }
         }
     ]
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("Chat", modelChat);

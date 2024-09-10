@@ -1489,7 +1489,6 @@ module.exports = {
           if(store[key].toko.status_pengiriman[0].status_pengiriman === 'pesanan selesai'){
             const proses = await ProsesPengirimanDistributor.exists({pengirimanId: { $in: store[key].toko.status_pengiriman.map(pgr => pgr._id)}});
             const prosesPelacakan = await PelacakanDistributorKonsumen.findOne({id_pesanan: proses._id});
-            console.log(prosesPelacakan)
             store[key].bukti_pengiriman = {
               image: prosesPelacakan.image_pengiriman,
               latitude: prosesPelacakan.latitude,
