@@ -1496,6 +1496,10 @@ module.exports = {
               waktu: prosesPelacakan.update_date_pesanan_selesai
             }
           }
+          store[key].incomplete = {
+            status: true,
+            message: `${store[key].arrayProduct[0].productId.name_product} yang bisa dipenuhi hanya ${incomplete.persentase}%. Mohon penuhi kekurangannya.`,
+          }
           data.push(store[key]);
         }
 

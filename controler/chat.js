@@ -19,7 +19,7 @@ module.exports = {
             const chats = await Chat.find({
                 participants: { $in: [req.user.id] }
             }).populate({ path: 'participants', select: "role" })
-              .sort({ 'messages.timestamp': 1 })
+              .sort({  updatedAt: -1, 'messages.timestamp': 1 })
               .lean();
     
             if (chats.length === 0) {
