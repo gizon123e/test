@@ -203,7 +203,7 @@
       }
 
       function initializeSocket(token) {
-        socket = io("http://localhost:8000",{
+        socket = io("https://staging-backend.superdigitalapps.my.id/",{
           transports: ['websocket'],
           auth: {
             token,
@@ -237,12 +237,10 @@
       socket.on(
         "msg",
         (msg) => {
+          console.log(msg)
           const text = document.createElement("p");
           text.innerHTML = msg;
           document.body.appendChild(text);
-        },
-        (res) => {
-          console.log(res);
         }
       );
       socket.on(

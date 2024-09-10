@@ -18,6 +18,9 @@ const modelIncompleteOrders = new mongoose.Schema({
     completedOrders:{
         type: Number,
         required: true
+    },
+    persentase: {
+        type: Number
     }
 }, { timestamps: true })
 

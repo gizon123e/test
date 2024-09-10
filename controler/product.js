@@ -169,7 +169,10 @@ module.exports = {
               },
             },
             {
-              $unwind: "$address",
+              $unwind: {
+                path: "$address",
+                preserveNullAndEmptyArrays: true
+              },
             },
           ]);
           break;
@@ -184,7 +187,10 @@ module.exports = {
               },
             },
             {
-              $unwind: "$address",
+              $unwind: {
+                path: "$address",
+                preserveNullAndEmptyArrays: true
+              },
             },
           ]);
           break;
@@ -199,7 +205,10 @@ module.exports = {
               },
             },
             {
-              $unwind: "$address",
+              $unwind: {
+                path: "$address",
+                preserveNullAndEmptyArrays: true
+              },
             },
           ]);
           break;
@@ -211,15 +220,15 @@ module.exports = {
       let sellerDalamRadius = [];
 
       for (let i = 0; i < sellers.length; i++) {
-        const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i].address.pinAlamat.lat), parseFloat(sellers[i].address.pinAlamat.long), biayaTetap.radius);
+        const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i]?.address?.pinAlamat?.lat), parseFloat(sellers[i]?.address?.pinAlamat?.long), biayaTetap.radius);
+        
         if (distance <= biayaTetap.radius) {
           sellerDalamRadius.push(sellers[i]);
           sellers[i].jarakVendor = distance;
         }
       }
-
       const idSellers = sellerDalamRadius.map((item) => new mongoose.Types.ObjectId(item.userId));
-
+      // console.log('id seller', idSellers)
       const dataProds = await Product.aggregate([
         {
           $match: {
@@ -303,8 +312,11 @@ module.exports = {
           },
         },
         {
+          $unwind: { path: "$alamatToko", preserveNullAndEmptyArrays: true },
+        },
+        {
           $addFields: {
-            "dataToko.alamat": { $arrayElemAt: ["$alamatToko", 0] },
+            "dataToko.alamat": "$alamatToko" ,
           },
         },
         {
@@ -341,6 +353,8 @@ module.exports = {
           $project: { userData: 0 },
         },
       ]);
+
+      // return res.status(200).json({data: dataProds})
 
       const productIds = dataProds.map((item) => {
         return item._id;
@@ -912,7 +926,8 @@ module.exports = {
 
   list_all: async (req, res, next) => {
     try {
-      const { status } = req.query;
+      const { status, page = 1, limit = 5 } = req.query;
+      const skip = (page - 1) * limit;
       const data = await Product.find({ userId: req.user.id }).populate({ path: "userId", select: "_id role" }).populate("id_main_category").populate("id_sub_category").populate("categoryId").populate("pangan.panganId").lean();
       const dataProds = [];
       for (const produk of data) {
@@ -946,11 +961,11 @@ module.exports = {
       };
       if(status){
         finalData = dataProds.filter(prd => prd.status.value.toLowerCase() === status.toLowerCase())
-      }
+      };
       if (data && data.length > 0) {
-        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data: finalData });
+        return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data: finalData.slice(skip, skip + limit) });
       } else {
-        return res.status(404).json({ message: "User tidak memiliki produk", data: finalData });
+        return res.status(404).json({ message: "User tidak memiliki produk", data: finalData.slice(skip, skip + limit) });
       }
     } catch (error) {
       console.log(error);

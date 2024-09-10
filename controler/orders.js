@@ -540,6 +540,7 @@ module.exports = {
               const rasio = totalHargaSubsidi / totalProductSubsidi;
               jumlah += Math.round(rasio * order.biaya_jasa_aplikasi) + Math.round(rasio * order.biaya_layanan);
             }
+            const incomplete = await IncompleteOrders.findOne({ pengirimanId: status_pengiriman[0]._id });
             const statusOrder = () => {
               const isAccepted = status_pengiriman.some((pgr) => pgr.isBuyerAccepted);
               return isAccepted ? "Berhasil" : status;
@@ -550,6 +551,15 @@ module.exports = {
               total_pesanan: total_pesanan + jumlah,
               status_pengiriman,
               ...restOfStore,
+              incomplete: incomplete ? 
+              {
+                status: true,
+                message: `${store[key].arrayProduct[0].productId.name_product} yang bisa dipenuhi hanya ${incomplete.completedOrders}%. Mohon penuhi kekurangannya.`,
+              } : 
+              {
+                status: false,
+                message: ``
+              },
               reviewed: {
                 produkReviewed: isSellerReviewed? true : false,
                 distriReviewed: isDistriReviewed? true : false
@@ -2575,7 +2585,7 @@ module.exports = {
       if (req.user.role === "konsumen") return res.status(403).json({ message: "Invalid Request" });
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).lean();
       const { userIdKonsumen, pengirimanId, completedOrders } = req.body;
-      const pengiriman = await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true, amountCapable: completedOrders }, { new: true })
+      const pengiriman = await Pengiriman.findById(pengirimanId)
         .populate({
           path: "orderId",
           populate: "addressId",
@@ -2592,18 +2602,41 @@ module.exports = {
       const avgPengemasan = biayaTetap.lama_pengemasan;
       const avgKecepatan = biayaTetap.rerata_kecepatan;
       const maxPengemasanPengiriman = biayaTetap.max_pengemasan_pengiriman * 60;
+      const persentase = completedOrders / total_produk_qty * 100;
       if (!userIdKonsumen) return res.status(400).json({ message: "Kirimkan userId konsumen" });
-      if (completedOrders !== total_produk_qty) {
+      if (completedOrders < total_produk_qty && persentase > 50) {
         await IncompleteOrders.create({
           userIdSeller: req.user.id,
           userIdKonsumen,
           pengirimanId,
           completedOrders,
+          persentase
+        });
+      }else if( completedOrders < total_produk_qty && persentase < 50){
+        await IncompleteOrders.create({
+          userIdSeller: req.user.id,
+          userIdKonsumen,
+          pengirimanId,
+          completedOrders,
+          persentase
         });
         await Vendor.updateOne({ userId: req.user.id }, { $inc: { nilai_pinalti: 1 } });
+      }else if( completedOrders === 0 ){
+        await IncompleteOrders.create({
+          userIdSeller: req.user.id,
+          userIdKonsumen,
+          pengirimanId,
+          completedOrders,
+          persentase
+        });
+        await Vendor.updateOne({ userId: req.user.id }, { $inc: { nilai_pinalti: 2 } });
       }
 
       if (!pengiriman) return res.status(404).json({ message: `Tidak ada pengiriman dengan id ${pengirimanId}` });
+
+      if(completedOrders === total_produk_qty){
+        await Pengiriman.findByIdAndUpdate(pengirimanId, { sellerApproved: true, amountCapable: completedOrders });
+      }
 
       const transaksi = await Transaksi.findById(pengiriman.invoice.id_transaksi);
       if (transaksi.subsidi == true) {
