@@ -50,12 +50,6 @@ io.on("connection", (socket) => {
     userConnected.push(socket.user); 
   }
 
-  console.log(
-    `${userConnected.length} ${
-      userConnected.length > 1 ? "users" : "user"
-    } succesfully connected`,
-  );
-
   socket.on("disconnect", (reason) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
     if (index > -1) userConnected.splice(index, 1);
