@@ -294,7 +294,6 @@ productModels.pre("findOneAndUpdate", async function (next) {
           elem.product.map((prod) => {
             if (document._id === prod.productId) {
               selisih *= prod.quantity
-              console.log(selisih)
               promises.push(
                 DetailPesanan.findOneAndUpdate(
                   { id_pesanan: item._id },

@@ -84,7 +84,6 @@ module.exports = {
 
     updateDetailToko: async(req, res, next) => {
         try {
-            console.log(req.body)
             if(req.files && req.files.profilePict){
                 const nameImg = `${new Date().getTime()}_${req.user.id}${path.extname(req.files.profilePict.name)}`
                 const imgPath = path.join(__dirname, "../../public", "profile-picts-store", nameImg)

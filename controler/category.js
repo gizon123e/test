@@ -227,7 +227,6 @@ module.exports = {
                     sub_category = await SubCategory.findByIdAndUpdate(id, { $push: { contents: specific_category._id } }, { new: true });
                 }
             };
-            console.log(req.body)
 
             return res.status(201).json({ message: "Berhasil Menambahkan Category", main_category, sub_category, specific_category });
         } catch (error) {

@@ -58,7 +58,6 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", (reason) => {
     const index = userConnected.findIndex((user) => user.id === socket.id);
-    console.log('index nya: ',index)
     if (index > -1) userConnected.splice(index, 1);
     User.updateOne(
       { _id: socket.user.id },
@@ -145,7 +144,6 @@ io.on("connection", (socket) => {
           default:
             return ({ message: "Role tidak dikenali" });  
         };
-        console.log(data, chat._id)
 
         io.to(socket.user.id).emit(`msg`, JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest}));
         io.to(userId).emit(`msg`, JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest}));

@@ -135,7 +135,6 @@ module.exports = {
 
   register: async (req, res, next) => {
     try {
-      console.log(req.body)
       const { id, password, role } = req.body;
       if(!id) return res.status(400).json({message: "Tidak ada id yang dikirim"});
       if(!password) return res.status(400).json({message: "Tidak ada password yang dikirim"});
@@ -145,10 +144,8 @@ module.exports = {
       const hashedPassword = await bcrypt.hash(password, 10)
       let user
       if(req.headers["from"] !== "Web"){
-        console.log('bukan web masuk sini')
         user = await User.create({ _id: temporary._id, ...temporary, password: hashedPassword});
       }else{
-        console.log('web masuk sini')
         user = await User.create({ _id: temporary._id, role, password: hashedPassword, ...temporary});
       }
 
@@ -230,7 +227,6 @@ module.exports = {
         if(email && !phone){ 
           await sendOTP(email, kode_random, "login")
         }else if(!email && phone) {
-          console.log('masuk')
           await sendPhoneOTP(phone, `KODE OTP :  ${kode_random} berlaku selama 5 menit. RAHASIAKAN KODE OTP Anda! Jangan beritahukan kepada SIAPAPUN!`)
         }
 
