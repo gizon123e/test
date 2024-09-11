@@ -3,7 +3,8 @@ const HistorySearch = require('../models/history-search')
 module.exports = {
     getHistorySearch: async (req, res, next) => {
         try {
-            const { search } = req.query
+            const { search, page = 1, limit = 5 } = req.query
+            const skip = (page - 1) * limit;
 
             let query = {
                 userId: req.user.id
@@ -12,7 +13,7 @@ module.exports = {
                 query.search = { $regex: search, $options: 'i' }
             }
 
-            const datas = await HistorySearch.find(query)
+            const datas = await HistorySearch.find(query).skip(skip).limit(parseInt(limit)).sort({ createdAt: -1 })
 
             res.status(200).json({
                 message: "get data success",
@@ -33,6 +34,9 @@ module.exports = {
 
     createHistorySearch: async (req, res, next) => {
         try {
+            const validate = await HistorySearch.findOne({ search: req.body.search })
+            if (validate) return res.status(400).json({ message: "data ini sudah ada " })
+
             const data = await HistorySearch.create({ search: req.body.search, userId: req.user.id })
 
             res.status(201).json({
