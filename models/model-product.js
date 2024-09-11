@@ -3,6 +3,7 @@ const Carts = require("./model-cart");
 const Pesanan = require("./pesanan/model-orders");
 const DetailPesanan = require("./model-detail-pesanan");
 const VirtualAccountUser = require("./model-user-va");
+const Wishlist = require("./model-wishlist");
 
 const varianSchema = new mongoose.Schema({
   _id: false,
@@ -353,6 +354,7 @@ productModels.pre("findOneAndUpdate", async function (next) {
 productModels.pre(["deleteMany", "deleteOne", "findOneAndDelete"], async function (next) {
   try {
     const products = await this.model.find(this.getQuery()).populate({ path: 'userId', select: "_id role" }).lean()
+    await Wishlist.deleteMany({ productId: { $in: products.map(prod => prod._id) } })
     for (const prod of products) {
       await Carts.updateMany(
         { productId: prod._id },
