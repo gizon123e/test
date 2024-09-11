@@ -1,14 +1,27 @@
 const DeviceId = require("../../models/model-token-device");
+const geoip = require('geoip-lite');
+
+const typeDeviceChecker = (val) => {
+    const desktop = ["windows", "mac", "linux"]
+    if(desktop.includes(val)){
+        return "desktop"
+    }else{
+        return "mobile"
+    }
+}
 
 module.exports = {
     getAktivitasLogin: async(req, res, next) => {
         try {
             const devices = (await DeviceId.find({userId: req.user.id}).lean()).map(dv => {
-                const { device, deviceId, login_at } = dv
+                const { device, deviceId, login_at, ip } = dv
+                console.log(geoip.lookup(ip))
                 return {
                     device,
                     deviceId,
-                    login_at
+                    login_at,
+                    lokasi: `${geoip.lookup(ip).city}, ${geoip.lookup(ip).country}`,
+                    deviceType: typeDeviceChecker(device)
                 }
             });
             return res.status(200).json({message: "berhasil menampilkan aktifitas login", devices})
