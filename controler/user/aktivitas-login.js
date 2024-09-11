@@ -2,8 +2,8 @@ const DeviceId = require("../../models/model-token-device");
 const geoip = require('geoip-lite');
 
 const typeDeviceChecker = (val) => {
-    const desktop = ["windows", "mac", "linux"]
-    if(desktop.includes(val)){
+    const desktop = ["windows", "win", "mac", "linux"]
+    if(desktop.includes(val.toLowerCase())){
         return "desktop"
     }else{
         return "mobile"
