@@ -150,6 +150,8 @@ app.use('/api/pangan', require('./routes/router-pangan'));
 app.use('/api/invoice', require('./routes/router-invoice'));
 app.use('/api/search', require("./routes/router-suggestion"));
 
+// search history
+app.use('/api/search', require('./routes/router-history-search'))
 
 //Penghasilan
 app.use("/api/penghasilan", require('./routes/router-penghasilan'));
