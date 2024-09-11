@@ -50,5 +50,39 @@ module.exports = {
             }
             next(error);
         }
+    },
+
+    deleteSearchHistory: async (req, res, next) => {
+        try {
+            const { id } = req.query
+
+            const query = {}
+
+            if (id) {
+                query._id = id
+                query.userId = req.user.id
+            }
+
+            let message
+            if (id) {
+                await HistorySearch.deleteOne(query)
+                message = 'by id'
+            } else {
+                await HistorySearch.deleteMany({ userId: req.user.id })
+                message = 'semua history'
+            }
+
+            res.status(200).json({ message: `delete data ${message} success` })
+        } catch (error) {
+            console.log(error);
+            if (error && error.name == "ValidationError") {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields,
+                });
+            }
+            next(error);
+        }
     }
 }
