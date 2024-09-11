@@ -178,7 +178,7 @@ module.exports = {
     try {
       const { email, password, phone, pin } = req.body;
       let newUser;
-      const ip = ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress 
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress 
       if(email && !phone){
         newUser = await User.findOne({ 'email.content': email.toLowerCase() });
         if(!newUser) return res.status(404).json({message: "Email yang dimasukkan tidak ditemukan"});
