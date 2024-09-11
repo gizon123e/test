@@ -140,7 +140,7 @@ Model.getDistrict = id => {
             in: {
               id: '$$villages.id',
               name: '$$villages.name',
-              kode_pos: "$$villges.kode_pos"
+              kode_pos: "$$villages.kode_pos"
             },
           },
         },
