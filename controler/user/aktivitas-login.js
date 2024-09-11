@@ -15,7 +15,6 @@ module.exports = {
         try {
             const devices = (await DeviceId.find({userId: req.user.id}).lean()).map(dv => {
                 const { device, deviceId, login_at, ip } = dv
-                console.log(geoip.lookup(ip))
                 return {
                     device,
                     deviceId,
