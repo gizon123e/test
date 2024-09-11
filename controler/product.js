@@ -9,7 +9,7 @@ const BiayaTetap = require("../models/model-biaya-tetap");
 const { calculateDistance } = require("../utils/menghitungJarak");
 // const Address = require("../models/model-address");
 // const { Pangan } = require("../models/model-pangan");
-const User = require("../models/model-auth-user")
+const User = require("../models/model-auth-user");
 const mongoose = require("mongoose");
 const SpecificCategory = require("../models/model-specific-category");
 const SubCategory = require("../models/model-sub-category");
@@ -155,7 +155,7 @@ module.exports = {
       const alamatSekolah = await Address.findOne({ userId: req.user.id, isUsed: true });
       let sellers;
 
-      switch(req.user.role){
+      switch (req.user.role) {
         case "konsumen":
           sellers = await TokoVendor.aggregate([
             {
@@ -169,7 +169,7 @@ module.exports = {
             {
               $unwind: {
                 path: "$address",
-                preserveNullAndEmptyArrays: true
+                preserveNullAndEmptyArrays: true,
               },
             },
           ]);
@@ -187,7 +187,7 @@ module.exports = {
             {
               $unwind: {
                 path: "$address",
-                preserveNullAndEmptyArrays: true
+                preserveNullAndEmptyArrays: true,
               },
             },
           ]);
@@ -205,7 +205,7 @@ module.exports = {
             {
               $unwind: {
                 path: "$address",
-                preserveNullAndEmptyArrays: true
+                preserveNullAndEmptyArrays: true,
               },
             },
           ]);
@@ -219,7 +219,7 @@ module.exports = {
 
       for (let i = 0; i < sellers.length; i++) {
         const distance = await calculateDistance(latAlamatSekolah, longAlamatSekolah, parseFloat(sellers[i]?.address?.pinAlamat?.lat), parseFloat(sellers[i]?.address?.pinAlamat?.long), biayaTetap.radius);
-        
+
         if (distance <= biayaTetap.radius) {
           sellerDalamRadius.push(sellers[i]);
           sellers[i].jarakVendor = distance;
@@ -235,8 +235,8 @@ module.exports = {
             total_stok: { $gt: 0 },
             $expr: { $gte: ["$total_stok", "$minimalOrder"] },
             userId: {
-              $in: idSellers
-            }
+              $in: idSellers,
+            },
           },
         },
         {
@@ -314,7 +314,7 @@ module.exports = {
         },
         {
           $addFields: {
-            "dataToko.alamat": "$alamatToko" ,
+            "dataToko.alamat": "$alamatToko",
           },
         },
         {
@@ -381,19 +381,19 @@ module.exports = {
 
   getProductWithRadiusKonsumen: async (req, res, next) => {
     try {
-      const { wishlist } = req.query
+      const { wishlist } = req.query;
 
       const biayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }).select("radius");
 
       const alamatDefault = await Address.findOne({ userId: req.user.id, isUsed: true });
       if (!alamatDefault) {
         return res.status(500).json({
-          message: "Alamat default"
-        })
+          message: "Alamat default",
+        });
       }
       let sellers;
 
-      switch(req.user.role){
+      switch (req.user.role) {
         case "konsumen":
           sellers = await TokoVendor.aggregate([
             {
@@ -446,26 +446,17 @@ module.exports = {
 
       const sellerDalamRadius = await Promise.all(
         sellers.map(async (seller) => {
-          const distance = await calculateDistance(
-            latalamatDefault, 
-            longalamatDefault, 
-            parseFloat(seller.address.pinAlamat.lat), 
-            parseFloat(seller.address.pinAlamat.long), 
-            biayaTetap.radius
-          );
-          
+          const distance = await calculateDistance(latalamatDefault, longalamatDefault, parseFloat(seller.address.pinAlamat.lat), parseFloat(seller.address.pinAlamat.long), biayaTetap.radius);
+
           if (!isNaN(distance)) {
             return seller;
           } else {
             return null;
           }
         })
-      )
+      );
 
-      
-      const idVendors = sellerDalamRadius
-      .filter(seller => seller !== null)
-      .map((item) => new mongoose.Types.ObjectId(item.userId));
+      const idVendors = sellerDalamRadius.filter((seller) => seller !== null).map((item) => new mongoose.Types.ObjectId(item.userId));
 
       let filter = {
         $match: {
@@ -474,11 +465,11 @@ module.exports = {
           },
           "status.value": "terpublish",
           total_stok: { $gt: 0 },
-          $expr: { $gte: ["$total_stok", "$minimalOrder"] },             
+          $expr: { $gte: ["$total_stok", "$minimalOrder"] },
         },
-      }
+      };
       if (Boolean(wishlist)) {
-        const user_wishlist = (await Wishlist.find({ userId: req.user.id }).lean()).map(prd => prd.productId);
+        const user_wishlist = (await Wishlist.find({ userId: req.user.id }).lean()).map((prd) => prd.productId);
         if (user_wishlist.length > 0) {
           filter.$match._id = { $nin: user_wishlist };
         }
@@ -561,7 +552,7 @@ module.exports = {
         {
           $unwind: {
             path: "$terjual",
-            preserveNullAndEmptyArrays: true
+            preserveNullAndEmptyArrays: true,
           },
         },
         {
@@ -583,7 +574,10 @@ module.exports = {
           $project: { alamatToko: 0 },
         },
         {
-          $sort: { poin_review: -1 },
+          $sort: {
+            poin_review: -1,
+            total_price: 1,
+          },
         },
       ]);
 
@@ -692,11 +686,11 @@ module.exports = {
     try {
       const { minPrice, maxPrice, penilaian, main_cat, sub_cat } = req.query;
 
-      let sellers
+      let sellers;
 
-      switch(req.user.role){
+      switch (req.user.role) {
         case "konsumen":
-          sellers = (await User.find({role: "vendor"}).lean()).map((user)=> user._id)
+          sellers = (await User.find({ role: "vendor" }).lean()).map((user) => user._id);
           break;
         case "vendor":
           sellers = await TokoSupplier.aggregate([
@@ -894,7 +888,6 @@ module.exports = {
         }
       }
       return res.status(200).json({ message: "get data succcess", data });
-
     } catch (error) {
       console.log(error);
       next(error);
@@ -916,7 +909,6 @@ module.exports = {
       }
 
       return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", dataProds });
-
     } catch (error) {
       console.log(error);
       next(error);
@@ -931,11 +923,11 @@ module.exports = {
       const dataProds = [];
       for (const produk of data) {
         let detailToko;
-        switch(produk.userId.role){
-          case "vendor": 
+        switch (produk.userId.role) {
+          case "vendor":
             detailToko = await TokoVendor.findOne({ userId: produk.userId._id });
             break;
-          case "supplier": 
+          case "supplier":
             detailToko = await TokoSupplier.findOne({ userId: produk.userId._id });
             break;
           default:
@@ -945,8 +937,8 @@ module.exports = {
         const terjual = await SalesReport.findOne({ productId: produk._id });
         const totalTerjual = terjual
           ? terjual.track.reduce((accumulator, current) => {
-            return accumulator + current.soldAtMoment;
-          }, 0)
+              return accumulator + current.soldAtMoment;
+            }, 0)
           : 0;
         dataProds.push({
           ...produk,
@@ -955,12 +947,12 @@ module.exports = {
         });
       }
       let finalData;
-      if(!status){
+      if (!status) {
         finalData = dataProds;
-      };
-      if(status){
-        finalData = dataProds.filter(prd => prd.status.value.toLowerCase() === status.toLowerCase())
-      };
+      }
+      if (status) {
+        finalData = dataProds.filter((prd) => prd.status.value.toLowerCase() === status.toLowerCase());
+      }
       if (data && data.length > 0) {
         return res.status(200).json({ message: "Menampilkan semua produk yang dimiliki user", data: finalData.slice(skip, skip + limit) });
       } else {
@@ -985,7 +977,7 @@ module.exports = {
         .populate("pangan.panganId")
         .lean();
       let accepted;
-      switch(req.user.role){
+      switch (req.user.role) {
         case "konsumen":
           accepted = "vendor";
           break;
@@ -993,20 +985,20 @@ module.exports = {
           accepted = "supplier";
           break;
         case "supplier":
-          accepted = 'produsen';
+          accepted = "produsen";
           break;
       }
 
       if (!dataProduct) return res.status(404).json({ message: `Product Id dengan ${req.params.id} tidak ditemukan` });
-      if((accepted !== dataProduct.userId.role) && (dataProduct.userId._id.toString() !== req.user.id.toString()) ) return res.status(403).json({message: "Invalid Request"});
+      if (accepted !== dataProduct.userId.role && dataProduct.userId._id.toString() !== req.user.id.toString()) return res.status(403).json({ message: "Invalid Request" });
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
       const total_terjual = terjual
         ? terjual.track.reduce((acc, val) => {
-          return acc + val.soldAtMoment;
-        }, 0)
+            return acc + val.soldAtMoment;
+          }, 0)
         : 0;
       let toko;
-      const wishlisted = await Wishlist.exists({ productId: req.params.id, userId: req.user?.id })
+      const wishlisted = await Wishlist.exists({ productId: req.params.id, userId: req.user?.id });
       switch (dataProduct.userId.role) {
         case "vendor":
           toko = await TokoVendor.findOne({ userId: dataProduct.userId._id }).populate("address");
@@ -1051,7 +1043,7 @@ module.exports = {
             const gizi = await Pangan.findById(item.bahan).select(
               "air.value energi.value protein.value lemak.value kh.value serat.value kalsium.value fosfor.value besi.value natrium.value kalium.value tembaga.value thiamin.value riboflavin.value vitc.value"
             );
-            if(!item.bahan) return res.status(400).json({message: "Produk anomali"})
+            if (!item.bahan) return res.status(400).json({ message: "Produk anomali" });
             gizi_varian.push(gizi);
           }
 
@@ -1848,12 +1840,12 @@ module.exports = {
 
       if (product.isReviewed) return res.status(403).json({ message: "Product sedang direview, tidak bisa diubah" });
 
-      const imgPaths = []
+      const imgPaths = [];
 
-      if(req.files?.ImageProduct || req.files?.ImageProduct?.length > 0){
-        for(const img of product.image_product){
-          const pathFile = path.join(`${__dirname}`, '../' , img.split(`${process.env.HOST}`)[1]);
-          unlinkSync(pathFile)
+      if (req.files?.ImageProduct || req.files?.ImageProduct?.length > 0) {
+        for (const img of product.image_product) {
+          const pathFile = path.join(`${__dirname}`, "../", img.split(`${process.env.HOST}`)[1]);
+          unlinkSync(pathFile);
         }
 
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
@@ -1873,10 +1865,9 @@ module.exports = {
           });
           imgPaths.push(`${process.env.HOST}public/img_products/${nameImg}`);
         }
-        
-        req.body.image_product = imgPaths
-        
-      };
+
+        req.body.image_product = imgPaths;
+      }
 
       Object.keys(req.body).forEach((key) => {
         if (notDirectlyEdited.includes(key)) {
@@ -1995,13 +1986,13 @@ module.exports = {
   updateProductPerformance: async (req, res, next) => {
     try {
       if (!req.body.productId) return res.status(400).json({ message: "Dibutuh kan payload productId" });
-      const prod = await Product.findOne({_id: req.body.productId});
-      if(!prod) return res.status(404).json({message: "Produk dengan id: " + req.body.productId + " tidak ditemukan"})
+      const prod = await Product.findOne({ _id: req.body.productId });
+      if (!prod) return res.status(404).json({ message: "Produk dengan id: " + req.body.productId + " tidak ditemukan" });
       const kinerja = await Performance.findOne({ productId: req.body.productId, userId: req.user.id });
-      if(!kinerja){
+      if (!kinerja) {
         Performance.create({ productId: req.body.productId, userId: req.user.id })
-        .then(()=>console.log("berhasil simpan performance produk"))
-        .catch((e)=>console.log("gagal simpan performance produk ", e))
+          .then(() => console.log("berhasil simpan performance produk"))
+          .catch((e) => console.log("gagal simpan performance produk ", e));
       }
 
       return res.status(200).json({ message: "Berhasil update performance product!" });
