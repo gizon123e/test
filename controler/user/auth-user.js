@@ -207,7 +207,8 @@ module.exports = {
           userId: newUser._id,
           deviceId,
           device: brand,
-          login_at: new Date()
+          login_at: new Date(),
+          ip: req.connection.remoteAddress
         });
       }
 

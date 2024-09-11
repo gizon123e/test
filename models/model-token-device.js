@@ -15,8 +15,11 @@ const model = new mongoose.Schema({
     },
     login_at: {
         type: Date
+    },
+    ip: {
+        type: String
     }
-});
+}, { timestamps: true });
 
 const DeviceId = mongoose.model("DeviceId", model);
 
