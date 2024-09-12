@@ -89,5 +89,20 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+
+    deleteAccount: async(req, res, next) => {
+        try {
+            const { id } = req.body;
+            const user = await User.findById(id).select("token codeOtp");
+            if(!user) return res.status(404).json({message: "Tidak Ditemukan"});
+            if(user.codeOtp.expire < new Date() || user.token.expired < new Date()) return res.status(401).json({message: "Sudah Kadaluarsa"});
+            const kode = await bcrypt.compare(kode_otp.toString(), user.codeOtp.code);
+            if(!kode) return res.status(401).json({message: "Kode OTP Tidak Sesuai"});
+            return res.status(200).json({message: "User Terverifikasi"})
+        } catch (error) {
+           console.log(error);
+           next(error) 
+        }
     }
 }
