@@ -9,6 +9,7 @@ const BiayaTetap = require("../models/model-biaya-tetap");
 const { calculateDistance } = require("../utils/menghitungJarak");
 // const Address = require("../models/model-address");
 // const { Pangan } = require("../models/model-pangan");
+const fs = require("fs")
 const User = require("../models/model-auth-user");
 const mongoose = require("mongoose");
 const SpecificCategory = require("../models/model-specific-category");
