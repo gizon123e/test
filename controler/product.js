@@ -1845,7 +1845,10 @@ module.exports = {
       if (req.files?.ImageProduct || req.files?.ImageProduct?.length > 0) {
         for (const img of product.image_product) {
           const pathFile = path.join(`${__dirname}`, "../", img.split(`${process.env.HOST}`)[1]);
-          unlinkSync(pathFile);
+          if (fs.existsSync(pathFile)) { // Cek apakah file ada
+            fs.unlinkSync(pathFile); // Hapus file jika ada
+            console.log(`File ${pathFile} berhasil dihapus.`);
+          }
         }
 
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
