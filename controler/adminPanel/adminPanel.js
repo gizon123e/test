@@ -19,6 +19,7 @@ const Pembatalan = require("../../models/model-pembatalan")
 const Pesanan = require("../../models/pesanan/model-orders")
 const Product = require('../../models/model-product')
 const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders')
+const Sekolah = require('../../models/model-sekolah')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -111,7 +112,35 @@ module.exports = {
     incompleterOrderList: async(req, res, next) => {
         try {
             if(req.user.role !== 'administrator') return res.status(403).json({message: "Invalid Request"});
-            const datas = await IncompleteOrders.find()
+            const datas = (await IncompleteOrders.find()
+            .populate({path: 'userIdKonsumen', select: 'role'})
+            .populate({
+                path: 'pengirimanId', 
+                select: 'orderId',
+                populate: {
+                    path: "orderId",
+                    select: "items",
+                    populate: {
+                        path: "items.product.productId",
+                        select: "userId"
+                    }
+                }
+            })
+            .lean())
+            // .map(async(data) => {
+            //     let detailKonsumen;
+            //     switch (data.userIdKonsumen.role) {
+            //         case 'konsumen':
+            //             detailKonsumen = await Sekolah.findOne({userId: data.userIdKonsumen._id}).lean();
+            //             break;
+            //         case 'vendor':
+            //             detailKonsumen = await Vendor.findOne({userId: data.userIdKonsumen._id}).lean();
+            //             break;
+            //         case 'supplier':
+            //             detailKonsumen = await Supplier.findOne({userId: data.userIdKonsumen._id}).lean();
+            //             break;
+            //     }
+            // })
             return res.status(200).json({message:"Berhasil mendapatkan orderan yang tidak lengkap", datas});
         } catch (error) {
             console.log(error);

@@ -3,7 +3,7 @@ const Sekolah = require("../../models/model-sekolah");
 const SimulasiSekolah = require('../../models/model-simulasi-sekolah')
 const Konsumen = require("../../models/konsumen/model-konsumen");
 const cekLokasiLatLog = require('../../utils/cek-alamat')
-
+const mongoose = require('mongoose')
 const path = require("path")
 const dotenv = require('dotenv');
 dotenv.config()
