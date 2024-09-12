@@ -111,9 +111,11 @@ module.exports = {
 
     incompleterOrderList: async(req, res, next) => {
         try {
+            const bolong = []
             if(req.user.role !== 'administrator') return res.status(403).json({message: "Invalid Request"});
-            const datas = (await IncompleteOrders.find()
+            const datas = await Promise.all((await IncompleteOrders.find()
             .populate({path: 'userIdKonsumen', select: 'role'})
+            .populate({path: 'userIdSeller', select: 'role'})
             .populate({
                 path: 'pengirimanId', 
                 select: 'orderId',
@@ -122,26 +124,52 @@ module.exports = {
                     select: "items",
                     populate: {
                         path: "items.product.productId",
-                        select: "userId"
+                        select: "userId total_price image_product name_product"
                     }
                 }
             })
             .lean())
-            // .map(async(data) => {
-            //     let detailKonsumen;
-            //     switch (data.userIdKonsumen.role) {
-            //         case 'konsumen':
-            //             detailKonsumen = await Sekolah.findOne({userId: data.userIdKonsumen._id}).lean();
-            //             break;
-            //         case 'vendor':
-            //             detailKonsumen = await Vendor.findOne({userId: data.userIdKonsumen._id}).lean();
-            //             break;
-            //         case 'supplier':
-            //             detailKonsumen = await Supplier.findOne({userId: data.userIdKonsumen._id}).lean();
-            //             break;
-            //     }
-            // })
-            return res.status(200).json({message:"Berhasil mendapatkan orderan yang tidak lengkap", datas});
+            .map(async(data) => {
+                if(!data.pengirimanId) bolong.push(data._id)
+                const selectedItem = data.pengirimanId?.orderId?.items.find((item) => {
+                    return item.product.some(prd => prd.productId.userId.toString() === data.userIdSeller._id.toString())
+                })
+                let detailKonsumen;
+                switch (data?.userIdKonsumen?.role) {
+                    case 'konsumen':
+                        detailKonsumen = await Sekolah.findOne({userId: data.userIdKonsumen._id}).select("namaSekolah").lean();
+                        break;
+                    case 'vendor':
+                        detailKonsumen = await Vendor.findOne({userId: data.userIdKonsumen._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                    case 'supplier':
+                        detailKonsumen = await Supplier.findOne({userId: data.userIdKonsumen._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                };
+                return {
+                    id: selectedItem?.kode_pesanan,
+                    products: selectedItem?.product.map(prd => {
+                        const { _id, name_product, image_product } = prd.productId
+                        return {
+                            _id,
+                            name_product,
+                            image_product
+                        }
+                    }),
+                    total_harga: selectedItem?.product.reduce((acc, item) => {
+                        return acc + item.productId.total_price * item.quantity
+                    } , 0),
+                    quantity: selectedItem?.quantity,
+                    pembeli: detailKonsumen,
+                    pengirimanId: data?.pengirimanId?._id,
+                    seller: data?.userIdSeller
+                }
+            }))
+            return res.status(200).json({message:"Berhasil mendapatkan orderan yang tidak lengkap", datas: {
+                catering: datas.filter(item => item.seller.role === 'vendor'),
+                toko: datas.filter(item => item.seller.role === 'supplier'),
+                produsen: datas.filter(item => item.seller.role === 'produsen'),
+            }});
         } catch (error) {
             console.log(error);
             next(error)
