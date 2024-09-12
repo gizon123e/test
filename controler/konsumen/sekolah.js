@@ -11,6 +11,7 @@ dotenv.config()
 module.exports = {
     getAllSekolah: async (req, res, next) => {
         try {
+            if(!new mongoose.Types.ObjectId(req.params.id)) return res.status(404).json({message: `Invalid id: ${req.params.id}`})
             const data = await Sekolah.find({ detailId: req.params.id }).populate('address')
 
             return res.status(200).json({
