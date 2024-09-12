@@ -27,7 +27,7 @@ const varianSchema = new mongoose.Schema({
         validate: {
           validator: function (value) {
             if (this.parent().nama_varian === "Topping") {
-              return value != null; 
+              return value != null;
             }
             return true;
           },
@@ -135,7 +135,7 @@ const productModels = new mongoose.Schema(
       required: true,
       default: 0,
       validate: {
-        validator: function(value) {
+        validator: function (value) {
           return value >= 0;
         },
         message: 'Total stock cannot be negative.'
@@ -237,8 +237,8 @@ productModels.pre("save", function (next) {
   }
 
   if (minimalDp === 0) this.minimalDp = null
-  
-  if(this.bervarian === true && !this.varian){
+
+  if (this.bervarian === true && !this.varian) {
     return next(new Error("produk bervarian harus ada varian!"))
   }
 
@@ -356,6 +356,7 @@ productModels.pre(["deleteMany", "deleteOne", "findOneAndDelete"], async functio
     const products = await this.model.find(this.getQuery()).populate({ path: 'userId', select: "_id role" }).lean()
     await Wishlist.deleteMany({ productId: { $in: products.map(prod => prod._id) } })
     for (const prod of products) {
+
       await Carts.updateMany(
         { productId: prod._id },
         {
@@ -364,10 +365,6 @@ productModels.pre(["deleteMany", "deleteOne", "findOneAndDelete"], async functio
             name_product: prod.name_product,
             total_price: prod.total_price,
             image_product: prod.image_product,
-            userId: {
-              _id: prod.userId._id,
-              role: prod.userId.role
-            }
           },
           productDeleted: true
         }
