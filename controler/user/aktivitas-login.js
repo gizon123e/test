@@ -32,7 +32,8 @@ module.exports = {
     
     deleteDeviceLogin: async(req, res, next) => {
         try {
-            const device = await DeviceId.findOneAndDelete({_id: req.params.id, userId: req.user.id});
+            if(!req.body.id) return res.status(400).json({message: "Tolong kirimkan id device login"});
+            const device = await DeviceId.findOneAndDelete({deviceId: req.body.id, userId: req.user.id});
             if(!device) return res.status(404).json({message: "Device tidak ditemukan"})
             return res.status(200).json({message: "berhasil menghapus device login"});
         } catch (error) {
