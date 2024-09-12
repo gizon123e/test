@@ -9,7 +9,7 @@ const controlerActivities = require("../controler/user/aktivitas-login");
 const router = require("express").Router();
 
 // router auth user
-router.get('/check-token', authorization, controlerAuthUser.checkToken);
+router.get('/check-token', controlerAuthUser.checkToken);
 router.get("/check-verified-detail", authorization, controlerAuthUser.validateDetail);
 router.get("/delete-account-validation", authorization, controlerAuthUser.deleteAccountCheck);
 router.get("/login-activities", authorization, controlerActivities.getAktivitasLogin);

@@ -6,6 +6,7 @@ const authorization = require('../../midelware/authorization')
 const router = require('express').Router()
 
 router.get('/biaya-tetap', controlerAdminPanel.getBiayaTetap)
+router.get('/incomplete-orders', authorization, controlerAdminPanel.incompleterOrderList)
 router.get('/biaya-tetap/:id', controlerAdminPanel.findByIdBiayaTetap)
 router.get('/detail-virtual-account/:id', controlerAdminPanel.userDetailId)
 router.get('/detail-user/:id', controlerAdminPanel.getDataDetailUser)

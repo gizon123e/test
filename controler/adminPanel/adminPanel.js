@@ -18,6 +18,7 @@ const Pengiriman = require("../../models/model-pengiriman")
 const Pembatalan = require("../../models/model-pembatalan")
 const Pesanan = require("../../models/pesanan/model-orders")
 const Product = require('../../models/model-product')
+const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -101,6 +102,17 @@ module.exports = {
                 datas: dataDetailId,
                 data_user: dataUser
             })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    incompleterOrderList: async(req, res, next) => {
+        try {
+            if(req.user.role !== 'administrator') return res.status(403).json({message: "Invalid Request"});
+            const datas = await IncompleteOrders.find()
+            return res.status(200).json({message:"Berhasil mendapatkan orderan yang tidak lengkap", datas});
         } catch (error) {
             console.log(error);
             next(error)

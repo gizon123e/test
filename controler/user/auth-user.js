@@ -249,8 +249,9 @@ module.exports = {
       const deviceId = req.headers["x-header-deviceid"]
       if(!deviceId) return res.status(401).json({ error: true, message: 'Kirimkan device id di headers' });
       if(!verifyToken) return res.status(401).json({ error: true, message: 'Invalid Token' });
-      const user = await User.exists(verifyToken.id);
+      const user = await User.exists({_id: verifyToken.id});
       if(!user) return res.status(401).json({ error: true, message: 'Invalid Token' });
+      console.log(deviceId, verifyToken.id)
       const device = await DeviceId.exists({userId: verifyToken.id, deviceId});
       if(!device) return res.status(401).json({ error: true, message: 'Invalid Token' });
       return res.status(200).json({message: "Token valid"});
