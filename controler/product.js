@@ -937,8 +937,8 @@ module.exports = {
         const terjual = await SalesReport.findOne({ productId: produk._id });
         const totalTerjual = terjual
           ? terjual.track.reduce((accumulator, current) => {
-              return accumulator + current.soldAtMoment;
-            }, 0)
+            return accumulator + current.soldAtMoment;
+          }, 0)
           : 0;
         dataProds.push({
           ...produk,
@@ -994,8 +994,8 @@ module.exports = {
       const terjual = await SalesReport.findOne({ productId: req.params.id }).lean();
       const total_terjual = terjual
         ? terjual.track.reduce((acc, val) => {
-            return acc + val.soldAtMoment;
-          }, 0)
+          return acc + val.soldAtMoment;
+        }, 0)
         : 0;
       let toko;
       const wishlisted = await Wishlist.exists({ productId: req.params.id, userId: req.user?.id });
@@ -2010,7 +2010,7 @@ module.exports = {
       const productId = req.params.productId;
       const deleted = await Product.findById(productId);
       if (!deleted) return res.status(404).json({ message: `Tidak ada produk dengan id: ${productId}` });
-      if (req.user.id.toString() !== deleted.userId.toString() && req.user.role !== "administrator") return res.status(403).json({ message: "Anda Tidak Bisa Menghapus Produk Ini" });
+      // if (req.user.id.toString() !== deleted.userId.toString() && req.user.role !== "administrator") return res.status(403).json({ message: "Anda Tidak Bisa Menghapus Produk Ini" });
 
       const ordered = await Pengiriman.find({
         productToDelivers: {
