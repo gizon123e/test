@@ -2,13 +2,13 @@ const DeviceId = require("../../models/model-token-device");
 const geoip = require('geoip-lite');
 
 const typeDeviceChecker = (val) => {
-    const desktop = ["windows", "win", "mac", "linux"]
-    if(desktop.includes(val.toLowerCase())){
-        return "desktop"
-    }else{
-        return "mobile"
+    const desktop = ["windows", "win", "mac", "linux"];
+    if (desktop.some((os) => val.toLowerCase().includes(os))) {
+        return "desktop";
+    } else {
+        return "mobile";
     }
-}
+};
 
 module.exports = {
     getAktivitasLogin: async(req, res, next) => {
