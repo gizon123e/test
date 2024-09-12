@@ -28,5 +28,16 @@ module.exports = {
             console.log(error);
             next(error)
         }
+    },
+    
+    deleteDeviceLogin: async(req, res, next) => {
+        try {
+            const device = await DeviceId.findOneAndDelete({_id: req.params.id, userId: req.user.id});
+            if(!device) return res.status(404).json({message: "Device tidak ditemukan"})
+            return res.status(200).json({message: "berhasil menghapus device login"});
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
     }
 }

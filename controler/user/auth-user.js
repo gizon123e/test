@@ -4,10 +4,16 @@ const sendOTP = require("../../utils/sendOtp").sendOtp;
 const sendPhoneOTP = require('../../utils/sendOtp').sendOtpPhone
 const Pengiriman = require("../../models/model-pengiriman")
 const jwt = require("../../utils/jwt");
+const {getToken} = require("../../utils/getToken");
 const bcrypt = require("bcrypt");
 const temporaryUser = require("../temporaryUser");
 const DeviceId = require("../../models/model-token-device");
 const RequestDeleteAccount = require("../../models/user/model-request-hapus-akun");
+const { verify } = require("jsonwebtoken");
+const TokoVendor = require("../../models/vendor/model-toko");
+const TokoSupplier = require("../../models/supplier/model-toko");
+const TokoProdusen = require("../../models/produsen/model-toko");
+const Distributtor = require("../../models/distributor/model-distributor");
 
 module.exports = {
 
@@ -137,8 +143,29 @@ module.exports = {
 
   deleteAccountCheck: async(req, res, next) => {
     try {
-      const user = await User.findById(req.user.id).select("email");
-      const dataOrder = await Pengiriman.find({ user: req.user.id, isBuyerAccepted: false });
+      const user = await User.findById(req.user.id).select("email role");
+      let dataOrder;
+      switch(user.role){
+        case "konsumen":
+          dataOrder = await Pengiriman.find({ user: req.user.id, isBuyerAccepted: false });
+          break;
+        case "vendor":
+          const tokoVendor = await TokoVendor.findOne({ userId: req.user.id });
+          dataOrder = await Pengiriman.find({ user: req.user.id, isBuyerAccepted: false }) || await Pengiriman.find({ toko: tokoVendor._id, isBuyerAccepted: false });
+          break;
+        case "supplier":
+          const tokoSupplier = await TokoSupplier.findOne({ userId: req.user.id });
+          dataOrder = await Pengiriman.find({ user: req.user.id, isBuyerAccepted: false }) || await Pengiriman.find({ toko: tokoSupplier._id, isBuyerAccepted: false });
+          break;
+        case "produsen":
+          const tokoProdusen = await TokoProdusen.findOne({ userId: req.user.id });
+          dataOrder = await Pengiriman.find({ toko: tokoProdusen._id, isBuyerAccepted: false });
+          break
+        case "distributor":
+          const distri = await Distributtor.findOne({ userId: req.user.id });
+          dataOrder = await Pengiriman.find({ distributorId: distri._id, isBuyerAccepted: false });
+          break;
+      }
 
       return res.status(200).json({ message: "Check for delete account successfully", data: { 
         user: {
@@ -212,6 +239,29 @@ module.exports = {
       }
       console.log(err)
       next(err);
+    }
+  },
+
+  checkToken: async (req, res, next) => {
+    try {
+      const token = getToken(req)
+      const verifyToken = jwt.verifyToken(token);
+      const deviceId = req.headers["x-header-deviceid"]
+      if(!deviceId) return res.status(401).json({ error: true, message: 'Kirimkan device id di headers' });
+      if(!verifyToken) return res.status(401).json({ error: true, message: 'Invalid Token' });
+      const user = await User.exists(verifyToken.id);
+      if(!user) return res.status(401).json({ error: true, message: 'Invalid Token' });
+      const device = await DeviceId.exists({userId: verifyToken.id, deviceId});
+      if(!device) return res.status(401).json({ error: true, message: 'Invalid Token' });
+      return res.status(200).json({message: "Token valid"});
+    } catch (error) {
+      console.log(error);
+      if (error.message === "Token has expired") {
+        return res.status(401).json({ error: true, message: 'Token has expired' });
+      } else if (error.message === "Invalid Token") {
+        return res.status(401).json({ error: true, message: 'Invalid Token' });
+      }
+      next(error)
     }
   },
 
