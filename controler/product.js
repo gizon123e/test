@@ -9,6 +9,7 @@ const BiayaTetap = require("../models/model-biaya-tetap");
 const { calculateDistance } = require("../utils/menghitungJarak");
 // const Address = require("../models/model-address");
 // const { Pangan } = require("../models/model-pangan");
+const fs = require("fs")
 const User = require("../models/model-auth-user");
 const mongoose = require("mongoose");
 const SpecificCategory = require("../models/model-specific-category");
@@ -1845,7 +1846,10 @@ module.exports = {
       if (req.files?.ImageProduct || req.files?.ImageProduct?.length > 0) {
         for (const img of product.image_product) {
           const pathFile = path.join(`${__dirname}`, "../", img.split(`${process.env.HOST}`)[1]);
-          unlinkSync(pathFile);
+          if (fs.existsSync(pathFile)) { // Cek apakah file ada
+            fs.unlinkSync(pathFile); // Hapus file jika ada
+            console.log(`File ${pathFile} berhasil dihapus.`);
+          }
         }
 
         if (Array.isArray(req.files.ImageProduct) && req.files.ImageProduct.length > 0) {
