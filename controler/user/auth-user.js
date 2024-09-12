@@ -14,6 +14,8 @@ const TokoVendor = require("../../models/vendor/model-toko");
 const TokoSupplier = require("../../models/supplier/model-toko");
 const TokoProdusen = require("../../models/produsen/model-toko");
 const Distributtor = require("../../models/distributor/model-distributor");
+const { Transaksi } = require("../../models/model-transaksi");
+const Invoice = require("../../models/model-invoice");
 
 module.exports = {
 
@@ -144,18 +146,19 @@ module.exports = {
   deleteAccountCheck: async(req, res, next) => {
     try {
       const user = await User.findById(req.user.id).select("email role");
+      const invoice = (await Invoice.find({userId: req.user.id}).lean()).map(inv => inv._id)
       let dataOrder;
       switch(user.role){
         case "konsumen":
-          dataOrder = await Pengiriman.find({ user: req.user.id, isBuyerAccepted: false });
+          dataOrder = await Pengiriman.find({ invoice: { $in: invoice }, isBuyerAccepted: false });
           break;
         case "vendor":
           const tokoVendor = await TokoVendor.findOne({ userId: req.user.id });
-          dataOrder = await Pengiriman.find({ user: req.user.id, isBuyerAccepted: false }) || await Pengiriman.find({ toko: tokoVendor._id, isBuyerAccepted: false });
+          dataOrder = await Pengiriman.find({ invoice: { $in: invoice }, isBuyerAccepted: false }) || await Pengiriman.find({ toko: tokoVendor._id, isBuyerAccepted: false });
           break;
         case "supplier":
           const tokoSupplier = await TokoSupplier.findOne({ userId: req.user.id });
-          dataOrder = await Pengiriman.find({ user: req.user.id, isBuyerAccepted: false }) || await Pengiriman.find({ toko: tokoSupplier._id, isBuyerAccepted: false });
+          dataOrder = await Pengiriman.find({ invoice: { $in: invoice }, isBuyerAccepted: false }) || await Pengiriman.find({ toko: tokoSupplier._id, isBuyerAccepted: false });
           break;
         case "produsen":
           const tokoProdusen = await TokoProdusen.findOne({ userId: req.user.id });
