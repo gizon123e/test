@@ -152,6 +152,7 @@ app.use('/api/search', require("./routes/router-suggestion"));
 
 // informasi informasi bantuan
 app.use('/api/category-utama-informasi-bantuan', require('./routes/informasi-bantuan/categort-utama-informasi-bantuan'))
+app.use('/api/sub-category-informasi-bantuan', require('./routes/informasi-bantuan/sub-category-informasi-bantuan'))
 app.use('/api/informasi-bantuan-konsumen', require('./routes/informasi-bantuan/informasi-bantuan-konsumen'))
 app.use('/api/informasi-bantuan-vendor', require('./routes/informasi-bantuan/informasi-bantuan-vendor'))
 
