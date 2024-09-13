@@ -42,7 +42,7 @@ module.exports = {
 
             await icon.mv(imageIcon);
 
-            const data = await CategoryInformasiPertanyaan.create({ nama, role, icon: `${process.env.HOST}public/icon-bantuan/`, namaIcon })
+            const data = await CategoryInformasiPertanyaan.create({ nama, role, icon: `${process.env.HOST}public/icon-bantuan/${namaIcon}` })
 
             res.status(200).json({
                 message: "create data success",
