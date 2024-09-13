@@ -150,6 +150,11 @@ app.use('/api/pangan', require('./routes/router-pangan'));
 app.use('/api/invoice', require('./routes/router-invoice'));
 app.use('/api/search', require("./routes/router-suggestion"));
 
+// informasi informasi bantuan
+app.use('/api/category-utama-informasi-bantuan', require('./routes/informasi-bantuan/categort-utama-informasi-bantuan'))
+app.use('/api/informasi-bantuan-konsumen', require('./routes/informasi-bantuan/informasi-bantuan-konsumen'))
+app.use('/api/informasi-bantuan-vendor', require('./routes/informasi-bantuan/informasi-bantuan-vendor'))
+
 // search history
 app.use('/api/search', require('./routes/router-history-search'))
 
