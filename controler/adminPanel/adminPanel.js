@@ -153,7 +153,8 @@ module.exports = {
                         return {
                             _id,
                             name_product,
-                            image_product
+                            image_product,
+                            quantity: prd.quantity
                         }
                     }),
                     total_harga: selectedItem?.product.reduce((acc, item) => {
