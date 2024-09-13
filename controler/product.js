@@ -639,7 +639,20 @@ module.exports = {
         handlerFilter = { ...handlerFilter, categoryId: categoryResoul._id };
       }
 
-      const nama_toko = await TokoVendor.find().populate("address").lean();
+      let nama_toko;
+      switch(req.user.role) {
+        case "konsumen":
+          nama_toko = await TokoVendor.find().populate("address").lean();
+          break;
+        case "vendor":
+          nama_toko = await TokoSupplier.find().populate("address").lean();
+          break;
+        case "supplier":
+          nama_toko = await TokoProdusen.find().populate("address").lean();
+          break;
+        default:
+          return res.status(404).json({ message: "Tidak ditemukan data" });
+      }
       const list_product = await Product.find(handlerFilter).populate("userId", "-password").populate("categoryId").lean();
 
       req.user = auth();
