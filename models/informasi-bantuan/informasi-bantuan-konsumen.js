@@ -11,7 +11,12 @@ const modelInformasiBantuanKonsumen = new mongoose.Schema({
             required: [true, 'jawaban harus di iis']
         },
         sub_description: [{
-            type: String,
+            text_sub_description: {
+                type: String,
+            },
+            spesifik_description: [{
+                type: String,
+            }]
         }]
     }],
     id_sub_informasi_bantuan: {
