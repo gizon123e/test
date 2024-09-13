@@ -147,6 +147,7 @@ module.exports = {
     try {
       const user = await User.findById(req.user.id).select("email role");
       const invoice = (await Invoice.find({userId: req.user.id}).lean()).map(inv => inv._id)
+      const requested = await RequestDeleteAccount.findOne({ userId: req.user.id });
       let dataOrder;
       switch(user.role){
         case "konsumen":
@@ -179,7 +180,8 @@ module.exports = {
         },
         saldo: {
           passed: true
-        }
+        },
+        requested: requested ? true : false
       }});
     } catch (error) {
       console.log(error);
