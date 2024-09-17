@@ -3,7 +3,19 @@ const InformasiBantuanKonsumen = require('../../models/informasi-bantuan/informa
 module.exports = {
     getInformasiBantuanKonsumen: async (req, res, next) => {
         try {
-            const datas = await InformasiBantuanKonsumen.find()
+            const { id_judul_utama, id_sub_judul } = req.query
+
+            let query = {}
+
+            if (id_judul_utama) {
+                query.id_judul_utama = id_judul_utama
+            }
+
+            if (id_sub_judul) {
+                query.id_sub_informasi_bantuan = id_sub_judul
+            }
+
+            const datas = await InformasiBantuanKonsumen.find(query)
 
             res.status(200).json({
                 message: "get data success",

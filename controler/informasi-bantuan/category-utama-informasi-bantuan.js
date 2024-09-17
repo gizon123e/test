@@ -5,11 +5,16 @@ require('dotenv').config()
 module.exports = {
     getCategoryUtamaInformasiBantuan: async (req, res, next) => {
         try {
-            const { role } = req.query
+            const { role, type } = req.query
             let query = {}
             if (role) {
                 query.role = role
             }
+
+            if (type) {
+                query.type = type
+            }
+
             const data = await CategoryInformasiPertanyaan.find(query)
 
             res.status(200).json({
@@ -31,7 +36,7 @@ module.exports = {
 
     createCategoryUtamaInformasiBantuan: async (req, res, next) => {
         try {
-            const { nama, role } = req.body
+            const { nama, role, type } = req.body
             const files = req.files;
             const icon = files ? files.icon : null;
 
@@ -42,7 +47,7 @@ module.exports = {
 
             await icon.mv(imageIcon);
 
-            const data = await CategoryInformasiPertanyaan.create({ nama, role, icon: `${process.env.HOST}public/icon-bantuan/${namaIcon}` })
+            const data = await CategoryInformasiPertanyaan.create({ nama, role, icon: `${process.env.HOST}public/icon-bantuan/${namaIcon}`, type })
 
             res.status(200).json({
                 message: "create data success",
