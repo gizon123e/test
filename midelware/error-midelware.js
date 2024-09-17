@@ -17,5 +17,5 @@ module.exports = (err, req, res, next) => {
 
     // if(err="Error: Invalid File Type") return res.status(400).json({ ...validateError , message: "Gambar yang dikirimkan harus berupa jpg, png, atau jpeg"});
 
-    res.status(500).json({ ...validateError, message: 'internal server error', error: err })
+    return res.status(500).json({ ...validateError, message: 'internal server error', error: err })
 }
