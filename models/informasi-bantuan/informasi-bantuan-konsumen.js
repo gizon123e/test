@@ -15,15 +15,7 @@ const modelInformasiBantuanKonsumen = new mongoose.Schema({
                 type: String,
             },
             spesifik_description: [{
-                text_desciption: {
-                    type: String,
-                },
-                image_web: {
-                    type: String
-                },
-                image_mobile: {
-                    type: String
-                },
+                type: String,
             }]
         }]
     }],
