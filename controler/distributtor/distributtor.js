@@ -9,22 +9,111 @@ const BiayaTetap = require('../../models/model-biaya-tetap')
 const User = require('../../models/model-auth-user')
 const LayananKendaraanDistributor = require('../../models/distributor/layananKendaraanDistributor')
 const Pengemudi = require('../../models/distributor/model-pengemudi')
-
+const Toko = require('../../models/supplier/model-toko')
 const { calculateDistance } = require('../../utils/menghitungJarak')
 const path = require('path')
 const fs = require('fs')
 const dotenv = require('dotenv')
+const Pengiriman = require('../../models/model-pengiriman')
+const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
+const Vendor = require('../../models/vendor/model-vendor')
+const Supplier = require('../../models/supplier/model-supplier')
+const TokoSupplier = require('../../models/supplier/model-toko')
+const TokoProdusen = require('../../models/produsen/model-toko')
+const PoinHistory = require('../../models/model-poin')
+const cekLokasiLatLog = require('../../utils/cek-alamat')
 dotenv.config()
 
 module.exports = {
     getProfileDistributor: async (req, res, next) => {
         try {
-            const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId")
+            const dataDistributor = await Distributtor.findOne({ userId: req.user.id }).populate("alamat_id").populate("userId").lean()
             if (!dataDistributor) return res.status(404).json({ message: "data not found" })
+            const poin = await PoinHistory.find({ userId: req.user.id });
+            dataDistributor.userId.poin = poin.length > 0 ?
+                poin
+                    .filter(pn => pn.jenis === "masuk")
+                    .reduce((acc, val) => acc + val.value, 0) -
+                poin
+                    .filter(pn => pn.jenis === "keluar")
+                    .reduce((acc, val) => acc + val.value, 0)
+                : 0
+            dataDistributor.userId.pin = dataDistributor.userId.pin ? "Ada" : null;
+            const pesanan = await Pengiriman.find({ distributorId: dataDistributor._id })
+            const total_pesanan = pesanan.length
+            const pesananBatal = pesanan.filter((item) => item.status_distributor === "Ditolak" || item.status_distributor === "Kadaluwarsa")
+            const total_dibatalkan = pesananBatal.length
+
+            const prosesPesanan = await ProsesPengirimanDistributor.find({ distributorId: dataDistributor._id })
+            const pesananDikirim = prosesPesanan.filter((item) => item.status_distributor === "Selesai")
+            const total_dijemput = pesananDikirim.length
+
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            today.setDate(today.getDate() - 1);
+            const formattedDateHariKemarin = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const dataPesananHariLalu = []
+            const dataPesananSaatIni = []
+            const dataMap = pesanan.map((data) => {
+                const todayPesanan = new Date(data.createdAt);
+                const formattedDatePesanan = todayPesanan.toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+
+                if (formattedDate === formattedDatePesanan) dataPesananSaatIni.push(data)
+
+                if (formattedDateHariKemarin === formattedDatePesanan) dataPesananHariLalu.push(data)
+            })
+
+            const totalPesananHariIni = dataPesananSaatIni.length;
+            const totalPesananHariLalu = dataPesananHariLalu.length;
+
+            let kenaikanPersentase = 0;
+            let penurunanPersentase = 0;
+            let statusKenaikan = false
+
+            if (totalPesananHariLalu > 0) {
+                if (totalPesananHariIni >= totalPesananHariLalu) {
+                    kenaikanPersentase = ((totalPesananHariIni - totalPesananHariLalu) / totalPesananHariLalu) * 100;
+                    statusKenaikan = true
+                } else {
+                    penurunanPersentase = ((totalPesananHariLalu - totalPesananHariIni) / totalPesananHariLalu) * 100;
+                    statusKenaikan = false
+                }
+            } else if (totalPesananHariIni > 0) {
+                kenaikanPersentase = 100;
+                statusKenaikan = true
+            }
+
+            let nilai_kenaikan = 0
+
+            if (kenaikanPersentase >= penurunanPersentase) {
+                nilai_kenaikan = kenaikanPersentase
+            } else {
+                nilai_kenaikan = penurunanPersentase
+            }
 
             res.status(200).json({
                 message: "data profile success",
-                data: dataDistributor
+                data: dataDistributor,
+                total_pesanan,
+                total_dibatalkan,
+                total_dijemput,
+                totalPesananHariIni,
+                kenaikanPesanan: `${nilai_kenaikan.toFixed(2)}%`,
+                statusKenaikan
             })
         } catch (error) {
             console.log(error)
@@ -41,35 +130,49 @@ module.exports = {
 
     getDistributtorCariHargaTerenda: async (req, res, next) => {
         try {
-            const { idAddress } = req.query
-            const { product = [] } = req.body
+            const { idAddress } = req.query;
+            const { product = [] } = req.body;
 
-            // const dataProduct = await Product.findOne({ _id: req.params.id }).populate('userId')
-            const addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address')
-            const dataKonsumen = await Konsumen.findOne({ userId: req.user.id }).populate("address")
-            const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
+            const [userDetail, dataBiayaTetap, addressCustom, dataDistributtor] = await Promise.all([
+                User.findById(req.params.id).select('role'),
+                BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" }),
+                Address.findById(idAddress),
+                Distributtor.find().populate("userId", '-password').populate('alamat_id')
+            ]);
 
-            let ukuranVolumeProduct = 0
-            let ukuranBeratProduct = 0
-            let hargaVolumeBeratProduct
+            if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" });
 
-            for (let productId of product) {
-                const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
-                const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang
-                const volumeTotal = volume * productId.qty
-                ukuranVolumeProduct += volumeTotal
-
-                const berat = dataProduct.berat * productId.qty //gram
-                const beratProduct = dataProduct.berat * dataProduct.minimalOrder
-                // ukuranBeratProduct += berat
-                if (berat) {
-                    ukuranBeratProduct += berat
-                } else {
-                    ukuranBeratProduct += beratProduct
-                }
+            let addressDetail;
+            switch (userDetail.role) {
+                case "vendor":
+                    addressDetail = await TokoVendor.findOne({ userId: req.params.id }).populate("address");
+                    break;
+                case "supplier":
+                    addressDetail = await TokoSupplier.findOne({ userId: req.params.id }).populate("address");
+                    break;
+                case "produsen":
+                    addressDetail = await TokoProdusen.findOne({ userId: req.params.id }).populate("address");
+                    break;
             }
 
-            const ukuranVolumeMotor = 100 * 30 * 40
+            let ukuranVolumeProduct = 0;
+            let ukuranBeratProduct = 0;
+
+            const productDetails = await Promise.all(product.map(productId =>
+                Product.findOne({ _id: productId.id }).populate('userId')
+            ));
+
+            productDetails.forEach((dataProduct, index) => {
+                const volume = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang;
+                const volumeTotal = volume * product[index].qty;
+                ukuranVolumeProduct += volumeTotal;
+
+                const berat = dataProduct.berat * product[index].qty;
+                ukuranBeratProduct += berat || (dataProduct.berat * dataProduct.minimalOrder);
+            });
+
+            const ukuranVolumeMotor = 100 * 30 * 40;
+            let hargaVolumeBeratProduct;
 
             if (ukuranVolumeProduct <= ukuranVolumeMotor && ukuranBeratProduct > 30000) {
                 const total = ukuranBeratProduct / 1000
@@ -90,173 +193,503 @@ module.exports = {
                 hargaVolumeBeratProduct = total
             }
 
-            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+            const [latDetail, longDetail] = [parseFloat(addressDetail?.address?.pinAlamat?.lat), parseFloat(addressDetail?.address?.pinAlamat?.long)];
+            const [latitudeAddressCustom, longitudeAddressCustom] = [parseFloat(addressCustom?.pinAlamat?.lat), parseFloat(addressCustom?.pinAlamat?.long)];
 
-            const addressCustom = await Address.findById(idAddress)
-            const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
-            const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-            const ongkir = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+            const ongkir = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latDetail, longDetail, 100);
+            if (isNaN(ongkir)) return res.status(400).json({ message: "Jarak antara konsumen dan vendor melebihi 100 km" });
 
-            if (isNaN(ongkir)) {
-                return res.status(400).json({
-                    message: "Jarak antara konsumen dan vendor melebihi 100 km"
-                });
-            }
+            const dataAllDistributtor = []
+            await Promise.all(dataDistributtor.map(async distributor => {
+                const latitudeDistributtot = parseFloat(distributor.alamat_id?.pinAlamat?.lat);
+                const longitudeDistributtor = parseFloat(distributor.alamat_id?.pinAlamat?.long);
 
-            let dataAllDistributtor = []
-            const dataDistributtor = await Distributtor.find().populate("userId", '-password').populate('alamat_id')
+                const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latDetail, longDetail, 50);
 
-            if (!dataDistributtor) return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" })
+                if (distance >= 50 || isNaN(distance)) return null;
 
-            for (let distributor of dataDistributtor) {
-                const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
-                const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
+                const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id })
+                    .populate({
+                        path: 'id_distributor',
+                        populate: 'userId'
+                    })
+                    .populate("jenisKendaraan")
+                    .populate({
+                        path: 'tarifId',
+                        populate: 'jenis_jasa'
+                    })
 
-                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+                return Promise.all(dataKendaraan.map(async data => {
+                    const gratong = await Gratong.findOne({ tarif: data.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
+                    let hargaOngkir, total_ongkir, potongan_harga;
+                    const jarakOngkir = ongkir;
 
-                if (Math.round(distance) < 50 && distance !== NaN) {
+                    if (jarakOngkir > 4) {
+                        const hargaKiloMeter = (jarakOngkir - 4) * data.tarifId.tarif_per_km;
+                        hargaOngkir = hargaKiloMeter + data.tarifId.tarif_dasar + (hargaVolumeBeratProduct > 1 ? hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg : dataBiayaTetap.biaya_per_kg);
+                    } else {
+                        hargaOngkir = data.tarifId.tarif_dasar + (hargaVolumeBeratProduct > 1 ? hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg : dataBiayaTetap.biaya_per_kg);
+                    }
 
-                    const dataKendaraan = await LayananKendaraanDistributor.find({ id_distributor: distributor._id })
-                        .populate({
-                            path: "id_distributor",
-                            populate: "userId"
-                        })
-                        .populate("jenisKendaraan")
-                        .populate({
-                            path: "tarifId",
-                            populate: "jenis_kendaraan",
-                            populate: "jenis_jasa"
-                        })
+                    if (gratong) {
+                        switch (gratong.jenis) {
+                            case "persentase":
+                                potongan_harga = hargaOngkir * gratong.nilai_gratong / 100;
+                                total_ongkir = hargaOngkir - potongan_harga;
+                                break;
+                            case "langsung":
+                                potongan_harga = hargaOngkir - gratong.nilai_gratong;
+                                total_ongkir = hargaOngkir - potongan_harga;
+                                break;
+                        }
+                        data.isGratong = true;
+                    } else {
+                        data.isGratong = false;
+                        total_ongkir = hargaOngkir;
+                    }
 
-                    if (dataKendaraan.length > 0)
-                        for (let data of dataKendaraan) {
-                            const gratong = await Gratong.findOne({ tarif: data.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
-
-                            const jarakOngkir = Math.round(ongkir)
-                            if (jarakOngkir > 4) {
-                                let potongan_harga;
-                                let total_ongkir;
-
-                                const angkaJarak = jarakOngkir - 4
-                                const hargaKiloMeter = angkaJarak * data.tarifId.tarif_per_km
-                                let hargaOngkir = 0
-
-                                if (hargaVolumeBeratProduct > 1) {
-                                    const hargaVolume = hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg
-                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) + hargaVolume
-                                } else {
-                                    hargaOngkir = (hargaKiloMeter + data.tarifId.tarif_dasar) + dataBiayaTetap.biaya_per_kg
-                                }
-
-                                if (gratong) {
-                                    data.isGratong = true
-                                    switch (gratong.jenis) {
-                                        case "persentase":
-                                            potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
-                                            total_ongkir = hargaOngkir - potongan_harga
-                                            break;
-                                        case "langsung":
-                                            potongan_harga = hargaOngkir - gratong.nilai_gratong;
-                                            total_ongkir = hargaOngkir - potongan_harga;
-                                            break;
-                                    }
-                                } else {
-                                    data.isGratong = false
-                                    total_ongkir = hargaOngkir
-                                }
+                    if (distributor.userId.isDetailVerified === true && data.tarifId.jenis_jasa.nama === "Standar" && req.user.role === "konsumen" && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
+                        if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
+                            if (data.jenisKendaraan.jenis === 'Mobil' || data.jenisKendaraan.jenis === 'Truk Box') {
 
                                 dataAllDistributtor.push({
-                                    distributor: data,
-                                    ukuranBeratProduct,
-                                    ukuranVolumeProduct,
-                                    hargaOngkir,
-                                    jarakTempu: Math.round(distance),
-                                    potongan_harga,
-                                    total_ongkir: Math.round(total_ongkir)
-                                })
-                            } else {
-                                let potongan_harga;
-                                let total_ongkir;
-                                let hargaOngkir = 0
-
-                                if (hargaVolumeBeratProduct > 1) {
-                                    const hargaVolume = hargaVolumeBeratProduct * dataBiayaTetap.biaya_per_kg
-                                    hargaOngkir = data.tarifId.tarif_dasar + hargaVolume
-                                } else {
-                                    hargaOngkir = data.tarifId.tarif_dasar + dataBiayaTetap.biaya_per_kg
-                                }
-
-                                if (gratong) {
-                                    data.isGratong = true
-                                    switch (gratong.jenis) {
-                                        case "persentase":
-                                            potongan_harga = hargaOngkir * gratong.nilai_gratong / 100
-                                            total_ongkir = hargaOngkir - potongan_harga
-                                            break;
-                                        case "langsung":
-                                            potongan_harga = hargaOngkir - gratong.nilai_gratong;
-                                            total_ongkir = hargaOngkir - potongan_harga;
-                                            break;
-                                    }
-                                } else {
-                                    data.isGratong = false
-                                    total_ongkir = hargaOngkir
-                                }
-
-                                dataAllDistributtor.push({
-                                    distributor: data,
-                                    jarakTempu: Math.round(distance),
+                                    distributor: {
+                                        id: distributor._id,
+                                        name: distributor.nama_distributor,
+                                        address: distributor.alamat_id.alamat,
+                                        npwp: distributor.npwp,
+                                        jenisKelamin: distributor.jenisKelamin,
+                                        imageProfile: distributor.imageProfile,
+                                        kendaraan: {
+                                            id_kendaraan: data.jenisKendaraan._id,
+                                            jenis: data.jenisKendaraan.jenis,
+                                            description: data.jenisKendaraan.description,
+                                            ukuran: data.jenisKendaraan.ukuran,
+                                        },
+                                        tarif: {
+                                            id: data.tarifId._id,
+                                            dasar: data.tarifId.tarif_dasar,
+                                            per_km: data.tarifId.tarif_per_km,
+                                            maximum: data.tarifId.jenis_jasa.maximum,
+                                            jenis_jasa: data.tarifId.jenis_jasa._id
+                                        },
+                                        userId: {
+                                            _id: distributor.userId._id,
+                                            isDetailVerified: distributor.userId.isDetailVerified,
+                                            role: distributor.userId.role,
+                                            isActive: distributor.userId.isActive,
+                                            isBlocked: distributor.userId.isBlocked,
+                                            isVerifikasiDocument: distributor.userId.isVerifikasiDocument
+                                        }
+                                    },
+                                    jarakTempu: distance,
                                     ukuranBeratProduct,
                                     ukuranVolumeProduct,
                                     hargaOngkir: Math.round(hargaOngkir),
                                     total_ongkir: Math.round(total_ongkir),
                                     potongan_harga
-                                })
+                                });
                             }
+                        } else {
+
+                            dataAllDistributtor.push({
+                                distributor: {
+                                    id: distributor._id,
+                                    name: distributor.nama_distributor,
+                                    address: distributor.alamat_id.alamat,
+                                    npwp: distributor.npwp,
+                                    jenisKelamin: distributor.jenisKelamin,
+                                    imageProfile: distributor.imageProfile,
+                                    kendaraan: {
+                                        id_kendaraan: data.jenisKendaraan._id,
+                                        jenis: data.jenisKendaraan.jenis,
+                                        description: data.jenisKendaraan.description,
+                                        ukuran: data.jenisKendaraan.ukuran,
+                                    },
+                                    tarif: {
+                                        id: data.tarifId._id,
+                                        dasar: data.tarifId.tarif_dasar,
+                                        per_km: data.tarifId.tarif_per_km,
+                                        maximum: data.tarifId.jenis_jasa.maximum,
+                                        jenis_jasa: data.tarifId.jenis_jasa._id
+                                    },
+                                    userId: {
+                                        _id: distributor.userId._id,
+                                        isDetailVerified: distributor.userId.isDetailVerified,
+                                        role: distributor.userId.role,
+                                        isActive: distributor.userId.isActive,
+                                        isBlocked: distributor.userId.isBlocked,
+                                        isVerifikasiDocument: distributor.userId.isVerifikasiDocument
+                                    }
+                                },
+                                jarakTempu: distance,
+                                ukuranBeratProduct,
+                                ukuranVolumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                total_ongkir: Math.round(total_ongkir),
+                                potongan_harga
+                            });
                         }
+                    } else if (distributor.userId.isDetailVerified === true && data.tarifId.jenis_jasa.nama !== "Standar" && req.user.role !== "konsumen" && distributor.userId.isActive === true && distributor.userId.isBlocked === false && distributor.userId.isVerifikasiDocument === true) {
+                        if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
+                            if (data.jenisKendaraan.jenis === 'Mobil' || data.jenisKendaraan.jenis === 'Truk Box') {
+                                dataAllDistributtor.push({
+                                    distributor: {
+                                        id: distributor._id,
+                                        name: distributor.nama_distributor,
+                                        address: distributor.alamat_id.alamat,
+                                        npwp: distributor.npwp,
+                                        jenisKelamin: distributor.jenisKelamin,
+                                        imageProfile: distributor.imageProfile,
+                                        kendaraan: {
+                                            id_kendaraan: data.jenisKendaraan._id,
+                                            jenis: data.jenisKendaraan.jenis,
+                                            description: data.jenisKendaraan.description,
+                                            ukuran: data.jenisKendaraan.ukuran,
+                                        },
+                                        tarif: {
+                                            id: data.tarifId._id,
+                                            dasar: data.tarifId.tarif_dasar,
+                                            per_km: data.tarifId.tarif_per_km,
+                                            maximum: data.tarifId.jenis_jasa.maximum,
+                                            jenis_jasa: data.tarifId.jenis_jasa._id
+                                        },
+                                        userId: {
+                                            _id: distributor.userId._id,
+                                            isDetailVerified: distributor.userId.isDetailVerified,
+                                            role: distributor.userId.role,
+                                            isActive: distributor.userId.isActive,
+                                            isBlocked: distributor.userId.isBlocked,
+                                            isVerifikasiDocument: distributor.userId.isVerifikasiDocument
+                                        }
+                                    },
+                                    jarakTempu: distance,
+                                    ukuranBeratProduct,
+                                    ukuranVolumeProduct,
+                                    hargaOngkir: Math.round(hargaOngkir),
+                                    total_ongkir: Math.round(total_ongkir),
+                                    potongan_harga
+                                });
+                            }
+                        } else {
+                            dataAllDistributtor.push({
+                                distributor: {
+                                    id: distributor._id,
+                                    name: distributor.nama_distributor,
+                                    address: distributor.alamat_id.alamat,
+                                    npwp: distributor.npwp,
+                                    jenisKelamin: distributor.jenisKelamin,
+                                    imageProfile: distributor.imageProfile,
+                                    kendaraan: {
+                                        id_kendaraan: data.jenisKendaraan._id,
+                                        jenis: data.jenisKendaraan.jenis,
+                                        description: data.jenisKendaraan.description,
+                                        ukuran: data.jenisKendaraan.ukuran,
+                                    },
+                                    tarif: {
+                                        id: data.tarifId._id,
+                                        dasar: data.tarifId.tarif_dasar,
+                                        per_km: data.tarifId.tarif_per_km,
+                                        maximum: data.tarifId.jenis_jasa.maximum,
+                                        jenis_jasa: data.tarifId.jenis_jasa._id
+                                    },
+                                    userId: {
+                                        _id: distributor.userId._id,
+                                        isDetailVerified: distributor.userId.isDetailVerified,
+                                        role: distributor.userId.role,
+                                        isActive: distributor.userId.isActive,
+                                        isBlocked: distributor.userId.isBlocked,
+                                        isVerifikasiDocument: distributor.userId.isVerifikasiDocument
+                                    }
+                                },
+                                jarakTempu: distance,
+                                ukuranBeratProduct,
+                                ukuranVolumeProduct,
+                                hargaOngkir: Math.round(hargaOngkir),
+                                total_ongkir: Math.round(total_ongkir),
+                                potongan_harga
+                            });
+                        }
+                    }
+                }));
+            }));
+
+            dataAllDistributtor.sort((a, b) => {
+                if (a.total_ongkir === b.total_ongkir) {
+                    return a.jarakTempu - b.jarakTempu;
                 }
+                return a.total_ongkir - b.total_ongkir;
+            });
+
+            const data = dataAllDistributtor[0]
+
+            res.status(200).json({
+                message: "Success get data Distributtor",
+                distributor: data,
+            });
+
+        } catch (error) {
+            console.log(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({ error: true, message: error.message, fields: error.fields });
+            }
+            next(error);
+        }
+    },
+
+    getAllDistributtor: async (req, res, next) => {
+        try {
+            const { name, addressId } = req.query;
+            const biayaTetap = await BiayaTetap.findOne({})
+            const { product = [] } = req.body;
+
+            const ukuranVolumeMotor = 100 * 30 * 40;
+            let totalUkuranVolumeProduct = 0;
+            let totalUkuranBeratProduct = 0;
+
+            // Calculate total volume and weight of products
+            const productPromises = product.map(async (productId) => {
+                const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId');
+                const ukuranVolumeProduct = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang;
+                const ukuranBeratProduct = dataProduct.berat * productId.qty;
+                totalUkuranVolumeProduct += ukuranVolumeProduct;
+                totalUkuranBeratProduct += ukuranBeratProduct;
+            });
+
+            await Promise.all(productPromises);
+
+            const userData = await User.findOne({ _id: req.params.id });
+            let addressVendor;
+
+            // Get vendor address based on user role
+            if (userData.role === 'vendor') {
+                addressVendor = await TokoVendor.findOne({ userId: req.params.id }).populate('address');
+            } else if (userData.role === 'supplier') {
+                addressVendor = await Toko.findOne({ userId: req.params.id }).populate('address');
+            } else if (userData.role === 'produsen') {
+                addressVendor = await TokoProdusen.findOne({ userId: req.params.id }).populate('address');
             }
 
-            const validate = dataAllDistributtor.filter(data =>
-                data.distributor.id_distributor.userId.isDetailVerified && data.distributor.id_distributor.userId.isVerifikasiDocument);
+            const latitudeVendor = parseFloat(addressVendor.address.pinAlamat.lat).toFixed(7);
+            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long).toFixed(7);
 
-            // let dataKendaraanData
-            // let dataPengemudiData
-            // for (let id of validate) {
-            //     const validateKendaraan = await KendaraanDistributor.find({ id_distributor: id.distributor.id_distributor._id })
-            //     dataKendaraanData = validateKendaraan.filter((item) => item.is_Active === true)
-
-            //     const validatePengemudi = await Pengemudi.find({ id_distributor: id.distributor.id_distributor._id })
-            //     dataPengemudiData = validatePengemudi.filter((item) => item.is_Active === true)
-            // }
-
-            let validDistributors = []
-            for (let distributor of validate) {
-                const activeKendaraan = await KendaraanDistributor.find({ id_distributor: distributor.distributor.id_distributor._id, is_Active: true })
-                const activePengemudi = await Pengemudi.find({ id_distributor: distributor.distributor.id_distributor._id, is_Active: true })
-
-                if (activeKendaraan.length > 0 && activePengemudi.length > 0) {
-                    validDistributors.push(distributor)
-                }
+            let detailUser;
+            switch (req.user.role) {
+                case "konsumen":
+                    detailUser = await Konsumen.findOne({ userId: req.user.id }).populate("address");
+                    break;
+                case "vendor":
+                    detailUser = await Vendor.findOne({ userId: req.user.id }).populate("address");
+                    break;
+                case "supplier":
+                    detailUser = await Supplier.findOne({ userId: req.user.id }).populate("address");
+                    break;
             }
 
-            let dataKendaraanHargaTermurah
+            const latDetail = parseFloat(detailUser.address.pinAlamat.lat);
+            const longDetail = parseFloat(detailUser.address.pinAlamat.long);
 
-            if (validate.length > 0) {
-                if (ukuranVolumeProduct > ukuranVolumeMotor || ukuranBeratProduct > 30000) {
-                    dataKendaraanHargaTermurah = validDistributors
-                        .filter((item) => item.distributor.jenisKendaraan.jenis !== 'Motor')
-                        .sort((a, b) => a.total_ongkir - b.total_ongkir);
-                } else {
-                    dataKendaraanHargaTermurah = validDistributors.sort((a, b) => a.total_ongkir - b.total_ongkir);
-                }
+            let jarakVendorKonsumen;
+
+            // Calculate distance based on the provided address or user address
+            if (addressId) {
+                const addressCustom = await Address.findById(addressId);
+                const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat).toFixed(7);
+                const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long).toFixed(7);
+                jarakVendorKonsumen = await calculateDistance(
+                    parseFloat(latitudeAddressCustom),
+                    parseFloat(longitudeAddressCustom),
+                    parseFloat(latitudeVendor),
+                    parseFloat(longitudeVendor),
+                    biayaTetap.radius
+                );
+            } else {
+                jarakVendorKonsumen = await calculateDistance(
+                    parseFloat(latDetail),
+                    parseFloat(longDetail),
+                    parseFloat(latitudeVendor),
+                    parseFloat(longitudeVendor),
+                    biayaTetap.radius
+                );
+            }
+            if (isNaN(jarakVendorKonsumen)) {
+                return res.status(400).json({
+                    message: `Jarak antara konsumen dan vendor melebihi ${biayaTetap.radius} km`
+                });
             }
 
-            const datas = dataKendaraanHargaTermurah[0]
+            let query = {};
+            if (name) {
+                query.nama_distributor = { $regex: name, $options: 'i' };
+            }
+
+            const dataDistributtor = await Distributtor.find(query)
+                .populate("userId", '-password')
+                .populate('alamat_id');
+
+            if (!dataDistributtor) {
+                return res.status(400).json({ message: "kamu belom ngisi data yang lengkap" });
+            }
+
+            const distributorPromises = dataDistributtor.map(async (distributor) => {
+                const latitudeDistributtor = parseFloat(distributor?.alamat_id?.pinAlamat?.lat);
+                const longitudeDistributtor = parseFloat(distributor?.alamat_id?.pinAlamat?.long);
+
+                const distance = await calculateDistance(
+                    latitudeDistributtor,
+                    longitudeDistributtor,
+                    latitudeVendor,
+                    longitudeVendor,
+                    biayaTetap.radius
+                );
+
+                if (distance < biayaTetap.radius && !isNaN(distance)) {
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
+                        .populate({
+                            path: "id_distributor",
+                            populate: "alamat_id"
+                        })
+                        .populate("jenisKendaraan")
+                        .lean();
+
+                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, status: 'Aktif' });
+
+                    let filteredDataKendaraan = dataKendaraan;
+                    if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
+                        filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis !== 'Motor');
+                    }
+
+                    if (filteredDataKendaraan.length > 0 && dataPengemudi.length > 0) {
+                        return {
+                            distributor,
+                            jarakTempu: distance
+                        };
+                    }
+                }
+            });
+
+            const datas = await Promise.all(distributorPromises);
+
+            if (datas.length === 0) {
+                return res.status(400).json({ message: "distributor belom tersedia" });
+            }
 
             res.status(200).json({
                 message: "success get data Distributtor",
+                datas: datas.filter(data => data)  // Filter out undefined entries,
+            });
+
+        } catch (error) {
+            console.log(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+
+    getAllDistributtorBeckupBisaOrderVendorLebiDariSatu: async (req, res, next) => {
+        try {
+            const { name, addressId } = req.query
+            const { product = [], id_toko = [] } = req.body
+
+            const ukuranVolumeMotor = 100 * 30 * 40
+            let totalUkuranVolumeProduct = 0
+            let totalUkuranBeratProduct = 0
+
+            for (let productId of product) {
+                const dataProduct = await Product.findOne({ _id: productId.id }).populate('userId')
+                const ukuranVolumeProduct = dataProduct.tinggi * dataProduct.lebar * dataProduct.panjang;
+                const ukuranBeratProduct = dataProduct.berat * productId.qty;
+                totalUkuranVolumeProduct += ukuranVolumeProduct;
+                totalUkuranBeratProduct += ukuranBeratProduct;
+            }
+
+            if (id_toko.length === 2) {
+                const toko1 = await TokoVendor.findOne({ _id: id_toko[0] }).populate('address');
+                const toko2 = await TokoVendor.findOne({ _id: id_toko[1] }).populate('address');
+
+                const latitudeToko1 = parseFloat(toko1.address.pinAlamat.lat)
+                const longitudeToko1 = parseFloat(toko1.address.pinAlamat.long)
+                const latitudeToko2 = parseFloat(toko2.address.pinAlamat.lat)
+                const longitudeToko2 = parseFloat(toko2.address.pinAlamat.long)
+
+                const jarak = await calculateDistance(latitudeToko1, longitudeToko1, latitudeToko2, longitudeToko2, 200);
+                if (isNaN(jarak)) {
+                    return res.status(400).json({
+                        message: "Jarak antara toko 1 dan toko 2 melebihi 5 km"
+                    });
+                }
+            }
+
+            const tokoVendor = []
+            if (addressId) {
+                const addressCustom = await Address.findById(addressId)
+                if (!addressCustom) return res.status(404).json({ essage: 'addressId dat Not Found' })
+
+                for (let data of id_toko) {
+                    const toko = await TokoVendor.findOne({ _id: data }).populate('address');
+
+                    const latitudeToko = parseFloat(toko.address.pinAlamat.lat)
+                    const longitudeToko = parseFloat(toko.address.pinAlamat.long)
+
+                    const jarak = await calculateDistance(parseFloat(addressCustom.pinAlamat.lat), parseFloat(addressCustom.pinAlamat.long), latitudeToko, longitudeToko, 100);
+                    if (Math.round(jarak) < 100 && jarak !== NaN) {
+                        tokoVendor.push(toko)
+                    }
+                }
+            }
+
+            let query = {}
+            if (name) {
+                query.nama_distributor = { $regex: name, $options: 'i' }
+            }
+
+            let datas = []
+            const dataDistributtor = await Distributtor.find(query).populate("userId", '-password').populate('alamat_id')
+            for (let distributor of dataDistributtor) {
+                const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
+                const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
+
+                for (let itemToko of tokoVendor) {
+                    const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, parseFloat(itemToko.address.pinAlamat.lat), parseFloat(itemToko.address.pinAlamat.long), 50);
+
+                    if (Math.round(distance) < 50 && distance !== NaN) {
+                        const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
+                            .populate({
+                                path: "id_distributor",
+                                populate: "alamat_id"
+                            })
+                            .populate("jenisKendaraan")
+                            .lean()
+
+                        const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, status: 'Aktif' })
+
+                        let filteredDataKendaraan = dataKendaraan
+                        if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
+                            filteredDataKendaraan = dataKendaraan.filter(kendaraan => kendaraan.jenisKendaraan.jenis !== 'Motor');
+                        } else {
+                            filteredDataKendaraan = dataKendaraan
+                        }
+
+                        if (filteredDataKendaraan.length > 0 && dataPengemudi.length > 0) {
+                            datas.push({
+                                distributor,
+                                jarakTempu: Math.round(distance)
+                            })
+                        }
+                    }
+
+                }
+            }
+
+            res.status(200).json({
+                message: 'get data all distributor success',
                 datas
             })
 
@@ -273,10 +706,10 @@ module.exports = {
         }
     },
 
-    getAllDistributtor: async (req, res, next) => {
+    getAllPencarianUlangDistributor: async (req, res, next) => {
         try {
             const { name, addressId } = req.query
-            const { product = [] } = req.body
+            const { product = [], id_distributor } = req.body
 
             const ukuranVolumeMotor = 100 * 30 * 40
             let totalUkuranVolumeProduct = 0
@@ -303,14 +736,15 @@ module.exports = {
                 const addressCustom = await Address.findById(addressId)
                 const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
                 const longitudeAddressCustom = parseFloat(addressCustom.pinAlamat.long)
-                const jarakVendorKonsumen = calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+                const jarakVendorKonsumen = await calculateDistance(latitudeAddressCustom, longitudeAddressCustom, latitudeVendor, longitudeVendor, 100);
+
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
                         message: "Jarak antara konsumen dan vendor melebihi 100 km"
                     });
                 }
             } else {
-                const jarakVendorKonsumen = calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
+                const jarakVendorKonsumen = await calculateDistance(latitudeKonsumen, longitudeKonsumen, latitudeVendor, longitudeVendor, 100);
                 if (isNaN(jarakVendorKonsumen)) {
                     return res.status(400).json({
                         message: "Jarak antara konsumen dan vendor melebihi 100 km"
@@ -333,10 +767,10 @@ module.exports = {
                 const latitudeDistributtot = parseFloat(distributor.alamat_id.pinAlamat.lat)
                 const longitudeDistributtor = parseFloat(distributor.alamat_id.pinAlamat.long)
 
-                const distance = calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
+                const distance = await calculateDistance(latitudeDistributtot, longitudeDistributtor, latitudeVendor, longitudeVendor, 50);
 
                 if (Math.round(distance) < 50 && distance !== NaN) {
-                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, is_Active: true })
+                    const dataKendaraan = await KendaraanDistributor.find({ id_distributor: distributor._id, status: 'Aktif' })
                         .populate({
                             path: "id_distributor",
                             populate: "alamat_id"
@@ -344,7 +778,7 @@ module.exports = {
                         .populate("jenisKendaraan")
                         .lean()
 
-                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, is_Active: true })
+                    const dataPengemudi = await Pengemudi.find({ id_distributor: distributor._id, status: 'Aktif' })
 
                     let filteredDataKendaraan = dataKendaraan
                     if (totalUkuranVolumeProduct > ukuranVolumeMotor || totalUkuranBeratProduct > ukuranVolumeMotor) {
@@ -366,9 +800,11 @@ module.exports = {
                 return res.status(400).json({ message: "distributor belom tersedia" })
             }
 
+            const dataPayload = datas.filter(item => item.distributor._id.toString() !== id_distributor);
+
             res.status(200).json({
                 message: "success get data Distributtor",
-                datas
+                datas: dataPayload
             })
 
         } catch (error) {
@@ -411,6 +847,12 @@ module.exports = {
         try {
             const { nama_distributor, province, regency, district, village, code_pos, address_description, long_pin_alamat, lat_pin_alamat, userId, npwp, nik, nomorAkta, noTelepon } = req.body
 
+            // Cek validasi latitude dan longitude
+            const lokasiValidasi = cekLokasiLatLog(lat_pin_alamat, long_pin_alamat);
+            if (!lokasiValidasi.valid) {
+                return res.status(400).json({ message: lokasiValidasi.message });
+            }
+
             const validateDistributor = await Distributtor.findOne({ userId })
             if (validateDistributor) return res.status(400).json({ message: "User ini sudah memiliki data detail Distributor", data: validateDistributor });
             const address = {
@@ -424,7 +866,8 @@ module.exports = {
                     long: long_pin_alamat,
                     lat: lat_pin_alamat
                 },
-                isMain: true
+                isMain: true,
+                isUsed: true
             };
 
             const newAddress = await Address.create({ ...address, userId });

@@ -1,6 +1,11 @@
 require("./database/database");
 const flash_sale_checker = require('./utils/flash-sale-checker');
 const checker_order = require("./utils/cancel-order")
+const send_notif = require("./utils/send-notif");
+const expiredPoin = require("./utils/expired-point");
+const http = require('http');
+const https = require('https')
+const fs = require('fs');
 const { batalPesanan } = require('./utils/pembatalan-distributor')
 const express = require("express");
 const cors = require("cors");
@@ -10,9 +15,36 @@ const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const websocket = require("./websocket/index-ws");
-const pembatalanDistributor = require("./utils/pembatalan-distributor");
-// const session = require("express-session");
+const socketIo = require('socket.io')
+const initSocketIo = require('./utils/pelacakanDistributor')
+const initializeChatSocket = require('./controler/message/vendor-distributor/vendor-distributor');
+const UAParser = require('ua-parser-js');
+
+const dotenv = require('dotenv');
+
+
+dotenv.config()
+
+// Sertifikat SSL
+// const privateKey = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/privkey.pem', 'utf8');
+// const certificate = fs.readFileSync('/etc/letsencrypt/live/staging-backend.superdigitalapps.my.id/fullchain.pem', 'utf8');
+// const privateKey = fs.readFileSync(`${process.env.SSLKEY}`, 'utf8');
+// const certificate = fs.readFileSync(`${process.env.SSLCERTIFIKAT}`, 'utf8');
+// const credentials = { key: privateKey, cert: certificate };
+
 const app = express();
+
+const httpServer = http.createServer(app);
+// const httpsServer = https.createServer(credentials, app);
+
+const io = socketIo(httpServer, {
+  cors: {
+    origin: '*',
+  }
+});
+
+initSocketIo(io);
+initializeChatSocket(io)
 
 app.use(cors());
 app.use(logger("dev"));
@@ -27,13 +59,35 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
 
-// router
-app.get('/failed', (req, res) => {
-  res.send("Failed");
+// Middleware to add io to req object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
 });
+
+// app.use((req, res, next) => {
+//   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+//   const parser = new UAParser();
+//   const ua = parser.setUA(req.headers['user-agent']).getResult();
+
+//   const accessInfo = {
+//     ip: ip,
+//     browser: ua.browser.name,
+//     os: ua.os.name,
+//     device: ua.device.type || 'Desktop',
+//     timestamp: new Date()
+//   };
+
+//   // Simpan accessInfo ke database atau log
+//   console.log('Access Info:', accessInfo);
+
+//   next();
+// });
+
 app.use("/api/temporary", require('./routes/router-temporary'));
 // app.use("/api/temporary/seller", require('./routes/router-temporary-seller'));
 app.use('/api/verify-otp', require('./routes/router-verifyOtp'));
+app.use('/api/terlarang', require('./routes/router-terlarang/router-pesanan-hapus-related'));
 app.use('/api/user', require('./routes/router-user'));
 app.use('/api/product', require('./routes/router-product'));
 app.use('/api/category', require('./routes/router-category'));
@@ -41,14 +95,18 @@ app.use('/api/cart', require('./routes/router-carts'));
 app.use('/api/address', require('./routes/router-address'));
 app.use('/api/order', require('./routes/router-order'));
 app.use("/api/report", require("./routes/router-laporan"));
-app.use("/api/produsen", require("./routes/router-produsen"));
 app.use("/api/comment", require("./routes/router-komentar"));
 app.use("/api/export", require("./routes/router-export"));
-app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
-app.use("/api/supplier", require('./routes/router-supplier'));
-app.use("/api/data/produsen", require('./routes/router-data-produsen'));
 app.use("/api/konsumen", require('./routes/router-konsumen/router-konsumen'));
 app.use("/api/konsumen/pic", require('./routes/router-konsumen/router-konsumen-pic'));
+app.use('/api/review-vendor', require('./routes/router-vendor/router-reviewVendor'));
+
+//Produsen
+app.use("/api/produsen", require("./routes/router-produsen/bahan/router-bahan-produsen"));
+app.use("/api/produsen", require('./routes/router-produsen/router-produsen'));
+
+// router konsumen
+app.use("/api/treking", require('./routes/router-konsumen/router-pelacakan'))
 
 // router distributtor
 app.use("/api/distributor", require('./routes/router-distributtor/router-distributtor'));
@@ -63,6 +121,9 @@ app.use('/api/jasa-distributor', require('./routes/router-distributtor/router-je
 app.use('/api/type-kendaraan', require('./routes/router-distributtor/router-typeKendaraan'))
 app.use('/api/proses-pengiriman', require('./routes/router-distributtor/router-prosesPengiriman'))
 app.use('/api/review-distributor', require('./routes/router-distributtor/router-reviewDistributor'))
+app.use('/api/rekening-distributor', require('./routes/router-distributtor/router-rekeningDistributor'))
+app.use('/api/penghasilan/distributor', require('./routes/router-distributtor/router-penghasilan'))
+app.use('/api/dasboard-distributor', require('./routes/router-distributtor/router-dasboardDistributor'))
 
 // review produk
 app.use('/api/review-produk', require('./routes/router-review/router-reviewProduk'))
@@ -71,6 +132,9 @@ app.use('/api/replay-produk', require('./routes/router-review/router-replayProdu
 // router Sekolah
 app.use('/api/instansi', require('./routes/router-controler-sekolah/router-instansi'))
 app.use("/api/konsumen/sekolah", require("./routes/router-konsumen/router-sekolah"))
+
+// router notifikasi
+app.use('/api/notifikasi', require('./routes/router-notifikasi'))
 
 app.use('/api/payment', require('./routes/router-payment'));
 app.use('/api/resend-otp', require('./routes/router-resendOtp'));
@@ -83,6 +147,20 @@ app.use('/api/gratong', require('./routes/router-gratong'));
 app.use('/api/alamat', require('./routes/router-alamat'));
 app.use('/api/sekolah', require('./routes/router-simulasi-sekolah'));
 app.use('/api/pangan', require('./routes/router-pangan'));
+app.use('/api/invoice', require('./routes/router-invoice'));
+app.use('/api/search', require("./routes/router-suggestion"));
+
+// informasi informasi bantuan
+app.use('/api/category-utama-informasi-bantuan', require('./routes/informasi-bantuan/categort-utama-informasi-bantuan'))
+app.use('/api/sub-category-informasi-bantuan', require('./routes/informasi-bantuan/sub-category-informasi-bantuan'))
+app.use('/api/informasi-bantuan-konsumen', require('./routes/informasi-bantuan/informasi-bantuan-konsumen'))
+app.use('/api/informasi-bantuan-vendor', require('./routes/informasi-bantuan/informasi-bantuan-vendor'))
+
+// search history
+app.use('/api/search', require('./routes/router-history-search'))
+
+//Penghasilan
+app.use("/api/penghasilan", require('./routes/router-penghasilan'));
 
 // Admin Panel
 app.use('/api/user-system', require('./routes/router-system-user'));
@@ -90,19 +168,51 @@ app.use('/api/panel', require('./routes/router-adminPanel/router-adminPanel'))
 app.use('/api/biaya_tetap', require('./routes/router-biaya-tetap'));
 app.use('/api/metode_pembayaran', require('./routes/router-metode-pembayaran'));
 
+//Transaksi
+app.use('/api/transaksi', require('./routes/router-transaksi'));
+
+//Chat
+app.use('/api/chat', require('./routes/router-chat'));
+
+//Vendor
+app.use("/api/vendor", require('./routes/router-vendor/router-vendor'));
+
+//Supplier
+app.use("/api/supplier", require('./routes/router-supplier/router-supplier'));
+
+// message
+app.use('/contak', require('./routes/router-message/router-message'))
 
 app.use('/api/tarif', require('./routes/router-tarif'))
 
+// Campeni Profile
+app.use('/api/campeni-profile', require('./routes/router-campeniProfile/router-mbg'));
+
+// Wishlist
+app.use('/api/wishlist', require('./routes/router-wishlist'));
+
+app.use('/api/poin', require('./routes/router-poin'));
+
+//Router PPOB
+app.use('/api/pulsa', require('./routes/router-ppob/router-pulsa/router-pulsa'));
+app.use('/api/data', require('./routes/router-ppob/router-data/router-data'));
+app.use('/api/listrik', require('./routes/router-ppob/router-listrik/router-listrik'));
+
+//Router Forget Credential
+app.use('/api/forget/password', require('./routes/router-forgot-credential/router-password'));
+app.use('/api/forget/pin', require('./routes/router-forgot-credential/router-pin'));
 
 // midelware error
 app.use(require("./midelware/error-midelware"));
 
 app.listen(4000, () => {
   // flash_sale_checker.start()
-  checker_order()
-  batalPesanan()
+  // checker_order()
+  // send_notif()
+  // batalPesanan()
+  // expiredPoin()
   console.log("connection express success");
-  websocket.listen(5000, () => {
+  websocket.listen(8000, () => {
     console.log("Connection websocket success");
   });
 });

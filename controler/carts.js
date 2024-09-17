@@ -3,6 +3,8 @@ const Product = require('../models/model-product');
 const Supplier = require("../models/supplier/model-supplier");
 const Produsen = require("../models/produsen/model-produsen")
 const TokoVendor = require('../models/vendor/model-toko');
+const TokoSupplier = require('../models/supplier/model-toko');
+const TokoProdusen = require('../models/produsen/model-toko');
 
 module.exports = {
 
@@ -76,10 +78,10 @@ module.exports = {
                         detailToko = await TokoVendor.findOne({userId: storeMap[key].id}).select('namaToko userId');
                         break;
                     case "supplier":
-                        detailToko = await Supplier.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await TokoSupplier.findOne({userId: storeMap[key].id}).select('namaToko userId');
                         break;
                     case "produsen":
-                        detailToko = await Produsen.findOne({userId: storeMap[key].id}).select('nama namaBadanUsaha -_id');
+                        detailToko = await TokoProdusen.findOne({userId: storeMap[key].id}).select('namaToko userId');
                         break;
                 }
                 finalData.push({
@@ -219,10 +221,10 @@ module.exports = {
                         detailToko = await TokoVendor.findOne({userId: store[key].id});
                         break;
                     case "supplier":
-                        detailToko = await Supplier.findOne({userId: store[key].id});
+                        detailToko = await TokoSupplier.findOne({userId: store[key].id});
                         break;
                     case "produsen":
-                        detailToko = await Produsen.findOne({userId: store[key].id});
+                        detailToko = await TokoProdusen.findOne({userId: store[key].id});
                         break;
                 }
                 finalData.push({
@@ -242,7 +244,7 @@ module.exports = {
     createCarts: async (req, res, next) => {
         try {
             const { productId, quantity, varian } = req.body
-            const product = await Product.findById(productId).populate('userId');
+            const product = await Product.findById(productId).populate({path: "userId", select: "role"});
             if (!product) {
                 return res.status(404).json({
                     error: true,
@@ -253,8 +255,23 @@ module.exports = {
             if(varian && product.varian === null) return res.status(400).json({message: `Product ${product.name_product} tidak memiliki varian`});
 
             if(product.total_stok === 0) return res.status(403).json({message: "Tidak Bisa Menambahkan Produk stok kosong ke keranjang"});
+
+            if(product.minimalOrder > quantity) return res.status(400).json({message: "Tidak bisa menambahkan ke keranjang kurang dari minimal order"})
+            let accepted;
             
-            if(product.userId.role !== "vendor") return res.status(403).json({message: "Hanya bisa menambahkan ke keranjang product dari Vendor"});
+            switch(req.user.role){
+                case "konsumen":
+                    accepted = "vendor";
+                    break;
+                case "vendor":
+                    accepted = "supplier";
+                    break;
+                case "supplier":
+                    accepted = 'produsen';
+                    break;
+            }
+
+            if(accepted !== product.userId.role) return res.status(403).json({message: "Permintaan tidak valid"});
 
             if(!Array.isArray(varian) && product.bervarian)return res.status(400).json({message: "Varian yang dikirimkan bukan array"});
             let harga_varian = 0
@@ -272,49 +289,41 @@ module.exports = {
                         });
                     };
                 })
-                
             }
 
-            if (req.user.role === 'konsumen') {
-                const filter = { 
-                    productId, 
-                    userId: req.user.id, 
-                    ...((varian && varian.length > 0) && { varian: { $all: varian.map(v => ({ $elemMatch: v })) } })
-                }
-                const validateCart = await Carts.findOne(filter).populate('userId')
-                if (validateCart) {
-                    
-                    const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
-                    if(plusQuantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok", data: validateCart})
-                    const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
-                        {
-                            quantity: plusQuantity,
-                            total_price: harga_varian > 0 ? ( parseInt(product.total_price) + harga_varian ) * plusQuantity : parseInt(product.total_price) * plusQuantity
-                        }, { new: true })
-
-                    return res.status(201).json({
-                        message: 'create data suceess',
-                        datas: updateCart
-                    })
-                } else {
-                    if(quantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok"})
-                    const dataCarts = await Carts.create({ 
-                        productId, 
-                        quantity, 
-                        total_price: harga_varian > 0 ? ( parseInt(product.total_price) + harga_varian ) * quantity : parseInt(product.total_price) * quantity, 
-                        userId: req.user.id,
-                        varian: req.body.varian
-                    })
-    
-                    return res.status(201).json({
-                        message: 'create data cart success',
-                        datas: dataCarts
-                    })
-                }
+            const filter = { 
+                productId, 
+                userId: req.user.id, 
+                ...((varian && varian.length > 0) && { varian: { $all: varian.map(v => ({ $elemMatch: v })) } })
+            }
+            const validateCart = await Carts.findOne(filter).populate('userId')
+            if (validateCart) {
                 
+                const plusQuantity = parseInt(validateCart.quantity) + parseInt(quantity)
+                if(plusQuantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok", data: validateCart})
+                const updateCart = await Carts.findByIdAndUpdate({ _id: validateCart._id },
+                    {
+                        quantity: plusQuantity,
+                        total_price: harga_varian > 0 ? ( parseInt(product.total_price) + harga_varian ) * plusQuantity : parseInt(product.total_price) * plusQuantity
+                    }, { new: true })
+
+                return res.status(201).json({
+                    message: 'create data suceess',
+                    datas: updateCart
+                })
             } else {
-                return res.status(400).json({
-                    message: "kamu tidak boleh create yang hanya boleh role nya konsumen"
+                if(quantity > product.total_stok) return res.status(403).json({message: "Tidak bisa menambahkan quantity lebih dari stok"})
+                const dataCarts = await Carts.create({ 
+                    productId, 
+                    quantity, 
+                    total_price: harga_varian > 0 ? ( parseInt(product.total_price) + harga_varian ) * quantity : parseInt(product.total_price) * quantity, 
+                    userId: req.user.id,
+                    varian: req.body.varian
+                })
+
+                return res.status(201).json({
+                    message: 'create data cart success',
+                    datas: dataCarts
                 })
             }
 
@@ -333,10 +342,16 @@ module.exports = {
 
     updateCart: async (req, res, next) => {
         try {
-            const dataCharts = await Carts.findByIdAndUpdate( req.params.id, {
-                $inc: { quantity: parseInt(req.body.quantity) }
-            }, {new: true})
-            return res.status(201).json({ message: 'update data cart success', data: dataCharts })
+            const dataCharts = await Carts.findById(req.params.id).populate({path: "productId", select:"total_stok minimalOrder"});
+            if(dataCharts.productId.total_stok < req.body.quantity) return res.status(400).json({message: "Quantity tidak bisa lebih dari total stok tersedia"});
+            
+            if(dataCharts.productId.minimalOrder > req.body.quantity) return res.status(400).json({message: "Quantity tidak bisa kurang dari minimal order"})
+
+            const final = await Carts.findByIdAndUpdate(req.params.id, {
+                quantity: parseInt(req.body.quantity)
+            }, {new: true });
+
+            return res.status(201).json({ message: 'update data cart success', data: final })
         } catch (error) {
             if (error && error.name === 'ValidationError') {
                 return res.status(400).json({

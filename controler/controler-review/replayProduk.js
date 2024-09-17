@@ -1,15 +1,18 @@
 const Reply = require('../../models/model-review/model-replayProduk');
 const ReviewProduk = require('../../models/model-review/model-reviewProduk');
+const Vendor = require('../../models/vendor/model-vendor');
 
 const tambahBalasan = async (req, res, next) => {
     const { reviewId } = req.params;
     const { komentar_reply } = req.body;
 
     try {
+        const vendor = await Vendor.findOne({ userId: req.user.id })
+
         // Membuat balasan baru
         const reply = new Reply({
             id_review: reviewId,
-            userId: req.user.id,
+            vendor: vendor._id,
             komentar_reply
         });
 

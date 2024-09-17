@@ -18,6 +18,8 @@ const Pengiriman = require("../../models/model-pengiriman")
 const Pembatalan = require("../../models/model-pembatalan")
 const Pesanan = require("../../models/pesanan/model-orders")
 const Product = require('../../models/model-product')
+const IncompleteOrders = require('../../models/pesanan/model-incomplete-orders')
+const Sekolah = require('../../models/model-sekolah')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -83,11 +85,92 @@ module.exports = {
             if (!dataDetailId) {
                 return res.status(404).json({ message: "data Not Found" })
             }
+            let dataUser
+            if (dataDetailId.userId.role === 'konsumen') {
+                dataUser = await Konsumen.findOne({ userId: dataDetailId.userId._id }).populate('address')
+            } else if (dataDetailId.userId.role === 'vendor') {
+                dataUser = await Vendor.findOne({ userId: dataDetailId.userId._id }).populate('address')
+            } else if (dataDetailId.userId.role === 'produsen') {
+                dataUser = await Produsen.findOne({ userId: dataDetailId.userId._id }).populate('address')
+            } else if (dataDetailId.userId.role === 'supplier') {
+                dataUser = await Supplier.findOne({ userId: dataDetailId.userId._id }).populate('address')
+            } else {
+                dataUser = await Distributtor.findOne({ userId: dataDetailId.userId._id }).populate('alamat_id')
+            }
 
             res.status(200).json({
                 message: "get detail success",
-                datas: dataDetailId
+                datas: dataDetailId,
+                data_user: dataUser
             })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    incompleterOrderList: async(req, res, next) => {
+        try {
+            const bolong = []
+            if(req.user.role !== 'administrator') return res.status(403).json({message: "Invalid Request"});
+            const datas = await Promise.all((await IncompleteOrders.find()
+            .populate({path: 'userIdKonsumen', select: 'role'})
+            .populate({path: 'userIdSeller', select: 'role'})
+            .populate({
+                path: 'pengirimanId', 
+                select: 'orderId',
+                populate: {
+                    path: "orderId",
+                    select: "items",
+                    populate: {
+                        path: "items.product.productId",
+                        select: "userId total_price image_product name_product"
+                    }
+                }
+            })
+            .lean())
+            .map(async(data) => {
+                if(!data.pengirimanId) bolong.push(data._id)
+                const selectedItem = data.pengirimanId?.orderId?.items.find((item) => {
+                    return item.product.some(prd => prd.productId.userId.toString() === data.userIdSeller._id.toString())
+                })
+                let detailKonsumen;
+                switch (data?.userIdKonsumen?.role) {
+                    case 'konsumen':
+                        detailKonsumen = await Sekolah.findOne({userId: data.userIdKonsumen._id}).select("namaSekolah").lean();
+                        break;
+                    case 'vendor':
+                        detailKonsumen = await Vendor.findOne({userId: data.userIdKonsumen._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                    case 'supplier':
+                        detailKonsumen = await Supplier.findOne({userId: data.userIdKonsumen._id}).select("nama namaBadanUsaha").lean();
+                        break;
+                };
+                return {
+                    id: selectedItem?.kode_pesanan,
+                    products: selectedItem?.product.map(prd => {
+                        const { _id, name_product, image_product } = prd.productId
+                        return {
+                            _id,
+                            name_product,
+                            image_product,
+                            quantity: prd.quantity
+                        }
+                    }),
+                    total_harga: selectedItem?.product.reduce((acc, item) => {
+                        return acc + item.productId.total_price * item.quantity
+                    } , 0),
+                    quantity: selectedItem?.quantity,
+                    pembeli: detailKonsumen,
+                    pengirimanId: data?.pengirimanId?._id,
+                    seller: data?.userIdSeller
+                }
+            }))
+            return res.status(200).json({message:"Berhasil mendapatkan orderan yang tidak lengkap", datas: {
+                catering: datas.filter(item => item.seller.role === 'vendor'),
+                toko: datas.filter(item => item.seller.role === 'supplier'),
+                produsen: datas.filter(item => item.seller.role === 'produsen'),
+            }});
         } catch (error) {
             console.log(error);
             next(error)
@@ -191,12 +274,14 @@ module.exports = {
 
     updateBiayaTetap: async (req, res, next) => {
         try {
-            const { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan } = req.body
+            const { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan, nilai_toleransi, radius, notif_rekomen_vendor } = req.body
 
             const dataBiayatetap = await BiayaTetap.findOne({ _id: req.params.id })
             if (!dataBiayatetap) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await BiayaTetap.updateOne({ _id: req.params.id }, { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan })
+            const data = await BiayaTetap.updateOne({ _id: req.params.id },
+                { biaya_proteksi, biaya_asuransi, biaya_layanan, biaya_jasa_aplikasi, nilai_koin, biaya_per_kg, constanta_volume, lama_pengemasan, rerata_kecepatan, nilai_toleransi, radius, notif_rekomen_vendor },
+                { new: true })
 
             res.status(201).json({ message: "update success", data })
 
@@ -281,6 +366,21 @@ module.exports = {
                 message: "data get all success",
                 // leng: dataPayload.length,
                 data: dataPayload
+            })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getByIdPesanan: async (req, res, next) => {
+        try {
+            const data = await Pesanan.findOne({ _id: req.params.id }).populate('items.product.productId').populate('shipments.id_distributor')
+            if (!data) return res.status(404).json({ message: "data Not Found" })
+
+            res.status(200).json({
+                message: 'get by Id success',
+                data
             })
         } catch (error) {
             console.log(error);

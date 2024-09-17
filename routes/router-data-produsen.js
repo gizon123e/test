@@ -14,3 +14,4 @@ router.put("/update/:id", authorization, fileType, controllerProdusen.updateProd
 router.delete("/delete/:id", authorization, controllerProdusen.deleteProdusen);
 
 module.exports = router;
+

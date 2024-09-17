@@ -3,10 +3,12 @@ const authorization = require("../../midelware/authorization");
 
 const controlerPengemudi = require('../../controler/distributtor/pengemudi')
 
-router.get('/list', controlerPengemudi.getPengemudiList)
+router.get('/list', authorization, controlerPengemudi.getPengemudiList)
 router.get('/detail/:id', controlerPengemudi.getPengemudiDetail)
-router.get('/veriifikasi/:id', controlerPengemudi.updateVerifikasi)
+router.get('/pencarian-pengemudi/:id', authorization, controlerPengemudi.getAllPengemudiProsesPengiriman)
+router.get('/pengemudi-aktif', authorization, controlerPengemudi.getPengemudiAktif)
 router.post('/create', controlerPengemudi.createPengemudi)
-router.put('/tolak/:id', controlerPengemudi.tolakPengemudi)
+router.put('/update/:id', controlerPengemudi.updatePengemudiDistributor)
+router.put('/update-status/:id', controlerPengemudi.updateStatusPengemudi)
 
 module.exports = router

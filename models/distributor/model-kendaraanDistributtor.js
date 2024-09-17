@@ -34,24 +34,23 @@ const kendaraanDistributorSchema = new mongoose.Schema({
     },
     nomorPolisi: {
         type: String,
-        required: [true, 'Warna kendaraan harus diisi']
+        required: [true, 'nomorPolisi kendaraan harus diisi']
     },
-    is_Active: {
-        type: Boolean,
-        required: [true, 'is_Active pengemudi harus diisi'],
-        default: false
+    status: {
+        type: String,
+        enum: ["Ditinjau", "Aktif", "Ditolak", "Diblokir", "Dinonaktifkan"],
+        message: "{VALUE} is not supported",
+        default: "Ditinjau"
     },
     tahun: {
         type: Number,
-        required: [true, 'tahun pengemudi harus diisi'],
+        required: [true, 'tahun harus diisi'],
         default: false
     },
-    descriptionTolak: {
+    descriptionStatusKendaraan: {
         type: String,
-        required: false,
         default: null
     }
-
 }, { timestamps: true });
 
 const KendaraanDistributor = mongoose.model('KendaraanDistributor', kendaraanDistributorSchema);

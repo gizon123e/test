@@ -26,7 +26,6 @@ module.exports = {
     },
     getMinat: async (req, res, next) => {
         try {
-            console.log(req.user.id)
             const minatUser = await Minat.findOne({userId: req.user.id}).populate({
                 path: 'categoryMinat.categoryId'
             })

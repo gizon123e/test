@@ -25,7 +25,8 @@ const modelDistributtor = mongoose.Schema({
     },
     tanggal_lahir: {
         type: String,
-        require: false
+        require: false,
+        default: null
     },
     jenisKelamin: {
         type: String,
@@ -65,7 +66,7 @@ const modelDistributtor = mongoose.Schema({
     },
     date_tolak: {
         type: Date,
-        default: Date.now
+        default: Date.now()
     },
     tolak_pesanan: {
         type: Number,

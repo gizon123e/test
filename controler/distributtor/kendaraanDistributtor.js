@@ -15,30 +15,42 @@ const LayananKendaraanDistributor = require('../../models/distributor/layananKen
 const path = require('path')
 const fs = require('fs')
 const dotenv = require('dotenv')
+const ProsesPengirimanDistributor = require('../../models/distributor/model-proses-pengiriman')
+const User = require('../../models/model-auth-user')
+const TokoSupplier = require('../../models/supplier/model-toko')
+const TokoProdusen = require('../../models/produsen/model-toko')
+const { populate } = require('../../models/model-cart')
 dotenv.config()
 
 module.exports = {
     getKendaraanDistributor: async (req, res, next) => {
         try {
+            const { status } = req.query
             if (req.user.role === "administrator") {
                 const data = await KendaraanDistributor.find().populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
 
-                if (!data) return res.status(400).json({ message: "saat ini data masi kosong" })
+                if (!data || data.length === 0) return res.status(400).json({ message: "saat ini data masi kosong" })
 
                 return res.status(200).json({
-                    message: "get data success",
+                    message: "get data success kendaraan",
                     data
                 })
             }
-
             const userId = req.user.id;
 
-            const distributors = await Distributtor.find({ userId: userId });
-            const distributorIds = distributors.map(distributor => distributor._id);
+            const distributors = await Distributtor.findOne({ userId: userId });
 
-            const data = await KendaraanDistributor.find({ id_distributor: { $in: distributorIds } }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan").populate('tarifId')
+            let query = {
+                id_distributor: distributors._id
+            };
 
-            if (!data) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
+            if (status) {
+                query.status = status;
+            }
+
+            const data = await KendaraanDistributor.find(query).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+
+            if (!data || data.length === 0) return res.status(400).json({ message: "anda belom ngisis data Kendaraan" })
 
             res.status(200).json({
                 message: "get data success",
@@ -91,7 +103,6 @@ module.exports = {
         try {
             const { userId, addressId } = req.query
             const { product = [] } = req.body
-
             const dataBiayaTetap = await BiayaTetap.findOne({ _id: "66456e44e21bfd96d4389c73" })
 
             const ukuranVolumeMotor = 100 * 30 * 40
@@ -126,10 +137,24 @@ module.exports = {
                 const total = volumeProduct / dataBiayaTetap.constanta_volume
                 hargaTotalVolume = total
             }
+            const user = await User.findById(userId).select("role");
 
-            const addressVendor = await TokoVendor.findOne({ userId: userId }).populate('address')
-            const latitudeVebdor = parseFloat(addressVendor.address.pinAlamat.lat)
-            const longitudeVendor = parseFloat(addressVendor.address.pinAlamat.long)
+            let addressDetail;
+
+            switch (user.role) {
+                case "vendor":
+                    addressDetail = await TokoVendor.findOne({ userId: userId }).populate('address');
+                    break;
+                case "supplier":
+                    addressDetail = await TokoSupplier.findOne({ userId: userId }).populate('address');
+                    break
+                default:
+                    addressDetail = await TokoProdusen.findOne({ userId: userId }).populate('address');
+                    break
+            }
+
+            const latDetail = parseFloat(addressDetail.address.pinAlamat.lat)
+            const longDetaik = parseFloat(addressDetail.address.pinAlamat.long)
 
             let distance
 
@@ -137,18 +162,17 @@ module.exports = {
 
             const latitudeAddressCustom = parseFloat(addressCustom.pinAlamat.lat)
             const longitudeAdressCustom = parseFloat(addressCustom.pinAlamat.long)
-            distance = calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latitudeVebdor, longitudeVendor, 100);
-            console.log(distance)
+            distance = await calculateDistance(latitudeAddressCustom, longitudeAdressCustom, latDetail, longDetaik, dataBiayaTetap.radius);
             if (isNaN(distance)) {
                 return res.status(400).json({
-                    message: "Jarak antara konsumen dan vendor melebihi 100 km"
+                    message: `Jarak antara konsumen dan vendor melebihi ${dataBiayaTetap.radius} km`
                 });
             }
 
-            const jarakTempu = Math.round(distance)
+            const jarakTempu = distance
 
             let data = []
-            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, is_Active: true })
+            const dataKendaraan = await KendaraanDistributor.find({ id_distributor: req.params.id, status: 'Aktif' })
                 .populate({
                     path: "id_distributor",
                     populate: "alamat_id"
@@ -158,12 +182,15 @@ module.exports = {
                 .lean()
 
             const dataLayananDistributor = []
+            const processedCombinations = new Set()
+
             for (let kendaraan of dataKendaraan) {
                 const dataLayanan = await LayananKendaraanDistributor.find({ id_distributor: kendaraan.id_distributor._id, jenisKendaraan: kendaraan.jenisKendaraan._id })
                     .populate({
                         path: "tarifId",
                         populate: "jenis_kendaraan",
-                        populate: "jenis_jasa"
+                        populate: "jenis_jasa",
+
                     })
                     .populate({
                         path: "id_distributor",
@@ -172,9 +199,8 @@ module.exports = {
                     .populate("jenisKendaraan")
                     .lean()
 
-                console.log("dataLayanan", dataLayanan)
-
                 for (let data of dataLayanan) {
+
                     const dataParsingLayananDistributor = await LayananKendaraanDistributor.findOne({ _id: data._id })
                         .populate({
                             path: "tarifId",
@@ -188,11 +214,29 @@ module.exports = {
                         .populate("jenisKendaraan")
                         .lean()
 
-                    dataLayananDistributor.push(dataParsingLayananDistributor)
+                    if (req.user.role === 'konsumen') {
+                        if (dataParsingLayananDistributor.tarifId.jenis_jasa.nama === 'Standar') {
+                            const key = `${dataParsingLayananDistributor.tarifId._id}_${dataParsingLayananDistributor.jenisKendaraan._id}`;
+                            if (!processedCombinations.has(key)) {
+                                dataLayananDistributor.push(dataParsingLayananDistributor);
+                                processedCombinations.add(key);
+                            }
+                        }
+                    } else {
+                        if (dataParsingLayananDistributor.tarifId.jenis_jasa.nama !== 'Standar') {
+                            const key = `${dataParsingLayananDistributor.tarifId._id}_${dataParsingLayananDistributor.jenisKendaraan._id}`;
+                            if (!processedCombinations.has(key)) {
+                                dataLayananDistributor.push(dataParsingLayananDistributor);
+                                processedCombinations.add(key);
+                            }
+                        }
+                    }
+
                 }
             }
 
             let filteredDataKendaraan = dataLayananDistributor;
+            // console.log(filteredDataKendaraan)
 
             for (let kendaraan of filteredDataKendaraan) {
                 const gratong = await Gratong.findOne({ tarif: kendaraan.tarifId._id, startTime: { $lt: new Date() }, endTime: { $gt: new Date() } });
@@ -231,7 +275,7 @@ module.exports = {
                         if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -242,7 +286,7 @@ module.exports = {
                         } else {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -251,10 +295,11 @@ module.exports = {
                                 is_available: true
                             })
                         }
-                    } else {
+                    }
+                    else {
                         data.push({
                             kendaraan,
-                            jarakTempu: Math.round(jarakTempu),
+                            jarakTempu: jarakTempu,
                             totalBeratProduct: beratProduct,
                             totalVolumeProduct: volumeProduct,
                             hargaOngkir: Math.round(hargaOngkir),
@@ -295,7 +340,7 @@ module.exports = {
                         if (kendaraan.jenisKendaraan.jenis === "Motor") {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -303,10 +348,11 @@ module.exports = {
                                 total_ongkir: Math.round(total_ongkir),
                                 is_available: false
                             })
-                        } else {
+                        }
+                        else {
                             data.push({
                                 kendaraan,
-                                jarakTempu: Math.round(jarakTempu),
+                                jarakTempu: jarakTempu,
                                 totalBeratProduct: beratProduct,
                                 totalVolumeProduct: volumeProduct,
                                 hargaOngkir: Math.round(hargaOngkir),
@@ -316,10 +362,9 @@ module.exports = {
                             })
                         }
                     } else {
-                        console.log("testig 1")
                         data.push({
                             kendaraan,
-                            jarakTempu: Math.round(jarakTempu),
+                            jarakTempu: jarakTempu,
                             totalBeratProduct: beratProduct,
                             totalVolumeProduct: volumeProduct,
                             hargaOngkir: Math.round(hargaOngkir),
@@ -336,6 +381,7 @@ module.exports = {
                 data
                 // dataLayanan
             })
+
         } catch (error) {
             console.error("Error creating document:", error);
             if (error && error.name === 'ValidationError') {
@@ -391,13 +437,14 @@ module.exports = {
             if (!regexNotelepon.test(no_telepon.toString())) return res.status(400).json({ message: "Nomor telepon tidak valid" });
 
             const dataCreateKendaraan = []
-            const validateLayananKendaraan = await LayananKendaraanDistributor.findOne({ jenisKendaraan: jenisKendaraan }).populate("jenisKendaraan")
+            const validateLayananKendaraan = await LayananKendaraanDistributor.findOne({ jenisKendaraan: jenisKendaraan, id_distributor: id_distributor }).populate("jenisKendaraan")
 
             const dataTarifidArray = tarifId.split('/');
+
             if (!validateLayananKendaraan) {
                 for (let idTarif of dataTarifidArray) {
                     const validateTarifId = await Tarif.findOne({ _id: idTarif })
-                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
+                    if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not Found" })
                     const createLayanaKendaraan = await LayananKendaraanDistributor.create({
                         id_distributor,
                         jenisKendaraan,
@@ -408,6 +455,7 @@ module.exports = {
                 }
             } else if (validateJenisKendaraan.jenis !== validateLayananKendaraan.jenisKendaraan.jenis) {
                 for (let idTarif of dataTarifidArray) {
+
                     const validateTarifId = await Tarif.findOne({ _id: idTarif })
                     if (!validateTarifId) return res.status(404).json({ message: "Tarif ID Not FOund" })
                     const createLayanaKendaraan = await LayananKendaraanDistributor.create({
@@ -439,7 +487,7 @@ module.exports = {
                 warna,
                 typeKendaraan,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
-                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameKendaraan}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
                 tahun
             })
 
@@ -487,8 +535,6 @@ module.exports = {
             const dataTarifidArray = tarifId.split('/')
             const dataCreateKendaraan = []
 
-            console.log("layanan", validateLayananKendaraan)
-            console.log("jenis", validateJenisKendaraan)
             if (!validateLayananKendaraan) {
                 for (let idTarif of dataTarifidArray) {
                     const validateTarifId = await Tarif.findOne({ _id: idTarif })
@@ -547,7 +593,7 @@ module.exports = {
 
     updateKendaraanDistributtor: async (req, res, next) => {
         try {
-            const { id_distributor, jenisKendaraan, merekKendaraan, nomorPolisi, warna, typeKendaraan, tarifId } = req.body
+            const { warna, } = req.body
             const files = req.files;
             const fotoKendaraan = files ? files.fotoKendaraan : null;
             const fileSTNK = files ? files.fileSTNK : null;
@@ -563,17 +609,66 @@ module.exports = {
             await fotoKendaraan.mv(imagePathProfile);
 
             const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, {
-                id_distributor,
-                jenisKendaraan,
-                merekKendaraan,
-                nomorPolisi,
                 warna,
-                typeKendaraan,
-                tarifId,
                 fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
                 STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
 
             }, { new: true })
+
+            res.status(201).json({
+                message: "create data success",
+                data
+            })
+        } catch (error) {
+            console.error("Error creating document:", error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+    updateIndividuKendaraanPengemudi: async (req, res, next) => {
+        try {
+            const { warna, no_telepon, jenis_sim } = req.body
+            const files = req.files;
+            const fotoKendaraan = files ? files.fotoKendaraan : null;
+            const fileSTNK = files ? files.fileSTNK : null;
+            const file_sim = files ? files.file_sim : null;
+
+            const imageName = `${Date.now()}${path.extname(file_sim.name)}`;
+            const imagePath = path.join(__dirname, '../../public/image-profile-distributtor', imageName);
+
+            await file_sim.mv(imagePath);
+
+            const imageNameSTNK = `${Date.now()}${path.extname(fileSTNK.name)}`;
+            const imagePathSTNK = path.join(__dirname, '../../public/image-profile-distributtor', imageNameSTNK);
+
+            await fileSTNK.mv(imagePathSTNK);
+
+            const imageNameProfile = `${Date.now()}${path.extname(fotoKendaraan.name)}`;
+            const imagePathProfile = path.join(__dirname, '../../public/image-profile-distributtor', imageNameProfile);
+
+            await fotoKendaraan.mv(imagePathProfile);
+
+            const distributor = await Distributtor.findOne({ userId: req.user.id, _id: req.params.id })
+
+            const data = await KendaraanDistributor.updateOne({ id_distributor: distributor._id }, {
+                warna,
+                fotoKendaraan: `${process.env.HOST}public/image-profile-distributtor/${imageNameProfile}`,
+                STNK: `${process.env.HOST}public/image-profile-distributtor/${imageNameSTNK}`,
+
+            })
+
+            await Pengemudi.updateOne({ id_distributor: distributor._id }, {
+                no_telepon,
+                jenis_sim,
+                file_sim: `${process.env.HOST}/public/image-profile-distributtor${imageName}`
+            })
 
             res.status(201).json({
                 message: "create data success",
@@ -620,7 +715,7 @@ module.exports = {
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { is_Active: true }, { new: true })
+            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
 
             res.status(200).json({
                 message: "update data success",
@@ -639,17 +734,122 @@ module.exports = {
         }
     },
 
-    tolakKenendaraan: async (req, res, next) => {
+    updateStatusKendaraan: async (req, res, next) => {
         try {
+            const { status, descriptionStatusKendaraan } = req.body
             const dataPengemudi = await KendaraanDistributor.findOne({ _id: req.params.id })
             if (!dataPengemudi) return res.status(404).json({ message: "data Not Found" })
 
-            const data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionTolak: req.body.descriptionTolak, is_Active: false }, { new: true })
+            let data
+            if (status === 'Ditolak') {
+                if (!descriptionStatusKendaraan) return res.status(400).json({ message: "descriptionStatusKendaraan harus di isi" })
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, status: 'Ditolak' }, { new: true })
+            } else if (status === 'Dinonaktifkan') {
+                if (!descriptionStatusKendaraan) return res.status(400).json({ message: "descriptionStatusKendaraan harus di isi" })
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, status: 'Dinonaktifkan' }, { new: true })
+            } else if (status === 'Aktif') {
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { status: 'Aktif' }, { new: true })
+            } else if (status === 'Diblokir') {
+                if (!descriptionStatusKendaraan) return res.status(400).json({ message: "descriptionStatusKendaraan harus di isi" })
+                data = await KendaraanDistributor.findByIdAndUpdate({ _id: req.params.id }, { descriptionStatusKendaraan, status: 'Diblokir' }, { new: true })
+            }
 
             res.status(200).json({
                 message: "update data success",
                 data
             })
+        } catch (error) {
+            console.error(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+
+    detailKendaraan: async (req, res, next) => {
+        try {
+            const kendaran = await KendaraanDistributor.findById(req.params.id).populate('id_distributor').populate('jenisKendaraan').populate('merekKendaraan')
+            if (!kendaran) return res.status(404).json({ message: 'data Kendaraan Not Found' })
+
+            res.status(200).json({
+                message: 'get data detail kendaraan success',
+                data: kendaran
+            })
+
+        } catch (error) {
+            console.error(error);
+            if (error && error.name === 'ValidationError') {
+                return res.status(400).json({
+                    error: true,
+                    message: error.message,
+                    fields: error.fields
+                });
+            }
+            next(error);
+        }
+    },
+
+
+    getAllpencarianKendaraDiProsesPengiriman: async (req, res, next) => {
+        try {
+            const distributor = await Distributtor.findOne({ userId: req.user.id })
+            if (!distributor) return res.status(404).json({ message: "distributor not found" })
+
+            const penentuanWaktu = await ProsesPengirimanDistributor.findById(req.params.id).populate('pengirimanId')
+            if (!penentuanWaktu) return res.status(404).json({ message: "proses pesanan not found" })
+
+            const prosesPengiriman = await ProsesPengirimanDistributor.find({ distributorId: distributor._id }).populate('pengirimanId')
+            if (prosesPengiriman.length === 0) return res.status(404).json({ message: "proses pesanan saat ini kosong" })
+
+            const totalWaktu = penentuanWaktu.optimasi_pengiriman * 2
+
+            const today = new Date(penentuanWaktu.waktu_pengiriman);
+            const formattedDate = today.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            const kendaraaan = await KendaraanDistributor.find({ id_distributor: distributor._id }).populate("id_distributor").populate("jenisKendaraan").populate("merekKendaraan")
+
+            const datas = []
+
+            for (let item of kendaraaan) {
+                let tidakTersedia = false;
+
+                for (let data of prosesPengiriman) {
+                    const totalWaktuEstimasi = data.optimasi_pengiriman * 2;
+
+                    const dateParameter = new Date(data.waktu_pengiriman);
+                    const dateSaatIni = dateParameter.toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+
+                    if (dateSaatIni === formattedDate && (totalWaktu === totalWaktuEstimasi || totalWaktu >= totalWaktuEstimasi) && item._id.equals(data.id_pengemudi)) {
+                        tidakTersedia = true;
+                        break; // Jika sudah ditemukan tidak tersedia, tidak perlu memeriksa lebih lanjut
+                    }
+                }
+
+                datas.push({
+                    ...item.toObject(),
+                    tidak_tersedia: tidakTersedia
+                });
+            }
+
+            res.status(200).json({
+                message: "get data Kendaraan success",
+                datas
+            })
+
         } catch (error) {
             console.error(error);
             if (error && error.name === 'ValidationError') {

@@ -1,38 +1,134 @@
 const mongoose = require("mongoose");
 
-const produsenModel = mongoose.Schema({
+const produsenModel = new mongoose.Schema({
     nama: {
         type: String,
-        required: false
+        required: false,
+        default: null
+    },
+    nik: {
+        type: String,
+        default: null
+    },
+    file_ktp: {
+        type: String,
+        default: null
     },
     namaBadanUsaha: {
         type: String,
-        required: false
+        required: false,
+        default: null
     },
-    penanggungJawab:{
+    nomorAktaPerusahaan: {
         type: String,
-        required: false
+        default: null
     },
-    addressId:{
+    npwpFile: {
+        type: String,
+        default: null
+    },
+    nomorNpwpPerusahaan: {
+        type: String,
+        default: null
+    },
+    penanggungJawab: {
+        type: mongoose.Types.ObjectId,
+        required: false,
+        ref: "ModelPenanggungJawabVendor"
+    },
+    nomorNpwp: {
+        type: String,
+        default: null
+    },
+    address: {
         type: mongoose.Types.ObjectId,
         ref: "Address",
         required: [true, "Harus memiliki alamat"]
+    },
+    noTeleponKantor: {
+        type: String,
+        required: false,
+        default: null
     },
     userId: {
         type: mongoose.Types.ObjectId,
         required: [true, 'userId harus di isi'],
         ref: 'User'
     },
-    noTeleponKantor:{
+    jenis_kelamin: {
         type: String,
-        required: false
+        validate: {
+            validator: function (value) {
+                if (this.namaBadanUsaha && value) {
+                    return false;
+                }
+                return true;
+            },
+            message: "Jenis Kelamin hanya untuk user individu"
+        },
+        enum: ["laki", "perempuan"],
+        default: null
     },
-    legalitasBadanUsaha:{
-        type: String, 
-        required: false
+    jenis_perusahaan: {
+        type: String,
+        validate: {
+            validator: function (value) {
+                if (!this.namaBadanUsaha && value) {
+                    return false;
+                }
+                return true;
+            },
+            message: "Jenis Perusahaan hanya untuk user perusahaan"
+        },
+        enum: ["PT", "CV", "BUMDes", "UD", "Koperasi", "Perusahaan Perseorangan", "Firma", "Persero", "PD", "Perum", "Perjan", "Yayasan"],
+        default: null
+    },
+    legalitasBadanUsaha: {
+        type: String,
+        required: false,
+        default: null
+    },
+    profile_pict: {
+        type: String,
+        default: "https://staging-backend.superdigitalapps.my.id/public/profile_picts/default.jpg",
+    },
+    tanggal_lahir: {
+        type: String,
+        default: null
+    },
+    nilai_pinalti:{
+        type: Number,
+        default: 0
     }
 })
 
+produsenModel.pre('save', function (next) {
+    if (this.namaBadanUsaha && this.jenis_kelamin) {
+        return next(new Error("Jenis Kelamin hanya untuk user individu"));
+    }
+    next();
+});
+
+produsenModel.pre('findOneAndUpdate', async function (next) {
+    const update = this.getUpdate();
+
+    const docToUpdate = await this.model.findOne(this.getQuery()).lean();
+
+    Object.keys(update).forEach(item => {
+        if (item === 'profile_pict') {
+            return;
+        };
+
+        if (Object.keys(docToUpdate).includes(item) && update[item] && docToUpdate[item]) return next(`${item} tidak bisa diubah lagi, karena sudah punya`)
+    });
+
+    if (update && docToUpdate.namaBadanUsaha && update.jenis_kelamin) {
+        return next("Jenis Kelamin hanya untuk user individu");
+    } else if (update && !docToUpdate.namaBadanUsaha && update.jenis_perusahaan) {
+        return next("Jenis Perusahaan hanya untuk user Perusahaan");
+    }
+    next();
+});
 const Produsen = mongoose.model("Produsen", produsenModel)
 
 module.exports = Produsen

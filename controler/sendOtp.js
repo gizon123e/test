@@ -6,6 +6,8 @@ const bcrypt = require("bcrypt")
 module.exports = {
     sendOtp: async (req, res, next) => {
         const { phone, email } = req.body
+        const fullUrl = req.originalUrl;
+  
         let user;
         if(phone && !email){
             user = await User.findOne({'phone.content': phone}) || await TemporaryUser.findOne({'phone.content': phone})

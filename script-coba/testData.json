@@ -1,144 +1,674 @@
 {
-    "message": "Berikut Data Penjualan untuk Produk Ini",
-    "data": {
-        "namaProduct": "Intel i5 9400f",
-        "dataPenjualan": [
-            {
-                "tanggal": "25 Maret",
-                "terjual": 39,
-                "waktu": "2024-03-25T11:46:39.619Z"
-            },
-            {
-                "tanggal": "26 Maret",
-                "terjual": 38,
-                "waktu": "2024-03-26T11:46:39.589Z"
-            },
-            {
-                "tanggal": "27 Maret",
-                "terjual": 36,
-                "waktu": "2024-03-27T11:46:39.560Z"
-            },
-            {
-                "tanggal": "28 Maret",
-                "terjual": 91,
-                "waktu": "2024-03-28T11:46:39.526Z"
-            },
-            {
-                "tanggal": "29 Maret",
-                "terjual": 26,
-                "waktu": "2024-03-29T11:46:39.493Z"
-            },
-            {
-                "tanggal": "30 Maret",
-                "terjual": 31,
-                "waktu": "2024-03-30T11:46:39.465Z"
-            },
-            {
-                "tanggal": "31 Maret",
-                "terjual": 52,
-                "waktu": "2024-03-31T11:46:39.435Z"
-            },
-            {
-                "tanggal": "1 April",
-                "terjual": 44,
-                "waktu": "2024-04-01T11:46:39.404Z"
-            },
-            {
-                "tanggal": "2 April",
-                "terjual": 80,
-                "waktu": "2024-04-02T11:46:39.372Z"
-            },
-            {
-                "tanggal": "3 April",
-                "terjual": 93,
-                "waktu": "2024-04-03T11:46:39.334Z"
-            },
-            {
-                "tanggal": "4 April",
-                "terjual": 77,
-                "waktu": "2024-04-04T11:46:39.293Z"
-            },
-            {
-                "tanggal": "5 April",
-                "terjual": 63,
-                "waktu": "2024-04-05T11:46:39.262Z"
-            },
-            {
-                "tanggal": "6 April",
-                "terjual": 27,
-                "waktu": "2024-04-06T11:46:39.232Z"
-            },
-            {
-                "tanggal": "7 April",
-                "terjual": 8,
-                "waktu": "2024-04-07T11:46:39.194Z"
-            },
-            {
-                "tanggal": "8 April",
-                "terjual": 16,
-                "waktu": "2024-04-08T11:46:39.157Z"
-            },
-            {
-                "tanggal": "9 April",
-                "terjual": 72,
-                "waktu": "2024-04-09T11:46:39.119Z"
-            },
-            {
-                "tanggal": "10 April",
-                "terjual": 51,
-                "waktu": "2024-04-10T11:46:39.085Z"
-            },
-            {
-                "tanggal": "11 April",
-                "terjual": 80,
-                "waktu": "2024-04-11T11:46:39.055Z"
-            },
-            {
-                "tanggal": "12 April",
-                "terjual": 1,
-                "waktu": "2024-04-12T11:46:39.021Z"
-            },
-            {
-                "tanggal": "13 April",
-                "terjual": 68,
-                "waktu": "2024-04-13T11:46:38.984Z"
-            },
-            {
-                "tanggal": "14 April",
-                "terjual": 9,
-                "waktu": "2024-04-14T11:46:38.947Z"
-            },
-            {
-                "tanggal": "15 April",
-                "terjual": 81,
-                "waktu": "2024-04-15T11:46:38.909Z"
-            },
-            {
-                "tanggal": "16 April",
-                "terjual": 2,
-                "waktu": "2024-04-16T11:46:38.872Z"
-            },
-            {
-                "tanggal": "17 April",
-                "terjual": 62,
-                "waktu": "2024-04-17T11:46:38.841Z"
-            },
-            {
-                "tanggal": "18 April",
-                "terjual": 33,
-                "waktu": "2024-04-18T11:46:38.810Z"
-            },
-            {
-                "tanggal": "19 April",
-                "terjual": 80,
-                "waktu": "2024-04-19T11:46:38.682Z"
-            },
-            {
-                "tanggal": "20 April",
-                "terjual": 1,
-                "waktu": "2024-04-20T11:46:39.736Z"
-            }
-        ],
-        "totalTerjual": 1261
-    }
+    "message": "Berhasil melihat laporan trend untuk produk yang dimiliki user ini",
+    "data": [
+        {
+            "namaProduct": "Buku Tulis",
+            "dataImpression": [],
+            "dataViews": [],
+            "dataPenjualan": [
+                {
+                    "tanggal": "3 Mei",
+                    "jumlah": 36,
+                    "waktu": "2024-05-03T04:11:55.114Z"
+                }
+            ],
+            "totalTerjual": 36,
+            "totalImpresi": 0,
+            "totalViews": 0
+        },
+        {
+            "namaProduct": "Intel i5 9400f",
+            "dataImpression": [
+                {
+                    "tanggal": "23 Maret",
+                    "jumlah": 59,
+                    "waktu": "2024-03-23T03:51:51.603Z"
+                },
+                {
+                    "tanggal": "24 Maret",
+                    "jumlah": 28,
+                    "waktu": "2024-03-24T03:51:51.563Z"
+                },
+                {
+                    "tanggal": "25 Maret",
+                    "jumlah": 63,
+                    "waktu": "2024-03-25T03:51:51.532Z"
+                },
+                {
+                    "tanggal": "26 Maret",
+                    "jumlah": 34,
+                    "waktu": "2024-03-26T03:51:51.502Z"
+                },
+                {
+                    "tanggal": "27 Maret",
+                    "jumlah": 2,
+                    "waktu": "2024-03-27T03:51:51.468Z"
+                },
+                {
+                    "tanggal": "28 Maret",
+                    "jumlah": 63,
+                    "waktu": "2024-03-28T03:51:51.429Z"
+                },
+                {
+                    "tanggal": "29 Maret",
+                    "jumlah": 71,
+                    "waktu": "2024-03-29T03:51:51.397Z"
+                },
+                {
+                    "tanggal": "30 Maret",
+                    "jumlah": 12,
+                    "waktu": "2024-03-30T03:51:51.367Z"
+                },
+                {
+                    "tanggal": "31 Maret",
+                    "jumlah": 30,
+                    "waktu": "2024-03-31T03:51:51.337Z"
+                },
+                {
+                    "tanggal": "1 April",
+                    "jumlah": 40,
+                    "waktu": "2024-04-01T03:51:51.306Z"
+                },
+                {
+                    "tanggal": "2 April",
+                    "jumlah": 2,
+                    "waktu": "2024-04-02T03:51:51.273Z"
+                },
+                {
+                    "tanggal": "3 April",
+                    "jumlah": 2,
+                    "waktu": "2024-04-03T03:51:51.237Z"
+                },
+                {
+                    "tanggal": "4 April",
+                    "jumlah": 16,
+                    "waktu": "2024-04-04T03:51:51.206Z"
+                },
+                {
+                    "tanggal": "5 April",
+                    "jumlah": 29,
+                    "waktu": "2024-04-05T03:51:51.175Z"
+                },
+                {
+                    "tanggal": "6 April",
+                    "jumlah": 61,
+                    "waktu": "2024-04-06T03:51:51.142Z"
+                },
+                {
+                    "tanggal": "7 April",
+                    "jumlah": 10,
+                    "waktu": "2024-04-07T03:51:51.112Z"
+                },
+                {
+                    "tanggal": "8 April",
+                    "jumlah": 75,
+                    "waktu": "2024-04-08T03:51:51.082Z"
+                },
+                {
+                    "tanggal": "9 April",
+                    "jumlah": 69,
+                    "waktu": "2024-04-09T03:51:51.050Z"
+                },
+                {
+                    "tanggal": "10 April",
+                    "jumlah": 31,
+                    "waktu": "2024-04-10T03:51:51.019Z"
+                },
+                {
+                    "tanggal": "11 April",
+                    "jumlah": 17,
+                    "waktu": "2024-04-11T03:51:50.990Z"
+                },
+                {
+                    "tanggal": "12 April",
+                    "jumlah": 53,
+                    "waktu": "2024-04-12T03:51:50.960Z"
+                },
+                {
+                    "tanggal": "13 April",
+                    "jumlah": 40,
+                    "waktu": "2024-04-13T03:51:50.924Z"
+                },
+                {
+                    "tanggal": "14 April",
+                    "jumlah": 15,
+                    "waktu": "2024-04-14T03:51:50.892Z"
+                },
+                {
+                    "tanggal": "15 April",
+                    "jumlah": 4,
+                    "waktu": "2024-04-15T03:51:50.863Z"
+                },
+                {
+                    "tanggal": "16 April",
+                    "jumlah": 62,
+                    "waktu": "2024-04-16T03:51:50.832Z"
+                },
+                {
+                    "tanggal": "17 April",
+                    "jumlah": 72,
+                    "waktu": "2024-04-17T03:51:50.795Z"
+                },
+                {
+                    "tanggal": "18 April",
+                    "jumlah": 57,
+                    "waktu": "2024-04-18T03:51:50.760Z"
+                },
+                {
+                    "tanggal": "19 April",
+                    "jumlah": 77,
+                    "waktu": "2024-04-19T03:51:50.728Z"
+                },
+                {
+                    "tanggal": "20 April",
+                    "jumlah": 7,
+                    "waktu": "2024-04-20T03:51:50.699Z"
+                },
+                {
+                    "tanggal": "21 April",
+                    "jumlah": 27,
+                    "waktu": "2024-04-21T03:51:50.566Z"
+                },
+                {
+                    "tanggal": "22 April",
+                    "jumlah": 89,
+                    "waktu": "2024-04-22T03:51:51.603Z"
+                }
+            ],
+            "dataViews": [
+                {
+                    "tanggal": "23 Maret",
+                    "jumlah": 33,
+                    "waktu": "2024-03-23T03:51:51.603Z"
+                },
+                {
+                    "tanggal": "24 Maret",
+                    "jumlah": 89,
+                    "waktu": "2024-03-24T03:51:51.563Z"
+                },
+                {
+                    "tanggal": "25 Maret",
+                    "jumlah": 31,
+                    "waktu": "2024-03-25T03:51:51.532Z"
+                },
+                {
+                    "tanggal": "26 Maret",
+                    "jumlah": 27,
+                    "waktu": "2024-03-26T03:51:51.502Z"
+                },
+                {
+                    "tanggal": "28 Maret",
+                    "jumlah": 84,
+                    "waktu": "2024-03-28T03:51:51.429Z"
+                },
+                {
+                    "tanggal": "29 Maret",
+                    "jumlah": 43,
+                    "waktu": "2024-03-29T03:51:51.397Z"
+                },
+                {
+                    "tanggal": "30 Maret",
+                    "jumlah": 55,
+                    "waktu": "2024-03-30T03:51:51.367Z"
+                },
+                {
+                    "tanggal": "31 Maret",
+                    "jumlah": 37,
+                    "waktu": "2024-03-31T03:51:51.337Z"
+                },
+                {
+                    "tanggal": "1 April",
+                    "jumlah": 40,
+                    "waktu": "2024-04-01T03:51:51.306Z"
+                },
+                {
+                    "tanggal": "2 April",
+                    "jumlah": 20,
+                    "waktu": "2024-04-02T03:51:51.273Z"
+                },
+                {
+                    "tanggal": "3 April",
+                    "jumlah": 58,
+                    "waktu": "2024-04-03T03:51:51.237Z"
+                },
+                {
+                    "tanggal": "4 April",
+                    "jumlah": 45,
+                    "waktu": "2024-04-04T03:51:51.206Z"
+                },
+                {
+                    "tanggal": "5 April",
+                    "jumlah": 64,
+                    "waktu": "2024-04-05T03:51:51.175Z"
+                },
+                {
+                    "tanggal": "6 April",
+                    "jumlah": 86,
+                    "waktu": "2024-04-06T03:51:51.142Z"
+                },
+                {
+                    "tanggal": "7 April",
+                    "jumlah": 81,
+                    "waktu": "2024-04-07T03:51:51.112Z"
+                },
+                {
+                    "tanggal": "8 April",
+                    "jumlah": 37,
+                    "waktu": "2024-04-08T03:51:51.082Z"
+                },
+                {
+                    "tanggal": "9 April",
+                    "jumlah": 81,
+                    "waktu": "2024-04-09T03:51:51.050Z"
+                },
+                {
+                    "tanggal": "10 April",
+                    "jumlah": 100,
+                    "waktu": "2024-04-10T03:51:51.019Z"
+                },
+                {
+                    "tanggal": "11 April",
+                    "jumlah": 15,
+                    "waktu": "2024-04-11T03:51:50.990Z"
+                },
+                {
+                    "tanggal": "12 April",
+                    "jumlah": 5,
+                    "waktu": "2024-04-12T03:51:50.960Z"
+                },
+                {
+                    "tanggal": "13 April",
+                    "jumlah": 60,
+                    "waktu": "2024-04-13T03:51:50.924Z"
+                },
+                {
+                    "tanggal": "14 April",
+                    "jumlah": 17,
+                    "waktu": "2024-04-14T03:51:50.892Z"
+                },
+                {
+                    "tanggal": "17 April",
+                    "jumlah": 48,
+                    "waktu": "2024-04-17T03:51:50.795Z"
+                },
+                {
+                    "tanggal": "18 April",
+                    "jumlah": 1,
+                    "waktu": "2024-04-18T03:51:50.760Z"
+                },
+                {
+                    "tanggal": "19 April",
+                    "jumlah": 4,
+                    "waktu": "2024-04-19T03:51:50.728Z"
+                },
+                {
+                    "tanggal": "20 April",
+                    "jumlah": 82,
+                    "waktu": "2024-04-20T03:51:50.699Z"
+                }
+            ],
+            "dataPenjualan": [
+                {
+                    "tanggal": "21 Maret",
+                    "jumlah": 82,
+                    "waktu": "2024-03-21T11:46:39.736Z"
+                },
+                {
+                    "tanggal": "22 Maret",
+                    "jumlah": 85,
+                    "waktu": "2024-03-22T11:46:39.707Z"
+                },
+                {
+                    "tanggal": "23 Maret",
+                    "jumlah": 82,
+                    "waktu": "2024-03-23T11:46:39.677Z"
+                },
+                {
+                    "tanggal": "24 Maret",
+                    "jumlah": 45,
+                    "waktu": "2024-03-24T11:46:39.648Z"
+                },
+                {
+                    "tanggal": "25 Maret",
+                    "jumlah": 39,
+                    "waktu": "2024-03-25T11:46:39.619Z"
+                },
+                {
+                    "tanggal": "26 Maret",
+                    "jumlah": 38,
+                    "waktu": "2024-03-26T11:46:39.589Z"
+                },
+                {
+                    "tanggal": "27 Maret",
+                    "jumlah": 36,
+                    "waktu": "2024-03-27T11:46:39.560Z"
+                },
+                {
+                    "tanggal": "28 Maret",
+                    "jumlah": 91,
+                    "waktu": "2024-03-28T11:46:39.526Z"
+                },
+                {
+                    "tanggal": "29 Maret",
+                    "jumlah": 26,
+                    "waktu": "2024-03-29T11:46:39.493Z"
+                },
+                {
+                    "tanggal": "30 Maret",
+                    "jumlah": 31,
+                    "waktu": "2024-03-30T11:46:39.465Z"
+                },
+                {
+                    "tanggal": "31 Maret",
+                    "jumlah": 52,
+                    "waktu": "2024-03-31T11:46:39.435Z"
+                },
+                {
+                    "tanggal": "1 April",
+                    "jumlah": 44,
+                    "waktu": "2024-04-01T11:46:39.404Z"
+                },
+                {
+                    "tanggal": "2 April",
+                    "jumlah": 80,
+                    "waktu": "2024-04-02T11:46:39.372Z"
+                },
+                {
+                    "tanggal": "3 April",
+                    "jumlah": 93,
+                    "waktu": "2024-04-03T11:46:39.334Z"
+                },
+                {
+                    "tanggal": "4 April",
+                    "jumlah": 77,
+                    "waktu": "2024-04-04T11:46:39.293Z"
+                },
+                {
+                    "tanggal": "5 April",
+                    "jumlah": 63,
+                    "waktu": "2024-04-05T11:46:39.262Z"
+                },
+                {
+                    "tanggal": "6 April",
+                    "jumlah": 27,
+                    "waktu": "2024-04-06T11:46:39.232Z"
+                },
+                {
+                    "tanggal": "7 April",
+                    "jumlah": 8,
+                    "waktu": "2024-04-07T11:46:39.194Z"
+                },
+                {
+                    "tanggal": "8 April",
+                    "jumlah": 16,
+                    "waktu": "2024-04-08T11:46:39.157Z"
+                },
+                {
+                    "tanggal": "9 April",
+                    "jumlah": 72,
+                    "waktu": "2024-04-09T11:46:39.119Z"
+                },
+                {
+                    "tanggal": "10 April",
+                    "jumlah": 51,
+                    "waktu": "2024-04-10T11:46:39.085Z"
+                },
+                {
+                    "tanggal": "11 April",
+                    "jumlah": 80,
+                    "waktu": "2024-04-11T11:46:39.055Z"
+                },
+                {
+                    "tanggal": "12 April",
+                    "jumlah": 1,
+                    "waktu": "2024-04-12T11:46:39.021Z"
+                },
+                {
+                    "tanggal": "13 April",
+                    "jumlah": 68,
+                    "waktu": "2024-04-13T11:46:38.984Z"
+                },
+                {
+                    "tanggal": "14 April",
+                    "jumlah": 9,
+                    "waktu": "2024-04-14T11:46:38.947Z"
+                },
+                {
+                    "tanggal": "15 April",
+                    "jumlah": 81,
+                    "waktu": "2024-04-15T11:46:38.909Z"
+                },
+                {
+                    "tanggal": "16 April",
+                    "jumlah": 2,
+                    "waktu": "2024-04-16T11:46:38.872Z"
+                },
+                {
+                    "tanggal": "17 April",
+                    "jumlah": 62,
+                    "waktu": "2024-04-17T11:46:38.841Z"
+                },
+                {
+                    "tanggal": "18 April",
+                    "jumlah": 33,
+                    "waktu": "2024-04-18T11:46:38.810Z"
+                },
+                {
+                    "tanggal": "19 April",
+                    "jumlah": 80,
+                    "waktu": "2024-04-19T11:46:38.682Z"
+                },
+                {
+                    "tanggal": "20 April",
+                    "jumlah": 1,
+                    "waktu": "2024-04-20T11:46:39.736Z"
+                },
+                {
+                    "tanggal": "3 Mei",
+                    "jumlah": 45,
+                    "waktu": "2024-05-03T04:11:54.111Z"
+                }
+            ],
+            "totalTerjual": 1600,
+            "totalImpresi": 1217,
+            "totalViews": 1243
+        },
+        {
+            "namaProduct": "Bihun Goreng",
+            "dataImpression": [],
+            "dataViews": [],
+            "dataPenjualan": [
+                {
+                    "tanggal": "21 Maret",
+                    "jumlah": 82,
+                    "waktu": "2024-03-21T11:46:39.736Z"
+                },
+                {
+                    "tanggal": "22 Maret",
+                    "jumlah": 85,
+                    "waktu": "2024-03-22T11:46:39.707Z"
+                },
+                {
+                    "tanggal": "23 Maret",
+                    "jumlah": 82,
+                    "waktu": "2024-03-23T11:46:39.677Z"
+                },
+                {
+                    "tanggal": "24 Maret",
+                    "jumlah": 45,
+                    "waktu": "2024-03-24T11:46:39.648Z"
+                },
+                {
+                    "tanggal": "25 Maret",
+                    "jumlah": 39,
+                    "waktu": "2024-03-25T11:46:39.619Z"
+                },
+                {
+                    "tanggal": "26 Maret",
+                    "jumlah": 38,
+                    "waktu": "2024-03-26T11:46:39.589Z"
+                },
+                {
+                    "tanggal": "27 Maret",
+                    "jumlah": 36,
+                    "waktu": "2024-03-27T11:46:39.560Z"
+                },
+                {
+                    "tanggal": "28 Maret",
+                    "jumlah": 91,
+                    "waktu": "2024-03-28T11:46:39.526Z"
+                },
+                {
+                    "tanggal": "29 Maret",
+                    "jumlah": 26,
+                    "waktu": "2024-03-29T11:46:39.493Z"
+                },
+                {
+                    "tanggal": "30 Maret",
+                    "jumlah": 31,
+                    "waktu": "2024-03-30T11:46:39.465Z"
+                },
+                {
+                    "tanggal": "31 Maret",
+                    "jumlah": 52,
+                    "waktu": "2024-03-31T11:46:39.435Z"
+                },
+                {
+                    "tanggal": "1 April",
+                    "jumlah": 44,
+                    "waktu": "2024-04-01T11:46:39.404Z"
+                },
+                {
+                    "tanggal": "2 April",
+                    "jumlah": 80,
+                    "waktu": "2024-04-02T11:46:39.372Z"
+                },
+                {
+                    "tanggal": "3 April",
+                    "jumlah": 93,
+                    "waktu": "2024-04-03T11:46:39.334Z"
+                },
+                {
+                    "tanggal": "4 April",
+                    "jumlah": 77,
+                    "waktu": "2024-04-04T11:46:39.293Z"
+                },
+                {
+                    "tanggal": "5 April",
+                    "jumlah": 63,
+                    "waktu": "2024-04-05T11:46:39.262Z"
+                },
+                {
+                    "tanggal": "6 April",
+                    "jumlah": 27,
+                    "waktu": "2024-04-06T11:46:39.232Z"
+                },
+                {
+                    "tanggal": "7 April",
+                    "jumlah": 8,
+                    "waktu": "2024-04-07T11:46:39.194Z"
+                },
+                {
+                    "tanggal": "8 April",
+                    "jumlah": 16,
+                    "waktu": "2024-04-08T11:46:39.157Z"
+                },
+                {
+                    "tanggal": "9 April",
+                    "jumlah": 72,
+                    "waktu": "2024-04-09T11:46:39.119Z"
+                },
+                {
+                    "tanggal": "10 April",
+                    "jumlah": 51,
+                    "waktu": "2024-04-10T11:46:39.085Z"
+                },
+                {
+                    "tanggal": "11 April",
+                    "jumlah": 80,
+                    "waktu": "2024-04-11T11:46:39.055Z"
+                },
+                {
+                    "tanggal": "12 April",
+                    "jumlah": 1,
+                    "waktu": "2024-04-12T11:46:39.021Z"
+                },
+                {
+                    "tanggal": "13 April",
+                    "jumlah": 68,
+                    "waktu": "2024-04-13T11:46:38.984Z"
+                },
+                {
+                    "tanggal": "14 April",
+                    "jumlah": 9,
+                    "waktu": "2024-04-14T11:46:38.947Z"
+                },
+                {
+                    "tanggal": "15 April",
+                    "jumlah": 81,
+                    "waktu": "2024-04-15T11:46:38.909Z"
+                },
+                {
+                    "tanggal": "16 April",
+                    "jumlah": 2,
+                    "waktu": "2024-04-16T11:46:38.872Z"
+                },
+                {
+                    "tanggal": "17 April",
+                    "jumlah": 62,
+                    "waktu": "2024-04-17T11:46:38.841Z"
+                },
+                {
+                    "tanggal": "18 April",
+                    "jumlah": 33,
+                    "waktu": "2024-04-18T11:46:38.810Z"
+                },
+                {
+                    "tanggal": "19 April",
+                    "jumlah": 80,
+                    "waktu": "2024-04-19T11:46:38.682Z"
+                },
+                {
+                    "tanggal": "20 April",
+                    "jumlah": 1,
+                    "waktu": "2024-04-20T11:46:39.736Z"
+                },
+                {
+                    "tanggal": "3 Mei",
+                    "jumlah": 34,
+                    "waktu": "2024-05-03T04:11:54.606Z"
+                }
+            ],
+            "totalTerjual": 1589,
+            "totalImpresi": 0,
+            "totalViews": 0
+        },
+        {
+            "namaProduct": "testing product Vendor",
+            "dataImpression": [
+                {
+                    "tanggal": "23 April",
+                    "jumlah": 0,
+                    "waktu": "2024-04-23T07:19:48.615Z"
+                }
+            ],
+            "dataViews": [
+                {
+                    "tanggal": "23 April",
+                    "jumlah": 0,
+                    "waktu": "2024-04-23T07:19:48.615Z"
+                }
+            ],
+            "dataPenjualan": [
+                {
+                    "tanggal": "23 April",
+                    "jumlah": 0,
+                    "waktu": "2024-04-23T07:19:48.662Z"
+                }
+            ],
+            "totalTerjual": 0,
+            "totalImpresi": 0,
+            "totalViews": 0
+        }
+    ]
 }

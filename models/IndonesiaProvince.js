@@ -5,6 +5,7 @@ const Name = 'IndonesiaProvince'
 const villageSchema = new mongoose.Schema({
   id: { type: Number, index: true },
   name: String,
+  kode_pos: String
 }).index({ name: 'text' })
 
 const districtSchema = new mongoose.Schema({
@@ -139,6 +140,7 @@ Model.getDistrict = id => {
             in: {
               id: '$$villages.id',
               name: '$$villages.name',
+              kode_pos: "$$villages.kode_pos"
             },
           },
         },

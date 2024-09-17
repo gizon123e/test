@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const modelInvoice = mongoose.Schema({
+const modelInvoice = new mongoose.Schema({
     id_transaksi: {
         type: mongoose.Types.ObjectId,
         ref: "Transaksi"
@@ -17,7 +17,7 @@ const modelInvoice = mongoose.Schema({
         enum: ["Belum Lunas", "Lunas", "Piutang"],
         message: `{VALUE} is not supported`
     }
-});
+}, { timestamps: true });
 
 const Invoice = mongoose.model("Invoice", modelInvoice);
 module.exports = Invoice

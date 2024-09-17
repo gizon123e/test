@@ -171,13 +171,24 @@ module.exports = {
         }
     },
 
+    getAllSubCategory: async (req, res, next) => {
+        try {
+            const sub_cats = await SubCategory.find().select("_id name").lean();
+            return res.status(200).json({data: sub_cats})
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
     createCategory: async (req, res, next) => {
         try {
             const { main, sub, specific, showAt, forShow } = req.body;
+            if(!forShow) return res.status(400).json({message: "kirimkan forShow!"})
             let main_category;
             let sub_category
             let specific_category;
-            main_category = await MainCategory.findOne({ name: { $regex: new RegExp(`^${main}$`, 'i') } }).populate("contents");
+            main_category = await MainCategory.findOne({ name: { $regex: new RegExp(`^${main}$`, 'i') }, for: forShow }).populate("contents");
             if (req.files === undefined && !main_category && main) return res.status(400).json({ message: "Tidak ada file icon yang dikirimkan" })
             if (main && req.files) {
                 const { icon } = req.files;
@@ -216,7 +227,6 @@ module.exports = {
                     sub_category = await SubCategory.findByIdAndUpdate(id, { $push: { contents: specific_category._id } }, { new: true });
                 }
             };
-            console.log(req.body)
 
             return res.status(201).json({ message: "Berhasil Menambahkan Category", main_category, sub_category, specific_category });
         } catch (error) {

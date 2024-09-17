@@ -2,7 +2,8 @@ const Address = require("../../models/model-address");
 const Sekolah = require("../../models/model-sekolah");
 const SimulasiSekolah = require('../../models/model-simulasi-sekolah')
 const Konsumen = require("../../models/konsumen/model-konsumen");
-
+const cekLokasiLatLog = require('../../utils/cek-alamat')
+const mongoose = require('mongoose')
 const path = require("path")
 const dotenv = require('dotenv');
 dotenv.config()
@@ -10,12 +11,24 @@ dotenv.config()
 module.exports = {
     getAllSekolah: async (req, res, next) => {
         try {
+            if(!new mongoose.Types.ObjectId(req.params.id)) return res.status(404).json({message: `Invalid id: ${req.params.id}`})
             const data = await Sekolah.find({ detailId: req.params.id }).populate('address')
 
             return res.status(200).json({
                 message: "get data all success",
                 data
             })
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    },
+
+    getDetailSekolah: async (req, res, next) => {
+        try {
+            const data = await Sekolah.findOne({_id: req.params.id, userId: req.user.id}).populate('address');
+            if(!data) return res.status(404).json({message: `Data sekolah dengan id: ${req.params.id} tidak ditemukan`})
+            return res.status(200).json({message: "Berhasil Mendapatkan Data", data})
         } catch (error) {
             console.log(error);
             next(error)
@@ -54,7 +67,12 @@ module.exports = {
                 addressId,
                 NPSN,
                 namaSekolah
-            } = req.body
+            } = req.body 
+
+            const lokasiValidasi = cekLokasiLatLog(lat_pin_alamat, long_pin_alamat);
+            if (!lokasiValidasi.valid && !addressId) {
+                return res.status(400).json({ message: lokasiValidasi.message });
+            }      
             const files = req.files
             const logoSekolah = files ? files.logoSekolah : null;
 
@@ -68,22 +86,128 @@ module.exports = {
             await logoSekolah.mv(imagePath);
             const numberNPSN = parseInt(NPSN)
 
+            const sudahAdaDefault = await Address.findOne({userId: req.user.id, isUsed: true});
+
             let alamat
-            if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
-                alamat = await Address.create({
-                    province,
-                    regency,
-                    district,
-                    village,
-                    code_pos,
-                    address_description,
-                    pinAlamat: {
-                        long: long_pin_alamat,
-                        lat: lat_pin_alamat
-                    },
-                    userId: req.user.id
-                });
+            if(sudahAdaDefault){
+                if(addressId){
+                    const addressMain = await Address.findOne({ _id: addressId });
+                    if (sudahAdaDefault.isSchool == true) {
+                        if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
+                            alamat = await Address.create({
+                                province,
+                                regency,
+                                district,
+                                village,
+                                code_pos,
+                                address_description,
+                                pinAlamat: {
+                                    long: long_pin_alamat,
+                                    lat: lat_pin_alamat
+                                },
+                                userId: req.user.id,
+                                isSchool: true,
+                            });
+                        }
+                    }
+                    
+                    await Address.findOneAndUpdate({_id: addressId, isUsed: true}, {isUsed: false});
+                    
+                    alamat = await Address.create({
+                        province: addressMain.province,
+                        regency: addressMain.regency,
+                        district: addressMain.district,
+                        village: addressMain.village,
+                        code_pos: addressMain.code_pos,
+                        address_description: addressMain.address_description,
+                        pinAlamat: {
+                            long: addressMain.pinAlamat.long,
+                            lat: addressMain.pinAlamat.lat
+                        },
+                        userId: req.user.id,
+                        isSchool: true, 
+                        isUsed: true,
+                    });
+                } else {
+                    if (sudahAdaDefault.isSchool == true) {
+                        if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
+                            alamat = await Address.create({
+                                province,
+                                regency,
+                                district,
+                                village,
+                                code_pos,
+                                address_description,
+                                pinAlamat: {
+                                    long: long_pin_alamat,
+                                    lat: lat_pin_alamat
+                                },
+                                userId: req.user.id,
+                                isSchool: true,
+                            });
+                        }
+                    } else{
+                        await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
+                        if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
+                            alamat = await Address.create({
+                                province,
+                                regency,
+                                district,
+                                village,
+                                code_pos,
+                                address_description,
+                                pinAlamat: {
+                                    long: long_pin_alamat,
+                                    lat: lat_pin_alamat
+                                },
+                                userId: req.user.id,
+                                isSchool: true,
+                                isUsed: true,
+                            });
+                        }
+                    }
+                }
             }
+            // else {
+            //     await Address.findOneAndUpdate({userId: req.user.id, isUsed: true}, {isUsed: false});
+                
+            //     if(addressId){
+            //         const addressMain = await Address.findOne({ _id: addressId });
+            //         alamat= await Address.create({
+            //             province: addressMain.province,
+            //             regency: addressMain.regency,
+            //             district: addressMain.district,
+            //             village: addressMain.village,
+            //             code_pos: addressMain.code_pos,
+            //             address_description: addressMain.address_description,
+            //             pinAlamat: {
+            //                 long: addressMain.pinAlamat.long,
+            //                 lat: addressMain.pinAlamat.lat
+            //             },
+            //             userId: req.user.id,
+            //             isSchool: true, 
+            //             isUsed: true,
+            //         });
+            //     }
+                
+            //     if (province && regency && district && village && code_pos && address_description && long_pin_alamat && lat_pin_alamat) {
+            //         alamat = await Address.create({
+            //             province,
+            //             regency,
+            //             district,
+            //             village,
+            //             code_pos,
+            //             address_description,
+            //             pinAlamat: {
+            //                 long: long_pin_alamat,
+            //                 lat: lat_pin_alamat
+            //             },
+            //             userId: req.user.id,
+            //             isSchool: true,
+            //             isUsed: true,
+            //         });
+            //     }
+            // }
 
             const dataKemendiknas = await SimulasiSekolah.findOne({ NPSN: numberNPSN })
             if (!dataKemendiknas) return res.status(404).json({ message: "data NPSN tidak terdaftar di Kemendikes" })
@@ -117,23 +241,8 @@ module.exports = {
                     logoSekolah: `${process.env.HOST}public/profil-sekolah/${imageName}`,
                     namaSekolah
                 });
-            } else if (addressId) {
-                sekolah = await Sekolah.create({
-                    userId: req.user.id,
-                    detailId: dataKonsumen._id,
-                    address: addressId,
-                    NPSN: numberNPSN,
-                    jumlahMurid: dataKemendiknas.jumlahMurid,
-                    jenisPendidikan: dataKemendiknas.jenisPendidikan,
-                    statusSekolah: dataKemendiknas.statusSekolah,
-                    jenjangPendidikan: dataKemendiknas.jenjangPendidikan,
-                    satuanPendidikan: dataKemendiknas.satuanPendidikan,
-                    kelas,
-                    logoSekolah: `${process.env.HOST}public/profil-sekolah/${imageName}`,
-                    namaSekolah
-                });
             }
-
+            
             if (!sekolah) return res.status(400).json({ message: "kamu gagal masukin data sekolah" })
 
             return res.status(201).json({ message: "Berhasil Menambahkan Sekolah", data: sekolah })

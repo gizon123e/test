@@ -44,7 +44,7 @@
 
     <div id="sendMsg">
       <label for="nama">Nama</label>
-      <input type="text" name="nama" id="nama" />
+      <input type="text" name="nama" id="userEmail" />
       <label for="pesan">Pesan</label>
       <input type="text" name="pesan" id="pesan" />
       <button onclick="sendMsg()">SEND MSG</button>
@@ -54,44 +54,61 @@
     <button onclick="download()">DOWNLOAD EXCEL</button>
     <script>
       let socket;
+      const userEmail = document.getElementById("userEmail")
       const token = localStorage.getItem("token");
-
 
       document.getElementById('uploadForm').addEventListener('submit', function(event) {
         event.preventDefault();
 
         // Mengumpulkan data dari formulir
         const formData = new FormData();
-        formData.append('name_product', document.getElementById('name_product').value);
-        formData.append('price', document.getElementById('price').value);
-        formData.append('description', document.getElementById('description').value);
-        formData.append('categoryId', document.getElementById('categoryId').value);
-        formData.append('stok', document.getElementById('stok').value);
-
-        // Mengumpulkan file-file foto
-        const fileInput = document.getElementById('photo');
-        for (let i = 0; i < fileInput.files.length; i++) {
-          formData.append('ImageProduct', fileInput.files[i]);
-        }
-        const bahanBakuArray = [
+        formData.append('name_product', "Baju Ultraman");
+        formData.append('jenis_produk', "not_makanan");
+        formData.append('price', 50000);
+        formData.append("description", "Baju Ultraman");
+        formData.append("long_description", "Baju Ultraman by Arya SenSen");
+        formData.append('bervarian', true);
+        formData.append("categoryId", "664d6b1e022983b028557972");
+        formData.append("total_stok", 65);
+        formData.append("minimalOrder", 65);
+        formData.append("panjang", 25);
+        formData.append("lebar", 25);
+        formData.append("tinggi", 10);
+        formData.append("berat", 300);
+        formData.append("minimalDp", 45);
+        
+        const varian = [
           {
-            bahanBakuId: "661f56a015aa8425f5fed2cc",
-            quantityNeed: 5
+            nama_varian: "ukuran",
+            nilai_varian: ["S", "M", "L", "XL"]
           },
           {
-            bahanBakuId: "661f85b4ba78463065f5088e",
-            quantityNeed: 4
+            nama_varian: "warna",
+            nilai_varian: ["Merah", "Kuning", "Hijau", "Biru"]
           }
         ];
 
-        for (let i = 0; i < bahanBakuArray.length; i++) {
-          formData.append('bahanBaku', JSON.stringify(bahanBakuArray[i]))
+        varian.forEach(item => {
+          formData.append("varian", JSON.stringify(item))
+        })
+
+        const detailVarian = []
+
+        for(let i = 0; i < varian[0].nilai_varian.length; i++){
+          for(let j = 0; j < varian[1].nilai_varian.length; j++){
+            detailVarian.push(`${varian[0].nilai_varian[i]}-${varian[1].nilai_varian[j]}`)
+          }
         }
 
+        console.log(detailVarian)
+
+
+
+
         // Mengirimkan formulir dengan menggunakan fetch
-        fetch('http://localhost:4000/product/upload', {
+        fetch('http://localhost:4000/api/product/upload', {
           headers:{
-            "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWY1NWZjMWI2YzQ5ZjlkMGFjOTdkZCIsIm5hbWUiOiJwcm9kdXNlbiIsImVtYWlsIjoicHJvZHVzZW5AZ21haWwuY29tIiwicm9sZSI6InByb2R1c2VuIiwicGhvbmUiOiIwODU4NDUxMjEwNTQ4IiwiaWF0IjoxNzEzNTEwNjgyfQ.bFN-gOsm65-lxcGj8WuOgYWN6NGcWbRS555HaLrOeOs",
+            "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2NDE5ZjFlMTEzM2ZjODQ0MGRmODhiNiIsImVtYWlsIjp7ImNvbnRlbnQiOiJ2ZW5kb3JAZ21haWwuY29tIiwiaXNWZXJpZmllZCI6dHJ1ZX0sInBob25lIjp7ImNvbnRlbnQiOiIwODEyMzQ1Njc4OSIsImlzVmVyaWZpZWQiOnRydWV9LCJyb2xlIjoidmVuZG9yIiwiaWF0IjoxNzE3NDY4OTg5fQ.xutJLqdrOOVz_5WeUvB7Gh_AX-wyIVfe1Bgm9wQk_XU",
           },
           method: 'POST',
           body: formData
@@ -115,13 +132,13 @@
             });
         const data = await response.json()
         console.log(data)
-        document.getElementById('img').src = data.data[0].image_product[0]
+        document.getElementById('img').src = data.data[1].image_product[0]
       })
 
       async function download(){
         try {
-          $.getJSON("testData.json", async function(data) {
-            const response = await fetch("http://localhost:4000/export/sell", {
+          $.getJSON("script-coba/testData.json", async function(data) {
+            const response = await fetch("http://localhost:4000/export/trend", {
               method: "POST",
               headers: {
                 "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MWY1NWZjMWI2YzQ5ZjlkMGFjOTdkZCIsIm5hbWUiOiJwcm9kdXNlbiIsImVtYWlsIjoicHJvZHVzZW5AZ21haWwuY29tIiwicm9sZSI6InByb2R1c2VuIiwicGhvbmUiOiIwODU4NDUxMjEwNTQ4IiwiaWF0IjoxNzEzNDEwMDg1fQ._qXT4CSN_-BBHLpvzrgsczd2jOcGmOWVG0KrlEx1-VE",
@@ -186,7 +203,8 @@
       }
 
       function initializeSocket(token) {
-        socket = io("http://localhost:3000", {
+        socket = io("https://staging-backend.superdigitalapps.my.id/",{
+          transports: ['websocket'],
           auth: {
             token,
           },
@@ -196,22 +214,19 @@
           const text = document.createElement("p");
           text.innerHTML = arg;
           document.body.appendChild(text);
+          // userEmail.value = arg
         });
       }
 
       function sendMsg() {
-        const nama = document.getElementById("nama").value;
+        const userEmail = document.getElementById('userEmail').value
         const msg = document.getElementById("pesan").value;
 
         if (socket) {
-          socket.emit(
-            "send msg",
-            {
-              nama,
-              msg,
-            },
+          socket.emit("send msg", { userId: userEmail, msg },
             (res) => {
               console.log(res);
+              msg.value = ''
             }
           );
         } else {
@@ -221,15 +236,63 @@
 
       socket.on(
         "msg",
-        (msg, sender) => {
+        (msg) => {
+          console.log(msg)
           const text = document.createElement("p");
-          text.innerHTML = `${sender}: ${msg}`;
+          text.innerHTML = msg;
           document.body.appendChild(text);
+        }
+      );
+      socket.on(
+        "error",
+        (msg) => {
+          alert(msg)
         },
         (res) => {
           console.log(res);
         }
       );
+      socket.on('notifikasi_order', (data)=>{
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);
+      })
+
+      socket.on('notifikasi_vendor_pesanan_masuk', (data)=> {
+        console.log(data);
+        alert(data.toString())
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);  
+      })
+
+      socket.on('notifikasi_vendor_distributor_menjemput', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);  
+      })
+
+      socket.on('notifikasi_distri_pengiriman_baru', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);
+      })
+
+      socket.on('notifikasi_distri_h-1_pengiriman', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);
+      })
+
+      socket.on('notifikasi_distri_sudah_dikemas', (data)=> {
+        console.log(data);
+        const text = document.createElement("p");
+        text.innerHTML = `${JSON.stringify(data)}`;
+        document.body.appendChild(text);
+      })
     </script>
   </body>
 </html>

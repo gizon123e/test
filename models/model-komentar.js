@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 require('./model-auth-user')
 require("./model-product")
-const komentarModels = mongoose.Schema({
+const komentarModels = new mongoose.Schema({
     userId:{
         type: mongoose.Types.ObjectId,
         required: true,
@@ -50,9 +50,7 @@ komentarModels.post("save", async function(next){
                 }
             }
         ]);
-        console.log(comments)
         const rating = comments.length > 0 ? comments[0].averageRating : 0
-        console.log(rating)
         await Product.findByIdAndUpdate(productId, {rating: rating.toFixed(2)})
     } catch (error) {
         console.log(error)

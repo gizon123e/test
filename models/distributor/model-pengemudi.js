@@ -33,12 +33,13 @@ const ModelPengemudi = new mongoose.Schema({
         required: false,
         default: null
     },
-    is_Active: {
-        type: Boolean,
-        required: [true, 'is_Active pengemudi harus diisi'],
-        default: false
+    status: {
+        type: String,
+        enum: ["Ditinjau", "Aktif", "Ditolak", "Diblokir", "Disuspend", "Diberhentikan"],
+        message: "{VALUE} is not supported",
+        default: "Ditinjau"
     },
-    descriptionTolak: {
+    descriptionStatusPengemudi: {
         type: String,
         required: false,
         default: null
@@ -51,7 +52,7 @@ const ModelPengemudi = new mongoose.Schema({
         type: String,
         required: [true, 'jenis_sim pengemudi harus diisi'],
     }
-})
+}, { timestamps: true })
 
 const Pengemudi = mongoose.model('Pengemudi', ModelPengemudi)
 
