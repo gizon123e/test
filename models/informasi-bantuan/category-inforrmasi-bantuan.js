@@ -17,7 +17,7 @@ const modelCategoryInformasiPertanyaan = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ["pembeli", "penjual"],
+        enum: ["pembeli", "penjual", "perusahaan", "individu"],
         message: "{VALUE} is not supported",
         default: null
     }
