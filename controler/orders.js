@@ -2292,6 +2292,7 @@ module.exports = {
         const id_transaksi_non_subsidi = new mongoose.Types.ObjectId();
         const id_invoice_non_subsidi = new mongoose.Types.ObjectId();
         const splitted = metode_pembayaran.split(" / ");
+        if(splitted[0].trim().length === 0 || splitted[1].trim().length === 0) return res.status(400).json({ message: "Metode pembayaran tidak valid" });
         if (splitted[1].replace(/\u00A0/g, " ") == "Virtual Account") {
           va_user = await VaUser.findOne({
             nama_bank: splitted[0],
@@ -2310,7 +2311,6 @@ module.exports = {
         });
 
         if (va_used) return res.status(403).json({ message: "Sedang ada transaki dengan virtual account ini", data: va_used });
-        const kodeInvoice = `INV_${user.get("kode_role")}_${date}_${minutes}_${total_transaksi + 1}`;
         const ids = [];
         for (const item of items) {
           productNotif = await Product.findById(item.product[0].productId).select("_id name_product image_product");
