@@ -1587,7 +1587,7 @@ module.exports = {
       tommorow.setDate(tommorow.getDate() + 1);
 
       const sixHoursAgo = formatWaktu(new Date(new Date().getTime() + 6 * 60 * 60 * 1000));
-      const { metode_pembayaran, total, items, shipments, dp, biaya_asuransi, biaya_jasa_aplikasi, biaya_layanan, poin_terpakai, sekolahId, biaya_awal_asuransi } = req.body;
+      const { metode_pembayaran, total, recurring, items, shipments, dp, biaya_asuransi, biaya_jasa_aplikasi, biaya_layanan, poin_terpakai, sekolahId, biaya_awal_asuransi } = req.body;
 
       if (Object.keys(req.body).length === 0) return res.status(400).json({ message: "Request Body tidak boleh kosong!" });
       if (!sekolahId && req.user.role === "konsumen") return res.status(400).json({ message: "Kirimkan Id Sekolah" });
