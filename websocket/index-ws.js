@@ -74,7 +74,6 @@ io.on("connection", (socket) => {
     )
     .then(()=>console.log("berhasil update last login"))
     .catch((e)=> console.log("gagal update last login"))
-    console.log('ada yang logout dengan socket id: ', socket.id)
   });
 
   socket.on("send msg", async (data) => {
