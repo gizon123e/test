@@ -11,6 +11,21 @@ const modelSimulasiSekolah = new mongoose.Schema({
     jumlahMurid: {
         type: Number
     },
+    jumlahGuru: {
+        type: Number
+    },
+    jumlahPegawai: {
+        type: Number
+    },
+    jumlahKelas: {
+        type: Number
+    },
+    jumlahLab: {
+        type: Number
+    },
+    jumlahPerpus: {
+        type: Number
+    },
     kelas: [
         {   
             _id: false,
@@ -61,11 +76,11 @@ const modelSimulasiSekolah = new mongoose.Schema({
         enum: ["swasta", "negeri"],
         message: "{VALUE} is not valid"
     },
-    jenjangPendidikan:{
-        type: String,
-        enum: ["pendidikan anak usia dini", "pendidikan dasar", "pendidikan menengah"],
-        message: "{VALUE} is not valid"
-    },
+    // jenjangPendidikan:{
+    //     type: String,
+    //     enum: ["pendidikan anak usia dini", "pendidikan dasar", "pendidikan menengah"],
+    //     message: "{VALUE} is not valid"
+    // },
     satuanPendidikan:{
         type: String,
         enum: [
@@ -74,6 +89,7 @@ const modelSimulasiSekolah = new mongoose.Schema({
             "TK",
             "RA",
             "SD",
+            "SPK SD",
             "MI",
             "SMP",
             "MTS",
