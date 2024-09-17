@@ -24,7 +24,7 @@ module.exports = {
         });
 
         return transporter.sendMail({
-            from: process.env.EMAIL_SENDER,
+            from: process.env.SENDER_EMAIL_PROD,
             to: email,
             subject: subject,
             text: `KODE OTP MBG:  ${kode} berlaku selama 5 menit. RAHASIAKAN KODE OTP MBG Anda! Jangan beritahukan kepada SIAPAPUN!`,
