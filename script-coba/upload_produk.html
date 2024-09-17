@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+      body{
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        grid-template-rows: auto;
+      }
+      input{
+        height: 40px;
+      }
+      button{
+        height: 50px;
+        width: 80px;
+      }
+      .detailVarian{
+        width: 300px;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border: 2px solid black;
+      }
+    </style>
+</head>
+<body>
+    <button onclick="tombol()">PENCET COK</button>
+    <button onclick="uploadKelompokPangan()"></button>
+    <script>
+
+        // function uploadKelompokPangan(){
+        //   const formKelompokPangan 
+        // }
+        const formData = new FormData();
+        const varian = [
+          {
+            nama_varian: "ukuran",
+            nilai_varian: ["S", "M"]
+          },
+          {
+            nama_varian: "warna",
+            nilai_varian: ["Merah", "Kuning"]
+          }
+        ];
+
+        varian.forEach(item => {
+          formData.append("varian", JSON.stringify(item))
+        })
+
+        const detailVarian = []
+
+        for(let i = 0; i < varian[0].nilai_varian.length; i++){
+          for(let j = 0; j < varian[1].nilai_varian.length; j++){
+            detailVarian.push(`${varian[0].nilai_varian[i]}-${varian[1].nilai_varian[j]}`)
+          }
+        }
+
+        detailVarian.forEach(item => {
+          const formDetailVarian = document.createElement("div");
+          formDetailVarian.className = "detailVarian";
+
+          const label = document.createElement('label');
+          label.textContent = item;
+
+          const harga = document.createElement('input');
+          harga.id = `harga-${item}`;
+          harga.placeholder = "Masukan harga varian";
+
+          const image = document.createElement('input');
+          image.id = `image-${item}`;
+          image.type = "file";
+
+          const minimalOrder = document.createElement("input");
+          minimalOrder.id = `minimalOrder-${item}`;
+          minimalOrder.placeholder = "Masukan minimal order";
+
+          const stok = document.createElement("input");
+          stok.id = `stok-${item}`;
+          stok.placeholder = "Masukan Stok";
+
+          const harga_diskon = document.createElement("input");
+          harga_diskon.id = `harga-diskon-${item}`;
+          harga_diskon.placeholder = "Masukan harga-diskon";
+
+          formDetailVarian.append(label);
+          formDetailVarian.append(harga);
+          formDetailVarian.append(image);
+          formDetailVarian.append(minimalOrder);
+          formDetailVarian.append(stok);
+          formDetailVarian.append(harga_diskon)
+
+          document.body.append(formDetailVarian);
+        });
+
+        function tombol() {
+          formData.append('name_product', "Baju Ultraman");
+          formData.append('jenis_produk', "not_makanan");
+          formData.append('price', 50000);
+          formData.append("description", "Baju Ultraman");
+          formData.append("long_description", "Baju Ultraman by Arya SenSen");
+          formData.append('bervarian', true);
+          formData.append("categoryId", "664d6b1e022983b028557972");
+          formData.append("total_stok", 65);
+          formData.append("minimalOrder", 65);
+          formData.append("panjang", 25);
+          formData.append("lebar", 25);
+          formData.append("tinggi", 10);
+          formData.append("berat", 300);
+          formData.append("minimalDp", 45);
+
+          // Capture input values from each detailVarian
+          detailVarian.forEach(item => {
+            const harga = document.getElementById(`harga-${item}`).value;
+            const image = document.getElementById(`image-${item}`).files[0]; // Handle file input
+            const minimalOrder = document.getElementById(`minimalOrder-${item}`).value;
+            const stok = document.getElementById(`stok-${item}`).value;
+            const harga_diskon = document.getElementById(`harga-diskon-${item}`).value
+            console.log(`${item}`, harga_diskon)
+            formData.append("detailVarian", JSON.stringify({
+              varian: item,
+              price: harga,
+              stok,
+              minimalOrder,
+              harga_diskon
+            }))
+
+            formData.append(`${item}`, image)
+          });
+
+          fetch('http://localhost:4000/api/product/upload', {
+            headers:{
+              "authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2NDE5ZjFlMTEzM2ZjODQ0MGRmODhiNiIsImVtYWlsIjp7ImNvbnRlbnQiOiJ2ZW5kb3JAZ21haWwuY29tIiwiaXNWZXJpZmllZCI6dHJ1ZX0sInBob25lIjp7ImNvbnRlbnQiOiIwODEyMzQ1Njc4OSIsImlzVmVyaWZpZWQiOnRydWV9LCJyb2xlIjoidmVuZG9yIiwiaWF0IjoxNzE3NDY4OTg5fQ.xutJLqdrOOVz_5WeUvB7Gh_AX-wyIVfe1Bgm9wQk_XU",
+            },
+            method: 'POST',
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Response:', data);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,601 @@
+{
+    "message": "get data all Order success",
+    "data": [
+        {
+            "_id": "669dfa2e7609a8bfa65eeb42",
+            "expire": "2024-07-23T05:03:27.785Z",
+            "createdAt": "2024-07-22T06:20:30.255Z",
+            "biaya_layanan": 1000,
+            "biaya_jasa_aplikasi": 1000,
+            "sekolahId": "6695d8d312db45597a24b32e",
+            "total_pesanan": 1232550,
+            "status": "Belum Bayar",
+            "orders": [
+                {
+                    "seller": {
+                        "_id": "6666889630b2f454ab8301cd",
+                        "idToko": "666689dd30b2f454ab83035f",
+                        "namaToko": "TOKO ARYA GUYS"
+                    },
+                    "status_pengiriman": {
+                        "_id": "669dfa307609a8bfa65eeb5f",
+                        "orderId": "669dfa2e7609a8bfa65eeb42",
+                        "distributorId": "667cd9c9d93bafedffcba32a",
+                        "waktu_pengiriman": "2024-07-25T08:54:00.000Z",
+                        "jenis_pengiriman": "667d1b43ef7a7441b0f6aed0",
+                        "total_ongkir": 2550,
+                        "ongkir": 2550,
+                        "potongan_ongkir": 0,
+                        "id_jenis_kendaraan": "6682649a886cae0acc149763",
+                        "id_toko": "666689dd30b2f454ab83035f",
+                        "productToDelivers": [
+                            {
+                                "productId": "Prod-66963e2a7cf9fa6fbe74036c",
+                                "quantity": 60
+                            }
+                        ],
+                        "status_pengiriman": "diproses",
+                        "kode_pengiriman": "PNR_KNS_20240722_120327_52",
+                        "rejected": false,
+                        "status_distributor": "Pesanan terbaru",
+                        "invoice": "669dfa2f7609a8bfa65eeb50",
+                        "createdAt": "2024-07-22T06:20:32.099Z",
+                        "updatedAt": "2024-07-22T06:20:32.099Z",
+                        "__v": 0
+                    },
+                    "arrayProduct": [
+                        {
+                            "productId": {
+                                "_id": "Prod-66963e2a7cf9fa6fbe74036c",
+                                "name_product": "Nama Saya Arya",
+                                "image_product": [
+                                    "https://staging-backend.superdigitalapps.my.id/public/img_products/Nama_Saya_Arya_1721122346621.png"
+                                ],
+                                "userId": {
+                                    "_id": "6666889630b2f454ab8301cd",
+                                    "role": "vendor"
+                                },
+                                "categoryId": {
+                                    "_id": "664d6465022983b028557610",
+                                    "name": "sandwich",
+                                    "__v": 0
+                                },
+                                "total_price": 20000
+                            },
+                            "varian": [],
+                            "note": "",
+                            "proteksi": false,
+                            "promo": "-",
+                            "quantity": 60
+                        }
+                    ]
+                },
+                {
+                    "seller": {
+                        "_id": "66611dacba5df3eba7c2021b",
+                        "idToko": "666120beba5df3eba7c2039d",
+                        "namaToko": "Maju Bersama"
+                    },
+                    "status_pengiriman": {
+                        "_id": "669dfa307609a8bfa65eeb62",
+                        "orderId": "669dfa2e7609a8bfa65eeb42",
+                        "distributorId": "667cd9c9d93bafedffcba32a",
+                        "waktu_pengiriman": "2024-07-25T08:54:00.000Z",
+                        "jenis_pengiriman": "667d1b43ef7a7441b0f6aed0",
+                        "total_ongkir": 8000,
+                        "ongkir": 8000,
+                        "potongan_ongkir": 0,
+                        "id_jenis_kendaraan": "6682649a886cae0acc149763",
+                        "id_toko": "666120beba5df3eba7c2039d",
+                        "productToDelivers": [
+                            {
+                                "productId": "Prod-6698e6706dfb32a9050269d7",
+                                "quantity": 20
+                            }
+                        ],
+                        "status_pengiriman": "diproses",
+                        "kode_pengiriman": "PNR_KNS_20240722_120327_52",
+                        "rejected": false,
+                        "status_distributor": "Pesanan terbaru",
+                        "invoice": "669dfa2f7609a8bfa65eeb50",
+                        "createdAt": "2024-07-22T06:20:32.275Z",
+                        "updatedAt": "2024-07-22T06:20:32.275Z",
+                        "__v": 0
+                    },
+                    "arrayProduct": [
+                        {
+                            "productId": {
+                                "_id": "Prod-6698e6706dfb32a9050269d7",
+                                "name_product": "Nasi Mas Maulana",
+                                "image_product": [
+                                    "https://staging-backend.superdigitalapps.my.id/public/img_products/Nasi_Mas_Maulana_1721296496669.jpeg"
+                                ],
+                                "userId": {
+                                    "_id": "66611dacba5df3eba7c2021b",
+                                    "role": "vendor"
+                                },
+                                "categoryId": {
+                                    "_id": "664d6c7c022983b028557a22",
+                                    "name": "nasi goreng",
+                                    "__v": 0
+                                },
+                                "total_price": 1000
+                            },
+                            "varian": [],
+                            "note": "",
+                            "proteksi": false,
+                            "promo": "-",
+                            "quantity": 20
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "_id": "669dfa2e7609a8bfa65eeb42",
+            "expire": "2024-07-23T05:03:27.785Z",
+            "createdAt": "2024-07-22T06:20:30.255Z",
+            "biaya_layanan": 1000,
+            "biaya_jasa_aplikasi": 1000,
+            "sekolahId": "6695d8d312db45597a24b32e",
+            "status": "Berlangsung",
+            "total_pesanan": 4509650,
+            "seller": {
+                "_id": "6666889630b2f454ab8301cd",
+                "idToko": "666689dd30b2f454ab83035f",
+                "namaToko": "TOKO ARYA GUYS"
+            },
+            "status_pengiriman": [
+                {
+                    "_id": "669dfa2f7609a8bfa65eeb58",
+                    "orderId": "669dfa2e7609a8bfa65eeb42",
+                    "distributorId": "667cd9c9d93bafedffcba32a",
+                    "waktu_pengiriman": "2024-07-25T08:54:00.000Z",
+                    "jenis_pengiriman": "667d1b43ef7a7441b0f6aed0",
+                    "total_ongkir": 7650,
+                    "ongkir": 7650,
+                    "potongan_ongkir": 0,
+                    "id_jenis_kendaraan": "6682649a886cae0acc149763",
+                    "id_toko": "666689dd30b2f454ab83035f",
+                    "productToDelivers": [
+                        {
+                            "productId": "Prod-66961f817cf9fa6fbe73fb7d",
+                            "quantity": 90
+                        },
+                        {
+                            "productId": "Prod-66963e2a7cf9fa6fbe74036c",
+                            "quantity": 90
+                        }
+                    ],
+                    "status_pengiriman": "diproses",
+                    "kode_pengiriman": "PNR_KNS_20240722_120327_52",
+                    "rejected": false,
+                    "status_distributor": "Pesanan terbaru",
+                    "invoice": "669dfa2f7609a8bfa65eeb55",
+                    "createdAt": "2024-07-22T06:20:31.925Z",
+                    "updatedAt": "2024-07-22T06:20:31.925Z",
+                    "__v": 0
+                }
+            ],
+            "arrayProduct": [
+                {
+                    "productId": {
+                        "_id": "Prod-66961f817cf9fa6fbe73fb7d",
+                        "bervarian": false,
+                        "name_product": "Nasi Maulana",
+                        "price": 30000,
+                        "description": "Hai mz",
+                        "long_description": "Iyh",
+                        "minimalDp": null,
+                        "image_product": [
+                            "https://staging-backend.superdigitalapps.my.id/public/img_products/Nasi_Maulana_1721114497765.jpeg"
+                        ],
+                        "status": {
+                            "value": "terpublish",
+                            "message": "Produk kamu sedang dalam proses tinjauan superapp. Produk kamu akan segera terunggah setelah tinjauan selesai."
+                        },
+                        "userId": {
+                            "_id": "6666889630b2f454ab8301cd",
+                            "role": "vendor"
+                        },
+                        "id_main_category": "6643037536c776b1490ad74f",
+                        "id_sub_category": "664d6c03022983b0285579ef",
+                        "categoryId": {
+                            "_id": "668e5a44895d76ecad83b29d",
+                            "name": "nasi kuning",
+                            "show_at_web": false,
+                            "icon": "https://staging-backend.superdigitalapps.my.id/public/icon/kursi.jpg",
+                            "__v": 0
+                        },
+                        "total_stok": 89759,
+                        "pemasok": null,
+                        "rating": 0,
+                        "minimalOrder": 20,
+                        "isFlashSale": false,
+                        "panjang": 10,
+                        "lebar": 10,
+                        "tinggi": 10,
+                        "berat": 20,
+                        "isReviewed": false,
+                        "pangan": [],
+                        "varian": null,
+                        "createdAt": "2024-07-16T07:21:37.768Z",
+                        "updatedAt": "2024-07-19T06:40:19.519Z",
+                        "total_price": 30000,
+                        "__v": 3,
+                        "reviews": [
+                            "6698ddb30a5170b03daa1f07",
+                            "6698deb2d4949a131f18e2b2",
+                            "6698e6e84e073b8a8bd82bf7",
+                            "6698e780368b730f2881821c",
+                            "6698e7cc6dfb32a905026a88",
+                            "6698e7ef368b730f28818243",
+                            "6698e844368b730f28818297",
+                            "6698e8656dfb32a905026b00",
+                            "669a085f74e01449fd4d36c6",
+                            "669a0a1b6135de5614e4b79a",
+                            "669a0a536135de5614e4b7ba"
+                        ],
+                        "poin_review": 3.4545454545454546
+                    },
+                    "varian": [],
+                    "note": "",
+                    "proteksi": false,
+                    "promo": "-",
+                    "quantity": 90
+                },
+                {
+                    "productId": {
+                        "_id": "Prod-66963e2a7cf9fa6fbe74036c",
+                        "bervarian": false,
+                        "name_product": "Nama Saya Arya",
+                        "price": 20000,
+                        "description": "Kamu?",
+                        "long_description": "Nama kamu siapah?",
+                        "minimalDp": null,
+                        "image_product": [
+                            "https://staging-backend.superdigitalapps.my.id/public/img_products/Nama_Saya_Arya_1721122346621.png"
+                        ],
+                        "status": {
+                            "value": "terpublish",
+                            "message": "Produk kamu sedang dalam proses tinjauan superapp. Produk kamu akan segera terunggah setelah tinjauan selesai."
+                        },
+                        "userId": {
+                            "_id": "6666889630b2f454ab8301cd",
+                            "role": "vendor"
+                        },
+                        "id_main_category": "6643037536c776b1490ad74f",
+                        "id_sub_category": "664d62586d9a821f0155ae7d",
+                        "categoryId": {
+                            "_id": "664d6465022983b028557610",
+                            "name": "sandwich",
+                            "__v": 0
+                        },
+                        "total_stok": 452,
+                        "pemasok": null,
+                        "rating": 0,
+                        "minimalOrder": 10,
+                        "isFlashSale": false,
+                        "panjang": 120,
+                        "lebar": 10,
+                        "tinggi": 10,
+                        "berat": 123,
+                        "isReviewed": false,
+                        "pangan": [],
+                        "varian": null,
+                        "createdAt": "2024-07-16T09:32:26.624Z",
+                        "updatedAt": "2024-07-17T03:53:20.648Z",
+                        "total_price": 20000,
+                        "__v": 0,
+                        "poin_review": 4,
+                        "reviews": [
+                            "66974030565c1b4406a0473d"
+                        ]
+                    },
+                    "varian": [],
+                    "note": "",
+                    "proteksi": false,
+                    "promo": "-",
+                    "quantity": 90
+                }
+            ]
+        },
+        {
+            "_id": "669de7bf843fdc98aed6f7ba",
+            "expire": "2024-07-23T05:01:40.519Z",
+            "createdAt": "2024-07-22T05:01:51.894Z",
+            "biaya_layanan": 1000,
+            "biaya_jasa_aplikasi": 1000,
+            "sekolahId": "6695d8d312db45597a24b32e",
+            "status": "Berlangsung",
+            "total_pesanan": 6620000,
+            "seller": {
+                "_id": "6666889630b2f454ab8301cd",
+                "idToko": "666689dd30b2f454ab83035f",
+                "namaToko": "TOKO ARYA GUYS"
+            },
+            "status_pengiriman": [
+                {
+                    "_id": "669de7c1843fdc98aed6f7d0",
+                    "orderId": "669de7bf843fdc98aed6f7ba",
+                    "distributorId": "667cd9c9d93bafedffcba32a",
+                    "waktu_pengiriman": "2024-07-25T08:54:00.000Z",
+                    "jenis_pengiriman": "667d1b43ef7a7441b0f6aed0",
+                    "total_ongkir": 7650,
+                    "ongkir": 7650,
+                    "potongan_ongkir": 0,
+                    "id_jenis_kendaraan": "6682649a886cae0acc149763",
+                    "id_toko": "666689dd30b2f454ab83035f",
+                    "productToDelivers": [
+                        {
+                            "productId": "Prod-66961f817cf9fa6fbe73fb7d",
+                            "quantity": 90
+                        },
+                        {
+                            "productId": "Prod-66963e2a7cf9fa6fbe74036c",
+                            "quantity": 90
+                        }
+                    ],
+                    "status_pengiriman": "diproses",
+                    "kode_pengiriman": "PNR_KNS_20240722_120140_46",
+                    "rejected": false,
+                    "status_distributor": "Pesanan terbaru",
+                    "invoice": "669de7c1843fdc98aed6f7cd",
+                    "createdAt": "2024-07-22T05:01:53.785Z",
+                    "updatedAt": "2024-07-22T05:01:53.785Z",
+                    "__v": 0
+                },
+                {
+                    "_id": "669de7c2843fdc98aed6f7d7",
+                    "orderId": "669de7bf843fdc98aed6f7ba",
+                    "distributorId": "667cd9c9d93bafedffcba32a",
+                    "waktu_pengiriman": "2024-07-25T08:54:00.000Z",
+                    "jenis_pengiriman": "667d1b43ef7a7441b0f6aed0",
+                    "total_ongkir": 2550,
+                    "ongkir": 2550,
+                    "potongan_ongkir": 0,
+                    "id_jenis_kendaraan": "6682649a886cae0acc149763",
+                    "id_toko": "666689dd30b2f454ab83035f",
+                    "productToDelivers": [
+                        {
+                            "productId": "Prod-66963e2a7cf9fa6fbe74036c",
+                            "quantity": 60
+                        }
+                    ],
+                    "status_pengiriman": "diproses",
+                    "kode_pengiriman": "PNR_KNS_20240722_120140_46",
+                    "rejected": false,
+                    "status_distributor": "Pesanan terbaru",
+                    "invoice": "669de7c1843fdc98aed6f7c8",
+                    "createdAt": "2024-07-22T05:01:54.016Z",
+                    "updatedAt": "2024-07-22T05:01:54.016Z",
+                    "__v": 0
+                }
+            ],
+            "arrayProduct": [
+                {
+                    "productId": {
+                        "_id": "Prod-66961f817cf9fa6fbe73fb7d",
+                        "bervarian": false,
+                        "name_product": "Nasi Maulana",
+                        "price": 30000,
+                        "description": "Hai mz",
+                        "long_description": "Iyh",
+                        "minimalDp": null,
+                        "image_product": [
+                            "https://staging-backend.superdigitalapps.my.id/public/img_products/Nasi_Maulana_1721114497765.jpeg"
+                        ],
+                        "status": {
+                            "value": "terpublish",
+                            "message": "Produk kamu sedang dalam proses tinjauan superapp. Produk kamu akan segera terunggah setelah tinjauan selesai."
+                        },
+                        "userId": {
+                            "_id": "6666889630b2f454ab8301cd",
+                            "role": "vendor"
+                        },
+                        "id_main_category": "6643037536c776b1490ad74f",
+                        "id_sub_category": "664d6c03022983b0285579ef",
+                        "categoryId": {
+                            "_id": "668e5a44895d76ecad83b29d",
+                            "name": "nasi kuning",
+                            "show_at_web": false,
+                            "icon": "https://staging-backend.superdigitalapps.my.id/public/icon/kursi.jpg",
+                            "__v": 0
+                        },
+                        "total_stok": 89759,
+                        "pemasok": null,
+                        "rating": 0,
+                        "minimalOrder": 20,
+                        "isFlashSale": false,
+                        "panjang": 10,
+                        "lebar": 10,
+                        "tinggi": 10,
+                        "berat": 20,
+                        "isReviewed": false,
+                        "pangan": [],
+                        "varian": null,
+                        "createdAt": "2024-07-16T07:21:37.768Z",
+                        "updatedAt": "2024-07-19T06:40:19.519Z",
+                        "total_price": 30000,
+                        "__v": 3,
+                        "reviews": [
+                            "6698ddb30a5170b03daa1f07",
+                            "6698deb2d4949a131f18e2b2",
+                            "6698e6e84e073b8a8bd82bf7",
+                            "6698e780368b730f2881821c",
+                            "6698e7cc6dfb32a905026a88",
+                            "6698e7ef368b730f28818243",
+                            "6698e844368b730f28818297",
+                            "6698e8656dfb32a905026b00",
+                            "669a085f74e01449fd4d36c6",
+                            "669a0a1b6135de5614e4b79a",
+                            "669a0a536135de5614e4b7ba"
+                        ],
+                        "poin_review": 3.4545454545454546
+                    },
+                    "quantity": 90,
+                    "varian": [],
+                    "note": "",
+                    "proteksi": false,
+                    "promo": "-"
+                },
+                {
+                    "productId": {
+                        "_id": "Prod-66963e2a7cf9fa6fbe74036c",
+                        "bervarian": false,
+                        "name_product": "Nama Saya Arya",
+                        "price": 20000,
+                        "description": "Kamu?",
+                        "long_description": "Nama kamu siapah?",
+                        "minimalDp": null,
+                        "image_product": [
+                            "https://staging-backend.superdigitalapps.my.id/public/img_products/Nama_Saya_Arya_1721122346621.png"
+                        ],
+                        "status": {
+                            "value": "terpublish",
+                            "message": "Produk kamu sedang dalam proses tinjauan superapp. Produk kamu akan segera terunggah setelah tinjauan selesai."
+                        },
+                        "userId": {
+                            "_id": "6666889630b2f454ab8301cd",
+                            "role": "vendor"
+                        },
+                        "id_main_category": "6643037536c776b1490ad74f",
+                        "id_sub_category": "664d62586d9a821f0155ae7d",
+                        "categoryId": {
+                            "_id": "664d6465022983b028557610",
+                            "name": "sandwich",
+                            "__v": 0
+                        },
+                        "total_stok": 452,
+                        "pemasok": null,
+                        "rating": 0,
+                        "minimalOrder": 10,
+                        "isFlashSale": false,
+                        "panjang": 120,
+                        "lebar": 10,
+                        "tinggi": 10,
+                        "berat": 123,
+                        "isReviewed": false,
+                        "pangan": [],
+                        "varian": null,
+                        "createdAt": "2024-07-16T09:32:26.624Z",
+                        "updatedAt": "2024-07-17T03:53:20.648Z",
+                        "total_price": 20000,
+                        "__v": 0,
+                        "poin_review": 4,
+                        "reviews": [
+                            "66974030565c1b4406a0473d"
+                        ]
+                    },
+                    "quantity": 150,
+                    "varian": [],
+                    "note": "",
+                    "proteksi": false,
+                    "promo": "-"
+                }
+            ]
+        },
+        {
+            "_id": "669de7bf843fdc98aed6f7ba",
+            "expire": "2024-07-23T05:01:40.519Z",
+            "createdAt": "2024-07-22T05:01:51.894Z",
+            "biaya_layanan": 1000,
+            "biaya_jasa_aplikasi": 1000,
+            "sekolahId": "6695d8d312db45597a24b32e",
+            "status": "Berlangsung",
+            "total_pesanan": 6620000,
+            "seller": {
+                "_id": "66611dacba5df3eba7c2021b",
+                "idToko": "666120beba5df3eba7c2039d",
+                "namaToko": "Maju Bersama"
+            },
+            "status_pengiriman": [
+                {
+                    "_id": "669de7c2843fdc98aed6f7da",
+                    "orderId": "669de7bf843fdc98aed6f7ba",
+                    "distributorId": "667cd9c9d93bafedffcba32a",
+                    "waktu_pengiriman": "2024-07-25T08:54:00.000Z",
+                    "jenis_pengiriman": "667d1b43ef7a7441b0f6aed0",
+                    "total_ongkir": 8000,
+                    "ongkir": 8000,
+                    "potongan_ongkir": 0,
+                    "id_jenis_kendaraan": "6682649a886cae0acc149763",
+                    "id_toko": "666120beba5df3eba7c2039d",
+                    "productToDelivers": [
+                        {
+                            "productId": "Prod-6698e6706dfb32a9050269d7",
+                            "quantity": 20
+                        }
+                    ],
+                    "status_pengiriman": "diproses",
+                    "kode_pengiriman": "PNR_KNS_20240722_120140_46",
+                    "rejected": false,
+                    "status_distributor": "Pesanan terbaru",
+                    "invoice": "669de7c1843fdc98aed6f7c8",
+                    "createdAt": "2024-07-22T05:01:54.277Z",
+                    "updatedAt": "2024-07-22T05:01:54.277Z",
+                    "__v": 0
+                }
+            ],
+            "arrayProduct": [
+                {
+                    "productId": {
+                        "_id": "Prod-6698e6706dfb32a9050269d7",
+                        "bervarian": false,
+                        "name_product": "Nasi Mas Maulana",
+                        "price": 1000,
+                        "description": "Hai",
+                        "long_description": "Oke",
+                        "minimalDp": null,
+                        "image_product": [
+                            "https://staging-backend.superdigitalapps.my.id/public/img_products/Nasi_Mas_Maulana_1721296496669.jpeg"
+                        ],
+                        "status": {
+                            "value": "terpublish",
+                            "message": "Produk kamu sedang dalam proses tinjauan superapp. Produk kamu akan segera terunggah setelah tinjauan selesai."
+                        },
+                        "userId": {
+                            "_id": "66611dacba5df3eba7c2021b",
+                            "role": "vendor"
+                        },
+                        "id_main_category": "6643037536c776b1490ad74f",
+                        "id_sub_category": "664d6c03022983b0285579ef",
+                        "categoryId": {
+                            "_id": "664d6c7c022983b028557a22",
+                            "name": "nasi goreng",
+                            "__v": 0
+                        },
+                        "total_stok": 20,
+                        "pemasok": null,
+                        "rating": 0,
+                        "minimalOrder": 10,
+                        "isFlashSale": false,
+                        "panjang": 10,
+                        "lebar": 10,
+                        "tinggi": 10,
+                        "berat": 10,
+                        "isReviewed": true,
+                        "pangan": [
+                            {
+                                "panganId": "66960d828c8b67dbd982578a",
+                                "berat": 421
+                            }
+                        ],
+                        "poin_review": 0,
+                        "reviews": [],
+                        "varian": null,
+                        "createdAt": "2024-07-18T09:54:56.741Z",
+                        "updatedAt": "2024-07-22T04:04:25.958Z",
+                        "total_price": 1000,
+                        "__v": 0
+                    },
+                    "quantity": 20,
+                    "varian": [],
+                    "note": "",
+                    "proteksi": false,
+                    "promo": "-"
+                }
+            ]
+        }
+    ]
+}
