@@ -13,6 +13,13 @@ const modelCategoryInformasiPertanyaan = new mongoose.Schema({
         type: String,
         enum: ["vendor", "konsumen", "produsen", "supplier", "distributor"],
         message: "{VALUE} is not supported",
+        required: [true, 'role harus di iis']
+    },
+    type: {
+        type: String,
+        enum: ["pembeli", "penjual"],
+        message: "{VALUE} is not supported",
+        default: null
     }
 }, { timeseries: true })
 
