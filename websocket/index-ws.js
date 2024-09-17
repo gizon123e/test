@@ -14,7 +14,19 @@ const io = new Server({
     origin: "*",
   },
   allowedHeaders: ["Chat Header"],
+  pingTimeout: 120000,
+  pingInterval: 60000
 });
+
+const userConnected = [];
+
+const sendToUser = (userId, event, message) => {
+  if (userConnected[userId]) {
+    userConnected[userId].forEach(socketId => {
+      io.to(socketId).emit(event, message);
+    });
+  }
+};
 
 io.use(async(socket, next) => {
   try {
@@ -27,14 +39,15 @@ io.use(async(socket, next) => {
     const verifyToken = jwt.verifyToken(token);
     if (!verifyToken) return next(new Error("Authentication error"));
     socket.user = verifyToken;
-    socket.id = socket.user.id
+    if(!userConnected[socket.user.id]) {
+      userConnected[socket.user.id] = [];
+    }
+    userConnected[socket.user.id].push(socket.id);
     next();
   } catch (error) {
     next(error)
   }
 });
-
-const userConnected = [];
 
 io.on("connection", (socket) => {
   socket.emit("hello", `Halo Selamat Datang, ${JSON.stringify(socket.user)}`);
@@ -46,13 +59,15 @@ io.on("connection", (socket) => {
       socket.emit('status_user', { online: false, lastOnline: new Date(user.lastOnline) })
     }
   })
-  if(!userConnected.some(user => user.id === socket.id)) {
-    userConnected.push(socket.user); 
-  }
 
   socket.on("disconnect", (reason) => {
-    const index = userConnected.findIndex((user) => user.id === socket.id);
-    if (index > -1) userConnected.splice(index, 1);
+    if (userConnected[socket.user.id]) {
+      userConnected[socket.user.id] = userConnected[socket.user.id].filter(id => id !== socket.id);
+  
+      if (userConnected[socket.user.id].length === 0) {
+        delete userConnected[socket.user.id];
+      }
+    }
     User.updateOne(
       { _id: socket.user.id },
       { lastOnline: new Date() }
@@ -66,6 +81,7 @@ io.on("connection", (socket) => {
     const { userId, ...contents } = data;
     try {
         const receiver = await User.findById(userId).select("role");
+        console.log(receiver)
         const senderRole = socket.user.role;
         const receiverRole = receiver.role;
 
@@ -139,8 +155,8 @@ io.on("connection", (socket) => {
             return ({ message: "Role tidak dikenali" });  
         };
 
-        io.to(socket.user.id).emit(`msg`, JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest}));
-        io.to(userId).emit(`msg`, JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest}));
+        sendToUser(socket.user.id, "msg", JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest }));
+        sendToUser(receiver._id, "msg", JSON.stringify({ sender: senderDetail, chatId: chat._id, ...rest }));
 
     } catch (err) {
       console.log('Gagal menyimpan chat', err);
