@@ -21,6 +21,9 @@ const modelInformasiBantuanKonsumen = new mongoose.Schema({
                 image_web: {
                     type: String
                 },
+                image_mobile: {
+                    type: String
+                },
             }]
         }]
     }],
