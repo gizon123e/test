@@ -15,7 +15,12 @@ const modelInformasiBantuanKonsumen = new mongoose.Schema({
                 type: String,
             },
             spesifik_description: [{
-                type: String,
+                text_desciption: {
+                    type: String,
+                },
+                image_web: {
+                    type: String
+                },
             }]
         }]
     }],
@@ -27,10 +32,12 @@ const modelInformasiBantuanKonsumen = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: 'CategoryInformasiPertanyaan',
     },
-    file_informasi_bantuan: {
-        type: String
-    },
-
+    type: {
+        type: String,
+        enum: ["pembeli", "penjual", "perusahaan", "individu"],
+        message: "{VALUE} is not supported",
+        default: null
+    }
 }, { timeseries: true })
 
 const InformasiBantuanKonsumen = mongoose.model('InformasiBantuanKonsumen', modelInformasiBantuanKonsumen)

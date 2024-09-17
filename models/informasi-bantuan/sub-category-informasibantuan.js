@@ -8,7 +8,12 @@ const modelSubCategoryInformasiPertanyaan = new mongoose.Schema({
     id_categori_informasi_bantuan: {
         type: mongoose.Types.ObjectId,
         ref: 'CategoryInformasiPertanyaan',
-
+    },
+    type: {
+        type: String,
+        enum: ["pembeli", "penjual", "perusahaan", "individu"],
+        message: "{VALUE} is not supported",
+        default: null
     }
 }, { timeseries: true })
 

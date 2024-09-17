@@ -1,4 +1,3 @@
-const InformasiBantuanKonsumen = require('../../models/informasi-bantuan/informasi-bantuan-konsumen')
 const SubCategoryInformasiPertanyaan = require('../../models/informasi-bantuan/sub-category-informasibantuan')
 
 module.exports = {
@@ -26,9 +25,9 @@ module.exports = {
 
     createSubCategoryInformasiBantuan: async (req, res, next) => {
         try {
-            const { id_categori_informasi_bantuan, nama } = req.body
+            const { id_categori_informasi_bantuan, nama, type } = req.body
 
-            const data = await SubCategoryInformasiPertanyaan.create({ id_categori_informasi_bantuan, nama })
+            const data = await SubCategoryInformasiPertanyaan.create({ id_categori_informasi_bantuan, nama, type })
 
             res.status(201).json({
                 message: "create data success",
@@ -49,9 +48,9 @@ module.exports = {
 
     updateSubCategoryInformasiBantuan: async (req, res, next) => {
         try {
-            const { id_categori_informasi_bantuan, nama } = req.body
+            const { id_categori_informasi_bantuan, nama, type } = req.body
 
-            const dataUpdate = await SubCategoryInformasiPertanyaan.findByIdAndUpdate(req.params.id, { id_categori_informasi_bantuan, nama })
+            const dataUpdate = await SubCategoryInformasiPertanyaan.findByIdAndUpdate(req.params.id, { id_categori_informasi_bantuan, nama, type })
 
             res.status(200).json({
                 message: "update data success",
