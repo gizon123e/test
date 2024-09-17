@@ -205,14 +205,14 @@ app.use('/api/forget/pin', require('./routes/router-forgot-credential/router-pin
 // midelware error
 app.use(require("./midelware/error-midelware"));
 
-app.listen(4000, () => {
+app.listen(4100, () => {
   // flash_sale_checker.start()
   // checker_order()
   // send_notif()
   // batalPesanan()
   // expiredPoin()
   console.log("connection express success");
-  websocket.listen(8000, () => {
+  websocket.listen(8100, () => {
     console.log("Connection websocket success");
   });
 });
