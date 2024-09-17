@@ -16,7 +16,7 @@ module.exports = async (req, res, next) => {
         const user_system = await User_System.findById(req.user.id)
         if(!user && !user_system) return res.status(401).json({message: "Tidak Ada User dengan id " + verifyToken.id + " pastikan token benar"});
         const deviceId = req.headers["x-header-deviceid"];
-        if(!deviceId) return res.status(401).json({ error: true, message: 'Kirimkan device id di headers' });
+        if(!deviceId && req.user.role !== 'administrator') return res.status(401).json({ error: true, message: 'Kirimkan device id di headers' });
         const existedDeviceId = await DeviceId.findOne({userId: req.user.id, deviceId});
         if(!existedDeviceId) return res.status(401).json({ error: true, message: 'Invalid Token' });
         next();
