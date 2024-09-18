@@ -31,9 +31,12 @@ const sendToUser = (userId, event, message) => {
 io.use(async(socket, next) => {
   try {
     if(socket.handshake.auth.fromServer){
-      socket.user = { id: '1',  email: { content: null } }
-      socket.id = socket.user.id
-      return next()
+      socket.user = { id: '1',  email: { content: null } };
+      if(!userConnected[socket.user.id]) {
+        userConnected[socket.user.id] = [];
+      };
+      userConnected[socket.user.id].push(socket.id);
+      return next();
     }
     const token = socket.handshake.auth.token;
     const verifyToken = jwt.verifyToken(token);
