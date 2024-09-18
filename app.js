@@ -1,4 +1,4 @@
-require("./database/database");
+const db = require("./database/database");
 const flash_sale_checker = require('./utils/flash-sale-checker');
 const checker_order = require("./utils/cancel-order")
 const send_notif = require("./utils/send-notif");
@@ -205,14 +205,18 @@ app.use('/api/forget/pin', require('./routes/router-forgot-credential/router-pin
 // midelware error
 app.use(require("./midelware/error-midelware"));
 
-app.listen(4100, () => {
-  // flash_sale_checker.start()
-  // checker_order()
-  // send_notif()
-  // batalPesanan()
-  // expiredPoin()
-  console.log("connection express success");
-  websocket.listen(8100, () => {
-    console.log("Connection websocket success");
+db.on("error", console.log.bind(console, "databases connection error"));
+db.on("open", () => {
+  console.log("databases connection success");
+  app.listen(4100, () => {
+    // flash_sale_checker.start()
+    // checker_order()
+    // send_notif()
+    // batalPesanan()
+    // expiredPoin()
+    console.log("connection express success");
+    websocket.listen(8100, () => {
+      console.log("Connection websocket success");
+    });
   });
 });
