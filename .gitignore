@@ -7,3 +7,4 @@ package-lock.json
 /script-coba
 /public
 /backend_panel
+.ecosystem.config.js
