@@ -18,13 +18,13 @@ module.exports = {
             port: 587,
             secure: false,
             auth: {
-                user: process.env.SENDER_EMAIL_PROD,
-                pass: process.env.PASSWORD_EMAIL_PROD,
+                user: process.env.SENDER_EMAIL,
+                pass: process.env.SENDER_PASSWORD_EMAIL,
             },
         });
 
         return transporter.sendMail({
-            from: process.env.SENDER_EMAIL_PROD,
+            from: process.env.SENDER_EMAIL,
             to: email,
             subject: subject,
             text: `KODE OTP MBG:  ${kode} berlaku selama 5 menit. RAHASIAKAN KODE OTP MBG Anda! Jangan beritahukan kepada SIAPAPUN!`,
