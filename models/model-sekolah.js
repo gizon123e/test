@@ -35,6 +35,21 @@ const modelSekolah = new mongoose.Schema({
             }
         }
     ],
+    jumlahGuru: {
+        type: Number
+    },
+    jumlahPegawai: {
+        type: Number
+    },
+    jumlahKelas: {
+        type: Number
+    },
+    jumlahLab: {
+        type: Number
+    },
+    jumlahPerpus: {
+        type: Number
+    },
     // dataMurids: [
     //     {
     //         _id: false,
@@ -56,12 +71,6 @@ const modelSekolah = new mongoose.Schema({
     //         }
     //     }
     // ],
-    jenisPendidikan: {
-        type: String,
-        enum: ["formal", "non-formal"],
-        message: "{VALUE} is not valid",
-        required: [true, "Harus memiliki jenisPendidikan"]
-    },
     statusSekolah: {
         type: String,
         enum: ["swasta", "negeri"],
