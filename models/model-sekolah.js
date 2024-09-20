@@ -68,12 +68,6 @@ const modelSekolah = new mongoose.Schema({
         message: "{VALUE} is not valid",
         required: [true, "Harus memiliki statusSekolah"]
     },
-    jenjangPendidikan: {
-        type: String,
-        enum: ["pendidikan anak usia dini", "pendidikan dasar", "pendidikan menengah"],
-        message: "{VALUE} is not valid",
-        required: [true, "Harus memiliki jenjangPendidikan"]
-    },
     satuanPendidikan: {
         type: String,
         enum: [
